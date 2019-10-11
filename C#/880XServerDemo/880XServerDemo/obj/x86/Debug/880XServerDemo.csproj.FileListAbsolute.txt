@@ -1,0 +1,8 @@
+F:\trunk-2\server\tool\880XServerDemo\880XServerDemo\obj\x86\Debug\_880XServerDemo.Form1.resources
+F:\trunk-2\server\tool\880XServerDemo\880XServerDemo\obj\x86\Debug\_880XServerDemo.Properties.Resources.resources
+F:\trunk-2\server\tool\880XServerDemo\880XServerDemo\obj\x86\Debug\880XServerDemo.csproj.GenerateResource.Cache
+F:\trunk-2\server\tool\880XServerDemo\880XServerDemo\bin\Debug\880XServerDemo.exe
+F:\trunk-2\server\tool\880XServerDemo\880XServerDemo\bin\Debug\880XServerDemo.pdb
+F:\trunk-2\server\tool\880XServerDemo\880XServerDemo\obj\x86\Debug\880XServerDemo.exe
+F:\trunk-2\server\tool\880XServerDemo\880XServerDemo\obj\x86\Debug\880XServerDemo.pdb
+F:\trunk-2\server\tool\880XServerDemo\880XServerDemo\obj\x86\Debug\880XServerDemo.csprojResolveAssemblyReference.cache
