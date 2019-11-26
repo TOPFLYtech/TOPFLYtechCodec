@@ -258,6 +258,8 @@ namespace _880XServerDemo
             {
                 BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = (BluetoothPeripheralDataMessage)message;
                 ShowMsg("receive bluetooth peripheral data message:" + bluetoothPeripheralDataMessage.Imei);
+                byte[] reply = t880xPlusEncoder.getBluetoothPeripheralMsgReply(bluetoothPeripheralDataMessage.Imei, bluetoothPeripheralDataMessage.SerialNo);
+                dict[strClientKey].Send(reply);
             }
             else if (message is NetworkInfoMessage)
             {
@@ -353,6 +355,8 @@ namespace _880XServerDemo
             {
                 BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = (BluetoothPeripheralDataMessage)message;
                 ShowMsg("receive bluetooth peripheral data message:" + bluetoothPeripheralDataMessage.Imei);
+                byte[] reply = t880xdEncoder.getBluetoothPeripheralMsgReply(bluetoothPeripheralDataMessage.Imei, bluetoothPeripheralDataMessage.SerialNo);
+                dict[strClientKey].Send(reply);
             }
             else if (message is NetworkInfoMessage)
             {

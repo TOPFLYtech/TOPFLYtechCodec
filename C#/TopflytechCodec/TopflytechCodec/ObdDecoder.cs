@@ -400,8 +400,12 @@ namespace TopflytechCodec
                 {
                     BleTempData bleTempData = new BleTempData();
                     byte[] macArray = new byte[6];
-                    Array.Copy(bleData, i + 2, macArray, 0, 6);
+                    Array.Copy(bleData, i + 0, macArray, 0, 6);
                     String mac = BytesUtils.Bytes2HexString(macArray, 0);
+                    if (mac.StartsWith("0000"))
+                    {
+                        mac = mac.Substring(4, 8);
+                    }
                     int voltageTmp = (int)bleData[i + 6] < 0 ? (int)bleData[i + 6] + 256 : (int)bleData[i + 6];
                     float voltage;
                     if (voltageTmp == 255)

@@ -1111,8 +1111,10 @@ class Decoder:
             i = 2
             while i < len(bleData):
                 bleTempData = BleTempData()
-                macArray = bleData[i + 2:i + 6]
+                macArray = bleData[i + 0:i + 6]
                 mac = byte2HexString(macArray, 0)
+                if mac.startswith('0000'):
+                    mac = mac[4:12]
                 voltageTmp = (int) (bleData[i + 6])
                 if voltageTmp < 0:
                    voltageTmp +=  256
@@ -2487,8 +2489,10 @@ class ObdDecoder:
             i = 2
             while i < len(bleData):
                 bleTempData = BleTempData()
-                macArray = bleData[i + 2:i + 6]
+                macArray = bleData[i + 0:i + 6]
                 mac = byte2HexString(macArray, 0)
+                if mac.startswith('0000'):
+                    mac = mac[4:12]
                 voltageTmp = (int) (bleData[i + 6])
                 if voltageTmp < 0:
                    voltageTmp +=  256
