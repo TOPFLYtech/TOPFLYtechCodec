@@ -1371,8 +1371,7 @@ class Decoder:
         relayStatus = 0
         if isRelayWorking:
             relayStatus = 1
-        isRelayWaiting = ((data[13] & 0xC0) != 0x00) and ((data[13] & 0x80) == 0x00 or (data[13] & 0x40) == 0x00)
-        relaySpeedLimit = data[13] & 0x3F
+        isRelayWaiting = ((data[13] & 0xC0) != 0x00) and ((data[13] & 0x80) == 0x00)
         dragThreshold = bytes2Short(data, 14)
         iop = bytes2Short(data, 16)
         iopIgnition = (iop & self.MASK_IGNITION) == self.MASK_IGNITION
@@ -2088,8 +2087,7 @@ class ObdDecoder:
         relayStatus = 0
         if isRelayWorking:
             relayStatus = 1
-        isRelayWaiting = ((data[13] & 0xC0) != 0x00) and ((data[13] & 0x80) == 0x00 or (data[13] & 0x40) == 0x00)
-        relaySpeedLimit = data[13] & 0x3F
+        isRelayWaiting = ((data[13] & 0xC0) != 0x00) and ((data[13] & 0x80) == 0x00)
         dragThreshold = bytes2Short(data, 14)
         iop = bytes2Short(data, 16)
         iopIgnition = (iop & self.MASK_IGNITION) == self.MASK_IGNITION

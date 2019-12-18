@@ -875,8 +875,7 @@ namespace TopflytechCodec
             int heartbeatInterval = data[12] & 0x00FF;
             bool isRelayWorking = (data[13] & 0xC0) == 0xC0;
             int relayStatus = isRelayWorking ? 1 : 0;
-            bool isRelayWaiting = ((data[13] & 0xC0) != 0x00) && ((data[13] & 0x80) == 0x00 || (data[13] & 0x40) == 0x00);
-            int relaySpeedLimit = data[13] & 0x3F;
+            bool isRelayWaiting = ((data[13] & 0xC0) != 0x00) && ((data[13] & 0x80) == 0x00);
             int dragThreshold = BytesUtils.Bytes2Short(data, 14);
             long iop = (long)BytesUtils.Bytes2Short(data, 16);
             bool iopIgnition = (iop & MASK_IGNITION) == MASK_IGNITION;
