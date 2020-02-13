@@ -48,7 +48,9 @@
     <Compile Include="Entities\AccelerationDriverBehaviorMessage.cs" />
     <Compile Include="Entities\AccidentAccelerationMessage.cs" />
     <Compile Include="Entities\BleAlertData.cs" />
+    <Compile Include="Entities\BleCtrlData.cs" />
     <Compile Include="Entities\BleData.cs" />
+    <Compile Include="Entities\BleDoorData.cs" />
     <Compile Include="Entities\BleDriverSignInData.cs" />
     <Compile Include="Entities\BleTempData.cs" />
     <Compile Include="Entities\BleTireData.cs" />

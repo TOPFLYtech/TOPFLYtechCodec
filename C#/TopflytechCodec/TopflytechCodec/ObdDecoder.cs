@@ -480,6 +480,148 @@ namespace TopflytechCodec
                     bleDataList.Add(bleTempData);
                 }
             }
+            else if (bleData[0] == 0x00 && bleData[1] == 0x05)
+            {
+                bluetoothPeripheralDataMessage.MessageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_DOOR;
+                for (int i = 2; i < bleData.Length; i += 12)
+                {
+                    BleDoorData bleDoorData = new BleDoorData();
+                    byte[] macArray = new byte[6];
+                    Array.Copy(bleData, i + 0, macArray, 0, 6);
+                    String mac = BytesUtils.Bytes2HexString(macArray, 0);
+                    if (mac.StartsWith("0000"))
+                    {
+                        mac = mac.Substring(4, 8);
+                    }
+                    int voltageTmp = (int)bleData[i + 6] < 0 ? (int)bleData[i + 6] + 256 : (int)bleData[i + 6];
+                    float voltage;
+                    if (voltageTmp == 255)
+                    {
+                        voltage = -999;
+                    }
+                    else
+                    {
+                        voltage = 2 + 0.01f * voltageTmp;
+                    }
+                    int batteryPercentTemp = (int)bleData[i + 7] < 0 ? (int)bleData[i + 7] + 256 : (int)bleData[i + 7];
+                    int batteryPercent;
+                    if (batteryPercentTemp == 255)
+                    {
+                        batteryPercent = -999;
+                    }
+                    else
+                    {
+                        batteryPercent = batteryPercentTemp;
+                    }
+                    int temperatureTemp = BytesUtils.Bytes2Short(bleData, i + 8);
+                    int tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
+                    float temperature;
+                    if (temperatureTemp == 65535)
+                    {
+                        temperature = -999;
+                    }
+                    else
+                    {
+                        temperature = (temperatureTemp & 0x7fff) * 0.01f * tempPositive;
+                    }
+                    int doorStatus = bleData[i + 10];
+                    int online = 1;
+                    if (doorStatus == 255)
+                    {
+                        doorStatus = -999;
+                        online = 0;
+                    }
+                    int rssiTemp = (int)bleData[i + 11] < 0 ? (int)bleData[i + 11] + 256 : (int)bleData[i + 11];
+                    int rssi;
+                    if (rssiTemp == 255)
+                    {
+                        rssi = -999;
+                    }
+                    else
+                    {
+                        rssi = rssiTemp - 128;
+                    }
+                    bleDoorData.Rssi = rssi;
+                    bleDoorData.Mac = mac;
+                    bleDoorData.DoorStatus = doorStatus;
+                    bleDoorData.Online = online;
+                    bleDoorData.Voltage = (float)Math.Round(voltage, 2, MidpointRounding.AwayFromZero);
+                    bleDoorData.BatteryPercent = batteryPercent;
+                    bleDoorData.Temp = (float)Math.Round(temperature, 2, MidpointRounding.AwayFromZero);
+                    bleDataList.Add(bleDoorData);
+                }
+            }
+            else if (bleData[0] == 0x00 && bleData[1] == 0x06)
+            {
+                bluetoothPeripheralDataMessage.MessageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_CTRL;
+                for (int i = 2; i < bleData.Length; i += 12)
+                {
+                    BleCtrlData bleCtrlData = new BleCtrlData();
+                    byte[] macArray = new byte[6];
+                    Array.Copy(bleData, i + 0, macArray, 0, 6);
+                    String mac = BytesUtils.Bytes2HexString(macArray, 0);
+                    if (mac.StartsWith("0000"))
+                    {
+                        mac = mac.Substring(4, 8);
+                    }
+                    int voltageTmp = (int)bleData[i + 6] < 0 ? (int)bleData[i + 6] + 256 : (int)bleData[i + 6];
+                    float voltage;
+                    if (voltageTmp == 255)
+                    {
+                        voltage = -999;
+                    }
+                    else
+                    {
+                        voltage = 2 + 0.01f * voltageTmp;
+                    }
+                    int batteryPercentTemp = (int)bleData[i + 7] < 0 ? (int)bleData[i + 7] + 256 : (int)bleData[i + 7];
+                    int batteryPercent;
+                    if (batteryPercentTemp == 255)
+                    {
+                        batteryPercent = -999;
+                    }
+                    else
+                    {
+                        batteryPercent = batteryPercentTemp;
+                    }
+                    int temperatureTemp = BytesUtils.Bytes2Short(bleData, i + 8);
+                    int tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
+                    float temperature;
+                    if (temperatureTemp == 65535)
+                    {
+                        temperature = -999;
+                    }
+                    else
+                    {
+                        temperature = (temperatureTemp & 0x7fff) * 0.01f * tempPositive;
+                    }
+                    int ctrlStatus = bleData[i + 10];
+                    int online = 1;
+                    if (ctrlStatus == 255)
+                    {
+                        ctrlStatus = -999;
+                        online = 0;
+                    }
+                    int rssiTemp = (int)bleData[i + 14] < 0 ? (int)bleData[i + 14] + 256 : (int)bleData[i + 14];
+                    int rssi;
+                    if (rssiTemp == 255)
+                    {
+                        rssi = -999;
+                    }
+                    else
+                    {
+                        rssi = rssiTemp - 128;
+                    }
+                    bleCtrlData.Rssi = rssi;
+                    bleCtrlData.Mac = mac;
+                    bleCtrlData.CtrlStatus = ctrlStatus;
+                    bleCtrlData.Online = online;
+                    bleCtrlData.Voltage = (float)Math.Round(voltage, 2, MidpointRounding.AwayFromZero);
+                    bleCtrlData.BatteryPercent = batteryPercent;
+                    bleCtrlData.Temp = (float)Math.Round(temperature, 2, MidpointRounding.AwayFromZero);
+                    bleDataList.Add(bleCtrlData);
+                }
+            }
             bluetoothPeripheralDataMessage.BleDataList = bleDataList;
             return bluetoothPeripheralDataMessage;
         }

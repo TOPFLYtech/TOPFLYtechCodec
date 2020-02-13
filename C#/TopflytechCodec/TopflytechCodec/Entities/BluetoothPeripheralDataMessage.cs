@@ -47,5 +47,7 @@ namespace TopflytechCodec.Entities
         public static int MESSAGE_TYPE_DRIVER = 1;
         public static int MESSAGE_TYPE_SOS = 2;
         public static int MESSAGE_TYPE_TEMP = 3;
+        public static int MESSAGE_TYPE_DOOR = 4;
+        public static int MESSAGE_TYPE_CTRL = 5;
     }
 }

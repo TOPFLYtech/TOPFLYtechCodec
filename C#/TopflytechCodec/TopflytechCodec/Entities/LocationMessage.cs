@@ -452,5 +452,18 @@ namespace TopflytechCodec.Entities
             get { return isSolarCharging; }
             set { isSolarCharging = value; }
         }
+
+        private String smartPowerSettingStatus;
+        public System.String SmartPowerSettingStatus
+        {
+            get { return smartPowerSettingStatus; }
+            set { smartPowerSettingStatus = value; }
+        }
+        private String smartPowerOpenStatus;
+        public System.String SmartPowerOpenStatus
+        {
+            get { return smartPowerOpenStatus; }
+            set { smartPowerOpenStatus = value; }
+        }
     }
 }

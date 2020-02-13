@@ -205,6 +205,18 @@ namespace TopflytechCodec
         byte[] command = new byte[HEADER_LENGTH];
         Array.Copy(data, 0, command, 0, HEADER_LENGTH);
         bool isAlarmData = command[2] == 0x04;
+        byte status1 = data[57];
+        String smartPowerOpenStatus = "close";
+        if ((status1 & 0x01) == 0x01)
+        {
+            smartPowerOpenStatus = "enable";
+        }
+        byte status3 = data[67];
+        String smartPowerSettingStatus = "disable";
+        if ((status3 & 0x80) == 0x80)
+        {
+            smartPowerSettingStatus = "enable";
+        }
         LocationMessage locationMessage;
         if (isAlarmData){
             locationMessage = new LocationAlarmMessage();
@@ -249,6 +261,8 @@ namespace TopflytechCodec
         locationMessage.LightSensor=lightSensor;
         locationMessage.BatteryVoltage=batteryVoltage;
         locationMessage.SolarVoltage=solarVoltage;
+        locationMessage.SmartPowerOpenStatus = smartPowerOpenStatus;
+        locationMessage.SmartPowerSettingStatus = smartPowerSettingStatus;
         return locationMessage;
     }
     private static int getEvent(byte alarmCodeByte) {
