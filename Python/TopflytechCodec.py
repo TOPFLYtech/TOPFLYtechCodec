@@ -193,6 +193,9 @@ class AccelerationData:
     latlngValid = False  #Is GPS data or LBS data. when GPS data,return true.
     isHistoryData = False
     rpm = 0
+    gyroscopeAxisX = 0.0
+    gyroscopeAxisY = 0.0
+    gyroscopeAxisZ = 0.0
 
 
 class SignInMessage(Message):
@@ -1442,8 +1445,52 @@ class Decoder:
         speedStr = byte2HexString(byteArray[curParseIndex + 24:curParseIndex + 26],0)
         acceleration.speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
         acceleration.azimuth = bytes2Short(byteArray,curParseIndex + 26)
+        if len(byteArray) >= 44:
+            gyroscopeAxisXDirect = -1
+            if (byteArray[curParseIndex + 28] & 0x80) == 0x80:
+                gyroscopeAxisXDirect = 1
+            gyroscopeAxisX = (((byteArray[curParseIndex + 28] & 0x7F & 0xff) << 4) + ((byteArray[curParseIndex + 29] & 0xf0) >> 4)) * gyroscopeAxisXDirect;
+            acceleration.gyroscopeAxisX = gyroscopeAxisX
+            gyroscopeAxisYDirect = -1
+            if (byteArray[curParseIndex + 29] & 0x08) == 0x08:
+                gyroscopeAxisYDirect = 1
+            gyroscopeAxisY = ((((byteArray[curParseIndex + 29] & 0x07) << 4) & 0xff) + (byteArray[curParseIndex + 30] &  0xff))* gyroscopeAxisYDirect;
+            acceleration.gyroscopeAxisY = gyroscopeAxisY
+            gyroscopeAxisZDirect = -1
+            if (byteArray[curParseIndex + 31] & 0x80) == 0x80:
+                gyroscopeAxisZDirect = 1
+            gyroscopeAxisZ = (((byteArray[curParseIndex + 31] & 0x7F & 0xff)<< 4) + ((byteArray[curParseIndex + 32] & 0xf0) >> 4)) * gyroscopeAxisZDirect;
+            acceleration.gyroscopeAxisZ = gyroscopeAxisZ
         return acceleration
 
+    def getAccidentAccelerationData(self,byteArray,imei,curParseIndex):
+        acceleration = AccelerationData()
+        acceleration.imei = imei
+        dateStr = "20" + byte2HexString(byteArray[curParseIndex:curParseIndex + 6],0)
+        acceleration.date = GTM0(dateStr)
+        acceleration.gpsWorking = (byteArray[curParseIndex + 6] & 0x20) == 0x00
+        acceleration.isHistoryData = (byteArray[curParseIndex + 6] & 0x80) != 0x00
+        acceleration.satelliteNumber = byteArray[curParseIndex + 6] & 0x1F
+        acceleration.latlngValid = (byteArray[curParseIndex + 6] & 0x40) != 0x00
+        axisXDirect = -1
+        if (byteArray[curParseIndex + 7] & 0x80) == 0x80:
+            axisXDirect = 1
+        acceleration.axisX = ((byteArray[curParseIndex + 7] & 0x7F & 0xff) + (((byteArray[curParseIndex + 8] & 0xf0) >> 4) & 0xff) /10.0) * axisXDirect
+        axisYDirect = -1
+        if (byteArray[curParseIndex + 8] & 0x08) == 0x08:
+            axisYDirect = 1
+        acceleration.axisY = (((((byteArray[curParseIndex + 8] & 0x07) << 4) & 0xff) + (((byteArray[curParseIndex + 9] & 0xf0) >> 4) & 0xff)) + (byteArray[curParseIndex + 9] & 0x0F & 0xff)/10.0)* axisYDirect
+        axisZDirect = -1
+        if (byteArray[curParseIndex + 10] & 0x80) == 0x80:
+            axisZDirect = 1
+        acceleration.axisZ = ((byteArray[curParseIndex + 10] & 0x7F & 0xff) + (((byteArray[curParseIndex + 11] & 0xf0) >> 4) & 0xff) /10.0) * axisZDirect
+        acceleration.altitude = bytes2Float(byteArray,curParseIndex + 12)
+        acceleration.longitude = bytes2Float(byteArray,curParseIndex + 16)
+        acceleration.latitude = bytes2Float(byteArray,curParseIndex + 20)
+        speedStr = byte2HexString(byteArray[curParseIndex + 24:curParseIndex + 26],0)
+        acceleration.speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+        acceleration.azimuth = bytes2Short(byteArray,curParseIndex + 26)
+        return acceleration
 
     def parseAccelerationAlarmMessage(self,byteArray):
         length = bytes2Short(byteArray,3)
@@ -1459,7 +1506,7 @@ class Decoder:
         while beginIndex < dataLength:
             curParseIndex = beginIndex
             beginIndex = beginIndex + 28
-            accelerationData = self.getAccelerationData(byteArray,imei,curParseIndex)
+            accelerationData = self.getAccidentAccelerationData(byteArray,imei,curParseIndex)
             accidentAccelerationList.append(accelerationData)
         accidentAccelerationMessage.accelerationList = accidentAccelerationList
         return accidentAccelerationMessage
@@ -2417,6 +2464,39 @@ class ObdDecoder:
         gpsDriverBehaviorMessage.endRpm = rpm
         return gpsDriverBehaviorMessage
 
+    def getAccidentAccelerationData(self,byteArray,imei,curParseIndex):
+        acceleration = AccelerationData()
+        acceleration.imei = imei
+        dateStr = "20" + byte2HexString(byteArray[curParseIndex:curParseIndex + 6],0)
+        acceleration.date = GTM0(dateStr)
+        acceleration.gpsWorking = (byteArray[curParseIndex + 6] & 0x20) == 0x00
+        acceleration.isHistoryData = (byteArray[curParseIndex + 6] & 0x80) != 0x00
+        acceleration.satelliteNumber = byteArray[curParseIndex + 6] & 0x1F
+        acceleration.latlngValid = (byteArray[curParseIndex + 6] & 0x40) != 0x00
+        axisXDirect = -1
+        if (byteArray[curParseIndex + 7] & 0x80) == 0x80:
+            axisXDirect = 1
+        acceleration.axisX = ((byteArray[curParseIndex + 7] & 0x7F & 0xff) + (((byteArray[curParseIndex + 8] & 0xf0) >> 4) & 0xff) /10.0) * axisXDirect
+        axisYDirect = -1
+        if (byteArray[curParseIndex + 8] & 0x08) == 0x08:
+            axisYDirect = 1
+        acceleration.axisY = (((((byteArray[curParseIndex + 8] & 0x07) << 4) & 0xff) + (((byteArray[curParseIndex + 9] & 0xf0) >> 4) & 0xff)) + (byteArray[curParseIndex + 9] & 0x0F & 0xff)/10.0)* axisYDirect
+        axisZDirect = -1
+        if (byteArray[curParseIndex + 10] & 0x80) == 0x80:
+            axisZDirect = 1
+        acceleration.axisZ = ((byteArray[curParseIndex + 10] & 0x7F & 0xff) + (((byteArray[curParseIndex + 11] & 0xf0) >> 4) & 0xff) /10.0) * axisZDirect
+        acceleration.altitude = bytes2Float(byteArray,curParseIndex + 12)
+        acceleration.longitude = bytes2Float(byteArray,curParseIndex + 16)
+        acceleration.latitude = bytes2Float(byteArray,curParseIndex + 20)
+        speedStr = byte2HexString(byteArray[curParseIndex + 24:curParseIndex + 26],0)
+        acceleration.speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+        acceleration.azimuth = bytes2Short(byteArray,curParseIndex + 26)
+        rpm = bytes2Short(byteArray, curParseIndex + 28);
+        if rpm == 65535:
+            rpm = -1
+        acceleration.rpm = rpm
+        return acceleration
+
     def getAccelerationData(self,byteArray,imei,curParseIndex):
         acceleration = AccelerationData()
         acceleration.imei = imei
@@ -2464,7 +2544,7 @@ class ObdDecoder:
         while beginIndex < dataLength:
             curParseIndex = beginIndex
             beginIndex = beginIndex + 30
-            accelerationData = self.getAccelerationData(byteArray,imei,curParseIndex)
+            accelerationData = self.getAccidentAccelerationData(byteArray,imei,curParseIndex)
             accidentAccelerationList.append(accelerationData)
         accidentAccelerationMessage.accelerationList = accidentAccelerationList
         return accidentAccelerationMessage
