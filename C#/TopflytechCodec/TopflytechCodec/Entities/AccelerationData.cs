@@ -128,5 +128,23 @@ namespace TopflytechCodec.Entities
             set { rpm = value; }
         }
 
+        private float gyroscopeAxisX;
+        public float GyroscopeAxisX
+        {
+            get { return gyroscopeAxisX; }
+            set { gyroscopeAxisX = value; }
+        }
+        private float gyroscopeAxisY;
+        public float GyroscopeAxisY
+        {
+            get { return gyroscopeAxisY; }
+            set { gyroscopeAxisY = value; }
+        }
+        private float gyroscopeAxisZ;
+        public float GyroscopeAxisZ
+        {
+            get { return gyroscopeAxisZ; }
+            set { gyroscopeAxisZ = value; }
+        }
     }
 }

@@ -676,7 +676,7 @@ namespace TopflytechCodec
             for (int i = 0; i < dataCount; i++)
             {
                 int curParseIndex = beginIdex + i * 28;
-                AccelerationData accidentAcceleration = getAccelerationData(bytes, imei, curParseIndex);
+                AccelerationData accidentAcceleration = getAccidentAccelerationData(bytes, imei, curParseIndex);
                 accidentAccelerationList.Add(accidentAcceleration);
             }
             accidentAccelerationMessage.AccelerationList = accidentAccelerationList;
@@ -699,6 +699,42 @@ namespace TopflytechCodec
             AccelerationData acceleration = getAccelerationData(bytes, imei, beginIdex);
             message.AccelerationData = acceleration;
             return message;
+        }
+
+        private AccelerationData getAccidentAccelerationData(byte[] bytes, String imei, int curParseIndex)
+        {
+            AccelerationData acceleration = new AccelerationData();
+            acceleration.Imei = imei;
+            acceleration.Date = Utils.getGTM0Date(bytes, curParseIndex);
+            bool isGpsWorking = (bytes[curParseIndex + 6] & 0x20) == 0x00;
+            bool isHistoryData = (bytes[curParseIndex + 6] & 0x80) != 0x00;
+            int satelliteNumber = bytes[curParseIndex + 6] & 0x1F;
+            bool latlngValid = (bytes[curParseIndex + 6] & 0x40) != 0x00;
+            acceleration.IsHistoryData = isHistoryData;
+            acceleration.GpsWorking = isGpsWorking;
+            acceleration.SatelliteNumber = satelliteNumber;
+            acceleration.LatlngValid = latlngValid;
+            int axisXDirect = (bytes[curParseIndex + 7] & 0x80) == 0x80 ? 1 : -1;
+            float axisX = ((bytes[curParseIndex + 7] & 0x7F & 0xff) + (((bytes[curParseIndex + 8] & 0xf0) >> 4) & 0xff) / 10.0f) * axisXDirect;
+            acceleration.AxisX = axisX;
+            int axisYDirect = (bytes[curParseIndex + 8] & 0x08) == 0x08 ? 1 : -1;
+            float axisY = (((((bytes[curParseIndex + 8] & 0x07) << 4) & 0xff) + (((bytes[curParseIndex + 9] & 0xf0) >> 4) & 0xff)) + (bytes[curParseIndex + 9] & 0x0F & 0xff) / 10.0f) * axisYDirect;
+            acceleration.AxisY = axisY;
+            int axisZDirect = (bytes[curParseIndex + 10] & 0x80) == 0x80 ? 1 : -1;
+            float axisZ = ((bytes[curParseIndex + 10] & 0x7F & 0xff) + (((bytes[curParseIndex + 11] & 0xf0) >> 4) & 0xff) / 10.0f) * axisZDirect;
+            acceleration.AxisZ = axisZ;
+
+            acceleration.Altitude = BytesUtils.Bytes2Float(bytes, curParseIndex + 12);
+            acceleration.Longitude = BytesUtils.Bytes2Float(bytes, curParseIndex + 16);
+            acceleration.Latitude = BytesUtils.Bytes2Float(bytes, curParseIndex + 20);
+            byte[] bytesSpeed = new byte[2];
+            Array.Copy(bytes, curParseIndex + 24, bytesSpeed, 0, 2);
+            String strSp = BytesUtils.Bytes2HexString(bytesSpeed, 0);
+            float speedf = (float)Convert.ToDouble(String.Format("{0}.{1}", Convert.ToInt32(strSp.Substring(0, 3)), Convert.ToInt32(strSp.Substring(3, strSp.Length - 3))));
+            acceleration.Speed = speedf;
+            int azimuth = BytesUtils.Bytes2Short(bytes, curParseIndex + 26);
+            acceleration.Azimuth = azimuth;
+            return acceleration;
         }
 
         private AccelerationData getAccelerationData(byte[] bytes, String imei, int curParseIndex)
@@ -734,6 +770,18 @@ namespace TopflytechCodec
             acceleration.Speed = speedf;
             int azimuth = BytesUtils.Bytes2Short(bytes, curParseIndex + 26);
             acceleration.Azimuth = azimuth;
+            if (bytes.Length > 44)
+            {
+                int gyroscopeAxisXDirect = (bytes[curParseIndex + 28] & 0x80) == 0x80 ? 1 : -1;
+                float gyroscopeAxisX = (((bytes[curParseIndex + 28] & 0x7F & 0xff) << 4) + ((bytes[curParseIndex + 29] & 0xf0) >> 4)) * gyroscopeAxisXDirect;
+                acceleration.GyroscopeAxisX = gyroscopeAxisX;
+                int gyroscopeAxisYDirect = (bytes[curParseIndex + 29] & 0x08) == 0x08 ? 1 : -1;
+                float gyroscopeAxisY = ((((bytes[curParseIndex + 29] & 0x07) << 4) & 0xff) + (bytes[curParseIndex + 30] & 0xff)) * gyroscopeAxisYDirect;
+                acceleration.GyroscopeAxisY = gyroscopeAxisY;
+                int gyroscopeAxisZDirect = (bytes[curParseIndex + 31] & 0x80) == 0x80 ? 1 : -1;
+                float gyroscopeAxisZ = (((bytes[curParseIndex + 31] & 0x7F & 0xff) << 4) + ((bytes[curParseIndex + 32] & 0xf0) >> 4)) * gyroscopeAxisZDirect;
+                acceleration.GyroscopeAxisZ = gyroscopeAxisZ;
+            }
             return acceleration;
         }
 
