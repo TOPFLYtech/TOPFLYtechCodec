@@ -191,6 +191,8 @@ def dealPersonalDeviceMessage(message,socketClient):
         print "receive signInMessage: " + message.imei
         reply = personalEncoder.getSignInMsgReply(message.imei,True,message.serialNo)
         socketClient.send(reply)
+        reply = personalEncoder.getConfigSettingMsg(message.imei,"config#")
+        socketClient.send(reply)
     elif isinstance(message,HeartbeatMessage):
         print "receive heartbeatMessage" + message.imei
         reply = personalEncoder.getHeartbeatMsgReply(message.imei,True,message.serialNo)
@@ -207,6 +209,10 @@ def dealPersonalDeviceMessage(message,socketClient):
         print "receive forwardMessage: " + message.imei + " : " + message.content
     elif isinstance(message,USSDMessage):
         print "receive forwardMessage: " + message.imei + " : " + message.content
+    elif isinstance(message,BluetoothPeripheralDataMessage):
+        print "receive blue Message: " + message.imei
+        reply = personalEncoder.getBluetoothPeripheralMsgReply(message.imei,True,message.serialNo)
+        socketClient.send(reply)
     elif isinstance(message,NetworkInfoMessage):
         print "receive network info Message: " + message.imei
 
@@ -221,7 +227,7 @@ if __name__ == "__main__":
     while True:
         c, addr = s.accept()
         print("\nConnection received from %s" % str(addr))
-        # decoder = Decoder(MessageEncryptType.NONE,"")
+        decoder = Decoder(MessageEncryptType.NONE,"")
         # decoder = ObdDecoder(MessageEncryptType.NONE,"")
         decoder = PersonalAssetMsgDecoder(MessageEncryptType.NONE,"")
         while True:

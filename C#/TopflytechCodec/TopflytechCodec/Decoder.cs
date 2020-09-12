@@ -1197,6 +1197,10 @@ namespace TopflytechCodec
             bool iopPowerCutOff = (iop & MASK_POWER_CUT) == MASK_POWER_CUT;
             bool iopACOn = (iop & MASK_AC) == MASK_AC;
             bool iopRs232DeviceValid = (iop & IOP_RS232_DEVICE_VALID) != IOP_RS232_DEVICE_VALID;
+            int output2 = (iop * 0x200) == 0x200 ? 1 : 0;
+            int output3 = (iop * 0x100) == 0x100 ? 1 : 0;
+            int output12V = (iop * 0x10) == 0x10 ? 1 : 0;
+            int outputVout = (iop * 0x8) == 0x8 ? 1 : 0;
             String str = BytesUtils.Bytes2HexString(data, 18);
             float analoginput = 0;
             try
@@ -1262,6 +1266,33 @@ namespace TopflytechCodec
             {
                 message = new LocationInfoMessage();
             }
+            float analogInput3 = 0;
+            int rpm = 0;
+            if (data.Length >= 55)
+            {
+                byte adc2Din = data[53]; 
+                str = BytesUtils.Bytes2HexString(data, 54);
+
+                if (str.ToLower().Equals("ffff"))
+                {
+                    analogInput3 = -999;
+                }
+                else
+                {
+                    try
+                    {
+                        analogInput3 = (float)Convert.ToDouble(String.Format("%d.%s", Convert.ToInt32(str.Substring(0, 2)), str.Substring(2, 4)));
+                    }
+                    catch (Exception e)
+                    {
+                        //            e.printStackTrace();
+                    }
+                }
+
+                 
+                rpm = BytesUtils.Bytes2Short(data, 56);
+
+            }
             message.OrignBytes = bytes;
             message.SerialNo = serialNo;
             message.Imei = imei;
@@ -1289,8 +1320,14 @@ namespace TopflytechCodec
             message.IopIgnition = iopIgnition;
             message.IopPowerCutOff = iopPowerCutOff;
             message.IopACOn = iopACOn;
+            message.Output12V = output12V;
+            message.Output2 = output2;
+            message.Output3 = output3;
+            message.OutputVout = outputVout;
             message.AnalogInput1 = analoginput;
             message.AnalogInput2 = analoginput2;
+            message.AnalogInput3 = analogInput3;
+            message.Rpm = rpm;
             message.OriginalAlarmCode = originalAlarmCode;
             message.Alarm = Event.getEvent(alarmByte);
             message.Mileage = mileage;

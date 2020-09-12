@@ -465,5 +465,36 @@ namespace TopflytechCodec.Entities
             get { return smartPowerOpenStatus; }
             set { smartPowerOpenStatus = value; }
         }
+
+        private int output2;
+        public int Output2
+        {
+            get { return output2; }
+            set { output2 = value; }
+        }
+        private int output3;
+        public int Output3
+        {
+            get { return output3; }
+            set { output3 = value; }
+        }
+        private int output12V;
+        public int Output12V
+        {
+            get { return output12V; }
+            set { output12V = value; }
+        }
+        private int outputVout;
+        public int OutputVout
+        {
+            get { return outputVout; }
+            set { outputVout = value; }
+        }
+        private float analogInput3 = 0f;
+        public float AnalogInput3
+        {
+            get { return analogInput3; }
+            set { analogInput3 = value; }
+        }
     }
 }

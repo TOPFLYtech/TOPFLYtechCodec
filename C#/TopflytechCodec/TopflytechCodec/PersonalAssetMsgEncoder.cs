@@ -36,7 +36,11 @@ namespace TopflytechCodec
             byte[] command = { 0x27, 0x27, 0x04 };
             return Encoder.getLocationAlarmMsgReply(imei, needSerialNo, serialNo, sourceAlarmCode, command, encryptType, aesKey);
         }
-
+        public byte[] getBluetoothPeripheralMsgReply(String imei, int serialNo)
+        {
+            byte[] command = { 0x27, 0x27, 0x10 };
+            return Encoder.getBluetoothPeripheralDataMsgReply(imei, serialNo, command, encryptType, aesKey);
+        }
         public byte[] getBrocastSmsMsg(String imei, String content)
         {
             byte[] command = { 0x27, 0x27, (byte)0x81 };
@@ -53,6 +57,6 @@ namespace TopflytechCodec
         {
             byte[] command = { 0x27, 0x27, (byte)0x81 };
             return Encoder.getConfigSettingMsg(imei, content, command, encryptType, aesKey);
-        }
+        } 
     }
 }

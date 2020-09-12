@@ -438,6 +438,13 @@ namespace _880XServerDemo
                 RS232Message rs232Message = (RS232Message)message;
                 ShowMsg("receive RS232 message :" + rs232Message.Imei);
             }
+            else if (message is BluetoothPeripheralDataMessage)
+            {
+                BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = (BluetoothPeripheralDataMessage)message;
+                ShowMsg("receive bluetooth peripheral data message:" + bluetoothPeripheralDataMessage.Imei);
+                byte[] reply = personalEncoder.getBluetoothPeripheralMsgReply(bluetoothPeripheralDataMessage.Imei, bluetoothPeripheralDataMessage.SerialNo);
+                dict[strClientKey].Send(reply);
+            }
         }
 
         public String getGpsDriverBehaviorDescription(int behaviorType){
