@@ -1703,7 +1703,8 @@ class Encoder:
 
     @staticmethod
     def encodeConfig(imei,useSerialNo,serialNo,command,protocol,content):
-        command.extend([0x00,0x10])
+        length = 15 + len(content)
+        command.extend(short2Bytes(length))
         if useSerialNo:
             command.extend(short2Bytes(serialNo))
         else:
@@ -3139,7 +3140,7 @@ class PersonalAssetMsgDecoder:
     NETWORK_INFO_DATA = [0x27, 0x27, 0x05]
 
     BLUETOOTH_DATA = [0x27, 0x27, 0x10]
-
+    CONFIG = [0x27, 0x27, 0x81]
     encryptType = 0
     esKey = ""
 
@@ -3154,7 +3155,7 @@ class PersonalAssetMsgDecoder:
 
     def match (self,byteArray):
         return byteArray == self.SIGNUP or byteArray == self.DATA or byteArray == self.HEARTBEAT \
-               or byteArray == self.ALARM or byteArray == self.NETWORK_INFO_DATA or byteArray == self.BLUETOOTH_DATA
+               or byteArray == self.ALARM or byteArray == self.NETWORK_INFO_DATA or byteArray == self.BLUETOOTH_DATA or byteArray == self.CONFIG
 
 
     decoderBuf = TopflytechByteBuf()
@@ -3210,8 +3211,42 @@ class PersonalAssetMsgDecoder:
                 return self.parseBluetoothDataMessage(byteArray)
             elif byteArray[2] == 0x81:
                 return self.parseInteractMessage(byteArray)
+            elif byteArray[2] == 0x81:
+                return self.parseInteractMessage(byteArray)
             else:
                 return None
+        return None
+
+
+    def parseInteractMessage(self,byteArray):
+        serialNo = bytes2Short(byteArray,5)
+        imei = decodeImei(byteArray,7)
+        protocol = byteArray[15]
+        data = byteArray[16:]
+        if protocol == 0x01:
+            messageData = ''.join(chr(i) for i in data).decode("UTF-16LE")
+            configMessage = ConfigMessage()
+            configMessage.serialNo = serialNo
+            configMessage.imei = imei
+            configMessage.configContent = messageData
+            configMessage.orignBytes = byteArray
+            return configMessage
+        elif protocol == 0x03:
+            messageData = ''.join(chr(i) for i in data).decode("UTF-16LE")
+            forwardMessage = ForwardMessage()
+            forwardMessage.serialNo = serialNo
+            forwardMessage.imei = imei
+            forwardMessage.content = messageData
+            forwardMessage.orignBytes = byteArray
+            return forwardMessage
+        elif protocol == 0x05:
+            messageData = ''.join(chr(i) for i in data).decode("UTF-16lE")
+            ussdMessage = USSDMessage()
+            ussdMessage.serialNo = serialNo
+            ussdMessage.imei = imei
+            ussdMessage.content = messageData
+            ussdMessage.orignBytes = byteArray
+            return ussdMessage
         return None
 
     def parseSignInMessage(self,byteArray):
