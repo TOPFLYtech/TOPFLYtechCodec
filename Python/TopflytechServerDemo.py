@@ -81,48 +81,82 @@ personalEncoder = PersonalAssetMsgEncoder(MessageEncryptType.NONE,"")
 
 def dealObdDeviceMessage(message,socketClient):
     if isinstance(message,SignInMessage):
-        print "receive signInMessage: " + message.imei
+        print ("receive signInMessage: " + message.imei)
+        # if message.isNeedResp:
+        #     reply = t880xdEncoder.getSignInMsgReply(message.imei,True,message.serialNo)
+        #     socketClient.send(reply)
         reply = t880xdEncoder.getSignInMsgReply(message.imei,True,message.serialNo)
         socketClient.send(reply)
     elif isinstance(message,HeartbeatMessage):
-        print "receive heartbeatMessage" + message.imei
+        print ("receive heartbeatMessage" + message.imei)
+        # if message.isNeedResp:
+        #     reply = t880xdEncoder.getHeartbeatMsgReply(message.imei,True,message.serialNo)
+        #     socketClient.send(reply)
         reply = t880xdEncoder.getHeartbeatMsgReply(message.imei,True,message.serialNo)
         socketClient.send(reply)
     elif isinstance(message,LocationInfoMessage):
-        print "receive locationInfoMessage" + message.imei
+        print ("receive locationInfoMessage" + message.imei)
+        # if message.isNeedResp:
+        #     reply = t880xdEncoder.getLocationMsgReply(message.imei,True,message.serialNo)
+        #     socketClient.send(reply)
+        reply = t880xdEncoder.getLocationMsgReply(message.imei,True,message.serialNo)
+        socketClient.send(reply)
     elif isinstance(message,LocationAlarmMessage):
-        print "receive locationAlarmMessage" + message.imei + "Alarm is : " + getEventDescription(message.alarm)
+        print ("receive locationAlarmMessage" + message.imei + "Alarm is : " + getEventDescription(message.alarm))
         # some new model device,need serial no,reply this message
+        # if message.isNeedResp:
+        #     reply = t880xdEncoder.getLocationAlarmMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode)
+        #     socketClient.send(reply)
         reply = t880xdEncoder.getLocationAlarmMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode)
         socketClient.send(reply)
     elif isinstance(message,GpsDriverBehaviorMessage):
-        print "receive gpsDriverBehaviorMessage" + message.imei + " behavior is :" + getGpsDriverBehaviorDescription(message.behaviorType)
+        print ("receive gpsDriverBehaviorMessage" + message.imei + " behavior is :" + getGpsDriverBehaviorDescription(message.behaviorType))
+        # if message.isNeedResp:
+        #     reply = t880xdEncoder.getGpsDriverBehaviorMsgReply(message.imei,True,message.serialNo)
+        #     socketClient.send(reply)
         reply = t880xdEncoder.getGpsDriverBehaviorMsgReply(message.imei,True,message.serialNo)
         socketClient.send(reply)
     elif isinstance(message,AccelerationDriverBehaviorMessage):
-        print "receive accelerationDriverBehaviorMessage" + message.imei + " behavior is :" + getGpsDriverBehaviorDescription(message.behaviorType)
+        print ("receive accelerationDriverBehaviorMessage" + message.imei + " behavior is :" + getGpsDriverBehaviorDescription(message.behaviorType))
+        # if message.isNeedResp:
+        #     reply = t880xdEncoder.getAccelerationDriverBehaviorMsgReply(message.imei,True,message.serialNo)
+        #     socketClient.send(reply)
         reply = t880xdEncoder.getAccelerationDriverBehaviorMsgReply(message.imei,True,message.serialNo)
         socketClient.send(reply)
     elif isinstance(message,AccidentAccelerationMessage):
-        print "receive accidentAccelerationMessage" + message.imei
+        print ("receive accidentAccelerationMessage" + message.imei)
+        # if message.isNeedResp:
+        #     reply = t880xdEncoder.getAccelerationAlarmMsgReply(message.imei,True,message.serialNo)
+        #     socketClient.send(reply)
         reply = t880xdEncoder.getAccelerationAlarmMsgReply(message.imei,True,message.serialNo)
         socketClient.send(reply)
     elif isinstance(message,ConfigMessage):
-        print "receive configMessage: " + message.imei + " : " + message.configContent
+        print ("receive configMessage: " + message.imei + " : " + message.configContent)
     elif isinstance(message,ForwardMessage):
-        print "receive forwardMessage: " + message.imei + " : " + message.content
+        print ("receive forwardMessage: " + message.imei + " : " + message.content)
     elif isinstance(message,USSDMessage):
-        print "receive forwardMessage: " + message.imei + " : " + message.content
+        print ("receive forwardMessage: " + message.imei + " : " + message.content)
     elif isinstance(message,ObdMessage):
-        print "receive OBD Message: " + message.imei
+        print ("receive OBD Message: " + message.imei)
+        # if message.isNeedResp:
+        #     reply = t880xdEncoder.getObdMsgReply(message.imei,True,message.serialNo)
+        #     socketClient.send(reply)
         reply = t880xdEncoder.getObdMsgReply(message.imei,True,message.serialNo)
         socketClient.send(reply)
     elif isinstance(message,BluetoothPeripheralDataMessage):
-        print "receive blue Message: " + message.imei
+        print ("receive blue Message: " + message.imei)
+        # if message.isNeedResp:
+        #     reply = t880xdEncoder.getBluetoothPeripheralMsgReply(message.imei,True,message.serialNo)
+        #     socketClient.send(reply)
         reply = t880xdEncoder.getBluetoothPeripheralMsgReply(message.imei,True,message.serialNo)
         socketClient.send(reply)
     elif isinstance(message,NetworkInfoMessage):
-        print "receive network info Message: " + message.imei
+        print ("receive network info Message: " + message.imei)
+        # if message.isNeedResp:
+        #     reply = t880xdEncoder.getNetworkMsgReply(message.imei,True,message.serialNo)
+        #     socketClient.send(reply)
+        reply = t880xdEncoder.getNetworkMsgReply(message.imei,True,message.serialNo)
+        socketClient.send(reply)
 
 
 def dealNoObdDeviceMessage(message,socketClient):
@@ -133,52 +167,86 @@ def dealNoObdDeviceMessage(message,socketClient):
     :return:
     """
     if isinstance(message,SignInMessage):
-        print "receive signInMessage: " + message.imei
+        print ("receive signInMessage: " + message.imei)
         #8806 Plus or some new model device,need serial no,reply this message
+        # if message.isNeedResp:
+        #     reply = t880xPlusEncoder.getSignInMsgReply(message.imei,True,message.serialNo)
+        #     socketClient.send(reply)
         reply = t880xPlusEncoder.getSignInMsgReply(message.imei,True,message.serialNo)
         socketClient.send(reply)
     elif isinstance(message,HeartbeatMessage):
-        print "receive heartbeatMessage" + message.imei
+        print ("receive heartbeatMessage" + message.imei)
         #8806 Plus or some new model device,need serial no,reply this message
+        # if message.isNeedResp:
+        #     reply = t880xPlusEncoder.getHeartbeatMsgReply(message.imei,True,message.serialNo)
+        #     socketClient.send(reply)
         reply = t880xPlusEncoder.getHeartbeatMsgReply(message.imei,True,message.serialNo)
         socketClient.send(reply)
     elif isinstance(message,LocationInfoMessage):
-        print "receive locationInfoMessage" + message.imei
+        print ("receive locationInfoMessage" + message.imei)
         #8806 Plus or some new model device, these is the code of 8806 plus.
+        # if message.isNeedResp:
+        #     reply = t880xPlusEncoder.getLocationMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode,message.protocolHeadType)
+        #     socketClient.send(reply)
+        reply = t880xPlusEncoder.getLocationMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode,message.protocolHeadType)
+        socketClient.send(reply)
     elif isinstance(message,LocationAlarmMessage):
-        print "receive locationAlarmMessage" + message.imei + "Alarm is : " + getEventDescription(message.alarm)
+        print ("receive locationAlarmMessage" + message.imei + "Alarm is : " + getEventDescription(message.alarm))
         #8806 Plus or some new model device,need serial no,reply this message
-        reply = t880xPlusEncoder.getLocationAlarmMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode)
+        # if message.isNeedResp:
+        #     reply = t880xPlusEncoder.getLocationAlarmMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode,message.protocolHeadType)
+        #     socketClient.send(reply)
+        reply = t880xPlusEncoder.getLocationAlarmMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode,message.protocolHeadType)
         socketClient.send(reply)
     elif isinstance(message,GpsDriverBehaviorMessage):
-        print "receive gpsDriverBehaviorMessage" + message.imei + " behavior is :" + getGpsDriverBehaviorDescription(message.behaviorType)
+        print ("receive gpsDriverBehaviorMessage" + message.imei + " behavior is :" + getGpsDriverBehaviorDescription(message.behaviorType))
+        # if message.isNeedResp:
+        #     reply = t880xPlusEncoder.getGpsDriverBehaviorMsgReply(message.imei,True,message.serialNo)
+        #     socketClient.send(reply)
         reply = t880xPlusEncoder.getGpsDriverBehaviorMsgReply(message.imei,True,message.serialNo)
         socketClient.send(reply)
     elif isinstance(message,AccelerationDriverBehaviorMessage):
-        print "receive accelerationDriverBehaviorMessage" + message.imei + " behavior is :" + getGpsDriverBehaviorDescription(message.behaviorType)
+        print ("receive accelerationDriverBehaviorMessage" + message.imei + " behavior is :" + getGpsDriverBehaviorDescription(message.behaviorType))
+        # if message.isNeedResp:
+        #     reply = t880xPlusEncoder.getAccelerationDriverBehaviorMsgReply(message.imei,True,message.serialNo)
+        #     socketClient.send(reply)
         reply = t880xPlusEncoder.getAccelerationDriverBehaviorMsgReply(message.imei,True,message.serialNo)
         socketClient.send(reply)
     elif isinstance(message,AccidentAccelerationMessage):
-        print "receive accidentAccelerationMessage" + message.imei
+        print ("receive accidentAccelerationMessage" + message.imei)
         #8806 Plus or some new model device,need serial no,reply this message
+        # if message.isNeedResp:
+        #     reply = t880xPlusEncoder.getAccelerationAlarmMsgReply(message.imei,True,message.serialNo)
+        #     socketClient.send(reply)
         reply = t880xPlusEncoder.getAccelerationAlarmMsgReply(message.imei,True,message.serialNo)
         socketClient.send(reply)
     elif isinstance(message,ConfigMessage):
-        print "receive configMessage: " + message.imei + " : " + message.configContent
+        print ("receive configMessage: " + message.imei + " : " + message.configContent)
     elif isinstance(message,ForwardMessage):
-        print "receive forwardMessage: " + message.imei + " : " + message.content
+        print ("receive forwardMessage: " + message.imei + " : " + message.content)
     elif isinstance(message,USSDMessage):
-        print "receive forwardMessage: " + message.imei + " : " + message.content
+        print ("receive forwardMessage: " + message.imei + " : " + message.content)
     elif isinstance(message,RS232Message):
-        print "receive RS232 Message: " + message.imei
+        print ("receive RS232 Message: " + message.imei)
+        # if message.isNeedResp:
+        #     reply = t880xPlusEncoder.getRS232MsgReply(message.imei,True,message.serialNo)
+        #     socketClient.send(reply)
         reply = t880xPlusEncoder.getRS232MsgReply(message.imei,True,message.serialNo)
         socketClient.send(reply)
     elif isinstance(message,BluetoothPeripheralDataMessage):
-        print "receive blue Message: " + message.imei
-        reply = t880xPlusEncoder.getBluetoothPeripheralMsgReply(message.imei,True,message.serialNo)
+        print ("receive blue Message: " + message.imei)
+        # if message.isNeedResp:
+        #     reply = t880xPlusEncoder.getBluetoothPeripheralMsgReply(message.imei,True,message.serialNo,message.protocolHeadType)
+        #     socketClient.send(reply)
+        reply = t880xPlusEncoder.getBluetoothPeripheralMsgReply(message.imei,True,message.serialNo,message.protocolHeadType)
         socketClient.send(reply)
     elif isinstance(message,NetworkInfoMessage):
-        print "receive network info Message: " + message.imei
+        print ("receive network info Message: " + message.imei)
+        # if message.isNeedResp:
+        #     reply = t880xPlusEncoder.getNetworkMsgReply(message.imei,True,message.serialNo)
+        #     socketClient.send(reply)
+        reply = t880xPlusEncoder.getNetworkMsgReply(message.imei,True,message.serialNo)
+        socketClient.send(reply)
 
 def dealPersonalDeviceMessage(message,socketClient):
     """
@@ -188,33 +256,53 @@ def dealPersonalDeviceMessage(message,socketClient):
     :return:
     """
     if isinstance(message,SignInMessage):
-        print "receive signInMessage: " + message.imei
+        print ("receive signInMessage: " + message.imei)
+        # if message.isNeedResp:
+        #     reply = personalEncoder.getSignInMsgReply(message.imei,True,message.serialNo)
+        #     socketClient.send(reply)
         reply = personalEncoder.getSignInMsgReply(message.imei,True,message.serialNo)
         socketClient.send(reply)
-        reply = personalEncoder.getConfigSettingMsg(message.imei,"config#")
-        socketClient.send(reply)
     elif isinstance(message,HeartbeatMessage):
-        print "receive heartbeatMessage" + message.imei
+        print ("receive heartbeatMessage" + message.imei)
+        # if message.isNeedResp:
+        #     reply = personalEncoder.getHeartbeatMsgReply(message.imei,True,message.serialNo)
+        #     socketClient.send(reply)
         reply = personalEncoder.getHeartbeatMsgReply(message.imei,True,message.serialNo)
         socketClient.send(reply)
     elif isinstance(message,LocationInfoMessage):
-        print "receive locationInfoMessage" + message.imei
+        print ("receive locationInfoMessage" + message.imei)
+        # if message.isNeedResp:
+        #     reply = personalEncoder.getLocationMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode)
+        #     socketClient.send(reply)
+        reply = personalEncoder.getLocationMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode)
+        socketClient.send(reply)
     elif isinstance(message,LocationAlarmMessage):
-        print "receive locationAlarmMessage" + message.imei + "Alarm is : " + getEventDescription(message.alarm)
+        print ("receive locationAlarmMessage" + message.imei + "Alarm is : " + getEventDescription(message.alarm))
+        # if message.isNeedResp:
+        #     reply = personalEncoder.getLocationAlarmMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode)
+        #     socketClient.send(reply)
         reply = personalEncoder.getLocationAlarmMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode)
         socketClient.send(reply)
     elif isinstance(message,ConfigMessage):
-        print "receive configMessage: " + message.imei + " : " + message.configContent
+        print ("receive configMessage: " + message.imei + " : " + message.configContent)
     elif isinstance(message,ForwardMessage):
-        print "receive forwardMessage: " + message.imei + " : " + message.content
+        print ("receive forwardMessage: " + message.imei + " : " + message.content)
     elif isinstance(message,USSDMessage):
-        print "receive forwardMessage: " + message.imei + " : " + message.content
+        print ("receive forwardMessage: " + message.imei + " : " + message.content)
     elif isinstance(message,BluetoothPeripheralDataMessage):
-        print "receive blue Message: " + message.imei
+        print ("receive blue Message: " + message.imei)
+        # if message.isNeedResp:
+        #     reply = personalEncoder.getBluetoothPeripheralMsgReply(message.imei,True,message.serialNo)
+        #     socketClient.send(reply)
         reply = personalEncoder.getBluetoothPeripheralMsgReply(message.imei,True,message.serialNo)
         socketClient.send(reply)
     elif isinstance(message,NetworkInfoMessage):
-        print "receive network info Message: " + message.imei
+        print ("receive network info Message: " + message.imei)
+        # if message.isNeedResp:
+        #     reply = personalEncoder.getNetworkMsgReply(message.imei,True,message.serialNo)
+        #     socketClient.send(reply)
+        reply = personalEncoder.getNetworkMsgReply(message.imei,True,message.serialNo)
+        socketClient.send(reply)
 
 if __name__ == "__main__":
     HOST, PORT = "192.168.1.8", 1001
@@ -229,7 +317,7 @@ if __name__ == "__main__":
         print("\nConnection received from %s" % str(addr))
         decoder = Decoder(MessageEncryptType.NONE,"")
         # decoder = ObdDecoder(MessageEncryptType.NONE,"")
-        decoder = PersonalAssetMsgDecoder(MessageEncryptType.NONE,"")
+        # decoder = PersonalAssetMsgDecoder(MessageEncryptType.NONE,"")
         while True:
             data = c.recv(2048)
             if not data:
@@ -238,9 +326,9 @@ if __name__ == "__main__":
 
             messageList = decoder.decode(data)
             for message in messageList:
-                # dealNoObdDeviceMessage(message,c)
+                dealNoObdDeviceMessage(message,c)
                 # dealObdDeviceMessage(message,c)
-                dealPersonalDeviceMessage(message,c)
+                # dealPersonalDeviceMessage(message,c)
 
         c.close()
 

@@ -57,6 +57,13 @@ namespace TopflytechCodec
         {
             byte[] command = { 0x27, 0x27, (byte)0x81 };
             return Encoder.getConfigSettingMsg(imei, content, command, encryptType, aesKey);
-        } 
+        }
+
+
+        public byte[] getNetworkMsgReply(String imei, int serialNo)
+        {
+            byte[] command = { 0x27, 0x27, 0x11 };
+            return Encoder.getNetworkMsgReply(imei, serialNo, command, encryptType, aesKey);
+        }
     }
 }

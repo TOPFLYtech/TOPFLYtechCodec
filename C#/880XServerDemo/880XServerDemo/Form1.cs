@@ -199,6 +199,11 @@ namespace _880XServerDemo
                 SignInMessage signInMessage = (SignInMessage)message;
                 ShowMsg("receive signIn Message imei :" + signInMessage.Imei + " serial no: " + signInMessage.SerialNo + " firmware :" + signInMessage.Firmware + " software: " + signInMessage.Software + "platform:" + signInMessage.Platform);
                 //8806 Plus or some new model device,need serial no,reply this message
+                //if (signInMessage.IsNeedResp)
+                //{
+                //    byte[] reply = t880xPlusEncoder.getSignInMsgReply(signInMessage.Imei, true, signInMessage.SerialNo);
+                //    dict[strClientKey].Send(reply); 
+                //}
                 byte[] reply = t880xPlusEncoder.getSignInMsgReply(signInMessage.Imei, true, signInMessage.SerialNo);
                 dict[strClientKey].Send(reply); 
             }
@@ -207,6 +212,10 @@ namespace _880XServerDemo
                 HeartbeatMessage heartbeatMessage = (HeartbeatMessage)message;
                 ShowMsg("receive heartbeat Message imei :" + heartbeatMessage.Imei + " serial no: " + heartbeatMessage.SerialNo);
                 //8806 Plus or some new model device,need serial no,reply this message
+                //if (heartbeatMessage.IsNeedResp) {
+                //    byte[] reply = t880xPlusEncoder.getHeartbeatMsgReply(heartbeatMessage.Imei, true, heartbeatMessage.SerialNo);
+                //    dict[strClientKey].Send(reply);
+                //}
                 byte[] reply = t880xPlusEncoder.getHeartbeatMsgReply(heartbeatMessage.Imei, true, heartbeatMessage.SerialNo);
                 dict[strClientKey].Send(reply);
             }
@@ -216,8 +225,13 @@ namespace _880XServerDemo
                 ShowMsg("receive location Info Message imei :" + locationInfoMessage.Imei + " serial no: " + locationInfoMessage.SerialNo);
                 ShowMsg("lat:" + locationInfoMessage.Latitude + " lng:" + locationInfoMessage.Longitude);
                 //8806 Plus or some new model device, these is the code of 8806 plus.
-                //byte[] reply = t880xPlusEncoder.getLocationMsgReply(locationInfoMessage.Imei, true, locationInfoMessage.SerialNo);
-                //dict[strClientKey].Send(reply);
+                //if (message.IsNeedResp)
+                //{
+                //    byte[] reply = t880xPlusEncoder.getLocationMsgReply(locationInfoMessage.Imei, true, locationInfoMessage.SerialNo, message.ProtocolHeadType);
+                //    dict[strClientKey].Send(reply);
+                //}
+                byte[] reply = t880xPlusEncoder.getLocationMsgReply(locationInfoMessage.Imei, true, locationInfoMessage.SerialNo, message.ProtocolHeadType);
+                dict[strClientKey].Send(reply);
             }
             else if (message is TopflytechCodec.Entities.LocationAlarmMessage)
             {
@@ -225,7 +239,12 @@ namespace _880XServerDemo
                 ShowMsg("receive location alarm Message imei :" + locationAlarmMessage.Imei + " serial no: " + locationAlarmMessage.SerialNo + " Alarm is : " + getEventDescription(locationAlarmMessage.Alarm));
                 ShowMsg("lat:" + locationAlarmMessage.Latitude + " lng:" + locationAlarmMessage.Longitude);
                 //8806 Plus or some new model device,need serial no,reply this message
-                byte[] reply = t880xPlusEncoder.getLocationAlarmMsgReply(locationAlarmMessage.Imei, true, locationAlarmMessage.SerialNo, locationAlarmMessage.OriginalAlarmCode);
+                //if (message.IsNeedResp)
+                //{
+                //    byte[] reply = t880xPlusEncoder.getLocationAlarmMsgReply(locationAlarmMessage.Imei, true, locationAlarmMessage.SerialNo, locationAlarmMessage.OriginalAlarmCode, message.ProtocolHeadType);
+                //    dict[strClientKey].Send(reply);
+                //}
+                byte[] reply = t880xPlusEncoder.getLocationAlarmMsgReply(locationAlarmMessage.Imei, true, locationAlarmMessage.SerialNo, locationAlarmMessage.OriginalAlarmCode, message.ProtocolHeadType);
                 dict[strClientKey].Send(reply);
             }
             else if(message is  GpsDriverBehaviorMessage){
@@ -233,6 +252,11 @@ namespace _880XServerDemo
                 ShowMsg("receive gps driver behavior message :" + gpsDriverBehaviorMessage.Imei);
                 ShowMsg("behavior is :" + getGpsDriverBehaviorDescription(gpsDriverBehaviorMessage.BehaviorType));
                 //8806 Plus or some new model device,need serial no,reply this message
+                //if (message.IsNeedResp)
+                //{
+                //    byte[] reply = t880xPlusEncoder.getGpsDriverBehaviorMsgReply(gpsDriverBehaviorMessage.Imei, gpsDriverBehaviorMessage.SerialNo);
+                //    dict[strClientKey].Send(reply); 
+                //}
                 byte[] reply = t880xPlusEncoder.getGpsDriverBehaviorMsgReply(gpsDriverBehaviorMessage.Imei, gpsDriverBehaviorMessage.SerialNo);
                 dict[strClientKey].Send(reply); 
             }
@@ -245,12 +269,23 @@ namespace _880XServerDemo
                 ShowMsg("receive acceleration driver behavior message :" + accelerationDriverBehaviorMessage.Imei);
                 ShowMsg("behavior is :" + getGpsDriverBehaviorDescription(accelerationDriverBehaviorMessage.BehaviorType));
                 //8806 Plus or some new model device,need serial no,reply this message
+                //if (message.IsNeedResp)
+                //{
+                //    byte[] reply = t880xPlusEncoder.getAccelerationDriverBehaviorMsgReply(accelerationDriverBehaviorMessage.Imei, accelerationDriverBehaviorMessage.SerialNo);
+                //    dict[strClientKey].Send(reply);
+                //}
                 byte[] reply = t880xPlusEncoder.getAccelerationDriverBehaviorMsgReply(accelerationDriverBehaviorMessage.Imei, accelerationDriverBehaviorMessage.SerialNo);
                 dict[strClientKey].Send(reply);
+                
             }else if (message is TopflytechCodec.Entities.AccidentAccelerationMessage){
                 AccidentAccelerationMessage accidentAccelerationMessage = (AccidentAccelerationMessage)message;
                 ShowMsg("receive accident acceleration message :" + accidentAccelerationMessage.Imei);
                 //8806 Plus or some new model device,need serial no,reply this message
+                //if (message.IsNeedResp)
+                //{
+                //    byte[] reply = t880xPlusEncoder.getAccelerationAlarmMsgReply(accidentAccelerationMessage.Imei, accidentAccelerationMessage.SerialNo);
+                //    dict[strClientKey].Send(reply);
+                //}
                 byte[] reply = t880xPlusEncoder.getAccelerationAlarmMsgReply(accidentAccelerationMessage.Imei, accidentAccelerationMessage.SerialNo);
                 dict[strClientKey].Send(reply);
             }
@@ -258,13 +293,25 @@ namespace _880XServerDemo
             {
                 BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = (BluetoothPeripheralDataMessage)message;
                 ShowMsg("receive bluetooth peripheral data message:" + bluetoothPeripheralDataMessage.Imei);
-                byte[] reply = t880xPlusEncoder.getBluetoothPeripheralMsgReply(bluetoothPeripheralDataMessage.Imei, bluetoothPeripheralDataMessage.SerialNo);
+                //if (message.IsNeedResp)
+                //{
+                //    byte[] reply = t880xPlusEncoder.getBluetoothPeripheralMsgReply(bluetoothPeripheralDataMessage.Imei, bluetoothPeripheralDataMessage.SerialNo, bluetoothPeripheralDataMessage.ProtocolHeadType);
+                //    dict[strClientKey].Send(reply);
+                //}
+                byte[] reply = t880xPlusEncoder.getBluetoothPeripheralMsgReply(bluetoothPeripheralDataMessage.Imei, bluetoothPeripheralDataMessage.SerialNo, bluetoothPeripheralDataMessage.ProtocolHeadType);
                 dict[strClientKey].Send(reply);
             }
             else if (message is NetworkInfoMessage)
             {
                 NetworkInfoMessage networkInfoMessage = (NetworkInfoMessage)message;
                 ShowMsg("receive network info message :" + networkInfoMessage.Imei);
+                //if (message.IsNeedResp)
+                //{
+                //    byte[] reply = t880xPlusEncoder.getNetworkMsgReply(networkInfoMessage.Imei, networkInfoMessage.SerialNo);
+                //    dict[strClientKey].Send(reply);
+                //}
+                byte[] reply = t880xPlusEncoder.getNetworkMsgReply(networkInfoMessage.Imei, networkInfoMessage.SerialNo);
+                dict[strClientKey].Send(reply);
             }
             else if (message is ForwardMessage)
             {
@@ -279,7 +326,15 @@ namespace _880XServerDemo
             else if (message is RS232Message)
             {
                 RS232Message rs232Message = (RS232Message)message;
-                ShowMsg("receive RS232 message :" + rs232Message.Imei); 
+                ShowMsg("receive RS232 message :" + rs232Message.Imei);
+                //if (message.IsNeedResp)
+                //{
+
+                //    byte[] reply = t880xPlusEncoder.getRS232MsgReply(rs232Message.Imei, rs232Message.SerialNo);
+                //    dict[strClientKey].Send(reply);
+                //}
+                byte[] reply = t880xPlusEncoder.getRS232MsgReply(rs232Message.Imei, rs232Message.SerialNo);
+                dict[strClientKey].Send(reply);
             }
         }
 
@@ -291,6 +346,11 @@ namespace _880XServerDemo
                 SignInMessage signInMessage = (SignInMessage)message;
                 ShowMsg("receive signIn Message imei :" + signInMessage.Imei + " serial no: " + signInMessage.SerialNo + " firmware :" + signInMessage.Firmware + " software: " + signInMessage.Software + "platform:" + signInMessage.Platform);
                 //some  model device,need serial no,reply this message
+                //if (message.IsNeedResp)
+                //{
+                //    byte[] reply = t880xdEncoder.getSignInMsgReply(signInMessage.Imei, true, signInMessage.SerialNo);
+                //    dict[strClientKey].Send(reply);
+                //}
                 byte[] reply = t880xdEncoder.getSignInMsgReply(signInMessage.Imei, true, signInMessage.SerialNo);
                 dict[strClientKey].Send(reply);
             }
@@ -299,6 +359,11 @@ namespace _880XServerDemo
                 HeartbeatMessage heartbeatMessage = (HeartbeatMessage)message;
                 ShowMsg("receive heartbeat Message imei :" + heartbeatMessage.Imei + " serial no: " + heartbeatMessage.SerialNo);
                 //some model device,need serial no,reply this message
+                //if (message.IsNeedResp)
+                //{
+                //    byte[] reply = t880xdEncoder.getHeartbeatMsgReply(heartbeatMessage.Imei, true, heartbeatMessage.SerialNo);
+                //    dict[strClientKey].Send(reply);
+                //}
                 byte[] reply = t880xdEncoder.getHeartbeatMsgReply(heartbeatMessage.Imei, true, heartbeatMessage.SerialNo);
                 dict[strClientKey].Send(reply);
             }
@@ -308,8 +373,13 @@ namespace _880XServerDemo
                 ShowMsg("receive location Info Message imei :" + locationInfoMessage.Imei + " serial no: " + locationInfoMessage.SerialNo);
                 ShowMsg("lat:" + locationInfoMessage.Latitude + " lng:" + locationInfoMessage.Longitude);
                 //some model device, these is the code of 8806 plus.
-                //byte[] reply = t880xdEncoder.getLocationMsgReply(locationInfoMessage.Imei, true, locationInfoMessage.SerialNo);
-                //dict[strClientKey].Send(reply);
+                //if (message.IsNeedResp)
+                //{
+                //    byte[] reply = t880xdEncoder.getLocationMsgReply(locationInfoMessage.Imei, true, locationInfoMessage.SerialNo);
+                //    dict[strClientKey].Send(reply);
+                //}
+                byte[] reply = t880xdEncoder.getLocationMsgReply(locationInfoMessage.Imei, true, locationInfoMessage.SerialNo);
+                dict[strClientKey].Send(reply);
             }
             else if (message is TopflytechCodec.Entities.LocationAlarmMessage)
             {
@@ -317,6 +387,11 @@ namespace _880XServerDemo
                 ShowMsg("receive location alarm Message imei :" + locationAlarmMessage.Imei + " serial no: " + locationAlarmMessage.SerialNo + " Alarm is : " + getEventDescription(locationAlarmMessage.Alarm));
                 ShowMsg("lat:" + locationAlarmMessage.Latitude + " lng:" + locationAlarmMessage.Longitude);
                 //some model device,need serial no,reply this message
+                //if (message.IsNeedResp)
+                //{
+                //    byte[] reply = t880xdEncoder.getLocationAlarmMsgReply(locationAlarmMessage.Imei, true, locationAlarmMessage.SerialNo, locationAlarmMessage.OriginalAlarmCode);
+                //    dict[strClientKey].Send(reply);
+                //}
                 byte[] reply = t880xdEncoder.getLocationAlarmMsgReply(locationAlarmMessage.Imei, true, locationAlarmMessage.SerialNo, locationAlarmMessage.OriginalAlarmCode);
                 dict[strClientKey].Send(reply);
             }
@@ -326,6 +401,11 @@ namespace _880XServerDemo
                 ShowMsg("receive gps driver behavior message :" + gpsDriverBehaviorMessage.Imei);
                 ShowMsg("behavior is :" + getGpsDriverBehaviorDescription(gpsDriverBehaviorMessage.BehaviorType));
                 //some model device,need serial no,reply this message
+                //if (message.IsNeedResp)
+                //{
+                //    byte[] reply = t880xdEncoder.getGpsDriverBehaviorMsgReply(gpsDriverBehaviorMessage.Imei, gpsDriverBehaviorMessage.SerialNo);
+                //    dict[strClientKey].Send(reply);
+                //}
                 byte[] reply = t880xdEncoder.getGpsDriverBehaviorMsgReply(gpsDriverBehaviorMessage.Imei, gpsDriverBehaviorMessage.SerialNo);
                 dict[strClientKey].Send(reply);
             }
@@ -340,6 +420,11 @@ namespace _880XServerDemo
                 ShowMsg("receive acceleration driver behavior message :" + accelerationDriverBehaviorMessage.Imei);
                 ShowMsg("behavior is :" + getGpsDriverBehaviorDescription(accelerationDriverBehaviorMessage.BehaviorType));
                 //some model device,need serial no,reply this message
+                //if (message.IsNeedResp)
+                //{
+                //    byte[] reply = t880xdEncoder.getAccelerationDriverBehaviorMsgReply(accelerationDriverBehaviorMessage.Imei, accelerationDriverBehaviorMessage.SerialNo);
+                //    dict[strClientKey].Send(reply);
+                //}
                 byte[] reply = t880xdEncoder.getAccelerationDriverBehaviorMsgReply(accelerationDriverBehaviorMessage.Imei, accelerationDriverBehaviorMessage.SerialNo);
                 dict[strClientKey].Send(reply);
             }
@@ -348,6 +433,11 @@ namespace _880XServerDemo
                 AccidentAccelerationMessage accidentAccelerationMessage = (AccidentAccelerationMessage)message;
                 ShowMsg("receive accident acceleration message :" + accidentAccelerationMessage.Imei);
                 //some model device,need serial no,reply this message
+                //if (message.IsNeedResp)
+                //{
+                //    byte[] reply = t880xdEncoder.getAccelerationAlarmMsgReply(accidentAccelerationMessage.Imei, accidentAccelerationMessage.SerialNo);
+                //    dict[strClientKey].Send(reply);
+                //}
                 byte[] reply = t880xdEncoder.getAccelerationAlarmMsgReply(accidentAccelerationMessage.Imei, accidentAccelerationMessage.SerialNo);
                 dict[strClientKey].Send(reply);
             }
@@ -355,6 +445,11 @@ namespace _880XServerDemo
             {
                 BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = (BluetoothPeripheralDataMessage)message;
                 ShowMsg("receive bluetooth peripheral data message:" + bluetoothPeripheralDataMessage.Imei);
+                //if (message.IsNeedResp)
+                //{
+                //    byte[] reply = t880xdEncoder.getBluetoothPeripheralMsgReply(bluetoothPeripheralDataMessage.Imei, bluetoothPeripheralDataMessage.SerialNo);
+                //    dict[strClientKey].Send(reply);
+                //}
                 byte[] reply = t880xdEncoder.getBluetoothPeripheralMsgReply(bluetoothPeripheralDataMessage.Imei, bluetoothPeripheralDataMessage.SerialNo);
                 dict[strClientKey].Send(reply);
             }
@@ -362,6 +457,13 @@ namespace _880XServerDemo
             {
                 NetworkInfoMessage networkInfoMessage = (NetworkInfoMessage)message;
                 ShowMsg("receive network info message :" + networkInfoMessage.Imei);
+                //if (message.IsNeedResp)
+                //{
+                //    byte[] reply = t880xdEncoder.getNetworkMsgReply(networkInfoMessage.Imei, networkInfoMessage.SerialNo);
+                //    dict[strClientKey].Send(reply);
+                //}
+                byte[] reply = t880xdEncoder.getNetworkMsgReply(networkInfoMessage.Imei, networkInfoMessage.SerialNo);
+                dict[strClientKey].Send(reply);
             }
             else if (message is ForwardMessage)
             {
@@ -373,11 +475,7 @@ namespace _880XServerDemo
                 USSDMessage ussdMessage = (USSDMessage)message;
                 ShowMsg("receive ussd message :" + ussdMessage.Imei + " : " + ussdMessage.Content);
             }
-            else if (message is RS232Message)
-            {
-                RS232Message rs232Message = (RS232Message)message;
-                ShowMsg("receive RS232 message :" + rs232Message.Imei);
-            }
+           
         }
 
 
@@ -389,6 +487,11 @@ namespace _880XServerDemo
                 SignInMessage signInMessage = (SignInMessage)message;
                 ShowMsg("receive signIn Message imei :" + signInMessage.Imei + " serial no: " + signInMessage.SerialNo + " firmware :" + signInMessage.Firmware + " software: " + signInMessage.Software + "platform:" + signInMessage.Platform);
                 //some model device,need serial no,reply this message
+                //if (message.IsNeedResp)
+                //{
+                //    byte[] reply = personalEncoder.getSignInMsgReply(signInMessage.Imei, true, signInMessage.SerialNo);
+                //    dict[strClientKey].Send(reply);
+                //}
                 byte[] reply = personalEncoder.getSignInMsgReply(signInMessage.Imei, true, signInMessage.SerialNo);
                 dict[strClientKey].Send(reply);
             }
@@ -397,6 +500,12 @@ namespace _880XServerDemo
                 HeartbeatMessage heartbeatMessage = (HeartbeatMessage)message;
                 ShowMsg("receive heartbeat Message imei :" + heartbeatMessage.Imei + " serial no: " + heartbeatMessage.SerialNo);
                 //some model device,need serial no,reply this message
+                //if (message.IsNeedResp)
+                //{
+                //    byte[] reply = personalEncoder.getHeartbeatMsgReply(heartbeatMessage.Imei, true, heartbeatMessage.SerialNo);
+                //    dict[strClientKey].Send(reply);
+
+                //}
                 byte[] reply = personalEncoder.getHeartbeatMsgReply(heartbeatMessage.Imei, true, heartbeatMessage.SerialNo);
                 dict[strClientKey].Send(reply);
             }
@@ -406,8 +515,13 @@ namespace _880XServerDemo
                 ShowMsg("receive location Info Message imei :" + locationInfoMessage.Imei + " serial no: " + locationInfoMessage.SerialNo);
                 ShowMsg("lat:" + locationInfoMessage.Latitude + " lng:" + locationInfoMessage.Longitude);
                 //some model device, these is the code of 8806 plus.
-                //byte[] reply = personalEncoder.getLocationMsgReply(locationInfoMessage.Imei, true, locationInfoMessage.SerialNo);
-                //dict[strClientKey].Send(reply);
+                //if (message.IsNeedResp)
+                //{
+                //    byte[] reply = personalEncoder.getLocationMsgReply(locationInfoMessage.Imei, true, locationInfoMessage.SerialNo);
+                //    dict[strClientKey].Send(reply);
+                //}
+                byte[] reply = personalEncoder.getLocationMsgReply(locationInfoMessage.Imei, true, locationInfoMessage.SerialNo);
+                dict[strClientKey].Send(reply);
             }
             else if (message is TopflytechCodec.Entities.LocationAlarmMessage)
             {
@@ -415,6 +529,11 @@ namespace _880XServerDemo
                 ShowMsg("receive location alarm Message imei :" + locationAlarmMessage.Imei + " serial no: " + locationAlarmMessage.SerialNo + " Alarm is : " + getEventDescription(locationAlarmMessage.Alarm));
                 ShowMsg("lat:" + locationAlarmMessage.Latitude + " lng:" + locationAlarmMessage.Longitude);
                 //some model device,need serial no,reply this message
+                //if (message.IsNeedResp)
+                //{
+                //    byte[] reply = personalEncoder.getLocationAlarmMsgReply(locationAlarmMessage.Imei, true, locationAlarmMessage.SerialNo, locationAlarmMessage.OriginalAlarmCode);
+                //    dict[strClientKey].Send(reply);
+                //}
                 byte[] reply = personalEncoder.getLocationAlarmMsgReply(locationAlarmMessage.Imei, true, locationAlarmMessage.SerialNo, locationAlarmMessage.OriginalAlarmCode);
                 dict[strClientKey].Send(reply);
             }
@@ -422,6 +541,13 @@ namespace _880XServerDemo
             {
                 NetworkInfoMessage networkInfoMessage = (NetworkInfoMessage)message;
                 ShowMsg("receive network info message :" + networkInfoMessage.Imei);
+                //if (message.IsNeedResp)
+                //{
+                //    byte[] reply = personalEncoder.getNetworkMsgReply(networkInfoMessage.Imei, networkInfoMessage.SerialNo);
+                //    dict[strClientKey].Send(reply);
+                //}
+                byte[] reply = personalEncoder.getNetworkMsgReply(networkInfoMessage.Imei, networkInfoMessage.SerialNo);
+                dict[strClientKey].Send(reply);
             }
             else if (message is ForwardMessage)
             {
@@ -432,16 +558,16 @@ namespace _880XServerDemo
             {
                 USSDMessage ussdMessage = (USSDMessage)message;
                 ShowMsg("receive ussd message :" + ussdMessage.Imei + " : " + ussdMessage.Content);
-            }
-            else if (message is RS232Message)
-            {
-                RS232Message rs232Message = (RS232Message)message;
-                ShowMsg("receive RS232 message :" + rs232Message.Imei);
-            }
+            } 
             else if (message is BluetoothPeripheralDataMessage)
             {
                 BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = (BluetoothPeripheralDataMessage)message;
                 ShowMsg("receive bluetooth peripheral data message:" + bluetoothPeripheralDataMessage.Imei);
+                //if (message.IsNeedResp)
+                //{
+                //    byte[] reply = personalEncoder.getBluetoothPeripheralMsgReply(bluetoothPeripheralDataMessage.Imei, bluetoothPeripheralDataMessage.SerialNo);
+                //    dict[strClientKey].Send(reply);
+                //}
                 byte[] reply = personalEncoder.getBluetoothPeripheralMsgReply(bluetoothPeripheralDataMessage.Imei, bluetoothPeripheralDataMessage.SerialNo);
                 dict[strClientKey].Send(reply);
             }

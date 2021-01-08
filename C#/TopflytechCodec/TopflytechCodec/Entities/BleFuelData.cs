@@ -5,22 +5,16 @@ using System.Text;
 
 namespace TopflytechCodec.Entities
 {
-    class BleCtrlData : BleData
+    class BleFuelData : BleData
     {
         private float voltage;
-         
+
         public float Voltage
         {
             get { return voltage; }
             set { voltage = value; }
         }
-        private int batteryPercent;
 
-        public int BatteryPercent
-        {
-            get { return batteryPercent; }
-            set { batteryPercent = value; }
-        }
         private float temp;
 
         public float Temp
@@ -29,13 +23,19 @@ namespace TopflytechCodec.Entities
             set { temp = value; }
         }
 
-        private int ctrlStatus;
-        public int CtrlStatus
+        private int value;
+        public int Value
         {
-            get { return ctrlStatus; }
-            set { ctrlStatus = value; }
+            get { return value; }
+            set { this.value = value; }
         }
-        
+
+        private int alarm;
+        public int Alarm
+        {
+            get { return alarm; }
+            set { alarm = value; }
+        }
 
         private int online;
         public int Online

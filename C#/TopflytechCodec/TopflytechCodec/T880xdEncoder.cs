@@ -128,6 +128,13 @@ namespace TopflytechCodec
             byte[] command = { 0x26, 0x26, (byte)0x82 };
             return Encoder.getObdConfigSettingMsg(imei, content, command, encryptType, aesKey);
         }
+
+        public byte[] getNetworkMsgReply(String imei, int serialNo)
+        {
+            byte[] command = { 0x26, 0x26, 0x11 };
+            return Encoder.getNetworkMsgReply(imei, serialNo, command, encryptType, aesKey);
+        }
+
     }
 
 }

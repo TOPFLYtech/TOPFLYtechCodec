@@ -38,16 +38,16 @@ namespace TopflytechCodec
         }
 
 
-        public byte[] getLocationMsgReply(String imei, bool needSerialNo, int serialNo)
+        public byte[] getLocationMsgReply(String imei, bool needSerialNo, int serialNo, int protocolHeadType)
         {
-            byte[] command = { 0x25, 0x25, 0x02 };
+            byte[] command = { 0x25, 0x25, (byte)protocolHeadType };
             return Encoder.getLocationMsgReply(imei, needSerialNo, serialNo, command, encryptType, aesKey);
         }
 
 
-        public byte[] getLocationAlarmMsgReply(String imei, bool needSerialNo, int serialNo, int sourceAlarmCode)
+        public byte[] getLocationAlarmMsgReply(String imei, bool needSerialNo, int serialNo, int sourceAlarmCode, int protocolHeadType)
         {
-            byte[] command = { 0x25, 0x25, 0x04 };
+            byte[] command = { 0x25, 0x25, (byte)protocolHeadType };
             return Encoder.getLocationAlarmMsgReply(imei, needSerialNo, serialNo, sourceAlarmCode, command, encryptType, aesKey);
         }
 
@@ -74,9 +74,9 @@ namespace TopflytechCodec
         }
 
 
-        public byte[] getBluetoothPeripheralMsgReply(String imei, int serialNo)
+        public byte[] getBluetoothPeripheralMsgReply(String imei, int serialNo, int protocolHeadType)
         {
-            byte[] command = { 0x25, 0x25, 0x10 };
+            byte[] command = { 0x25, 0x25, (byte)protocolHeadType };
             return Encoder.getBluetoothPeripheralDataMsgReply(imei, serialNo, command, encryptType, aesKey);
         }
 
@@ -85,6 +85,11 @@ namespace TopflytechCodec
         {
             byte[] command = { 0x25, 0x25, 0x09 };
             return Encoder.getRS232MsgReply(imei, serialNo, command, encryptType, aesKey);
+        }
+        public byte[] getNetworkMsgReply(String imei, int serialNo)
+        {
+            byte[] command = { 0x25, 0x25, 0x11 };
+            return Encoder.getNetworkMsgReply(imei, serialNo, command, encryptType, aesKey);
         }
 
         public byte[] getConfigSettingMsg(String imei, String content)

@@ -52,6 +52,7 @@
     <Compile Include="Entities\BleData.cs" />
     <Compile Include="Entities\BleDoorData.cs" />
     <Compile Include="Entities\BleDriverSignInData.cs" />
+    <Compile Include="Entities\BleFuelData.cs" />
     <Compile Include="Entities\BleTempData.cs" />
     <Compile Include="Entities\BleTireData.cs" />
     <Compile Include="Entities\BluetoothPeripheralDataMessage.cs" />

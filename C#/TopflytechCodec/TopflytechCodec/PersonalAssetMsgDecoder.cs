@@ -127,6 +127,7 @@ namespace TopflytechCodec
         {
             BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = new BluetoothPeripheralDataMessage();
             int serialNo = BytesUtils.Bytes2Short(bytes, 5);
+            //Boolean isNeedResp = (serialNo & 0x8000) != 0x8000; 
             String imei = BytesUtils.IMEI.Decode(bytes, 7);
             if ((bytes[21] & 0x01) == 0x01)
             {
@@ -140,6 +141,7 @@ namespace TopflytechCodec
             bluetoothPeripheralDataMessage.OrignBytes = bytes;
             bluetoothPeripheralDataMessage.IsHistoryData = (bytes[15] & 0x80) != 0x00;
             bluetoothPeripheralDataMessage.SerialNo = serialNo;
+            //bluetoothPeripheralDataMessage.IsNeedResp = isNeedResp;
             bluetoothPeripheralDataMessage.Imei = imei;
             byte[] bleData = new byte[bytes.Length - 22];
             Array.Copy(bytes, 22, bleData, 0, bleData.Length);
@@ -541,12 +543,84 @@ namespace TopflytechCodec
                     bleDataList.Add(bleCtrlData);
                 }
             }
+            else if (bleData[0] == 0x00 && bleData[1] == 0x07)
+            {
+                bluetoothPeripheralDataMessage.MessageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_FUEL;
+                for (int i = 2; i < bleData.Length; i += 15)
+                {
+                    BleFuelData bleFuelData = new BleFuelData();
+                    byte[] macArray = new byte[6];
+                    Array.Copy(bleData, i + 0, macArray, 0, 6);
+                    String mac = BytesUtils.Bytes2HexString(macArray, 0);
+                    if (mac.StartsWith("0000"))
+                    {
+                        mac = mac.Substring(4, 8);
+                    }
+                    int voltageTmp = (int)bleData[i + 6] < 0 ? (int)bleData[i + 6] + 256 : (int)bleData[i + 6];
+                    float voltage;
+                    if (voltageTmp == 255)
+                    {
+                        voltage = -999;
+                    }
+                    else
+                    {
+                        voltage = 2 + 0.01f * voltageTmp;
+                    }
+                    int valueTemp = BytesUtils.Bytes2Short(bleData, i + 7);
+                    int value;
+                    if (valueTemp == 255)
+                    {
+                        value = -999;
+                    }
+                    else
+                    {
+                        value = valueTemp;
+                    }
+                    int temperatureTemp = BytesUtils.Bytes2Short(bleData, i + 9);
+                    int tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
+                    float temperature;
+                    if (temperatureTemp == 65535)
+                    {
+                        temperature = -999;
+                    }
+                    else
+                    {
+                        temperature = (temperatureTemp & 0x7fff) * 0.01f * tempPositive;
+                    }
+                    int status = (int)bleData[i + 13] < 0 ? (int)bleData[i + 13] + 256 : (int)bleData[i + 13];
+                    int online = 1;
+                    if (status == 255)
+                    {
+                        status = 0;
+                        online = 0;
+                    }
+                    int rssiTemp = (int)bleData[i + 14] < 0 ? (int)bleData[i + 14] + 256 : (int)bleData[i + 14];
+                    int rssi;
+                    if (rssiTemp == 255)
+                    {
+                        rssi = -999;
+                    }
+                    else
+                    {
+                        rssi = rssiTemp - 128;
+                    }
+                    bleFuelData.Rssi = rssi;
+                    bleFuelData.Mac = mac;
+                    bleFuelData.Alarm = status;
+                    bleFuelData.Online = online;
+                    bleFuelData.Voltage = (float)Math.Round(voltage, 2, MidpointRounding.AwayFromZero);
+                    bleFuelData.Value = value;
+                    bleFuelData.Temp = (float)Math.Round(temperature, 2, MidpointRounding.AwayFromZero);
+                    bleDataList.Add(bleFuelData);
+                }
+            }
             bluetoothPeripheralDataMessage.BleDataList = bleDataList;
             return bluetoothPeripheralDataMessage;
         }
 
         private LocationMessage parseDataMessage(byte[] data) {
         int serialNo = BytesUtils.Bytes2Short(data, 5);
+        //Boolean isNeedResp = (serialNo & 0x8000) != 0x8000; 
         String imei = BytesUtils.IMEI.Decode(data, 7);
         DateTime date = Utils.getGTM0Date(data, 17);
         bool isGpsWorking = (data[15] & 0x20) == 0x00;
@@ -651,6 +725,7 @@ namespace TopflytechCodec
         }
         locationMessage.OrignBytes=data;
         locationMessage.SerialNo=serialNo;
+        //locationMessage.IsNeedResp = isNeedResp;
         locationMessage.NetworkSignal=network;
         locationMessage.Imei=imei;
         locationMessage.IsSolarCharging=isSolarCharging;
@@ -761,6 +836,7 @@ namespace TopflytechCodec
 
     private SignInMessage parseLoginMessage(byte[] bytes)  {
         int serialNo = BytesUtils.Bytes2Short(bytes, 5);
+        //Boolean isNeedResp = (serialNo & 0x8000) != 0x8000; 
         String imei = BytesUtils.IMEI.Decode(bytes, 7);
         String str = BytesUtils.Bytes2HexString(bytes, 15);
         String software = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 15, 17), 0);
@@ -771,6 +847,7 @@ namespace TopflytechCodec
         hardware = String.Format("V{0}.{1}", hardware.Substring(0, 1), hardware.Substring(1, 1));
         SignInMessage signInMessage = new SignInMessage();
         signInMessage.SerialNo=serialNo;
+        //signInMessage.IsNeedResp = isNeedResp;
         signInMessage.Imei=imei;
         signInMessage.Software=software;
         signInMessage.Firmware=firmware;
@@ -782,9 +859,11 @@ namespace TopflytechCodec
     {
         int serialNo = BytesUtils.Bytes2Short(bytes, 5);
         String imei = BytesUtils.IMEI.Decode(bytes, 7);
+        //Boolean isNeedResp = (serialNo & 0x8000) != 0x8000; 
         HeartbeatMessage heartbeatMessage = new HeartbeatMessage();
         heartbeatMessage.OrignBytes = bytes;
         heartbeatMessage.SerialNo = serialNo;
+        //heartbeatMessage.IsNeedResp = isNeedResp;
         heartbeatMessage.Imei = imei;
         return heartbeatMessage;
     }
@@ -793,6 +872,7 @@ namespace TopflytechCodec
     {
         NetworkInfoMessage networkInfoMessage = new NetworkInfoMessage();
         int serialNo = BytesUtils.Bytes2Short(bytes, 5);
+        //Boolean isNeedResp = (serialNo & 0x8000) != 0x8000;
         String imei = BytesUtils.IMEI.Decode(bytes, 7);
         DateTime gmt0 = Utils.getGTM0Date(bytes, 15);
         int networkOperatorLen = bytes[21];
@@ -825,6 +905,7 @@ namespace TopflytechCodec
             }
         }
         networkInfoMessage.SerialNo = serialNo;
+        //networkInfoMessage.IsNeedResp = isNeedResp;
         networkInfoMessage.Imei = imei;
         networkInfoMessage.OrignBytes = bytes;
         networkInfoMessage.Date = gmt0;
@@ -838,6 +919,7 @@ namespace TopflytechCodec
     private Message parseInteractMessage(byte[] bytes)
     {
         int serialNo = BytesUtils.Bytes2Short(bytes, 5);
+        //Boolean isNeedResp = (serialNo & 0x8000) != 0x8000; 
         String imei = BytesUtils.IMEI.Decode(bytes, 7);
         byte protocol = bytes[15];
         byte[] data = new byte[bytes.Length - 16];
@@ -852,6 +934,7 @@ namespace TopflytechCodec
                     configMessage.ConfigResultContent = messageData;
                     configMessage.OrignBytes = bytes;
                     configMessage.SerialNo = serialNo;
+                    //configMessage.IsNeedResp = isNeedResp;
                     configMessage.Imei = imei;
                     return configMessage;
                 }
@@ -862,6 +945,7 @@ namespace TopflytechCodec
                     forwardMessage.Content = messageData;
                     forwardMessage.OrignBytes = bytes;
                     forwardMessage.SerialNo = serialNo;
+                    //forwardMessage.IsNeedResp = isNeedResp;
                     forwardMessage.Imei = imei;
                     return forwardMessage;
                 }
@@ -872,6 +956,7 @@ namespace TopflytechCodec
                     ussdMessage.Content = messageData;
                     ussdMessage.OrignBytes = bytes;
                     ussdMessage.SerialNo = serialNo;
+                    //ussdMessage.IsNeedResp = isNeedResp;
                     ussdMessage.Imei = imei;
                     return ussdMessage;
                 }

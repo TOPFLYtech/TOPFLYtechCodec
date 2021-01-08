@@ -478,14 +478,14 @@ namespace TopflytechCodec.Entities
             get { return output3; }
             set { output3 = value; }
         }
-        private int output12V;
-        public int Output12V
+        private Boolean output12V;
+        public Boolean Output12V
         {
             get { return output12V; }
             set { output12V = value; }
         }
-        private int outputVout;
-        public int OutputVout
+        private Boolean outputVout;
+        public Boolean OutputVout
         {
             get { return outputVout; }
             set { outputVout = value; }
@@ -496,5 +496,56 @@ namespace TopflytechCodec.Entities
             get { return analogInput3; }
             set { analogInput3 = value; }
         }
+
+        private int input3 = 0;
+        public int Input3
+        {
+            get { return input3; }
+            set { input3 = value; }
+        }
+        private int input4 = 0;
+        public int Input4
+        {
+            get { return input4; }
+            set { input4 = value; }
+        }
+        private int input5 = 0;
+        public int Input5
+        {
+            get { return input5; }
+            set { input5 = value; }
+        }
+        private int input6 = 0;
+        public int Input6
+        {
+            get { return input6; }
+            set { input6 = value; }
+        }
+        private float analogInput4 = 0f;
+        public float AnalogInput4
+        {
+            get { return analogInput4; }
+            set { analogInput4 = value; }
+        }
+        private float analogInput5 = 0f;
+        public float AnalogInput5
+        {
+            get { return analogInput5; }
+            set { analogInput5 = value; }
+        }
+        private Boolean isSmartUploadSupport;
+        public Boolean IsSmartUploadSupport
+        {
+            get { return isSmartUploadSupport; }
+            set { isSmartUploadSupport = value; }
+        }
+        private Boolean supportChangeBattery;
+        public Boolean SupportChangeBattery
+        {
+            get { return supportChangeBattery; }
+            set { supportChangeBattery = value; }
+        }
+    
+        
     }
 }
