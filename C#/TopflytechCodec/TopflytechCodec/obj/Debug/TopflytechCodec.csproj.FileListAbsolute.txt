@@ -1,0 +1,4 @@
+F:\trunk-2\server\tool\TopflytechCodec\TopflytechCodec\bin\Debug\TopflytechCodec.dll
+F:\trunk-2\server\tool\TopflytechCodec\TopflytechCodec\bin\Debug\TopflytechCodec.pdb
+F:\trunk-2\server\tool\TopflytechCodec\TopflytechCodec\obj\Debug\TopflytechCodec.dll
+F:\trunk-2\server\tool\TopflytechCodec\TopflytechCodec\obj\Debug\TopflytechCodec.pdb
