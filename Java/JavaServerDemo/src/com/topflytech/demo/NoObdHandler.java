@@ -129,7 +129,7 @@ public class NoObdHandler extends SimpleChannelInboundHandler<Message> {
             LocationAlarmMessage locationAlarmMessage = (LocationAlarmMessage)message;
             System.out.println("receive location alarm message :" + locationAlarmMessage.getImei() + " Alarm is : "+ getEventDescription(locationAlarmMessage.getAlarm()));
             //8806 Plus or some new model device,need serial no,reply this message
-            byte[] reply = t880xPlusEncoder.getLocationAlarmMsgReply(locationAlarmMessage.getImei(),true, locationAlarmMessage.getSerialNo(),locationAlarmMessage.getOriginalAlarmCode());
+            byte[] reply = t880xPlusEncoder.getLocationAlarmMsgReply(locationAlarmMessage.getImei(),true, locationAlarmMessage.getSerialNo(),locationAlarmMessage.getOriginalAlarmCode(),locationAlarmMessage.getProtocolHeadType());
             Utils.write(channel, reply, new Utils.WriteListener() {
                 @Override
                 public void messageRespond(boolean success) {
@@ -175,7 +175,7 @@ public class NoObdHandler extends SimpleChannelInboundHandler<Message> {
         }else if (message instanceof BluetoothPeripheralDataMessage){
             BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = (BluetoothPeripheralDataMessage)message;
             System.out.println("receive bluetooth ignition message :" + bluetoothPeripheralDataMessage.getImei());
-            byte[] reply = t880xPlusEncoder.getBluetoothPeripheralMsgReply(bluetoothPeripheralDataMessage.getImei(), bluetoothPeripheralDataMessage.getSerialNo());
+            byte[] reply = t880xPlusEncoder.getBluetoothPeripheralMsgReply(bluetoothPeripheralDataMessage.getImei(), bluetoothPeripheralDataMessage.getSerialNo(),bluetoothPeripheralDataMessage.getProtocolHeadType());
             Utils.write(channel, reply, new Utils.WriteListener() {
                 @Override
                 public void messageRespond(boolean success) {

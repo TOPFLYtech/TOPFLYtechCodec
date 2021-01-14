@@ -20,7 +20,9 @@ public class ObdDecoder extends ByteToMessageDecoder {
         }
 
         com.topflytech.codec.ObdDecoder decoder = new com.topflytech.codec.ObdDecoder(MessageEncryptType.NONE,null);
-        List<Message> messageList = decoder.decode(in.readBytes(in.readableBytes()).array());
+        byte[] array = new byte[in.readableBytes()];
+        in.readBytes(array);
+        List<Message> messageList = decoder.decode(array);
         list.addAll(messageList);
     }
 }

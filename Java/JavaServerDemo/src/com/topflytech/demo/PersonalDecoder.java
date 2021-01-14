@@ -21,7 +21,9 @@ public class PersonalDecoder extends ByteToMessageDecoder {
         }
 
         PersonalAssetMsgDecoder decoder = new com.topflytech.codec.PersonalAssetMsgDecoder(MessageEncryptType.NONE,null);
-        List<Message> messageList = decoder.decode(in.readBytes(in.readableBytes()).array());
+        byte[] array = new byte[in.readableBytes()];
+        in.readBytes(array);
+        List<Message> messageList = decoder.decode(array);
         list.addAll(messageList);
     }
 }

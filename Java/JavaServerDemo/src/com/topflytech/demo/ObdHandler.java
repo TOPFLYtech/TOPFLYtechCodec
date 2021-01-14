@@ -109,7 +109,7 @@ public class ObdHandler extends SimpleChannelInboundHandler<Message> {
         }else if (message instanceof BluetoothPeripheralDataMessage){
             BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = (BluetoothPeripheralDataMessage)message;
             System.out.println("receive bluetooth ignition message :" + bluetoothPeripheralDataMessage.getImei());
-            byte[] reply = t880xdEncoder.getBluetoothPeripheralMsgReply(bluetoothPeripheralDataMessage.getImei(), bluetoothPeripheralDataMessage.getSerialNo());
+            byte[] reply = t880xdEncoder.getBluetoothPeripheralMsgReply(bluetoothPeripheralDataMessage.getImei(), bluetoothPeripheralDataMessage.getSerialNo(),bluetoothPeripheralDataMessage.getProtocolHeadType());
             Utils.write(channel, reply, new Utils.WriteListener() {
                 @Override
                 public void messageRespond(boolean success) {
