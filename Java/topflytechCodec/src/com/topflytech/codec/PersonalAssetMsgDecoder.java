@@ -275,6 +275,50 @@ public class PersonalAssetMsgDecoder {
                 System.out.println("Imei : " + imei);
                 e.printStackTrace();
             }
+            Boolean is_4g_lbs = false;
+            Integer mcc_4g = null;
+            Integer mnc_4g = null;
+            Long ci_4g = null;
+            Integer earfcn_4g_1 = null;
+            Integer pcid_4g_1 = null;
+            Integer earfcn_4g_2 = null;
+            Integer pcid_4g_2 = null;
+            Boolean is_2g_lbs = false;
+            Integer mcc_2g = null;
+            Integer mnc_2g = null;
+            Integer lac_2g_1 = null;
+            Integer ci_2g_1 = null;
+            Integer lac_2g_2 = null;
+            Integer ci_2g_2 = null;
+            Integer lac_2g_3 = null;
+            Integer ci_2g_3 = null;
+            if (!latlngValid){
+                byte lbsByte = bleData[11];
+                if ((lbsByte & 0x8) == 0x8){
+                    is_2g_lbs = true;
+                }else{
+                    is_4g_lbs = true;
+                }
+            }
+            if (is_2g_lbs){
+                mcc_2g = BytesUtils.bytes2Short(bleData,11);
+                mnc_2g = BytesUtils.bytes2Short(bleData,13);
+                lac_2g_1 = BytesUtils.bytes2Short(bleData,15);
+                ci_2g_1 = BytesUtils.bytes2Short(bleData,17);
+                lac_2g_2 = BytesUtils.bytes2Short(bleData,19);
+                ci_2g_2 = BytesUtils.bytes2Short(bleData,21);
+                lac_2g_3 = BytesUtils.bytes2Short(bleData,23);
+                ci_2g_3 = BytesUtils.bytes2Short(bleData,25);
+            }
+            if (is_4g_lbs){
+                mcc_4g = BytesUtils.bytes2Short(bleData,11);
+                mnc_4g = BytesUtils.bytes2Short(bleData,13);
+                ci_4g = BytesUtils.unsigned4BytesToInt(bleData, 15);
+                earfcn_4g_1 = BytesUtils.bytes2Short(bleData, 19);
+                pcid_4g_1 = BytesUtils.bytes2Short(bleData, 21);
+                earfcn_4g_2 = BytesUtils.bytes2Short(bleData, 23);
+                pcid_4g_2 = BytesUtils.bytes2Short(bleData,25);
+            }
             bleAlertData.setAlertType(alert);
             bleAlertData.setAltitude(altitude);
             bleAlertData.setAzimuth(azimuth);
@@ -286,6 +330,23 @@ public class PersonalAssetMsgDecoder {
             bleAlertData.setLongitude(longitude);
             bleAlertData.setMac(mac);
             bleAlertData.setSpeed(speedf);
+            bleAlertData.setIs_4g_lbs(is_4g_lbs);
+            bleAlertData.setIs_2g_lbs(is_2g_lbs);
+            bleAlertData.setMcc_2g(mcc_2g);
+            bleAlertData.setMnc_2g(mnc_2g);
+            bleAlertData.setLac_2g_1(lac_2g_1);
+            bleAlertData.setCi_2g_1(ci_2g_1);
+            bleAlertData.setLac_2g_2(lac_2g_2);
+            bleAlertData.setCi_2g_2(ci_2g_2);
+            bleAlertData.setLac_2g_3(lac_2g_3);
+            bleAlertData.setCi_2g_3(ci_2g_3);
+            bleAlertData.setMcc_4g(mcc_4g);
+            bleAlertData.setMnc_4g(mnc_4g);
+            bleAlertData.setCi_4g(ci_4g);
+            bleAlertData.setEarfcn_4g_1(earfcn_4g_1);
+            bleAlertData.setPcid_4g_1(pcid_4g_1);
+            bleAlertData.setEarfcn_4g_2(earfcn_4g_2);
+            bleAlertData.setPcid_4g_2(pcid_4g_2);
             bleDataList.add(bleAlertData);
         }else if (bleData[0] == 0x00 && bleData[1] == 0x03){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_DRIVER);
@@ -321,6 +382,50 @@ public class PersonalAssetMsgDecoder {
                 System.out.println("Imei : " + imei);
                 e.printStackTrace();
             }
+            Boolean is_4g_lbs = false;
+            Integer mcc_4g = null;
+            Integer mnc_4g = null;
+            Long ci_4g = null;
+            Integer earfcn_4g_1 = null;
+            Integer pcid_4g_1 = null;
+            Integer earfcn_4g_2 = null;
+            Integer pcid_4g_2 = null;
+            Boolean is_2g_lbs = false;
+            Integer mcc_2g = null;
+            Integer mnc_2g = null;
+            Integer lac_2g_1 = null;
+            Integer ci_2g_1 = null;
+            Integer lac_2g_2 = null;
+            Integer ci_2g_2 = null;
+            Integer lac_2g_3 = null;
+            Integer ci_2g_3 = null;
+            if (!latlngValid){
+                byte lbsByte = bleData[11];
+                if ((lbsByte & 0x8) == 0x8){
+                    is_2g_lbs = true;
+                }else{
+                    is_4g_lbs = true;
+                }
+            }
+            if (is_2g_lbs){
+                mcc_2g = BytesUtils.bytes2Short(bleData,11);
+                mnc_2g = BytesUtils.bytes2Short(bleData,13);
+                lac_2g_1 = BytesUtils.bytes2Short(bleData,15);
+                ci_2g_1 = BytesUtils.bytes2Short(bleData,17);
+                lac_2g_2 = BytesUtils.bytes2Short(bleData,19);
+                ci_2g_2 = BytesUtils.bytes2Short(bleData,21);
+                lac_2g_3 = BytesUtils.bytes2Short(bleData,23);
+                ci_2g_3 = BytesUtils.bytes2Short(bleData,25);
+            }
+            if (is_4g_lbs){
+                mcc_4g = BytesUtils.bytes2Short(bleData,11);
+                mnc_4g = BytesUtils.bytes2Short(bleData,13);
+                ci_4g = BytesUtils.unsigned4BytesToInt(bleData, 15);
+                earfcn_4g_1 = BytesUtils.bytes2Short(bleData, 19);
+                pcid_4g_1 = BytesUtils.bytes2Short(bleData, 21);
+                earfcn_4g_2 = BytesUtils.bytes2Short(bleData, 23);
+                pcid_4g_2 = BytesUtils.bytes2Short(bleData,25);
+            }
             bleDriverSignInData.setAlert(alert);
             bleDriverSignInData.setAltitude(altitude);
             bleDriverSignInData.setAzimuth(azimuth);
@@ -332,6 +437,23 @@ public class PersonalAssetMsgDecoder {
             bleDriverSignInData.setLongitude(longitude);
             bleDriverSignInData.setMac(mac);
             bleDriverSignInData.setSpeed(speedf);
+            bleDriverSignInData.setIs_4g_lbs(is_4g_lbs);
+            bleDriverSignInData.setIs_2g_lbs(is_2g_lbs);
+            bleDriverSignInData.setMcc_2g(mcc_2g);
+            bleDriverSignInData.setMnc_2g(mnc_2g);
+            bleDriverSignInData.setLac_2g_1(lac_2g_1);
+            bleDriverSignInData.setCi_2g_1(ci_2g_1);
+            bleDriverSignInData.setLac_2g_2(lac_2g_2);
+            bleDriverSignInData.setCi_2g_2(ci_2g_2);
+            bleDriverSignInData.setLac_2g_3(lac_2g_3);
+            bleDriverSignInData.setCi_2g_3(ci_2g_3);
+            bleDriverSignInData.setMcc_4g(mcc_4g);
+            bleDriverSignInData.setMnc_4g(mnc_4g);
+            bleDriverSignInData.setCi_4g(ci_4g);
+            bleDriverSignInData.setEarfcn_4g_1(earfcn_4g_1);
+            bleDriverSignInData.setPcid_4g_1(pcid_4g_1);
+            bleDriverSignInData.setEarfcn_4g_2(earfcn_4g_2);
+            bleDriverSignInData.setPcid_4g_2(pcid_4g_2);
             bleDataList.add(bleDriverSignInData);
         }else if (bleData[0] == 0x00 && bleData[1] == 0x04){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_TEMP);
@@ -574,12 +696,60 @@ public class PersonalAssetMsgDecoder {
             if (latlngValid) {
                 byte[] bytesSpeed = Arrays.copyOfRange(data, 35, 37);
                 String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
-                speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+                if(!strSp.toLowerCase().equals("ffff")){
+                    speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+                }
             }
         }catch (Exception e){
             e.printStackTrace();
         }
         int azimuth = latlngValid ? BytesUtils.bytes2Short(data, 37) : 0;
+
+        Boolean is_4g_lbs = false;
+        Integer mcc_4g = null;
+        Integer mnc_4g = null;
+        Long ci_4g = null;
+        Integer earfcn_4g_1 = null;
+        Integer pcid_4g_1 = null;
+        Integer earfcn_4g_2 = null;
+        Integer pcid_4g_2 = null;
+        Boolean is_2g_lbs = false;
+        Integer mcc_2g = null;
+        Integer mnc_2g = null;
+        Integer lac_2g_1 = null;
+        Integer ci_2g_1 = null;
+        Integer lac_2g_2 = null;
+        Integer ci_2g_2 = null;
+        Integer lac_2g_3 = null;
+        Integer ci_2g_3 = null;
+        if (!latlngValid){
+            byte lbsByte = data[35];
+            if ((lbsByte & 0x8) == 0x8){
+                is_2g_lbs = true;
+            }else{
+                is_4g_lbs = true;
+            }
+        }
+        if (is_2g_lbs){
+            mcc_2g = BytesUtils.bytes2Short(data,23);
+            mnc_2g = BytesUtils.bytes2Short(data,25);
+            lac_2g_1 = BytesUtils.bytes2Short(data,27);
+            ci_2g_1 = BytesUtils.bytes2Short(data,29);
+            lac_2g_2 = BytesUtils.bytes2Short(data,31);
+            ci_2g_2 = BytesUtils.bytes2Short(data,33);
+            lac_2g_3 = BytesUtils.bytes2Short(data,35);
+            ci_2g_3 = BytesUtils.bytes2Short(data,37);
+        }
+        if (is_4g_lbs){
+            mcc_4g = BytesUtils.bytes2Short(data,23);
+            mnc_4g = BytesUtils.bytes2Short(data,25);
+            ci_4g = BytesUtils.unsigned4BytesToInt(data, 27);
+            earfcn_4g_1 = BytesUtils.bytes2Short(data, 31);
+            pcid_4g_1 = BytesUtils.bytes2Short(data, 33);
+            earfcn_4g_2 = BytesUtils.bytes2Short(data, 35);
+            pcid_4g_2 = BytesUtils.bytes2Short(data,37);
+        }
+
         int axisXDirect = (data[39] & 0x80) == 0x80 ? 1 : -1;
         float axisX = ((data[39] & 0x7F & 0xff) + (((data[40] & 0xf0) >> 4) & 0xff) /10.0f) * axisXDirect;
 
@@ -723,6 +893,23 @@ public class PersonalAssetMsgDecoder {
         locationMessage.setSolarVoltage(solarVoltage);
         locationMessage.setSmartPowerSettingStatus(smartPowerSettingStatus);
         locationMessage.setSmartPowerOpenStatus(smartPowerOpenStatus);
+        locationMessage.setIs_4g_lbs(is_4g_lbs);
+        locationMessage.setIs_2g_lbs(is_2g_lbs);
+        locationMessage.setMcc_2g(mcc_2g);
+        locationMessage.setMnc_2g(mnc_2g);
+        locationMessage.setLac_2g_1(lac_2g_1);
+        locationMessage.setCi_2g_1(ci_2g_1);
+        locationMessage.setLac_2g_2(lac_2g_2);
+        locationMessage.setCi_2g_2(ci_2g_2);
+        locationMessage.setLac_2g_3(lac_2g_3);
+        locationMessage.setCi_2g_3(ci_2g_3);
+        locationMessage.setMcc_4g(mcc_4g);
+        locationMessage.setMnc_4g(mnc_4g);
+        locationMessage.setCi_4g(ci_4g);
+        locationMessage.setEarfcn_4g_1(earfcn_4g_1);
+        locationMessage.setPcid_4g_1(pcid_4g_1);
+        locationMessage.setEarfcn_4g_2(earfcn_4g_2);
+        locationMessage.setPcid_4g_2(pcid_4g_2);
         return locationMessage;
     }
     private static int getEvent(byte alarmCodeByte) {

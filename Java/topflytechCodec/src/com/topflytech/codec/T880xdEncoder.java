@@ -132,7 +132,7 @@ public class T880xdEncoder {
     }
 
     public byte[] getNetworkMsgReply(String imei,int serialNo)throws IOException {
-        byte[] command = {0x25, 0x25, 0x11};
+        byte[] command = {0x26, 0x26, 0x11};
         return Encoder.getNetworkMsgReply(imei, serialNo, command, encryptType, aesKey);
     }
     /**

@@ -384,11 +384,73 @@ public class ObdDecoder {
             System.out.println("Imei : " + imei);
             e.printStackTrace();
         }
+        Boolean is_4g_lbs = false;
+        Integer mcc_4g = null;
+        Integer mnc_4g = null;
+        Long ci_4g = null;
+        Integer earfcn_4g_1 = null;
+        Integer pcid_4g_1 = null;
+        Integer earfcn_4g_2 = null;
+        Integer pcid_4g_2 = null;
+        Boolean is_2g_lbs = false;
+        Integer mcc_2g = null;
+        Integer mnc_2g = null;
+        Integer lac_2g_1 = null;
+        Integer ci_2g_1 = null;
+        Integer lac_2g_2 = null;
+        Integer ci_2g_2 = null;
+        Integer lac_2g_3 = null;
+        Integer ci_2g_3 = null;
+        if (!latlngValid){
+            byte lbsByte = bytes[23];
+            if ((lbsByte & 0x8) == 0x8){
+                is_2g_lbs = true;
+            }else{
+                is_4g_lbs = true;
+            }
+        }
+        if (is_2g_lbs){
+            mcc_2g = BytesUtils.bytes2Short(bytes,23);
+            mnc_2g = BytesUtils.bytes2Short(bytes,25);
+            lac_2g_1 = BytesUtils.bytes2Short(bytes,27);
+            ci_2g_1 = BytesUtils.bytes2Short(bytes,29);
+            lac_2g_2 = BytesUtils.bytes2Short(bytes,31);
+            ci_2g_2 = BytesUtils.bytes2Short(bytes,33);
+            lac_2g_3 = BytesUtils.bytes2Short(bytes,35);
+            ci_2g_3 = BytesUtils.bytes2Short(bytes,37);
+        }
+        if (is_4g_lbs){
+            mcc_4g = BytesUtils.bytes2Short(bytes,23);
+            mnc_4g = BytesUtils.bytes2Short(bytes,25);
+            ci_4g = BytesUtils.unsigned4BytesToInt(bytes, 27);
+            earfcn_4g_1 = BytesUtils.bytes2Short(bytes, 31);
+            pcid_4g_1 = BytesUtils.bytes2Short(bytes, 33);
+            earfcn_4g_2 = BytesUtils.bytes2Short(bytes, 35);
+            pcid_4g_2 = BytesUtils.bytes2Short(bytes,37);
+        }
         bluetoothPeripheralDataMessage.setLatitude(latitude);
         bluetoothPeripheralDataMessage.setLongitude(longitude);
         bluetoothPeripheralDataMessage.setAzimuth(azimuth);
         bluetoothPeripheralDataMessage.setSpeed(speedf);
         bluetoothPeripheralDataMessage.setAltitude(altitude);
+        bluetoothPeripheralDataMessage.setIsHadLocationInfo(true);
+        bluetoothPeripheralDataMessage.setIs_4g_lbs(is_4g_lbs);
+        bluetoothPeripheralDataMessage.setIs_2g_lbs(is_2g_lbs);
+        bluetoothPeripheralDataMessage.setMcc_2g(mcc_2g);
+        bluetoothPeripheralDataMessage.setMnc_2g(mnc_2g);
+        bluetoothPeripheralDataMessage.setLac_2g_1(lac_2g_1);
+        bluetoothPeripheralDataMessage.setCi_2g_1(ci_2g_1);
+        bluetoothPeripheralDataMessage.setLac_2g_2(lac_2g_2);
+        bluetoothPeripheralDataMessage.setCi_2g_2(ci_2g_2);
+        bluetoothPeripheralDataMessage.setLac_2g_3(lac_2g_3);
+        bluetoothPeripheralDataMessage.setCi_2g_3(ci_2g_3);
+        bluetoothPeripheralDataMessage.setMcc_4g(mcc_4g);
+        bluetoothPeripheralDataMessage.setMnc_4g(mnc_4g);
+        bluetoothPeripheralDataMessage.setCi_4g(ci_4g);
+        bluetoothPeripheralDataMessage.setEarfcn_4g_1(earfcn_4g_1);
+        bluetoothPeripheralDataMessage.setPcid_4g_1(pcid_4g_1);
+        bluetoothPeripheralDataMessage.setEarfcn_4g_2(earfcn_4g_2);
+        bluetoothPeripheralDataMessage.setPcid_4g_2(pcid_4g_2);
         byte[] bleData = Arrays.copyOfRange(bytes,39,bytes.length);
         List<BleData> bleDataList = new ArrayList<BleData>();
         if(bleData[0] == 0x00 && bleData[1] == 0x01){
@@ -456,6 +518,23 @@ public class ObdDecoder {
             bleAlertData.setLongitude(longitude);
             bleAlertData.setMac(mac);
             bleAlertData.setSpeed(speedf);
+            bleAlertData.setIs_4g_lbs(is_4g_lbs);
+            bleAlertData.setIs_2g_lbs(is_2g_lbs);
+            bleAlertData.setMcc_2g(mcc_2g);
+            bleAlertData.setMnc_2g(mnc_2g);
+            bleAlertData.setLac_2g_1(lac_2g_1);
+            bleAlertData.setCi_2g_1(ci_2g_1);
+            bleAlertData.setLac_2g_2(lac_2g_2);
+            bleAlertData.setCi_2g_2(ci_2g_2);
+            bleAlertData.setLac_2g_3(lac_2g_3);
+            bleAlertData.setCi_2g_3(ci_2g_3);
+            bleAlertData.setMcc_4g(mcc_4g);
+            bleAlertData.setMnc_4g(mnc_4g);
+            bleAlertData.setCi_4g(ci_4g);
+            bleAlertData.setEarfcn_4g_1(earfcn_4g_1);
+            bleAlertData.setPcid_4g_1(pcid_4g_1);
+            bleAlertData.setEarfcn_4g_2(earfcn_4g_2);
+            bleAlertData.setPcid_4g_2(pcid_4g_2);
             bleDataList.add(bleAlertData);
         }else if (bleData[0] == 0x00 && bleData[1] == 0x03){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_DRIVER);
@@ -482,6 +561,23 @@ public class ObdDecoder {
             bleDriverSignInData.setLongitude(longitude);
             bleDriverSignInData.setMac(mac);
             bleDriverSignInData.setSpeed(speedf);
+            bleDriverSignInData.setIs_4g_lbs(is_4g_lbs);
+            bleDriverSignInData.setIs_2g_lbs(is_2g_lbs);
+            bleDriverSignInData.setMcc_2g(mcc_2g);
+            bleDriverSignInData.setMnc_2g(mnc_2g);
+            bleDriverSignInData.setLac_2g_1(lac_2g_1);
+            bleDriverSignInData.setCi_2g_1(ci_2g_1);
+            bleDriverSignInData.setLac_2g_2(lac_2g_2);
+            bleDriverSignInData.setCi_2g_2(ci_2g_2);
+            bleDriverSignInData.setLac_2g_3(lac_2g_3);
+            bleDriverSignInData.setCi_2g_3(ci_2g_3);
+            bleDriverSignInData.setMcc_4g(mcc_4g);
+            bleDriverSignInData.setMnc_4g(mnc_4g);
+            bleDriverSignInData.setCi_4g(ci_4g);
+            bleDriverSignInData.setEarfcn_4g_1(earfcn_4g_1);
+            bleDriverSignInData.setPcid_4g_1(pcid_4g_1);
+            bleDriverSignInData.setEarfcn_4g_2(earfcn_4g_2);
+            bleDriverSignInData.setPcid_4g_2(pcid_4g_2);
             bleDataList.add(bleDriverSignInData);
         }else if (bleData[0] == 0x00 && bleData[1] == 0x04){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_TEMP);
@@ -786,7 +882,6 @@ public class ObdDecoder {
             double altitude = latlngValid? BytesUtils.bytes2Float(bleData, 11) : 0.0;
             double longitude = latlngValid ? BytesUtils.bytes2Float(bleData, 15) : 0.0;
             double latitude = latlngValid ? BytesUtils.bytes2Float(bleData, 19) : 0.0;
-            int azimuth = latlngValid ? BytesUtils.bytes2Short(bleData, 25) : 0;
             Float speedf = 0.0f;
             try{
                 byte[] bytesSpeed = Arrays.copyOfRange(bleData, 23, 25);
@@ -800,6 +895,51 @@ public class ObdDecoder {
                 System.out.println("Imei : " + imei);
                 e.printStackTrace();
             }
+            int azimuth = latlngValid ? BytesUtils.bytes2Short(bleData, 25) : 0;
+            Boolean is_4g_lbs = false;
+            Integer mcc_4g = null;
+            Integer mnc_4g = null;
+            Long ci_4g = null;
+            Integer earfcn_4g_1 = null;
+            Integer pcid_4g_1 = null;
+            Integer earfcn_4g_2 = null;
+            Integer pcid_4g_2 = null;
+            Boolean is_2g_lbs = false;
+            Integer mcc_2g = null;
+            Integer mnc_2g = null;
+            Integer lac_2g_1 = null;
+            Integer ci_2g_1 = null;
+            Integer lac_2g_2 = null;
+            Integer ci_2g_2 = null;
+            Integer lac_2g_3 = null;
+            Integer ci_2g_3 = null;
+            if (!latlngValid){
+                byte lbsByte = bleData[11];
+                if ((lbsByte & 0x8) == 0x8){
+                    is_2g_lbs = true;
+                }else{
+                    is_4g_lbs = true;
+                }
+            }
+            if (is_2g_lbs){
+                mcc_2g = BytesUtils.bytes2Short(bleData,11);
+                mnc_2g = BytesUtils.bytes2Short(bleData,13);
+                lac_2g_1 = BytesUtils.bytes2Short(bleData,15);
+                ci_2g_1 = BytesUtils.bytes2Short(bleData,17);
+                lac_2g_2 = BytesUtils.bytes2Short(bleData,19);
+                ci_2g_2 = BytesUtils.bytes2Short(bleData,21);
+                lac_2g_3 = BytesUtils.bytes2Short(bleData,23);
+                ci_2g_3 = BytesUtils.bytes2Short(bleData,25);
+            }
+            if (is_4g_lbs){
+                mcc_4g = BytesUtils.bytes2Short(bleData,11);
+                mnc_4g = BytesUtils.bytes2Short(bleData,13);
+                ci_4g = BytesUtils.unsigned4BytesToInt(bleData, 15);
+                earfcn_4g_1 = BytesUtils.bytes2Short(bleData, 19);
+                pcid_4g_1 = BytesUtils.bytes2Short(bleData, 21);
+                earfcn_4g_2 = BytesUtils.bytes2Short(bleData, 23);
+                pcid_4g_2 = BytesUtils.bytes2Short(bleData,25);
+            }
             bleAlertData.setAlertType(alert);
             bleAlertData.setAltitude(altitude);
             bleAlertData.setAzimuth(azimuth);
@@ -811,6 +951,23 @@ public class ObdDecoder {
             bleAlertData.setLongitude(longitude);
             bleAlertData.setMac(mac);
             bleAlertData.setSpeed(speedf);
+            bleAlertData.setIs_4g_lbs(is_4g_lbs);
+            bleAlertData.setIs_2g_lbs(is_2g_lbs);
+            bleAlertData.setMcc_2g(mcc_2g);
+            bleAlertData.setMnc_2g(mnc_2g);
+            bleAlertData.setLac_2g_1(lac_2g_1);
+            bleAlertData.setCi_2g_1(ci_2g_1);
+            bleAlertData.setLac_2g_2(lac_2g_2);
+            bleAlertData.setCi_2g_2(ci_2g_2);
+            bleAlertData.setLac_2g_3(lac_2g_3);
+            bleAlertData.setCi_2g_3(ci_2g_3);
+            bleAlertData.setMcc_4g(mcc_4g);
+            bleAlertData.setMnc_4g(mnc_4g);
+            bleAlertData.setCi_4g(ci_4g);
+            bleAlertData.setEarfcn_4g_1(earfcn_4g_1);
+            bleAlertData.setPcid_4g_1(pcid_4g_1);
+            bleAlertData.setEarfcn_4g_2(earfcn_4g_2);
+            bleAlertData.setPcid_4g_2(pcid_4g_2);
             bleDataList.add(bleAlertData);
         }else if (bleData[0] == 0x00 && bleData[1] == 0x03){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_DRIVER);
@@ -846,6 +1003,50 @@ public class ObdDecoder {
                 System.out.println("Imei : " + imei);
                 e.printStackTrace();
             }
+            Boolean is_4g_lbs = false;
+            Integer mcc_4g = null;
+            Integer mnc_4g = null;
+            Long ci_4g = null;
+            Integer earfcn_4g_1 = null;
+            Integer pcid_4g_1 = null;
+            Integer earfcn_4g_2 = null;
+            Integer pcid_4g_2 = null;
+            Boolean is_2g_lbs = false;
+            Integer mcc_2g = null;
+            Integer mnc_2g = null;
+            Integer lac_2g_1 = null;
+            Integer ci_2g_1 = null;
+            Integer lac_2g_2 = null;
+            Integer ci_2g_2 = null;
+            Integer lac_2g_3 = null;
+            Integer ci_2g_3 = null;
+            if (!latlngValid){
+                byte lbsByte = bleData[11];
+                if ((lbsByte & 0x8) == 0x8){
+                    is_2g_lbs = true;
+                }else{
+                    is_4g_lbs = true;
+                }
+            }
+            if (is_2g_lbs){
+                mcc_2g = BytesUtils.bytes2Short(bleData,11);
+                mnc_2g = BytesUtils.bytes2Short(bleData,13);
+                lac_2g_1 = BytesUtils.bytes2Short(bleData,15);
+                ci_2g_1 = BytesUtils.bytes2Short(bleData,17);
+                lac_2g_2 = BytesUtils.bytes2Short(bleData,19);
+                ci_2g_2 = BytesUtils.bytes2Short(bleData,21);
+                lac_2g_3 = BytesUtils.bytes2Short(bleData,23);
+                ci_2g_3 = BytesUtils.bytes2Short(bleData,25);
+            }
+            if (is_4g_lbs){
+                mcc_4g = BytesUtils.bytes2Short(bleData,11);
+                mnc_4g = BytesUtils.bytes2Short(bleData,13);
+                ci_4g = BytesUtils.unsigned4BytesToInt(bleData, 15);
+                earfcn_4g_1 = BytesUtils.bytes2Short(bleData, 19);
+                pcid_4g_1 = BytesUtils.bytes2Short(bleData, 21);
+                earfcn_4g_2 = BytesUtils.bytes2Short(bleData, 23);
+                pcid_4g_2 = BytesUtils.bytes2Short(bleData,25);
+            }
             bleDriverSignInData.setAlert(alert);
             bleDriverSignInData.setAltitude(altitude);
             bleDriverSignInData.setAzimuth(azimuth);
@@ -857,6 +1058,23 @@ public class ObdDecoder {
             bleDriverSignInData.setLongitude(longitude);
             bleDriverSignInData.setMac(mac);
             bleDriverSignInData.setSpeed(speedf);
+            bleDriverSignInData.setIs_4g_lbs(is_4g_lbs);
+            bleDriverSignInData.setIs_2g_lbs(is_2g_lbs);
+            bleDriverSignInData.setMcc_2g(mcc_2g);
+            bleDriverSignInData.setMnc_2g(mnc_2g);
+            bleDriverSignInData.setLac_2g_1(lac_2g_1);
+            bleDriverSignInData.setCi_2g_1(ci_2g_1);
+            bleDriverSignInData.setLac_2g_2(lac_2g_2);
+            bleDriverSignInData.setCi_2g_2(ci_2g_2);
+            bleDriverSignInData.setLac_2g_3(lac_2g_3);
+            bleDriverSignInData.setCi_2g_3(ci_2g_3);
+            bleDriverSignInData.setMcc_4g(mcc_4g);
+            bleDriverSignInData.setMnc_4g(mnc_4g);
+            bleDriverSignInData.setCi_4g(ci_4g);
+            bleDriverSignInData.setEarfcn_4g_1(earfcn_4g_1);
+            bleDriverSignInData.setPcid_4g_1(pcid_4g_1);
+            bleDriverSignInData.setEarfcn_4g_2(earfcn_4g_2);
+            bleDriverSignInData.setPcid_4g_2(pcid_4g_2);
             bleDataList.add(bleDriverSignInData);
         }else if (bleData[0] == 0x00 && bleData[1] == 0x04){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_TEMP);
@@ -1465,22 +1683,72 @@ public class ObdDecoder {
             System.out.println("GPS Acceleration azimuth Error ; imei is :" + imei + ":" + BytesUtils.bytes2HexString(bytes,0));
         }
         acceleration.setAzimuth(azimuth);
+        Boolean is_4g_lbs = false;
+        Integer mcc_4g = null;
+        Integer mnc_4g = null;
+        Long ci_4g = null;
+        Integer earfcn_4g_1 = null;
+        Integer pcid_4g_1 = null;
+        Integer earfcn_4g_2 = null;
+        Integer pcid_4g_2 = null;
+        Boolean is_2g_lbs = false;
+        Integer mcc_2g = null;
+        Integer mnc_2g = null;
+        Integer lac_2g_1 = null;
+        Integer ci_2g_1 = null;
+        Integer lac_2g_2 = null;
+        Integer ci_2g_2 = null;
+        Integer lac_2g_3 = null;
+        Integer ci_2g_3 = null;
+        if (!latlngValid){
+            byte lbsByte = bytes[curParseIndex + 12];
+            if ((lbsByte & 0x8) == 0x8){
+                is_2g_lbs = true;
+            }else{
+                is_4g_lbs = true;
+            }
+        }
+        if (is_2g_lbs){
+            mcc_2g = BytesUtils.bytes2Short(bytes,curParseIndex + 12);
+            mnc_2g = BytesUtils.bytes2Short(bytes,curParseIndex + 14);
+            lac_2g_1 = BytesUtils.bytes2Short(bytes,curParseIndex + 16);
+            ci_2g_1 = BytesUtils.bytes2Short(bytes,curParseIndex + 18);
+            lac_2g_2 = BytesUtils.bytes2Short(bytes,curParseIndex + 20);
+            ci_2g_2 = BytesUtils.bytes2Short(bytes,curParseIndex + 22);
+            lac_2g_3 = BytesUtils.bytes2Short(bytes,curParseIndex + 24);
+            ci_2g_3 = BytesUtils.bytes2Short(bytes,curParseIndex + 26);
+        }
+        if (is_4g_lbs){
+            mcc_4g = BytesUtils.bytes2Short(bytes,curParseIndex + 12);
+            mnc_4g = BytesUtils.bytes2Short(bytes,curParseIndex + 14);
+            ci_4g = BytesUtils.unsigned4BytesToInt(bytes, curParseIndex + 16);
+            earfcn_4g_1 = BytesUtils.bytes2Short(bytes, curParseIndex + 20);
+            pcid_4g_1 = BytesUtils.bytes2Short(bytes, curParseIndex + 22);
+            earfcn_4g_2 = BytesUtils.bytes2Short(bytes, curParseIndex + 24);
+            pcid_4g_2 = BytesUtils.bytes2Short(bytes,curParseIndex + 26);
+        }
         int rpm = BytesUtils.bytes2Short(bytes, curParseIndex + 28);
         if(rpm == 65535){
             rpm = -999;
         }
         acceleration.setRpm(rpm);
-        if (bytes.length > 46){
-            int gyroscopeAxisXDirect = (bytes[curParseIndex + 28] & 0x80) == 0x80 ? 1 : -1;
-            float gyroscopeAxisX = (((bytes[curParseIndex + 28] & 0x7F & 0xff) << 4) + ((bytes[curParseIndex + 29] & 0xf0) >> 4)) * gyroscopeAxisXDirect;
-            acceleration.setGyroscopeAxisX(gyroscopeAxisX);
-            int gyroscopeAxisYDirect = (bytes[curParseIndex + 29] & 0x08) == 0x08 ? 1 : -1;
-            float gyroscopeAxisY = ((((bytes[curParseIndex + 29] & 0x07) << 4) & 0xff) + (bytes[curParseIndex + 30] &  0xff))* gyroscopeAxisYDirect;
-            acceleration.setGyroscopeAxisY(gyroscopeAxisY);
-            int gyroscopeAxisZDirect = (bytes[curParseIndex + 31] & 0x80) == 0x80 ? 1 : -1;
-            float gyroscopeAxisZ = (((bytes[curParseIndex + 31] & 0x7F & 0xff)<< 4) + ((bytes[curParseIndex + 32] & 0xf0) >> 4)) * gyroscopeAxisZDirect;
-            acceleration.setGyroscopeAxisZ(gyroscopeAxisZ);
-        }
+        acceleration.setIs_4g_lbs(is_4g_lbs);
+        acceleration.setIs_2g_lbs(is_2g_lbs);
+        acceleration.setMcc_2g(mcc_2g);
+        acceleration.setMnc_2g(mnc_2g);
+        acceleration.setLac_2g_1(lac_2g_1);
+        acceleration.setCi_2g_1(ci_2g_1);
+        acceleration.setLac_2g_2(lac_2g_2);
+        acceleration.setCi_2g_2(ci_2g_2);
+        acceleration.setLac_2g_3(lac_2g_3);
+        acceleration.setCi_2g_3(ci_2g_3);
+        acceleration.setMcc_4g(mcc_4g);
+        acceleration.setMnc_4g(mnc_4g);
+        acceleration.setCi_4g(ci_4g);
+        acceleration.setEarfcn_4g_1(earfcn_4g_1);
+        acceleration.setPcid_4g_1(pcid_4g_1);
+        acceleration.setEarfcn_4g_2(earfcn_4g_2);
+        acceleration.setPcid_4g_2(pcid_4g_2);
         return acceleration;
     }
     private AccelerationData getAlarmAccelerationData(byte[] bytes, String imei, int curParseIndex) {
@@ -1534,11 +1802,72 @@ public class ObdDecoder {
             System.out.println("GPS Acceleration azimuth Error ; imei is :" + imei + ":" + BytesUtils.bytes2HexString(bytes,0));
         }
         acceleration.setAzimuth(azimuth);
+        Boolean is_4g_lbs = false;
+        Integer mcc_4g = null;
+        Integer mnc_4g = null;
+        Long ci_4g = null;
+        Integer earfcn_4g_1 = null;
+        Integer pcid_4g_1 = null;
+        Integer earfcn_4g_2 = null;
+        Integer pcid_4g_2 = null;
+        Boolean is_2g_lbs = false;
+        Integer mcc_2g = null;
+        Integer mnc_2g = null;
+        Integer lac_2g_1 = null;
+        Integer ci_2g_1 = null;
+        Integer lac_2g_2 = null;
+        Integer ci_2g_2 = null;
+        Integer lac_2g_3 = null;
+        Integer ci_2g_3 = null;
+        if (!latlngValid){
+            byte lbsByte = bytes[curParseIndex + 12];
+            if ((lbsByte & 0x8) == 0x8){
+                is_2g_lbs = true;
+            }else{
+                is_4g_lbs = true;
+            }
+        }
+        if (is_2g_lbs){
+            mcc_2g = BytesUtils.bytes2Short(bytes,curParseIndex + 12);
+            mnc_2g = BytesUtils.bytes2Short(bytes,curParseIndex + 14);
+            lac_2g_1 = BytesUtils.bytes2Short(bytes,curParseIndex + 16);
+            ci_2g_1 = BytesUtils.bytes2Short(bytes,curParseIndex + 18);
+            lac_2g_2 = BytesUtils.bytes2Short(bytes,curParseIndex + 20);
+            ci_2g_2 = BytesUtils.bytes2Short(bytes,curParseIndex + 22);
+            lac_2g_3 = BytesUtils.bytes2Short(bytes,curParseIndex + 24);
+            ci_2g_3 = BytesUtils.bytes2Short(bytes,curParseIndex + 26);
+        }
+        if (is_4g_lbs){
+            mcc_4g = BytesUtils.bytes2Short(bytes,curParseIndex + 12);
+            mnc_4g = BytesUtils.bytes2Short(bytes,curParseIndex + 14);
+            ci_4g = BytesUtils.unsigned4BytesToInt(bytes, curParseIndex + 16);
+            earfcn_4g_1 = BytesUtils.bytes2Short(bytes, curParseIndex + 20);
+            pcid_4g_1 = BytesUtils.bytes2Short(bytes, curParseIndex + 22);
+            earfcn_4g_2 = BytesUtils.bytes2Short(bytes, curParseIndex + 24);
+            pcid_4g_2 = BytesUtils.bytes2Short(bytes,curParseIndex + 26);
+        }
         int rpm = BytesUtils.bytes2Short(bytes, curParseIndex + 28);
         if(rpm == 65535){
             rpm = -999;
         }
         acceleration.setRpm(rpm);
+        acceleration.setIs_4g_lbs(is_4g_lbs);
+        acceleration.setIs_2g_lbs(is_2g_lbs);
+        acceleration.setMcc_2g(mcc_2g);
+        acceleration.setMnc_2g(mnc_2g);
+        acceleration.setLac_2g_1(lac_2g_1);
+        acceleration.setCi_2g_1(ci_2g_1);
+        acceleration.setLac_2g_2(lac_2g_2);
+        acceleration.setCi_2g_2(ci_2g_2);
+        acceleration.setLac_2g_3(lac_2g_3);
+        acceleration.setCi_2g_3(ci_2g_3);
+        acceleration.setMcc_4g(mcc_4g);
+        acceleration.setMnc_4g(mnc_4g);
+        acceleration.setCi_4g(ci_4g);
+        acceleration.setEarfcn_4g_1(earfcn_4g_1);
+        acceleration.setPcid_4g_1(pcid_4g_1);
+        acceleration.setEarfcn_4g_2(earfcn_4g_2);
+        acceleration.setPcid_4g_2(pcid_4g_2);
         return acceleration;
     }
 
@@ -1592,7 +1921,50 @@ public class ObdDecoder {
         double latitude = latlngValid ? BytesUtils.bytes2Float(data, 39) : 0.0;
         double longitude = latlngValid ? BytesUtils.bytes2Float(data, 35) : 0.0;
         int azimuth = latlngValid ? BytesUtils.bytes2Short(data, 45) : 0;
-
+        Boolean is_4g_lbs = false;
+        Integer mcc_4g = null;
+        Integer mnc_4g = null;
+        Long ci_4g = null;
+        Integer earfcn_4g_1 = null;
+        Integer pcid_4g_1 = null;
+        Integer earfcn_4g_2 = null;
+        Integer pcid_4g_2 = null;
+        Boolean is_2g_lbs = false;
+        Integer mcc_2g = null;
+        Integer mnc_2g = null;
+        Integer lac_2g_1 = null;
+        Integer ci_2g_1 = null;
+        Integer lac_2g_2 = null;
+        Integer ci_2g_2 = null;
+        Integer lac_2g_3 = null;
+        Integer ci_2g_3 = null;
+        if (!latlngValid){
+            byte lbsByte = data[31];
+            if ((lbsByte & 0x8) == 0x8){
+                is_2g_lbs = true;
+            }else{
+                is_4g_lbs = true;
+            }
+        }
+        if (is_2g_lbs){
+            mcc_2g = BytesUtils.bytes2Short(data,31);
+            mnc_2g = BytesUtils.bytes2Short(data,33);
+            lac_2g_1 = BytesUtils.bytes2Short(data,35);
+            ci_2g_1 = BytesUtils.bytes2Short(data,37);
+            lac_2g_2 = BytesUtils.bytes2Short(data,39);
+            ci_2g_2 = BytesUtils.bytes2Short(data,41);
+            lac_2g_3 = BytesUtils.bytes2Short(data,43);
+            ci_2g_3 = BytesUtils.bytes2Short(data,45);
+        }
+        if (is_4g_lbs){
+            mcc_4g = BytesUtils.bytes2Short(data,31);
+            mnc_4g = BytesUtils.bytes2Short(data,33);
+            ci_4g = BytesUtils.unsigned4BytesToInt(data, 35);
+            earfcn_4g_1 = BytesUtils.bytes2Short(data, 39);
+            pcid_4g_1 = BytesUtils.bytes2Short(data, 41);
+            earfcn_4g_2 = BytesUtils.bytes2Short(data, 43);
+            pcid_4g_2 = BytesUtils.bytes2Short(data,45);
+        }
         Float externalPowerVoltage = 0f;
         byte[] externalPowerVoltageBytes = Arrays.copyOfRange(data, 47, 49);
         String externalPowerVoltageStr = BytesUtils.bytes2HexString(externalPowerVoltageBytes, 0);
@@ -1729,6 +2101,23 @@ public class ObdDecoder {
         message.setEngineLoad(engineLoad);
         message.setThrottlePosition(throttlePosition);
         message.setRemainFuelRate(remainFuelRate);
+        message.setIs_4g_lbs(is_4g_lbs);
+        message.setIs_2g_lbs(is_2g_lbs);
+        message.setMcc_2g(mcc_2g);
+        message.setMnc_2g(mnc_2g);
+        message.setLac_2g_1(lac_2g_1);
+        message.setCi_2g_1(ci_2g_1);
+        message.setLac_2g_2(lac_2g_2);
+        message.setCi_2g_2(ci_2g_2);
+        message.setLac_2g_3(lac_2g_3);
+        message.setCi_2g_3(ci_2g_3);
+        message.setMcc_4g(mcc_4g);
+        message.setMnc_4g(mnc_4g);
+        message.setCi_4g(ci_4g);
+        message.setEarfcn_4g_1(earfcn_4g_1);
+        message.setPcid_4g_1(pcid_4g_1);
+        message.setEarfcn_4g_2(earfcn_4g_2);
+        message.setPcid_4g_2(pcid_4g_2);
         return message;
     }
 

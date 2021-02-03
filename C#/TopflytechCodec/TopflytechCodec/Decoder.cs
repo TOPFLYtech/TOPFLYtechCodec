@@ -763,7 +763,74 @@ namespace TopflytechCodec
             float speedf = (float)Convert.ToDouble(String.Format("{0}.{1}", Convert.ToInt32(strSp.Substring(0, 3)), Convert.ToInt32(strSp.Substring(3, strSp.Length - 3))));
             acceleration.Speed = speedf;
             int azimuth = BytesUtils.Bytes2Short(bytes, curParseIndex + 26);
+            Boolean is_4g_lbs = false;
+            Int32 mcc_4g = -1;
+            Int32 mnc_4g = -1;
+            Int64 ci_4g = -1;
+            Int32 earfcn_4g_1 = -1;
+            Int32 pcid_4g_1 = -1;
+            Int32 earfcn_4g_2 = -1;
+            Int32 pcid_4g_2 = -1;
+            Boolean is_2g_lbs = false;
+            Int32 mcc_2g = -1;
+            Int32 mnc_2g = -1;
+            Int32 lac_2g_1 = -1;
+            Int32 ci_2g_1 = -1;
+            Int32 lac_2g_2 = -1;
+            Int32 ci_2g_2 = -1;
+            Int32 lac_2g_3 = -1;
+            Int32 ci_2g_3 = -1;
+            if (!latlngValid)
+            {
+                byte lbsByte = bytes[curParseIndex + 12];
+                if ((lbsByte & 0x8) == 0x8)
+                {
+                    is_2g_lbs = true;
+                }
+                else
+                {
+                    is_4g_lbs = true;
+                }
+            }
+            if (is_2g_lbs)
+            {
+                mcc_2g = BytesUtils.Bytes2Short(bytes, curParseIndex + 12);
+                mnc_2g = BytesUtils.Bytes2Short(bytes, curParseIndex + 14);
+                lac_2g_1 = BytesUtils.Bytes2Short(bytes, curParseIndex + 16);
+                ci_2g_1 = BytesUtils.Bytes2Short(bytes, curParseIndex + 18);
+                lac_2g_2 = BytesUtils.Bytes2Short(bytes, curParseIndex + 20);
+                ci_2g_2 = BytesUtils.Bytes2Short(bytes, curParseIndex + 22);
+                lac_2g_3 = BytesUtils.Bytes2Short(bytes, curParseIndex + 24);
+                ci_2g_3 = BytesUtils.Bytes2Short(bytes, curParseIndex + 26);
+            }
+            if (is_4g_lbs)
+            {
+                mcc_4g = BytesUtils.Bytes2Short(bytes, curParseIndex + 12);
+                mnc_4g = BytesUtils.Bytes2Short(bytes, curParseIndex + 14);
+                ci_4g = BytesUtils.Byte2Int(bytes, curParseIndex + 16);
+                earfcn_4g_1 = BytesUtils.Bytes2Short(bytes, curParseIndex + 20);
+                pcid_4g_1 = BytesUtils.Bytes2Short(bytes, curParseIndex + 22);
+                earfcn_4g_2 = BytesUtils.Bytes2Short(bytes, curParseIndex + 24);
+                pcid_4g_2 = BytesUtils.Bytes2Short(bytes, curParseIndex + 26);
+            }
             acceleration.Azimuth = azimuth;
+            acceleration.Is_2g_lbs = is_2g_lbs;
+            acceleration.Is_4g_lbs = is_4g_lbs;
+            acceleration.Mcc_4g = mcc_4g;
+            acceleration.Mnc_4g = mnc_4g;
+            acceleration.Ci_4g = ci_4g;
+            acceleration.Earfcn_4g_1 = earfcn_4g_1;
+            acceleration.Pcid_4g_1 = pcid_4g_1;
+            acceleration.Earfcn_4g_2 = earfcn_4g_2;
+            acceleration.Pcid_4g_2 = pcid_4g_2;
+            acceleration.Mcc_2g = mcc_2g;
+            acceleration.Mnc_2g = mnc_2g;
+            acceleration.Lac_2g_1 = lac_2g_1;
+            acceleration.Ci_2g_1 = ci_2g_1;
+            acceleration.Lac_2g_2 = lac_2g_2;
+            acceleration.Ci_2g_2 = ci_2g_2;
+            acceleration.Lac_2g_3 = lac_2g_3;
+            acceleration.Ci_2g_3 = ci_2g_3;
             return acceleration;
         }
 
@@ -799,6 +866,56 @@ namespace TopflytechCodec
             float speedf = (float)Convert.ToDouble(String.Format("{0}.{1}", Convert.ToInt32(strSp.Substring(0, 3)), Convert.ToInt32(strSp.Substring(3, strSp.Length - 3))));
             acceleration.Speed = speedf;
             int azimuth = BytesUtils.Bytes2Short(bytes, curParseIndex + 26);
+            Boolean is_4g_lbs = false;
+            Int32 mcc_4g = -1;
+            Int32 mnc_4g = -1;
+            Int64 ci_4g = -1;
+            Int32 earfcn_4g_1 = -1;
+            Int32 pcid_4g_1 = -1;
+            Int32 earfcn_4g_2 = -1;
+            Int32 pcid_4g_2 = -1;
+            Boolean is_2g_lbs = false;
+            Int32 mcc_2g = -1;
+            Int32 mnc_2g = -1;
+            Int32 lac_2g_1 = -1;
+            Int32 ci_2g_1 = -1;
+            Int32 lac_2g_2 = -1;
+            Int32 ci_2g_2 = -1;
+            Int32 lac_2g_3 = -1;
+            Int32 ci_2g_3 = -1;
+            if (!latlngValid)
+            {
+                byte lbsByte = bytes[curParseIndex + 12];
+                if ((lbsByte & 0x8) == 0x8)
+                {
+                    is_2g_lbs = true;
+                }
+                else
+                {
+                    is_4g_lbs = true;
+                }
+            }
+            if (is_2g_lbs)
+            {
+                mcc_2g = BytesUtils.Bytes2Short(bytes, curParseIndex + 12);
+                mnc_2g = BytesUtils.Bytes2Short(bytes, curParseIndex + 14);
+                lac_2g_1 = BytesUtils.Bytes2Short(bytes, curParseIndex + 16);
+                ci_2g_1 = BytesUtils.Bytes2Short(bytes, curParseIndex + 18);
+                lac_2g_2 = BytesUtils.Bytes2Short(bytes, curParseIndex + 20);
+                ci_2g_2 = BytesUtils.Bytes2Short(bytes, curParseIndex + 22);
+                lac_2g_3 = BytesUtils.Bytes2Short(bytes, curParseIndex + 24);
+                ci_2g_3 = BytesUtils.Bytes2Short(bytes, curParseIndex + 26);
+            }
+            if (is_4g_lbs)
+            {
+                mcc_4g = BytesUtils.Bytes2Short(bytes, curParseIndex + 12);
+                mnc_4g = BytesUtils.Bytes2Short(bytes, curParseIndex + 14);
+                ci_4g = BytesUtils.Byte2Int(bytes, curParseIndex + 16);
+                earfcn_4g_1 = BytesUtils.Bytes2Short(bytes, curParseIndex + 20);
+                pcid_4g_1 = BytesUtils.Bytes2Short(bytes, curParseIndex + 22);
+                earfcn_4g_2 = BytesUtils.Bytes2Short(bytes, curParseIndex + 24);
+                pcid_4g_2 = BytesUtils.Bytes2Short(bytes, curParseIndex + 26);
+            }
             acceleration.Azimuth = azimuth;
             if (bytes.Length > 44)
             {
@@ -812,6 +929,23 @@ namespace TopflytechCodec
                 float gyroscopeAxisZ = (((bytes[curParseIndex + 31] & 0x7F & 0xff) << 4) + ((bytes[curParseIndex + 32] & 0xf0) >> 4)) * gyroscopeAxisZDirect;
                 acceleration.GyroscopeAxisZ = gyroscopeAxisZ;
             }
+            acceleration.Is_2g_lbs = is_2g_lbs;
+            acceleration.Is_4g_lbs = is_4g_lbs;
+            acceleration.Mcc_4g = mcc_4g;
+            acceleration.Mnc_4g = mnc_4g;
+            acceleration.Ci_4g = ci_4g;
+            acceleration.Earfcn_4g_1 = earfcn_4g_1;
+            acceleration.Pcid_4g_1 = pcid_4g_1;
+            acceleration.Earfcn_4g_2 = earfcn_4g_2;
+            acceleration.Pcid_4g_2 = pcid_4g_2;
+            acceleration.Mcc_2g = mcc_2g;
+            acceleration.Mnc_2g = mnc_2g;
+            acceleration.Lac_2g_1 = lac_2g_1;
+            acceleration.Ci_2g_1 = ci_2g_1;
+            acceleration.Lac_2g_2 = lac_2g_2;
+            acceleration.Ci_2g_2 = ci_2g_2;
+            acceleration.Lac_2g_3 = lac_2g_3;
+            acceleration.Ci_2g_3 = ci_2g_3;
             return acceleration;
         }
 
@@ -856,13 +990,80 @@ namespace TopflytechCodec
             }
         }catch (Exception e){
     
-        } 
+        }
+        Boolean is_4g_lbs = false;
+        Int32 mcc_4g = -1;
+        Int32 mnc_4g = -1;
+        Int64 ci_4g = -1;
+        Int32 earfcn_4g_1 = -1;
+        Int32 pcid_4g_1 = -1;
+        Int32 earfcn_4g_2 = -1;
+        Int32 pcid_4g_2 = -1;
+        Boolean is_2g_lbs = false;
+        Int32 mcc_2g = -1;
+        Int32 mnc_2g = -1;
+        Int32 lac_2g_1 = -1;
+        Int32 ci_2g_1 = -1;
+        Int32 lac_2g_2 = -1;
+        Int32 ci_2g_2 = -1;
+        Int32 lac_2g_3 = -1;
+        Int32 ci_2g_3 = -1;
+        if (!latlngValid)
+        {
+            byte lbsByte = bytes[23];
+            if ((lbsByte & 0x8) == 0x8)
+            {
+                is_2g_lbs = true;
+            }
+            else
+            {
+                is_4g_lbs = true;
+            }
+        }
+        if (is_2g_lbs)
+        {
+            mcc_2g = BytesUtils.Bytes2Short(bytes, 23);
+            mnc_2g = BytesUtils.Bytes2Short(bytes, 25);
+            lac_2g_1 = BytesUtils.Bytes2Short(bytes, 27);
+            ci_2g_1 = BytesUtils.Bytes2Short(bytes, 29);
+            lac_2g_2 = BytesUtils.Bytes2Short(bytes, 31);
+            ci_2g_2 = BytesUtils.Bytes2Short(bytes, 33);
+            lac_2g_3 = BytesUtils.Bytes2Short(bytes, 35);
+            ci_2g_3 = BytesUtils.Bytes2Short(bytes, 37);
+        }
+        if (is_4g_lbs)
+        {
+            mcc_4g = BytesUtils.Bytes2Short(bytes, 23);
+            mnc_4g = BytesUtils.Bytes2Short(bytes, 25);
+            ci_4g = BytesUtils.Byte2Int(bytes, 27);
+            earfcn_4g_1 = BytesUtils.Bytes2Short(bytes, 31);
+            pcid_4g_1 = BytesUtils.Bytes2Short(bytes, 33);
+            earfcn_4g_2 = BytesUtils.Bytes2Short(bytes, 35);
+            pcid_4g_2 = BytesUtils.Bytes2Short(bytes, 37);
+        }
         bluetoothPeripheralDataMessage.IsHadLocationInfo = true;
              bluetoothPeripheralDataMessage.Altitude = altitude;
                 bluetoothPeripheralDataMessage.Azimuth = azimuth;
              bluetoothPeripheralDataMessage.Latitude = latitude; 
               bluetoothPeripheralDataMessage.Longitude = longitude; 
                 bluetoothPeripheralDataMessage.Speed = speedf;
+                bluetoothPeripheralDataMessage.Is_2g_lbs = is_2g_lbs;
+                bluetoothPeripheralDataMessage.Is_4g_lbs = is_4g_lbs;
+                bluetoothPeripheralDataMessage.Mcc_4g = mcc_4g;
+                bluetoothPeripheralDataMessage.Mnc_4g = mnc_4g;
+                bluetoothPeripheralDataMessage.Ci_4g = ci_4g;
+                bluetoothPeripheralDataMessage.Earfcn_4g_1 = earfcn_4g_1;
+                bluetoothPeripheralDataMessage.Pcid_4g_1 = pcid_4g_1;
+                bluetoothPeripheralDataMessage.Earfcn_4g_2 = earfcn_4g_2;
+                bluetoothPeripheralDataMessage.Pcid_4g_2 = pcid_4g_2;
+                bluetoothPeripheralDataMessage.Mcc_2g = mcc_2g;
+                bluetoothPeripheralDataMessage.Mnc_2g = mnc_2g;
+                bluetoothPeripheralDataMessage.Lac_2g_1 = lac_2g_1;
+                bluetoothPeripheralDataMessage.Ci_2g_1 = ci_2g_1;
+                bluetoothPeripheralDataMessage.Lac_2g_2 = lac_2g_2;
+                bluetoothPeripheralDataMessage.Ci_2g_2 = ci_2g_2;
+                bluetoothPeripheralDataMessage.Lac_2g_3 = lac_2g_3;
+                bluetoothPeripheralDataMessage.Ci_2g_3 = ci_2g_3;
              
          byte[] bleData = new byte[bytes.Length - 39];
         Array.Copy(bytes, 39, bleData, 0, bleData.Length);
@@ -938,6 +1139,23 @@ namespace TopflytechCodec
             bleAlertData.Longitude = longitude;
             bleAlertData.Mac = mac;
             bleAlertData.Speed = speedf;
+            bleAlertData.Is_2g_lbs = is_2g_lbs;
+            bleAlertData.Is_4g_lbs = is_4g_lbs;
+            bleAlertData.Mcc_4g = mcc_4g;
+            bleAlertData.Mnc_4g = mnc_4g;
+            bleAlertData.Ci_4g = ci_4g;
+            bleAlertData.Earfcn_4g_1 = earfcn_4g_1;
+            bleAlertData.Pcid_4g_1 = pcid_4g_1;
+            bleAlertData.Earfcn_4g_2 = earfcn_4g_2;
+            bleAlertData.Pcid_4g_2 = pcid_4g_2;
+            bleAlertData.Mcc_2g = mcc_2g;
+            bleAlertData.Mnc_2g = mnc_2g;
+            bleAlertData.Lac_2g_1 = lac_2g_1;
+            bleAlertData.Ci_2g_1 = ci_2g_1;
+            bleAlertData.Lac_2g_2 = lac_2g_2;
+            bleAlertData.Ci_2g_2 = ci_2g_2;
+            bleAlertData.Lac_2g_3 = lac_2g_3;
+            bleAlertData.Ci_2g_3 = ci_2g_3;
             bleDataList.Add(bleAlertData);
         }else if (bleData[0] == 0x00 && bleData[1] == 0x03){
             bluetoothPeripheralDataMessage.MessageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_DRIVER;
@@ -967,6 +1185,23 @@ namespace TopflytechCodec
             bleDriverSignInData.Longitude = longitude;
             bleDriverSignInData.Mac = mac;
             bleDriverSignInData.Speed = speedf;
+            bleDriverSignInData.Is_2g_lbs = is_2g_lbs;
+            bleDriverSignInData.Is_4g_lbs = is_4g_lbs;
+            bleDriverSignInData.Mcc_4g = mcc_4g;
+            bleDriverSignInData.Mnc_4g = mnc_4g;
+            bleDriverSignInData.Ci_4g = ci_4g;
+            bleDriverSignInData.Earfcn_4g_1 = earfcn_4g_1;
+            bleDriverSignInData.Pcid_4g_1 = pcid_4g_1;
+            bleDriverSignInData.Earfcn_4g_2 = earfcn_4g_2;
+            bleDriverSignInData.Pcid_4g_2 = pcid_4g_2;
+            bleDriverSignInData.Mcc_2g = mcc_2g;
+            bleDriverSignInData.Mnc_2g = mnc_2g;
+            bleDriverSignInData.Lac_2g_1 = lac_2g_1;
+            bleDriverSignInData.Ci_2g_1 = ci_2g_1;
+            bleDriverSignInData.Lac_2g_2 = lac_2g_2;
+            bleDriverSignInData.Ci_2g_2 = ci_2g_2;
+            bleDriverSignInData.Lac_2g_3 = lac_2g_3;
+            bleDriverSignInData.Ci_2g_3 = ci_2g_3;
             bleDataList.Add(bleDriverSignInData);
         }else if (bleData[0] == 0x00 && bleData[1] == 0x04){
             bluetoothPeripheralDataMessage.MessageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_TEMP; 
@@ -1278,6 +1513,56 @@ namespace TopflytechCodec
                 {
 
                 }
+                Boolean is_4g_lbs = false;
+                Int32 mcc_4g = -1;
+                Int32 mnc_4g = -1;
+                Int64 ci_4g = -1;
+                Int32 earfcn_4g_1 = -1;
+                Int32 pcid_4g_1 = -1;
+                Int32 earfcn_4g_2 = -1;
+                Int32 pcid_4g_2 = -1;
+                Boolean is_2g_lbs = false;
+                Int32 mcc_2g = -1;
+                Int32 mnc_2g = -1;
+                Int32 lac_2g_1 = -1;
+                Int32 ci_2g_1 = -1;
+                Int32 lac_2g_2 = -1;
+                Int32 ci_2g_2 = -1;
+                Int32 lac_2g_3 = -1;
+                Int32 ci_2g_3 = -1;
+                if (!latlngValid)
+                {
+                    byte lbsByte = bleData[11];
+                    if ((lbsByte & 0x8) == 0x8)
+                    {
+                        is_2g_lbs = true;
+                    }
+                    else
+                    {
+                        is_4g_lbs = true;
+                    }
+                }
+                if (is_2g_lbs)
+                {
+                    mcc_2g = BytesUtils.Bytes2Short(bleData, 11);
+                    mnc_2g = BytesUtils.Bytes2Short(bleData, 13);
+                    lac_2g_1 = BytesUtils.Bytes2Short(bleData, 15);
+                    ci_2g_1 = BytesUtils.Bytes2Short(bleData, 17);
+                    lac_2g_2 = BytesUtils.Bytes2Short(bleData, 19);
+                    ci_2g_2 = BytesUtils.Bytes2Short(bleData, 21);
+                    lac_2g_3 = BytesUtils.Bytes2Short(bleData, 23);
+                    ci_2g_3 = BytesUtils.Bytes2Short(bleData, 25);
+                }
+                if (is_4g_lbs)
+                {
+                    mcc_4g = BytesUtils.Bytes2Short(bleData, 11);
+                    mnc_4g = BytesUtils.Bytes2Short(bleData, 13);
+                    ci_4g = BytesUtils.Byte2Int(bleData, 15);
+                    earfcn_4g_1 = BytesUtils.Bytes2Short(bleData, 19);
+                    pcid_4g_1 = BytesUtils.Bytes2Short(bleData, 21);
+                    earfcn_4g_2 = BytesUtils.Bytes2Short(bleData, 23);
+                    pcid_4g_2 = BytesUtils.Bytes2Short(bleData, 25);
+                }
                 bleAlertData.AlertType = alert;
                 bleAlertData.Altitude = altitude;
                 bleAlertData.Azimuth = azimuth;
@@ -1289,6 +1574,23 @@ namespace TopflytechCodec
                 bleAlertData.Longitude = longitude;
                 bleAlertData.Mac = mac;
                 bleAlertData.Speed = speedf;
+                bleAlertData.Is_2g_lbs = is_2g_lbs;
+                bleAlertData.Is_4g_lbs = is_4g_lbs;
+                bleAlertData.Mcc_4g = mcc_4g;
+                bleAlertData.Mnc_4g = mnc_4g;
+                bleAlertData.Ci_4g = ci_4g;
+                bleAlertData.Earfcn_4g_1 = earfcn_4g_1;
+                bleAlertData.Pcid_4g_1 = pcid_4g_1;
+                bleAlertData.Earfcn_4g_2 = earfcn_4g_2;
+                bleAlertData.Pcid_4g_2 = pcid_4g_2;
+                bleAlertData.Mcc_2g = mcc_2g;
+                bleAlertData.Mnc_2g = mnc_2g;
+                bleAlertData.Lac_2g_1 = lac_2g_1;
+                bleAlertData.Ci_2g_1 = ci_2g_1;
+                bleAlertData.Lac_2g_2 = lac_2g_2;
+                bleAlertData.Ci_2g_2 = ci_2g_2;
+                bleAlertData.Lac_2g_3 = lac_2g_3;
+                bleAlertData.Ci_2g_3 = ci_2g_3;
                 bleDataList.Add(bleAlertData);
             }
             else if (bleData[0] == 0x00 && bleData[1] == 0x03)
@@ -1334,6 +1636,56 @@ namespace TopflytechCodec
                 catch (Exception e)
                 {
                 }
+                Boolean is_4g_lbs = false;
+                Int32 mcc_4g = -1;
+                Int32 mnc_4g = -1;
+                Int64 ci_4g = -1;
+                Int32 earfcn_4g_1 = -1;
+                Int32 pcid_4g_1 = -1;
+                Int32 earfcn_4g_2 = -1;
+                Int32 pcid_4g_2 = -1;
+                Boolean is_2g_lbs = false;
+                Int32 mcc_2g = -1;
+                Int32 mnc_2g = -1;
+                Int32 lac_2g_1 = -1;
+                Int32 ci_2g_1 = -1;
+                Int32 lac_2g_2 = -1;
+                Int32 ci_2g_2 = -1;
+                Int32 lac_2g_3 = -1;
+                Int32 ci_2g_3 = -1;
+                if (!latlngValid)
+                {
+                    byte lbsByte = bleData[11];
+                    if ((lbsByte & 0x8) == 0x8)
+                    {
+                        is_2g_lbs = true;
+                    }
+                    else
+                    {
+                        is_4g_lbs = true;
+                    }
+                }
+                if (is_2g_lbs)
+                {
+                    mcc_2g = BytesUtils.Bytes2Short(bleData, 11);
+                    mnc_2g = BytesUtils.Bytes2Short(bleData, 13);
+                    lac_2g_1 = BytesUtils.Bytes2Short(bleData, 15);
+                    ci_2g_1 = BytesUtils.Bytes2Short(bleData, 17);
+                    lac_2g_2 = BytesUtils.Bytes2Short(bleData, 19);
+                    ci_2g_2 = BytesUtils.Bytes2Short(bleData, 21);
+                    lac_2g_3 = BytesUtils.Bytes2Short(bleData, 23);
+                    ci_2g_3 = BytesUtils.Bytes2Short(bleData, 25);
+                }
+                if (is_4g_lbs)
+                {
+                    mcc_4g = BytesUtils.Bytes2Short(bleData, 11);
+                    mnc_4g = BytesUtils.Bytes2Short(bleData, 13);
+                    ci_4g = BytesUtils.Byte2Int(bleData, 15);
+                    earfcn_4g_1 = BytesUtils.Bytes2Short(bleData, 19);
+                    pcid_4g_1 = BytesUtils.Bytes2Short(bleData, 21);
+                    earfcn_4g_2 = BytesUtils.Bytes2Short(bleData, 23);
+                    pcid_4g_2 = BytesUtils.Bytes2Short(bleData, 25);
+                }
                 bleDriverSignInData.Alert = alert;
                 bleDriverSignInData.Altitude = altitude;
                 bleDriverSignInData.Azimuth = azimuth;
@@ -1345,6 +1697,23 @@ namespace TopflytechCodec
                 bleDriverSignInData.Longitude = longitude;
                 bleDriverSignInData.Mac = mac;
                 bleDriverSignInData.Speed = speedf;
+                bleDriverSignInData.Is_2g_lbs = is_2g_lbs;
+                bleDriverSignInData.Is_4g_lbs = is_4g_lbs;
+                bleDriverSignInData.Mcc_4g = mcc_4g;
+                bleDriverSignInData.Mnc_4g = mnc_4g;
+                bleDriverSignInData.Ci_4g = ci_4g;
+                bleDriverSignInData.Earfcn_4g_1 = earfcn_4g_1;
+                bleDriverSignInData.Pcid_4g_1 = pcid_4g_1;
+                bleDriverSignInData.Earfcn_4g_2 = earfcn_4g_2;
+                bleDriverSignInData.Pcid_4g_2 = pcid_4g_2;
+                bleDriverSignInData.Mcc_2g = mcc_2g;
+                bleDriverSignInData.Mnc_2g = mnc_2g;
+                bleDriverSignInData.Lac_2g_1 = lac_2g_1;
+                bleDriverSignInData.Ci_2g_1 = ci_2g_1;
+                bleDriverSignInData.Lac_2g_2 = lac_2g_2;
+                bleDriverSignInData.Ci_2g_2 = ci_2g_2;
+                bleDriverSignInData.Lac_2g_3 = lac_2g_3;
+                bleDriverSignInData.Ci_2g_3 = ci_2g_3;
                 bleDataList.Add(bleDriverSignInData);
             }
             else if (bleData[0] == 0x00 && bleData[1] == 0x04)
@@ -1800,7 +2169,56 @@ namespace TopflytechCodec
             }catch (Exception e){ 
             }
             int azimuth = latlngValid ? BytesUtils.Bytes2Short(data, 57) : 0;
-
+            Boolean is_4g_lbs = false;
+            Int32 mcc_4g = -1;
+            Int32 mnc_4g = -1;
+            Int64 ci_4g = -1;
+            Int32 earfcn_4g_1 = -1;
+            Int32 pcid_4g_1 = -1;
+            Int32 earfcn_4g_2 = -1;
+            Int32 pcid_4g_2 = -1;
+            Boolean is_2g_lbs = false;
+            Int32 mcc_2g = -1;
+            Int32 mnc_2g = -1;
+            Int32 lac_2g_1 = -1;
+            Int32 ci_2g_1 = -1;
+            Int32 lac_2g_2 = -1;
+            Int32 ci_2g_2 = -1;
+            Int32 lac_2g_3 = -1;
+            Int32 ci_2g_3 = -1;
+            if (!latlngValid)
+            {
+                byte lbsByte = data[43];
+                if ((lbsByte & 0x8) == 0x8)
+                {
+                    is_2g_lbs = true;
+                }
+                else
+                {
+                    is_4g_lbs = true;
+                }
+            }
+            if (is_2g_lbs)
+            {
+                mcc_2g = BytesUtils.Bytes2Short(data, 43);
+                mnc_2g = BytesUtils.Bytes2Short(data, 45);
+                lac_2g_1 = BytesUtils.Bytes2Short(data, 47);
+                ci_2g_1 = BytesUtils.Bytes2Short(data, 49);
+                lac_2g_2 = BytesUtils.Bytes2Short(data, 51);
+                ci_2g_2 = BytesUtils.Bytes2Short(data, 53);
+                lac_2g_3 = BytesUtils.Bytes2Short(data, 55);
+                ci_2g_3 = BytesUtils.Bytes2Short(data, 57);
+            }
+            if (is_4g_lbs)
+            {
+                mcc_4g = BytesUtils.Bytes2Short(data, 43);
+                mnc_4g = BytesUtils.Bytes2Short(data, 45);
+                ci_4g = BytesUtils.Byte2Int(data, 47);
+                earfcn_4g_1 = BytesUtils.Bytes2Short(data, 51);
+                pcid_4g_1 = BytesUtils.Bytes2Short(data, 53);
+                earfcn_4g_2 = BytesUtils.Bytes2Short(data, 55);
+                pcid_4g_2 = BytesUtils.Bytes2Short(data, 57);
+            }
             float batteryVoltage = 0f; 
 
             byte[] batteryVoltageBytes = new byte[2];
@@ -2008,7 +2426,57 @@ namespace TopflytechCodec
                 speedf = (float)Convert.ToDouble(String.Format("{0}.{1}", Convert.ToInt32(strSp.Substring(0, 3)), Convert.ToInt32(strSp.Substring(3, strSp.Length - 3))));
                 azimuth = latlngValid ? BytesUtils.Bytes2Short(data, 49) : 0;
             }
-
+            Boolean is_4g_lbs = false;
+            Int32 mcc_4g = -1;
+            Int32 mnc_4g = -1;
+            Int64 ci_4g = -1;
+            Int32 earfcn_4g_1 = -1;
+            Int32 pcid_4g_1 = -1;
+            Int32 earfcn_4g_2 = -1;
+            Int32 pcid_4g_2 = -1;
+            Boolean is_2g_lbs = false;
+            Int32 mcc_2g = -1;
+            Int32 mnc_2g = -1;
+            Int32 lac_2g_1 = -1;
+            Int32 ci_2g_1 = -1;
+            Int32 lac_2g_2 = -1;
+            Int32 ci_2g_2 = -1;
+            Int32 lac_2g_3 = -1;
+            Int32 ci_2g_3 = -1;
+            if (!latlngValid)
+            {
+                byte lbsByte = data[35];
+                if ((lbsByte & 0x8) == 0x8)
+                {
+                    is_2g_lbs = true;
+                }
+                else
+                {
+                    is_4g_lbs = true;
+                }
+            }
+            if (is_2g_lbs)
+            {
+                mcc_2g = BytesUtils.Bytes2Short(data, 35);
+                mnc_2g = BytesUtils.Bytes2Short(data, 37);
+                lac_2g_1 = BytesUtils.Bytes2Short(data, 39);
+                ci_2g_1 = BytesUtils.Bytes2Short(data, 41);
+                lac_2g_2 = BytesUtils.Bytes2Short(data, 43);
+                ci_2g_2 = BytesUtils.Bytes2Short(data, 45);
+                lac_2g_3 = BytesUtils.Bytes2Short(data, 47);
+                ci_2g_3 = BytesUtils.Bytes2Short(data, 49);
+            }
+            if (is_4g_lbs)
+            {
+                mcc_4g = BytesUtils.Bytes2Short(data, 35);
+                mnc_4g = BytesUtils.Bytes2Short(data, 37);
+                ci_4g = BytesUtils.Byte2Int(data, 39);
+                earfcn_4g_1 = BytesUtils.Bytes2Short(data, 43);
+                pcid_4g_1 = BytesUtils.Bytes2Short(data, 45);
+                earfcn_4g_2 = BytesUtils.Bytes2Short(data, 47);
+                pcid_4g_2 = BytesUtils.Bytes2Short(data, 49);
+            }
+		
             float externalPowerVoltage = 0f;
             if (data.Length >= 53)
             {
@@ -2120,6 +2588,23 @@ namespace TopflytechCodec
             }
             message.Azimuth = azimuth;
             message.ExternalPowerVoltage = externalPowerVoltage;
+            message.Is_2g_lbs = is_2g_lbs;
+            message.Is_4g_lbs = is_4g_lbs;
+            message.Mcc_4g = mcc_4g;
+            message.Mnc_4g = mnc_4g;
+            message.Ci_4g = ci_4g;
+            message.Earfcn_4g_1 = earfcn_4g_1;
+            message.Pcid_4g_1 = pcid_4g_1;
+            message.Earfcn_4g_2 = earfcn_4g_2;
+            message.Pcid_4g_2 = pcid_4g_2;
+            message.Mcc_2g = mcc_2g;
+            message.Mnc_2g = mnc_2g;
+            message.Lac_2g_1 = lac_2g_1;
+            message.Ci_2g_1 = ci_2g_1;
+            message.Lac_2g_2 = lac_2g_2;
+            message.Ci_2g_2 = ci_2g_2;
+            message.Lac_2g_3 = lac_2g_3;
+            message.Ci_2g_3 = ci_2g_3;
             return message;
         }
 

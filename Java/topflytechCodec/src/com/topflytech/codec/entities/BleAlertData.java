@@ -107,5 +107,158 @@ public class BleAlertData  extends BleData{
     private Float speed = 0.0f;
     private Integer azimuth = 0;
 
+    private Boolean is_4g_lbs = false;
+    private Integer mcc_4g;
+    private Integer mnc_4g;
+    private Long ci_4g;
+    private Integer earfcn_4g_1;
+    private Integer pcid_4g_1;
+    private Integer earfcn_4g_2;
+    private Integer pcid_4g_2;
 
+    private Boolean is_2g_lbs = false;
+    private Integer mcc_2g;
+    private Integer mnc_2g;
+    private Integer lac_2g_1;
+    private Integer ci_2g_1;
+    private Integer lac_2g_2;
+    private Integer ci_2g_2;
+    private Integer lac_2g_3;
+    private Integer ci_2g_3;
+
+    public Boolean is_4g_lbs() {
+        return is_4g_lbs;
+    }
+
+    public void setIs_4g_lbs(Boolean is_4g_lbs) {
+        this.is_4g_lbs = is_4g_lbs;
+    }
+
+    public Integer getMcc_4g() {
+        return mcc_4g;
+    }
+
+    public void setMcc_4g(Integer mcc_4g) {
+        this.mcc_4g = mcc_4g;
+    }
+
+    public Integer getMnc_4g() {
+        return mnc_4g;
+    }
+
+    public void setMnc_4g(Integer mnc_4g) {
+        this.mnc_4g = mnc_4g;
+    }
+
+    public Long getCi_4g() {
+        return ci_4g;
+    }
+
+    public void setCi_4g(Long ci_4g) {
+        this.ci_4g = ci_4g;
+    }
+
+    public Integer getEarfcn_4g_1() {
+        return earfcn_4g_1;
+    }
+
+    public void setEarfcn_4g_1(Integer earfcn_4g_1) {
+        this.earfcn_4g_1 = earfcn_4g_1;
+    }
+
+    public Integer getPcid_4g_1() {
+        return pcid_4g_1;
+    }
+
+    public void setPcid_4g_1(Integer pcid_4g_1) {
+        this.pcid_4g_1 = pcid_4g_1;
+    }
+
+    public Integer getEarfcn_4g_2() {
+        return earfcn_4g_2;
+    }
+
+    public void setEarfcn_4g_2(Integer earfcn_4g_2) {
+        this.earfcn_4g_2 = earfcn_4g_2;
+    }
+
+    public Integer getPcid_4g_2() {
+        return pcid_4g_2;
+    }
+
+    public void setPcid_4g_2(Integer pcid_4g_2) {
+        this.pcid_4g_2 = pcid_4g_2;
+    }
+
+    public Boolean is_2g_lbs() {
+        return is_2g_lbs;
+    }
+
+    public void setIs_2g_lbs(Boolean is_2g_lbs) {
+        this.is_2g_lbs = is_2g_lbs;
+    }
+
+    public Integer getMcc_2g() {
+        return mcc_2g;
+    }
+
+    public void setMcc_2g(Integer mcc_2g) {
+        this.mcc_2g = mcc_2g;
+    }
+
+    public Integer getMnc_2g() {
+        return mnc_2g;
+    }
+
+    public void setMnc_2g(Integer mnc_2g) {
+        this.mnc_2g = mnc_2g;
+    }
+
+    public Integer getLac_2g_1() {
+        return lac_2g_1;
+    }
+
+    public void setLac_2g_1(Integer lac_2g_1) {
+        this.lac_2g_1 = lac_2g_1;
+    }
+
+    public Integer getCi_2g_1() {
+        return ci_2g_1;
+    }
+
+    public void setCi_2g_1(Integer ci_2g_1) {
+        this.ci_2g_1 = ci_2g_1;
+    }
+
+    public Integer getLac_2g_2() {
+        return lac_2g_2;
+    }
+
+    public void setLac_2g_2(Integer lac_2g_2) {
+        this.lac_2g_2 = lac_2g_2;
+    }
+
+    public Integer getCi_2g_2() {
+        return ci_2g_2;
+    }
+
+    public void setCi_2g_2(Integer ci_2g_2) {
+        this.ci_2g_2 = ci_2g_2;
+    }
+
+    public Integer getLac_2g_3() {
+        return lac_2g_3;
+    }
+
+    public void setLac_2g_3(Integer lac_2g_3) {
+        this.lac_2g_3 = lac_2g_3;
+    }
+
+    public Integer getCi_2g_3() {
+        return ci_2g_3;
+    }
+
+    public void setCi_2g_3(Integer ci_2g_3) {
+        this.ci_2g_3 = ci_2g_3;
+    }
 }

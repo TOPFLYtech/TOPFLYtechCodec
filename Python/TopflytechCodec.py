@@ -116,6 +116,30 @@ class BluetoothPeripheralDataMessage(Message):
     MESSAGE_TYPE_DOOR = 4
     MESSAGE_TYPE_CTRL = 5
     MESSAGE_TYPE_FUEL = 6
+    is_4g_lbs = False
+    mcc_4g = 0
+    mnc_4g = 0
+    ci_4g = 0
+    earfcn_4g_1 = 0
+    pcid_4g_1 = 0
+    earfcn_4g_2 = 0
+    pcid_4g_2 = 0
+    is_2g_lbs = False
+    mcc_2g = 0
+    mnc_2g = 0
+    lac_2g_1 = 0
+    ci_2g_1 = 0
+    lac_2g_2 = 0
+    ci_2g_2 = 0
+    lac_2g_3 = 0
+    ci_2g_3 = 0
+    isHadLocationInfo = False
+    latlngValid = False
+    altitude = 0
+    latitude = 0
+    longitude = 0
+    azimuth = 0
+    speed = 0
 
 class BleData:
     mac = ""
@@ -134,6 +158,23 @@ class BleAlertData(BleData):
     altitude = 0.0
     speed = 0.0
     azimuth = 0
+    is_4g_lbs = False
+    mcc_4g = 0
+    mnc_4g = 0
+    ci_4g = 0
+    earfcn_4g_1 = 0
+    pcid_4g_1 = 0
+    earfcn_4g_2 = 0
+    pcid_4g_2 = 0
+    is_2g_lbs = False
+    mcc_2g = 0
+    mnc_2g = 0
+    lac_2g_1 = 0
+    ci_2g_1 = 0
+    lac_2g_2 = 0
+    ci_2g_2 = 0
+    lac_2g_3 = 0
+    ci_2g_3 = 0
 
 class BleDriverSignInData(BleData):
     ALERT_TYPE_DRIVER = 0
@@ -148,6 +189,23 @@ class BleDriverSignInData(BleData):
     altitude = 0.0
     speed = 0.0
     azimuth = 0
+    is_4g_lbs = False
+    mcc_4g = 0
+    mnc_4g = 0
+    ci_4g = 0
+    earfcn_4g_1 = 0
+    pcid_4g_1 = 0
+    earfcn_4g_2 = 0
+    pcid_4g_2 = 0
+    is_2g_lbs = False
+    mcc_2g = 0
+    mnc_2g = 0
+    lac_2g_1 = 0
+    ci_2g_1 = 0
+    lac_2g_2 = 0
+    ci_2g_2 = 0
+    lac_2g_3 = 0
+    ci_2g_3 = 0
 
 class BleTempData(BleData):
     voltage = 0
@@ -207,6 +265,23 @@ class AccelerationData:
     gyroscopeAxisX = 0.0
     gyroscopeAxisY = 0.0
     gyroscopeAxisZ = 0.0
+    is_4g_lbs = False
+    mcc_4g = 0
+    mnc_4g = 0
+    ci_4g = 0
+    earfcn_4g_1 = 0
+    pcid_4g_1 = 0
+    earfcn_4g_2 = 0
+    pcid_4g_2 = 0
+    is_2g_lbs = False
+    mcc_2g = 0
+    mnc_2g = 0
+    lac_2g_1 = 0
+    ci_2g_1 = 0
+    lac_2g_2 = 0
+    ci_2g_2 = 0
+    lac_2g_3 = 0
+    ci_2g_3 = 0
 
 
 class SignInMessage(Message):
@@ -301,6 +376,23 @@ class LocationMessage(Message):
     isSmartUploadSupport = False
     supportChangeBattery = False
     batteryVoltage = 0
+    is_4g_lbs = False
+    mcc_4g = 0
+    mnc_4g = 0
+    ci_4g = 0
+    earfcn_4g_1 = 0
+    pcid_4g_1 = 0
+    earfcn_4g_2 = 0
+    pcid_4g_2 = 0
+    is_2g_lbs = False
+    mcc_2g = 0
+    mnc_2g = 0
+    lac_2g_1 = 0
+    ci_2g_1 = 0
+    lac_2g_2 = 0
+    ci_2g_2 = 0
+    lac_2g_3 = 0
+    ci_2g_3 = 0
 
 
 class LocationInfoMessage(LocationMessage):
@@ -1035,11 +1127,50 @@ class Decoder:
         azimuth = 0
         speed = 0
         strSp = byte2HexString(bleData[35:37], 0);
+        is_4g_lbs = False
+        mcc_4g = 0
+        mnc_4g = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
+        pcid_4g_1 = 0
+        earfcn_4g_2 = 0
+        pcid_4g_2 = 0
+        is_2g_lbs = False
+        mcc_2g = 0
+        mnc_2g = 0
+        lac_2g_1 = 0
+        ci_2g_1 = 0
+        lac_2g_2 = 0
+        ci_2g_2 = 0
+        lac_2g_3 = 0
+        ci_2g_3 = 0
         if  latlngValid:
             altitude = bytes2Float(bleData, 23)
             latitude = bytes2Float(bleData, 27)
             longitude = bytes2Float(bleData, 31)
             azimuth = bytes2Short(bleData, 37)
+        else:
+            if (bleData[23] & 0x8) == 0x8:
+                is_2g_lbs = True
+            else:
+                is_4g_lbs = True
+        if is_2g_lbs:
+            mcc_2g = bytes2Short(bleData,23)
+            mnc_2g = bytes2Short(bleData,25)
+            lac_2g_1 = bytes2Short(bleData,27)
+            ci_2g_1 = bytes2Short(bleData,29)
+            lac_2g_2 = bytes2Short(bleData,31)
+            ci_2g_2 = bytes2Short(bleData,33)
+            lac_2g_3 = bytes2Short(bleData,35)
+            ci_2g_3 = bytes2Short(bleData,37)
+        if is_4g_lbs:
+            mcc_4g = bytes2Short(bleData,23)
+            mnc_4g = bytes2Short(bleData,25)
+            ci_4g = bytes2Integer(bleData, 27)
+            earfcn_4g_1 = bytes2Short(bleData, 31)
+            pcid_4g_1 = bytes2Short(bleData, 33)
+            earfcn_4g_2 = bytes2Short(bleData, 35)
+            pcid_4g_2 = bytes2Short(bleData,37)
         if strSp.find("f") == -1:
                 speed = -1
         else:
@@ -1054,9 +1185,32 @@ class Decoder:
         bluetoothPeripheralDataMessage.orignBytes = byteArray
         bluetoothPeripheralDataMessage.isHistoryData = isHistoryData
         bluetoothPeripheralDataMessage.serialNo = serialNo
+        bluetoothPeripheralDataMessage.latlngValid = latlngValid
+        bluetoothPeripheralDataMessage.altitude = altitude
+        bluetoothPeripheralDataMessage.latitude = latitude
+        bluetoothPeripheralDataMessage.longitude = longitude
+        bluetoothPeripheralDataMessage.azimuth = azimuth
+        bluetoothPeripheralDataMessage.isHadLocationInfo = True
         bluetoothPeripheralDataMessage.protocolHeadType = 0x12
         # bluetoothPeripheralDataMessage.isNeedResp = isNeedResp
         bluetoothPeripheralDataMessage.imei = imei
+        bluetoothPeripheralDataMessage.is_4g_lbs = is_4g_lbs
+        bluetoothPeripheralDataMessage.is_2g_lbs = is_2g_lbs
+        bluetoothPeripheralDataMessage.mcc_4g = mcc_4g
+        bluetoothPeripheralDataMessage.mnc_4g = mnc_4g
+        bluetoothPeripheralDataMessage.ci_4g = ci_4g
+        bluetoothPeripheralDataMessage.earfcn_4g_1 = earfcn_4g_1
+        bluetoothPeripheralDataMessage.pcid_4g_1 = pcid_4g_1
+        bluetoothPeripheralDataMessage.earfcn_4g_2 = earfcn_4g_2
+        bluetoothPeripheralDataMessage.pcid_4g_2 = pcid_4g_2
+        bluetoothPeripheralDataMessage.mcc_2g = mcc_2g
+        bluetoothPeripheralDataMessage.mnc_2g = mnc_2g
+        bluetoothPeripheralDataMessage.lac_2g_1 = lac_2g_1
+        bluetoothPeripheralDataMessage.ci_2g_1 = ci_2g_1
+        bluetoothPeripheralDataMessage.lac_2g_2 = lac_2g_2
+        bluetoothPeripheralDataMessage.ci_2g_2 = ci_2g_2
+        bluetoothPeripheralDataMessage.lac_2g_3 = lac_2g_3
+        bluetoothPeripheralDataMessage.ci_2g_3 = ci_2g_3
         bleData = byteArray[39:len(byteArray)]
         bleDataList = []
         if bleData[0] == 0x00 and bleData[1] == 0x01:
@@ -1127,6 +1281,23 @@ class Decoder:
             bleAlertData.longitude = longitude
             bleAlertData.mac = mac
             bleAlertData.speed = speed
+            bleAlertData.is_4g_lbs = is_4g_lbs
+            bleAlertData.is_2g_lbs = is_2g_lbs
+            bleAlertData.mcc_4g = mcc_4g
+            bleAlertData.mnc_4g = mnc_4g
+            bleAlertData.ci_4g = ci_4g
+            bleAlertData.earfcn_4g_1 = earfcn_4g_1
+            bleAlertData.pcid_4g_1 = pcid_4g_1
+            bleAlertData.earfcn_4g_2 = earfcn_4g_2
+            bleAlertData.pcid_4g_2 = pcid_4g_2
+            bleAlertData.mcc_2g = mcc_2g
+            bleAlertData.mnc_2g = mnc_2g
+            bleAlertData.lac_2g_1 = lac_2g_1
+            bleAlertData.ci_2g_1 = ci_2g_1
+            bleAlertData.lac_2g_2 = lac_2g_2
+            bleAlertData.ci_2g_2 = ci_2g_2
+            bleAlertData.lac_2g_3 = lac_2g_3
+            bleAlertData.ci_2g_3 = ci_2g_3
             bleDataList.append(bleAlertData);
         elif bleData[0] == 0x00 and bleData[1] == 0x03:
             bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_DRIVER
@@ -1156,6 +1327,23 @@ class Decoder:
             bleDriverSignInData.longitude = longitude
             bleDriverSignInData.mac = mac
             bleDriverSignInData.speed = speed
+            bleDriverSignInData.is_4g_lbs = is_4g_lbs
+            bleDriverSignInData.is_2g_lbs = is_2g_lbs
+            bleDriverSignInData.mcc_4g = mcc_4g
+            bleDriverSignInData.mnc_4g = mnc_4g
+            bleDriverSignInData.ci_4g = ci_4g
+            bleDriverSignInData.earfcn_4g_1 = earfcn_4g_1
+            bleDriverSignInData.pcid_4g_1 = pcid_4g_1
+            bleDriverSignInData.earfcn_4g_2 = earfcn_4g_2
+            bleDriverSignInData.pcid_4g_2 = pcid_4g_2
+            bleDriverSignInData.mcc_2g = mcc_2g
+            bleDriverSignInData.mnc_2g = mnc_2g
+            bleDriverSignInData.lac_2g_1 = lac_2g_1
+            bleDriverSignInData.ci_2g_1 = ci_2g_1
+            bleDriverSignInData.lac_2g_2 = lac_2g_2
+            bleDriverSignInData.ci_2g_2 = ci_2g_2
+            bleDriverSignInData.lac_2g_3 = lac_2g_3
+            bleDriverSignInData.ci_2g_3 = ci_2g_3
             bleDataList.append(bleDriverSignInData);
         elif bleData[0] == 0x00 and bleData[1] == 0x04:
             bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_TEMP
@@ -1425,11 +1613,50 @@ class Decoder:
             azimuth = 0
             speed = 0
             strSp = byte2HexString(bleData[23:25], 0);
+            is_4g_lbs = False
+            mcc_4g = 0
+            mnc_4g = 0
+            ci_4g = 0
+            earfcn_4g_1 = 0
+            pcid_4g_1 = 0
+            earfcn_4g_2 = 0
+            pcid_4g_2 = 0
+            is_2g_lbs = False
+            mcc_2g = 0
+            mnc_2g = 0
+            lac_2g_1 = 0
+            ci_2g_1 = 0
+            lac_2g_2 = 0
+            ci_2g_2 = 0
+            lac_2g_3 = 0
+            ci_2g_3 = 0
             if  latlngValid:
                 altitude = bytes2Float(bleData, 11)
                 latitude = bytes2Float(bleData, 19)
                 longitude = bytes2Float(bleData, 15)
                 azimuth = bytes2Short(bleData, 25)
+            else:
+                if (bleData[11] & 0x8) == 0x8:
+                    is_2g_lbs = True
+                else:
+                    is_4g_lbs = True
+            if is_2g_lbs:
+                mcc_2g = bytes2Short(bleData,11)
+                mnc_2g = bytes2Short(bleData,13)
+                lac_2g_1 = bytes2Short(bleData,15)
+                ci_2g_1 = bytes2Short(bleData,17)
+                lac_2g_2 = bytes2Short(bleData,19)
+                ci_2g_2 = bytes2Short(bleData,21)
+                lac_2g_3 = bytes2Short(bleData,23)
+                ci_2g_3 = bytes2Short(bleData,25)
+            if is_4g_lbs:
+                mcc_4g = bytes2Short(bleData,11)
+                mnc_4g = bytes2Short(bleData,13)
+                ci_4g = bytes2Integer(bleData, 15)
+                earfcn_4g_1 = bytes2Short(bleData, 19)
+                pcid_4g_1 = bytes2Short(bleData, 21)
+                earfcn_4g_2 = bytes2Short(bleData, 23)
+                pcid_4g_2 = bytes2Short(bleData,25)
             if strSp.find("f") == -1:
                 speed = -1;
             else:
@@ -1445,6 +1672,23 @@ class Decoder:
             bleAlertData.longitude = longitude
             bleAlertData.mac = mac
             bleAlertData.speed = speed
+            bleAlertData.is_4g_lbs = is_4g_lbs
+            bleAlertData.is_2g_lbs = is_2g_lbs
+            bleAlertData.mcc_4g = mcc_4g
+            bleAlertData.mnc_4g = mnc_4g
+            bleAlertData.ci_4g = ci_4g
+            bleAlertData.earfcn_4g_1 = earfcn_4g_1
+            bleAlertData.pcid_4g_1 = pcid_4g_1
+            bleAlertData.earfcn_4g_2 = earfcn_4g_2
+            bleAlertData.pcid_4g_2 = pcid_4g_2
+            bleAlertData.mcc_2g = mcc_2g
+            bleAlertData.mnc_2g = mnc_2g
+            bleAlertData.lac_2g_1 = lac_2g_1
+            bleAlertData.ci_2g_1 = ci_2g_1
+            bleAlertData.lac_2g_2 = lac_2g_2
+            bleAlertData.ci_2g_2 = ci_2g_2
+            bleAlertData.lac_2g_3 = lac_2g_3
+            bleAlertData.ci_2g_3 = ci_2g_3
             bleDataList.append(bleAlertData);
         elif bleData[0] == 0x00 and bleData[1] == 0x03:
             bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_DRIVER
@@ -1472,11 +1716,50 @@ class Decoder:
             azimuth = 0
             speed = 0
             strSp = byte2HexString(bleData[23:25], 0);
+            is_4g_lbs = False
+            mcc_4g = 0
+            mnc_4g = 0
+            ci_4g = 0
+            earfcn_4g_1 = 0
+            pcid_4g_1 = 0
+            earfcn_4g_2 = 0
+            pcid_4g_2 = 0
+            is_2g_lbs = False
+            mcc_2g = 0
+            mnc_2g = 0
+            lac_2g_1 = 0
+            ci_2g_1 = 0
+            lac_2g_2 = 0
+            ci_2g_2 = 0
+            lac_2g_3 = 0
+            ci_2g_3 = 0
             if  latlngValid:
                 altitude = bytes2Float(bleData, 11)
                 latitude = bytes2Float(bleData, 19)
                 longitude = bytes2Float(bleData, 15)
                 azimuth = bytes2Short(bleData, 25)
+            else:
+                if (bleData[11] & 0x8) == 0x8:
+                    is_2g_lbs = True
+                else:
+                    is_4g_lbs = True
+            if is_2g_lbs:
+                mcc_2g = bytes2Short(bleData,11)
+                mnc_2g = bytes2Short(bleData,13)
+                lac_2g_1 = bytes2Short(bleData,15)
+                ci_2g_1 = bytes2Short(bleData,17)
+                lac_2g_2 = bytes2Short(bleData,19)
+                ci_2g_2 = bytes2Short(bleData,21)
+                lac_2g_3 = bytes2Short(bleData,23)
+                ci_2g_3 = bytes2Short(bleData,25)
+            if is_4g_lbs:
+                mcc_4g = bytes2Short(bleData,11)
+                mnc_4g = bytes2Short(bleData,13)
+                ci_4g = bytes2Integer(bleData, 15)
+                earfcn_4g_1 = bytes2Short(bleData, 19)
+                pcid_4g_1 = bytes2Short(bleData, 21)
+                earfcn_4g_2 = bytes2Short(bleData, 23)
+                pcid_4g_2 = bytes2Short(bleData,25)
             if strSp.find("f") == -1:
                 speed = -1;
             else:
@@ -1492,6 +1775,23 @@ class Decoder:
             bleDriverSignInData.longitude = longitude
             bleDriverSignInData.mac = mac
             bleDriverSignInData.speed = speed
+            bleDriverSignInData.is_4g_lbs = is_4g_lbs
+            bleDriverSignInData.is_2g_lbs = is_2g_lbs
+            bleDriverSignInData.mcc_4g = mcc_4g
+            bleDriverSignInData.mnc_4g = mnc_4g
+            bleDriverSignInData.ci_4g = ci_4g
+            bleDriverSignInData.earfcn_4g_1 = earfcn_4g_1
+            bleDriverSignInData.pcid_4g_1 = pcid_4g_1
+            bleDriverSignInData.earfcn_4g_2 = earfcn_4g_2
+            bleDriverSignInData.pcid_4g_2 = pcid_4g_2
+            bleDriverSignInData.mcc_2g = mcc_2g
+            bleDriverSignInData.mnc_2g = mnc_2g
+            bleDriverSignInData.lac_2g_1 = lac_2g_1
+            bleDriverSignInData.ci_2g_1 = ci_2g_1
+            bleDriverSignInData.lac_2g_2 = lac_2g_2
+            bleDriverSignInData.ci_2g_2 = ci_2g_2
+            bleDriverSignInData.lac_2g_3 = lac_2g_3
+            bleDriverSignInData.ci_2g_3 = ci_2g_3
             bleDataList.append(bleDriverSignInData);
         elif bleData[0] == 0x00 and bleData[1] == 0x04:
             bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_TEMP
@@ -1860,12 +2160,69 @@ class Decoder:
         if (byteArray[curParseIndex + 10] & 0x80) == 0x80:
             axisZDirect = 1
         acceleration.axisZ = ((byteArray[curParseIndex + 10] & 0x7F & 0xff) + (((byteArray[curParseIndex + 11] & 0xf0) >> 4) & 0xff) /10.0) * axisZDirect
-        acceleration.altitude = bytes2Float(byteArray,curParseIndex + 12)
-        acceleration.longitude = bytes2Float(byteArray,curParseIndex + 16)
-        acceleration.latitude = bytes2Float(byteArray,curParseIndex + 20)
-        speedStr = byte2HexString(byteArray[curParseIndex + 24:curParseIndex + 26],0)
-        acceleration.speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
-        acceleration.azimuth = bytes2Short(byteArray,curParseIndex + 26)
+        is_4g_lbs = False
+        mcc_4g = 0
+        mnc_4g = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
+        pcid_4g_1 = 0
+        earfcn_4g_2 = 0
+        pcid_4g_2 = 0
+        is_2g_lbs = False
+        mcc_2g = 0
+        mnc_2g = 0
+        lac_2g_1 = 0
+        ci_2g_1 = 0
+        lac_2g_2 = 0
+        ci_2g_2 = 0
+        lac_2g_3 = 0
+        ci_2g_3 = 0
+        if acceleration.latlngValid:
+            acceleration.altitude = bytes2Float(byteArray,curParseIndex + 12)
+            acceleration.longitude = bytes2Float(byteArray,curParseIndex + 16)
+            acceleration.latitude = bytes2Float(byteArray,curParseIndex + 20)
+            acceleration.azimuth = bytes2Short(byteArray,curParseIndex + 26)
+            speedStr = byte2HexString(byteArray[curParseIndex + 24:curParseIndex + 26],0)
+            acceleration.speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+        else:
+            if (byteArray[curParseIndex + 12] & 0x8) == 0x8:
+                is_2g_lbs = True
+            else:
+                is_4g_lbs = True
+        if is_2g_lbs:
+            mcc_2g = bytes2Short(byteArray,curParseIndex + 12)
+            mnc_2g = bytes2Short(byteArray,curParseIndex + 14)
+            lac_2g_1 = bytes2Short(byteArray,curParseIndex + 16)
+            ci_2g_1 = bytes2Short(byteArray,curParseIndex + 18)
+            lac_2g_2 = bytes2Short(byteArray,curParseIndex + 20)
+            ci_2g_2 = bytes2Short(byteArray,curParseIndex + 22)
+            lac_2g_3 = bytes2Short(byteArray,curParseIndex + 24)
+            ci_2g_3 = bytes2Short(byteArray,curParseIndex + 26)
+        if is_4g_lbs:
+            mcc_4g = bytes2Short(byteArray,curParseIndex + 12)
+            mnc_4g = bytes2Short(byteArray,curParseIndex + 14)
+            ci_4g = bytes2Integer(byteArray, curParseIndex + 16)
+            earfcn_4g_1 = bytes2Short(byteArray, curParseIndex + 20)
+            pcid_4g_1 = bytes2Short(byteArray, curParseIndex + 22)
+            earfcn_4g_2 = bytes2Short(byteArray, curParseIndex + 24)
+            pcid_4g_2 = bytes2Short(byteArray,curParseIndex + 26)
+
+        acceleration.is_2g_lbs = is_2g_lbs
+        acceleration.mcc_4g = mcc_4g
+        acceleration.mnc_4g = mnc_4g
+        acceleration.ci_4g = ci_4g
+        acceleration.earfcn_4g_1 = earfcn_4g_1
+        acceleration.pcid_4g_1 = pcid_4g_1
+        acceleration.earfcn_4g_2 = earfcn_4g_2
+        acceleration.pcid_4g_2 = pcid_4g_2
+        acceleration.mcc_2g = mcc_2g
+        acceleration.mnc_2g = mnc_2g
+        acceleration.lac_2g_1 = lac_2g_1
+        acceleration.ci_2g_1 = ci_2g_1
+        acceleration.lac_2g_2 = lac_2g_2
+        acceleration.ci_2g_2 = ci_2g_2
+        acceleration.lac_2g_3 = lac_2g_3
+        acceleration.ci_2g_3 = ci_2g_3
         if len(byteArray) >= 44:
             gyroscopeAxisXDirect = -1
             if (byteArray[curParseIndex + 28] & 0x80) == 0x80:
@@ -1905,12 +2262,69 @@ class Decoder:
         if (byteArray[curParseIndex + 10] & 0x80) == 0x80:
             axisZDirect = 1
         acceleration.axisZ = ((byteArray[curParseIndex + 10] & 0x7F & 0xff) + (((byteArray[curParseIndex + 11] & 0xf0) >> 4) & 0xff) /10.0) * axisZDirect
-        acceleration.altitude = bytes2Float(byteArray,curParseIndex + 12)
-        acceleration.longitude = bytes2Float(byteArray,curParseIndex + 16)
-        acceleration.latitude = bytes2Float(byteArray,curParseIndex + 20)
-        speedStr = byte2HexString(byteArray[curParseIndex + 24:curParseIndex + 26],0)
-        acceleration.speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
-        acceleration.azimuth = bytes2Short(byteArray,curParseIndex + 26)
+        is_4g_lbs = False
+        mcc_4g = 0
+        mnc_4g = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
+        pcid_4g_1 = 0
+        earfcn_4g_2 = 0
+        pcid_4g_2 = 0
+        is_2g_lbs = False
+        mcc_2g = 0
+        mnc_2g = 0
+        lac_2g_1 = 0
+        ci_2g_1 = 0
+        lac_2g_2 = 0
+        ci_2g_2 = 0
+        lac_2g_3 = 0
+        ci_2g_3 = 0
+        if acceleration.latlngValid:
+            acceleration.altitude = bytes2Float(byteArray,curParseIndex + 12)
+            acceleration.longitude = bytes2Float(byteArray,curParseIndex + 16)
+            acceleration.latitude = bytes2Float(byteArray,curParseIndex + 20)
+            speedStr = byte2HexString(byteArray[curParseIndex + 24:curParseIndex + 26],0)
+            acceleration.speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+            acceleration.azimuth = bytes2Short(byteArray,curParseIndex + 26)
+        else:
+            if (byteArray[curParseIndex + 12] & 0x8) == 0x8:
+                is_2g_lbs = True
+            else:
+                is_4g_lbs = True
+        if is_2g_lbs:
+            mcc_2g = bytes2Short(byteArray,curParseIndex + 12)
+            mnc_2g = bytes2Short(byteArray,curParseIndex + 14)
+            lac_2g_1 = bytes2Short(byteArray,curParseIndex + 16)
+            ci_2g_1 = bytes2Short(byteArray,curParseIndex + 18)
+            lac_2g_2 = bytes2Short(byteArray,curParseIndex + 20)
+            ci_2g_2 = bytes2Short(byteArray,curParseIndex + 22)
+            lac_2g_3 = bytes2Short(byteArray,curParseIndex + 24)
+            ci_2g_3 = bytes2Short(byteArray,curParseIndex + 26)
+        if is_4g_lbs:
+            mcc_4g = bytes2Short(byteArray,curParseIndex + 12)
+            mnc_4g = bytes2Short(byteArray,curParseIndex + 14)
+            ci_4g = bytes2Integer(byteArray, curParseIndex + 16)
+            earfcn_4g_1 = bytes2Short(byteArray, curParseIndex + 20)
+            pcid_4g_1 = bytes2Short(byteArray, curParseIndex + 22)
+            earfcn_4g_2 = bytes2Short(byteArray, curParseIndex + 24)
+            pcid_4g_2 = bytes2Short(byteArray,curParseIndex + 26)
+        acceleration.is_4g_lbs = is_4g_lbs
+        acceleration.is_2g_lbs = is_2g_lbs
+        acceleration.mcc_4g = mcc_4g
+        acceleration.mnc_4g = mnc_4g
+        acceleration.ci_4g = ci_4g
+        acceleration.earfcn_4g_1 = earfcn_4g_1
+        acceleration.pcid_4g_1 = pcid_4g_1
+        acceleration.earfcn_4g_2 = earfcn_4g_2
+        acceleration.pcid_4g_2 = pcid_4g_2
+        acceleration.mcc_2g = mcc_2g
+        acceleration.mnc_2g = mnc_2g
+        acceleration.lac_2g_1 = lac_2g_1
+        acceleration.ci_2g_1 = ci_2g_1
+        acceleration.lac_2g_2 = lac_2g_2
+        acceleration.ci_2g_2 = ci_2g_2
+        acceleration.lac_2g_3 = lac_2g_3
+        acceleration.ci_2g_3 = ci_2g_3
         return acceleration
 
     def parseAccelerationAlarmMessage(self,byteArray):
@@ -2042,6 +2456,23 @@ class Decoder:
         longitude = 0
         azimuth = 0
         speed = 0
+        is_4g_lbs = False
+        mcc_4g = 0
+        mnc_4g = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
+        pcid_4g_1 = 0
+        earfcn_4g_2 = 0
+        pcid_4g_2 = 0
+        is_2g_lbs = False
+        mcc_2g = 0
+        mnc_2g = 0
+        lac_2g_1 = 0
+        ci_2g_1 = 0
+        lac_2g_2 = 0
+        ci_2g_2 = 0
+        lac_2g_3 = 0
+        ci_2g_3 = 0
         if  latlngValid:
             altitude = bytes2Float(data,43)
             latitude = bytes2Float(data,51)
@@ -2049,6 +2480,28 @@ class Decoder:
             azimuth = bytes2Short(data,57)
             speedStr = byte2HexString(data[55:57],0)
             speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+        else:
+            if (data[43] & 0x8) == 0x8:
+                is_2g_lbs = True
+            else:
+                is_4g_lbs = True
+        if is_2g_lbs:
+            mcc_2g = bytes2Short(data,43)
+            mnc_2g = bytes2Short(data,45)
+            lac_2g_1 = bytes2Short(data,47)
+            ci_2g_1 = bytes2Short(data,49)
+            lac_2g_2 = bytes2Short(data,51)
+            ci_2g_2 = bytes2Short(data,53)
+            lac_2g_3 = bytes2Short(data,55)
+            ci_2g_3 = bytes2Short(data,57)
+        if is_4g_lbs:
+            mcc_4g = bytes2Short(data,43)
+            mnc_4g = bytes2Short(data,45)
+            ci_4g = bytes2Integer(data, 47)
+            earfcn_4g_1 = bytes2Short(data, 51)
+            pcid_4g_1 = bytes2Short(data, 53)
+            earfcn_4g_2 = bytes2Short(data, 55)
+            pcid_4g_2 = bytes2Short(data,57)
         batteryVoltageStr = byte2HexString(data[59:61],0)
         batteryVoltage = (float)(batteryVoltageStr) / 100
         externalPowerVoltage = 0
@@ -2110,6 +2563,23 @@ class Decoder:
         locationMessage.supportChangeBattery = supportChangeBattery
         locationMessage.batteryVoltage = batteryVoltage
         locationMessage.deviceTemp = deviceTemp
+        locationMessage.is_4g_lbs = is_4g_lbs
+        locationMessage.is_2g_lbs = is_2g_lbs
+        locationMessage.mcc_4g = mcc_4g
+        locationMessage.mnc_4g = mnc_4g
+        locationMessage.ci_4g = ci_4g
+        locationMessage.earfcn_4g_1 = earfcn_4g_1
+        locationMessage.pcid_4g_1 = pcid_4g_1
+        locationMessage.earfcn_4g_2 = earfcn_4g_2
+        locationMessage.pcid_4g_2 = pcid_4g_2
+        locationMessage.mcc_2g = mcc_2g
+        locationMessage.mnc_2g = mnc_2g
+        locationMessage.lac_2g_1 = lac_2g_1
+        locationMessage.ci_2g_1 = ci_2g_1
+        locationMessage.lac_2g_2 = lac_2g_2
+        locationMessage.ci_2g_2 = ci_2g_2
+        locationMessage.lac_2g_3 = lac_2g_3
+        locationMessage.ci_2g_3 = ci_2g_3
         try:
             charge = (int)(batteryStr)
             if  charge == 0:
@@ -2204,6 +2674,23 @@ class Decoder:
         longitude = 0
         azimuth = 0
         speed = 0
+        is_4g_lbs = False
+        mcc_4g = 0
+        mnc_4g = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
+        pcid_4g_1 = 0
+        earfcn_4g_2 = 0
+        pcid_4g_2 = 0
+        is_2g_lbs = False
+        mcc_2g = 0
+        mnc_2g = 0
+        lac_2g_1 = 0
+        ci_2g_1 = 0
+        lac_2g_2 = 0
+        ci_2g_2 = 0
+        lac_2g_3 = 0
+        ci_2g_3 = 0
         if  latlngValid:
             altitude = bytes2Float(data,35)
             latitude = bytes2Float(data,43)
@@ -2211,6 +2698,28 @@ class Decoder:
             azimuth = bytes2Short(data,49)
             speedStr = byte2HexString(data[47:49],0)
             speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+        else:
+            if (data[35] & 0x8) == 0x8:
+                is_2g_lbs = True
+            else:
+                is_4g_lbs = True
+        if is_2g_lbs:
+            mcc_2g = bytes2Short(data,35)
+            mnc_2g = bytes2Short(data,37)
+            lac_2g_1 = bytes2Short(data,39)
+            ci_2g_1 = bytes2Short(data,41)
+            lac_2g_2 = bytes2Short(data,43)
+            ci_2g_2 = bytes2Short(data,45)
+            lac_2g_3 = bytes2Short(data,47)
+            ci_2g_3 = bytes2Short(data,49)
+        if is_4g_lbs:
+            mcc_4g = bytes2Short(data,35)
+            mnc_4g = bytes2Short(data,37)
+            ci_4g = bytes2Integer(data, 39)
+            earfcn_4g_1 = bytes2Short(data, 43)
+            pcid_4g_1 = bytes2Short(data, 45)
+            earfcn_4g_2 = bytes2Short(data, 47)
+            pcid_4g_2 = bytes2Short(data,49)
         externalPowerVoltage = 0
         if len(data) >= 53:
             externalPowerVoltageStr = byte2HexString(data[51:53], 0)
@@ -2257,6 +2766,23 @@ class Decoder:
         locationMessage.originalAlarmCode = originalAlarmCode
         locationMessage.alarm = Event.getEvent(data[22])
         locationMessage.mileage = mileage
+        locationMessage.is_4g_lbs = is_4g_lbs
+        locationMessage.is_2g_lbs = is_2g_lbs
+        locationMessage.mcc_4g = mcc_4g
+        locationMessage.mnc_4g = mnc_4g
+        locationMessage.ci_4g = ci_4g
+        locationMessage.earfcn_4g_1 = earfcn_4g_1
+        locationMessage.pcid_4g_1 = pcid_4g_1
+        locationMessage.earfcn_4g_2 = earfcn_4g_2
+        locationMessage.pcid_4g_2 = pcid_4g_2
+        locationMessage.mcc_2g = mcc_2g
+        locationMessage.mnc_2g = mnc_2g
+        locationMessage.lac_2g_1 = lac_2g_1
+        locationMessage.ci_2g_1 = ci_2g_1
+        locationMessage.lac_2g_2 = lac_2g_2
+        locationMessage.ci_2g_2 = ci_2g_2
+        locationMessage.lac_2g_3 = lac_2g_3
+        locationMessage.ci_2g_3 = ci_2g_3
         try:
             charge = (int)(batteryStr)
             if  charge == 0:
@@ -2936,6 +3462,23 @@ class ObdDecoder:
         longitude = 0
         azimuth = 0
         speed = 0
+        is_4g_lbs = False
+        mcc_4g = 0
+        mnc_4g = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
+        pcid_4g_1 = 0
+        earfcn_4g_2 = 0
+        pcid_4g_2 = 0
+        is_2g_lbs = False
+        mcc_2g = 0
+        mnc_2g = 0
+        lac_2g_1 = 0
+        ci_2g_1 = 0
+        lac_2g_2 = 0
+        ci_2g_2 = 0
+        lac_2g_3 = 0
+        ci_2g_3 = 0
         if  latlngValid:
             altitude = bytes2Float(data,31)
             latitude = bytes2Float(data,39)
@@ -2943,6 +3486,28 @@ class ObdDecoder:
             azimuth = bytes2Short(data,45)
             speedStr = byte2HexString(data[49:51],0)
             speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+        else:
+            if (data[31] & 0x8) == 0x8:
+                is_2g_lbs = True
+            else:
+                is_4g_lbs = True
+        if is_2g_lbs:
+            mcc_2g = bytes2Short(data,31)
+            mnc_2g = bytes2Short(data,33)
+            lac_2g_1 = bytes2Short(data,35)
+            ci_2g_1 = bytes2Short(data,37)
+            lac_2g_2 = bytes2Short(data,39)
+            ci_2g_2 = bytes2Short(data,41)
+            lac_2g_3 = bytes2Short(data,43)
+            ci_2g_3 = bytes2Short(data,45)
+        if is_4g_lbs:
+            mcc_4g = bytes2Short(data,31)
+            mnc_4g = bytes2Short(data,33)
+            ci_4g = bytes2Integer(data, 35)
+            earfcn_4g_1 = bytes2Short(data, 39)
+            pcid_4g_1 = bytes2Short(data, 41)
+            earfcn_4g_2 = bytes2Short(data, 43)
+            pcid_4g_2 = bytes2Short(data,45)
         externalPowerVoltageStr = byte2HexString(data[47:49], 0)
         externalPowerVoltage = (float(externalPowerVoltageStr) ) / 100
         accumulatingFuelConsumption = bytes2Integer(data, 51)
@@ -3033,6 +3598,23 @@ class ObdDecoder:
         except:
             print ("charge error")
         locationMessage.date = gtm0
+        locationMessage.is_4g_lbs = is_4g_lbs
+        locationMessage.is_2g_lbs = is_2g_lbs
+        locationMessage.mcc_4g = mcc_4g
+        locationMessage.mnc_4g = mnc_4g
+        locationMessage.ci_4g = ci_4g
+        locationMessage.earfcn_4g_1 = earfcn_4g_1
+        locationMessage.pcid_4g_1 = pcid_4g_1
+        locationMessage.earfcn_4g_2 = earfcn_4g_2
+        locationMessage.pcid_4g_2 = pcid_4g_2
+        locationMessage.mcc_2g = mcc_2g
+        locationMessage.mnc_2g = mnc_2g
+        locationMessage.lac_2g_1 = lac_2g_1
+        locationMessage.ci_2g_1 = ci_2g_1
+        locationMessage.lac_2g_2 = lac_2g_2
+        locationMessage.ci_2g_2 = ci_2g_2
+        locationMessage.lac_2g_3 = lac_2g_3
+        locationMessage.ci_2g_3 = ci_2g_3
         locationMessage.latlngValid = latlngValid
         locationMessage.altitude = altitude
         locationMessage.latitude = latitude
@@ -3115,12 +3697,70 @@ class ObdDecoder:
         if (byteArray[curParseIndex + 10] & 0x80) == 0x80:
             axisZDirect = 1
         acceleration.axisZ = ((byteArray[curParseIndex + 10] & 0x7F & 0xff) + (((byteArray[curParseIndex + 11] & 0xf0) >> 4) & 0xff) /10.0) * axisZDirect
-        acceleration.altitude = bytes2Float(byteArray,curParseIndex + 12)
-        acceleration.longitude = bytes2Float(byteArray,curParseIndex + 16)
-        acceleration.latitude = bytes2Float(byteArray,curParseIndex + 20)
-        speedStr = byte2HexString(byteArray[curParseIndex + 24:curParseIndex + 26],0)
-        acceleration.speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
-        acceleration.azimuth = bytes2Short(byteArray,curParseIndex + 26)
+        is_4g_lbs = False
+        mcc_4g = 0
+        mnc_4g = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
+        pcid_4g_1 = 0
+        earfcn_4g_2 = 0
+        pcid_4g_2 = 0
+        is_2g_lbs = False
+        mcc_2g = 0
+        mnc_2g = 0
+        lac_2g_1 = 0
+        ci_2g_1 = 0
+        lac_2g_2 = 0
+        ci_2g_2 = 0
+        lac_2g_3 = 0
+        ci_2g_3 = 0
+        if  latlngValid:
+            acceleration.altitude = bytes2Float(byteArray,curParseIndex + 12)
+            acceleration.longitude = bytes2Float(byteArray,curParseIndex + 16)
+            acceleration.latitude = bytes2Float(byteArray,curParseIndex + 20)
+            speedStr = byte2HexString(byteArray[curParseIndex + 24:curParseIndex + 26],0)
+            acceleration.speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+            acceleration.azimuth = bytes2Short(byteArray,curParseIndex + 26)
+        else:
+            if (byteArray[curParseIndex + 12] & 0x8) == 0x8:
+                is_2g_lbs = True
+            else:
+                is_4g_lbs = True
+        if is_2g_lbs:
+            mcc_2g = bytes2Short(byteArray,curParseIndex + 12)
+            mnc_2g = bytes2Short(byteArray,curParseIndex + 14)
+            lac_2g_1 = bytes2Short(byteArray,curParseIndex + 16)
+            ci_2g_1 = bytes2Short(byteArray,curParseIndex + 18)
+            lac_2g_2 = bytes2Short(byteArray,curParseIndex + 20)
+            ci_2g_2 = bytes2Short(byteArray,curParseIndex + 22)
+            lac_2g_3 = bytes2Short(byteArray,curParseIndex + 24)
+            ci_2g_3 = bytes2Short(byteArray,curParseIndex + 26)
+        if is_4g_lbs:
+            mcc_4g = bytes2Short(byteArray,curParseIndex + 12)
+            mnc_4g = bytes2Short(byteArray,curParseIndex + 14)
+            ci_4g = bytes2Integer(byteArray, curParseIndex + 16)
+            earfcn_4g_1 = bytes2Short(byteArray, curParseIndex + 20)
+            pcid_4g_1 = bytes2Short(byteArray, curParseIndex + 22)
+            earfcn_4g_2 = bytes2Short(byteArray, curParseIndex + 24)
+            pcid_4g_2 = bytes2Short(byteArray,curParseIndex + 26)
+
+        acceleration.is_4g_lbs = is_4g_lbs
+        acceleration.is_2g_lbs = is_2g_lbs
+        acceleration.mcc_4g = mcc_4g
+        acceleration.mnc_4g = mnc_4g
+        acceleration.ci_4g = ci_4g
+        acceleration.earfcn_4g_1 = earfcn_4g_1
+        acceleration.pcid_4g_1 = pcid_4g_1
+        acceleration.earfcn_4g_2 = earfcn_4g_2
+        acceleration.pcid_4g_2 = pcid_4g_2
+        acceleration.mcc_2g = mcc_2g
+        acceleration.mnc_2g = mnc_2g
+        acceleration.lac_2g_1 = lac_2g_1
+        acceleration.ci_2g_1 = ci_2g_1
+        acceleration.lac_2g_2 = lac_2g_2
+        acceleration.ci_2g_2 = ci_2g_2
+        acceleration.lac_2g_3 = lac_2g_3
+        acceleration.ci_2g_3 = ci_2g_3
         rpm = bytes2Short(byteArray, curParseIndex + 28);
         if rpm == 65535:
             rpm = -1
@@ -3282,16 +3922,56 @@ class ObdDecoder:
             longitude = 0
             azimuth = 0
             speed = 0
+            is_4g_lbs = False
+            mcc_4g = 0
+            mnc_4g = 0
+            ci_4g = 0
+            earfcn_4g_1 = 0
+            pcid_4g_1 = 0
+            earfcn_4g_2 = 0
+            pcid_4g_2 = 0
+            is_2g_lbs = False
+            mcc_2g = 0
+            mnc_2g = 0
+            lac_2g_1 = 0
+            ci_2g_1 = 0
+            lac_2g_2 = 0
+            ci_2g_2 = 0
+            lac_2g_3 = 0
+            ci_2g_3 = 0
             strSp = byte2HexString(bleData[23:25], 0);
             if  latlngValid:
                 altitude = bytes2Float(bleData, 11)
                 latitude = bytes2Float(bleData, 19)
                 longitude = bytes2Float(bleData, 15)
                 azimuth = bytes2Short(bleData, 25)
-            if strSp.find("f") == -1:
-                speed = -1;
+                if strSp.find("f") == -1:
+                    speed = -1;
+                else:
+                    speed = (float)("{0}.{1}".format(strSp[0:3],strSp[3:]))
             else:
-                speed = (float)("{0}.{1}".format(strSp[0:3],strSp[3:]))
+                if (bleData[11] & 0x8) == 0x8:
+                    is_2g_lbs = True
+                else:
+                    is_4g_lbs = True
+            if is_2g_lbs:
+                mcc_2g = bytes2Short(bleData,11)
+                mnc_2g = bytes2Short(bleData,13)
+                lac_2g_1 = bytes2Short(bleData,15)
+                ci_2g_1 = bytes2Short(bleData,17)
+                lac_2g_2 = bytes2Short(bleData,19)
+                ci_2g_2 = bytes2Short(bleData,21)
+                lac_2g_3 = bytes2Short(bleData,23)
+                ci_2g_3 = bytes2Short(bleData,25)
+            if is_4g_lbs:
+                mcc_4g = bytes2Short(bleData,11)
+                mnc_4g = bytes2Short(bleData,13)
+                ci_4g = bytes2Integer(bleData, 15)
+                earfcn_4g_1 = bytes2Short(bleData, 19)
+                pcid_4g_1 = bytes2Short(bleData, 21)
+                earfcn_4g_2 = bytes2Short(bleData, 23)
+                pcid_4g_2 = bytes2Short(bleData,25)
+
             bleAlertData.alertType = alert
             bleAlertData.altitude = altitude
             bleAlertData.azimuth = azimuth
@@ -3303,6 +3983,23 @@ class ObdDecoder:
             bleAlertData.longitude = longitude
             bleAlertData.mac = mac
             bleAlertData.speed = speed
+            bleAlertData.is_4g_lbs = is_4g_lbs
+            bleAlertData.is_2g_lbs = is_2g_lbs
+            bleAlertData.mcc_4g = mcc_4g
+            bleAlertData.mnc_4g = mnc_4g
+            bleAlertData.ci_4g = ci_4g
+            bleAlertData.earfcn_4g_1 = earfcn_4g_1
+            bleAlertData.pcid_4g_1 = pcid_4g_1
+            bleAlertData.earfcn_4g_2 = earfcn_4g_2
+            bleAlertData.pcid_4g_2 = pcid_4g_2
+            bleAlertData.mcc_2g = mcc_2g
+            bleAlertData.mnc_2g = mnc_2g
+            bleAlertData.lac_2g_1 = lac_2g_1
+            bleAlertData.ci_2g_1 = ci_2g_1
+            bleAlertData.lac_2g_2 = lac_2g_2
+            bleAlertData.ci_2g_2 = ci_2g_2
+            bleAlertData.lac_2g_3 = lac_2g_3
+            bleAlertData.ci_2g_3 = ci_2g_3
             bleDataList.append(bleAlertData);
         elif bleData[0] == 0x00 and bleData[1] == 0x03:
             bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_DRIVER
@@ -3329,16 +4026,55 @@ class ObdDecoder:
             longitude = 0
             azimuth = 0
             speed = 0
+            is_4g_lbs = False
+            mcc_4g = 0
+            mnc_4g = 0
+            ci_4g = 0
+            earfcn_4g_1 = 0
+            pcid_4g_1 = 0
+            earfcn_4g_2 = 0
+            pcid_4g_2 = 0
+            is_2g_lbs = False
+            mcc_2g = 0
+            mnc_2g = 0
+            lac_2g_1 = 0
+            ci_2g_1 = 0
+            lac_2g_2 = 0
+            ci_2g_2 = 0
+            lac_2g_3 = 0
+            ci_2g_3 = 0
             strSp = byte2HexString(bleData[23:25], 0);
             if  latlngValid:
                 altitude = bytes2Float(bleData, 11)
                 latitude = bytes2Float(bleData, 19)
                 longitude = bytes2Float(bleData, 15)
                 azimuth = bytes2Short(bleData, 25)
-            if strSp.find("f") == -1:
-                speed = -1;
+                if strSp.find("f") == -1:
+                    speed = -1;
+                else:
+                    speed = (float)("{0}.{1}".format(strSp[0:3],strSp[3:]))
             else:
-                speed = (float)("{0}.{1}".format(strSp[0:3],strSp[3:]))
+                if (bleData[11] & 0x8) == 0x8:
+                    is_2g_lbs = True
+                else:
+                    is_4g_lbs = True
+            if is_2g_lbs:
+                mcc_2g = bytes2Short(bleData,11)
+                mnc_2g = bytes2Short(bleData,13)
+                lac_2g_1 = bytes2Short(bleData,15)
+                ci_2g_1 = bytes2Short(bleData,17)
+                lac_2g_2 = bytes2Short(bleData,19)
+                ci_2g_2 = bytes2Short(bleData,21)
+                lac_2g_3 = bytes2Short(bleData,23)
+                ci_2g_3 = bytes2Short(bleData,25)
+            if is_4g_lbs:
+                mcc_4g = bytes2Short(bleData,11)
+                mnc_4g = bytes2Short(bleData,13)
+                ci_4g = bytes2Integer(bleData, 15)
+                earfcn_4g_1 = bytes2Short(bleData, 19)
+                pcid_4g_1 = bytes2Short(bleData, 21)
+                earfcn_4g_2 = bytes2Short(bleData, 23)
+                pcid_4g_2 = bytes2Short(bleData,25)
             bleDriverSignInData.alert = alert
             bleDriverSignInData.altitude = altitude
             bleDriverSignInData.azimuth = azimuth
@@ -3350,6 +4086,23 @@ class ObdDecoder:
             bleDriverSignInData.longitude = longitude
             bleDriverSignInData.mac = mac
             bleDriverSignInData.speed = speed
+            bleDriverSignInData.is_4g_lbs = is_4g_lbs
+            bleDriverSignInData.is_2g_lbs = is_2g_lbs
+            bleDriverSignInData.mcc_4g = mcc_4g
+            bleDriverSignInData.mnc_4g = mnc_4g
+            bleDriverSignInData.ci_4g = ci_4g
+            bleDriverSignInData.earfcn_4g_1 = earfcn_4g_1
+            bleDriverSignInData.pcid_4g_1 = pcid_4g_1
+            bleDriverSignInData.earfcn_4g_2 = earfcn_4g_2
+            bleDriverSignInData.pcid_4g_2 = pcid_4g_2
+            bleDriverSignInData.mcc_2g = mcc_2g
+            bleDriverSignInData.mnc_2g = mnc_2g
+            bleDriverSignInData.lac_2g_1 = lac_2g_1
+            bleDriverSignInData.ci_2g_1 = ci_2g_1
+            bleDriverSignInData.lac_2g_2 = lac_2g_2
+            bleDriverSignInData.ci_2g_2 = ci_2g_2
+            bleDriverSignInData.lac_2g_3 = lac_2g_3
+            bleDriverSignInData.ci_2g_3 = ci_2g_3
             bleDataList.append(bleDriverSignInData);
         elif bleData[0] == 0x00 and bleData[1] == 0x04:
             bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_TEMP
@@ -4002,16 +4755,55 @@ class PersonalAssetMsgDecoder:
             longitude = 0
             azimuth = 0
             speed = 0
+            is_4g_lbs = False
+            mcc_4g = 0
+            mnc_4g = 0
+            ci_4g = 0
+            earfcn_4g_1 = 0
+            pcid_4g_1 = 0
+            earfcn_4g_2 = 0
+            pcid_4g_2 = 0
+            is_2g_lbs = False
+            mcc_2g = 0
+            mnc_2g = 0
+            lac_2g_1 = 0
+            ci_2g_1 = 0
+            lac_2g_2 = 0
+            ci_2g_2 = 0
+            lac_2g_3 = 0
+            ci_2g_3 = 0
             strSp = byte2HexString(bleData[23:25], 0);
             if  latlngValid:
                 altitude = bytes2Float(bleData, 11)
                 latitude = bytes2Float(bleData, 19)
                 longitude = bytes2Float(bleData, 15)
                 azimuth = bytes2Short(bleData, 25)
-            if strSp.find("f") == -1:
-                speed = -1;
+                if strSp.find("f") == -1:
+                    speed = -1;
+                else:
+                    speed = (float)("{0}.{1}".format(strSp[0:3],strSp[3:]))
             else:
-                speed = (float)("{0}.{1}".format(strSp[0:3],strSp[3:]))
+                if (bleData[11] & 0x8) == 0x8:
+                    is_2g_lbs = True
+                else:
+                    is_4g_lbs = True
+            if is_2g_lbs:
+                mcc_2g = bytes2Short(bleData,11)
+                mnc_2g = bytes2Short(bleData,13)
+                lac_2g_1 = bytes2Short(bleData,15)
+                ci_2g_1 = bytes2Short(bleData,17)
+                lac_2g_2 = bytes2Short(bleData,19)
+                ci_2g_2 = bytes2Short(bleData,21)
+                lac_2g_3 = bytes2Short(bleData,23)
+                ci_2g_3 = bytes2Short(bleData,25)
+            if is_4g_lbs:
+                mcc_4g = bytes2Short(bleData,11)
+                mnc_4g = bytes2Short(bleData,13)
+                ci_4g = bytes2Integer(bleData, 15)
+                earfcn_4g_1 = bytes2Short(bleData, 19)
+                pcid_4g_1 = bytes2Short(bleData, 21)
+                earfcn_4g_2 = bytes2Short(bleData, 23)
+                pcid_4g_2 = bytes2Short(bleData,25)
             bleAlertData.alertType = alert
             bleAlertData.altitude = altitude
             bleAlertData.azimuth = azimuth
@@ -4023,6 +4815,23 @@ class PersonalAssetMsgDecoder:
             bleAlertData.longitude = longitude
             bleAlertData.mac = mac
             bleAlertData.speed = speed
+            bleAlertData.is_4g_lbs = is_4g_lbs
+            bleAlertData.is_2g_lbs = is_2g_lbs
+            bleAlertData.mcc_4g = mcc_4g
+            bleAlertData.mnc_4g = mnc_4g
+            bleAlertData.ci_4g = ci_4g
+            bleAlertData.earfcn_4g_1 = earfcn_4g_1
+            bleAlertData.pcid_4g_1 = pcid_4g_1
+            bleAlertData.earfcn_4g_2 = earfcn_4g_2
+            bleAlertData.pcid_4g_2 = pcid_4g_2
+            bleAlertData.mcc_2g = mcc_2g
+            bleAlertData.mnc_2g = mnc_2g
+            bleAlertData.lac_2g_1 = lac_2g_1
+            bleAlertData.ci_2g_1 = ci_2g_1
+            bleAlertData.lac_2g_2 = lac_2g_2
+            bleAlertData.ci_2g_2 = ci_2g_2
+            bleAlertData.lac_2g_3 = lac_2g_3
+            bleAlertData.ci_2g_3 = ci_2g_3
             bleDataList.append(bleAlertData);
         elif bleData[0] == 0x00 and bleData[1] == 0x03:
             bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_DRIVER
@@ -4049,16 +4858,55 @@ class PersonalAssetMsgDecoder:
             longitude = 0
             azimuth = 0
             speed = 0
+            is_4g_lbs = False
+            mcc_4g = 0
+            mnc_4g = 0
+            ci_4g = 0
+            earfcn_4g_1 = 0
+            pcid_4g_1 = 0
+            earfcn_4g_2 = 0
+            pcid_4g_2 = 0
+            is_2g_lbs = False
+            mcc_2g = 0
+            mnc_2g = 0
+            lac_2g_1 = 0
+            ci_2g_1 = 0
+            lac_2g_2 = 0
+            ci_2g_2 = 0
+            lac_2g_3 = 0
+            ci_2g_3 = 0
             strSp = byte2HexString(bleData[23:25], 0);
             if  latlngValid:
                 altitude = bytes2Float(bleData, 11)
                 latitude = bytes2Float(bleData, 19)
                 longitude = bytes2Float(bleData, 15)
                 azimuth = bytes2Short(bleData, 25)
-            if strSp.find("f") == -1:
-                speed = -1;
+                if strSp.find("f") == -1:
+                    speed = -1;
+                else:
+                    speed = (float)("{0}.{1}".format(strSp[0:3],strSp[3:]))
             else:
-                speed = (float)("{0}.{1}".format(strSp[0:3],strSp[3:]))
+                if (bleData[11] & 0x8) == 0x8:
+                    is_2g_lbs = True
+                else:
+                    is_4g_lbs = True
+            if is_2g_lbs:
+                mcc_2g = bytes2Short(bleData,11)
+                mnc_2g = bytes2Short(bleData,13)
+                lac_2g_1 = bytes2Short(bleData,15)
+                ci_2g_1 = bytes2Short(bleData,17)
+                lac_2g_2 = bytes2Short(bleData,19)
+                ci_2g_2 = bytes2Short(bleData,21)
+                lac_2g_3 = bytes2Short(bleData,23)
+                ci_2g_3 = bytes2Short(bleData,25)
+            if is_4g_lbs:
+                mcc_4g = bytes2Short(bleData,11)
+                mnc_4g = bytes2Short(bleData,13)
+                ci_4g = bytes2Integer(bleData, 15)
+                earfcn_4g_1 = bytes2Short(bleData, 19)
+                pcid_4g_1 = bytes2Short(bleData, 21)
+                earfcn_4g_2 = bytes2Short(bleData, 23)
+                pcid_4g_2 = bytes2Short(bleData,25)
             bleDriverSignInData.alert = alert
             bleDriverSignInData.altitude = altitude
             bleDriverSignInData.azimuth = azimuth
@@ -4070,6 +4918,23 @@ class PersonalAssetMsgDecoder:
             bleDriverSignInData.longitude = longitude
             bleDriverSignInData.mac = mac
             bleDriverSignInData.speed = speed
+            bleDriverSignInData.is_4g_lbs = is_4g_lbs
+            bleDriverSignInData.is_2g_lbs = is_2g_lbs
+            bleDriverSignInData.mcc_4g = mcc_4g
+            bleDriverSignInData.mnc_4g = mnc_4g
+            bleDriverSignInData.ci_4g = ci_4g
+            bleDriverSignInData.earfcn_4g_1 = earfcn_4g_1
+            bleDriverSignInData.pcid_4g_1 = pcid_4g_1
+            bleDriverSignInData.earfcn_4g_2 = earfcn_4g_2
+            bleDriverSignInData.pcid_4g_2 = pcid_4g_2
+            bleDriverSignInData.mcc_2g = mcc_2g
+            bleDriverSignInData.mnc_2g = mnc_2g
+            bleDriverSignInData.lac_2g_1 = lac_2g_1
+            bleDriverSignInData.ci_2g_1 = ci_2g_1
+            bleDriverSignInData.lac_2g_2 = lac_2g_2
+            bleDriverSignInData.ci_2g_2 = ci_2g_2
+            bleDriverSignInData.lac_2g_3 = lac_2g_3
+            bleDriverSignInData.ci_2g_3 = ci_2g_3
             bleDataList.append(bleDriverSignInData);
         elif bleData[0] == 0x00 and bleData[1] == 0x04:
             bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_TEMP
@@ -4421,6 +5286,23 @@ class PersonalAssetMsgDecoder:
         latitude = 0
         longitude = 0
         azimuth = 0
+        is_4g_lbs = False
+        mcc_4g = 0
+        mnc_4g = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
+        pcid_4g_1 = 0
+        earfcn_4g_2 = 0
+        pcid_4g_2 = 0
+        is_2g_lbs = False
+        mcc_2g = 0
+        mnc_2g = 0
+        lac_2g_1 = 0
+        ci_2g_1 = 0
+        lac_2g_2 = 0
+        ci_2g_2 = 0
+        lac_2g_3 = 0
+        ci_2g_3 = 0
         if  latlngValid:
             altitude = bytes2Float(byteArray,23)
             latitude = bytes2Float(byteArray,31)
@@ -4428,6 +5310,28 @@ class PersonalAssetMsgDecoder:
             azimuth = bytes2Short(byteArray,37)
             speedStr = byte2HexString(byteArray[35:37],0)
             speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+        else:
+            if (byteArray[23] & 0x8) == 0x8:
+                is_2g_lbs = True
+            else:
+                is_4g_lbs = True
+        if is_2g_lbs:
+            mcc_2g = bytes2Short(byteArray,23)
+            mnc_2g = bytes2Short(byteArray,25)
+            lac_2g_1 = bytes2Short(byteArray,27)
+            ci_2g_1 = bytes2Short(byteArray,29)
+            lac_2g_2 = bytes2Short(byteArray,31)
+            ci_2g_2 = bytes2Short(byteArray,33)
+            lac_2g_3 = bytes2Short(byteArray,35)
+            ci_2g_3 = bytes2Short(byteArray,37)
+        if is_4g_lbs:
+            mcc_4g = bytes2Short(byteArray,23)
+            mnc_4g = bytes2Short(byteArray,25)
+            ci_4g = bytes2Integer(byteArray, 27)
+            earfcn_4g_1 = bytes2Short(byteArray, 31)
+            pcid_4g_1 = bytes2Short(byteArray, 33)
+            earfcn_4g_2 = bytes2Short(byteArray, 35)
+            pcid_4g_2 = bytes2Short(byteArray,37)
         axisXDirect = -1
         if (byteArray[39] & 0x80) == 0x80:
             axisXDirect = -1
@@ -4522,6 +5426,23 @@ class PersonalAssetMsgDecoder:
         locationMessage.batteryPercent = batteryPercent
         locationMessage.date = gtm0
         locationMessage.latlngValid = latlngValid
+        locationMessage.is_4g_lbs = is_4g_lbs
+        locationMessage.is_2g_lbs = is_2g_lbs
+        locationMessage.mcc_4g = mcc_4g
+        locationMessage.mnc_4g = mnc_4g
+        locationMessage.ci_4g = ci_4g
+        locationMessage.earfcn_4g_1 = earfcn_4g_1
+        locationMessage.pcid_4g_1 = pcid_4g_1
+        locationMessage.earfcn_4g_2 = earfcn_4g_2
+        locationMessage.pcid_4g_2 = pcid_4g_2
+        locationMessage.mcc_2g = mcc_2g
+        locationMessage.mnc_2g = mnc_2g
+        locationMessage.lac_2g_1 = lac_2g_1
+        locationMessage.ci_2g_1 = ci_2g_1
+        locationMessage.lac_2g_2 = lac_2g_2
+        locationMessage.ci_2g_2 = ci_2g_2
+        locationMessage.lac_2g_3 = lac_2g_3
+        locationMessage.ci_2g_3 = ci_2g_3
         locationMessage.altitude = altitude
         locationMessage.latitude = latitude
         locationMessage.longitude =longitude
