@@ -868,7 +868,6 @@ public class PersonalAssetMsgDecoder {
         locationMessage.setSatelliteNumber(satelliteNumber);
         locationMessage.setHeartbeatInterval(heartbeatInterval);
         locationMessage.setOriginalAlarmCode(originalAlarmCode);
-        locationMessage.setAlarm(getEvent(alarmByte));
         locationMessage.setMileage(mileage);
         locationMessage.setIopIgnition(iopIgnition);
         locationMessage.setIOP(locationMessage.isIopIgnition() ? 0x4000l :0x0000l);
@@ -912,72 +911,7 @@ public class PersonalAssetMsgDecoder {
         locationMessage.setPcid_4g_2(pcid_4g_2);
         return locationMessage;
     }
-    private static int getEvent(byte alarmCodeByte) {
-        if(alarmCodeByte == 0x01){
-            return Event.ALARM_DEVICE_REMOVE;
-        }else if(alarmCodeByte == 0x02){
-            return Event.ALARM_DEVICE_CASE_OPEN;
-        }else if(alarmCodeByte == 0x03){
-            return Event.ALARM_SOS;
-        }else if(alarmCodeByte == 0x04){
-            return Event.ALARM_BOX_OPEN;
-        }else if(alarmCodeByte == 0x05){
-            return Event.ALARM_FALL_DOWN;
-        }else if(alarmCodeByte == 0x06){
-            return Event.ALARM_LOW_BATTERY;
-        }else if(alarmCodeByte == 0x07){
-            return Event.ALARM_BATTERY_POWER_RECOVER;
-        }else if(alarmCodeByte == 0x08){
-            return Event.ALARM_INNER_TEMP_HIGH;
-        }else if(alarmCodeByte == 0x09){
-            return Event.ALARM_MOVE;
-        }else if(alarmCodeByte == 0x10){
-            return Event.ALARM_COLLISION;
-        }else if(alarmCodeByte == 0x11){
-            return Event.ALARM_INCLINE;
-        }else if(alarmCodeByte == 0x12){
-            return Event.ALARM_USB_RECHARGE_START;
-        }else if(alarmCodeByte == 0x13){
-            return Event.ALARM_USB_RECHARGE_END;
-        }else if(alarmCodeByte == 0x14){
-            return Event.ALARM_GEOFENCE_IN;
-        }else if(alarmCodeByte == 0x15){
-            return Event.ALARM_GEOFENCE_OUT;
-        }else if(alarmCodeByte == 0x16){
-            return Event.IGNITION;
-        }else if(alarmCodeByte == 0x17){
-            return Event.PARKING;
-        }else if(alarmCodeByte == 0x18){
-            return Event.IDLE_START;
-        }else if(alarmCodeByte == 0x19){
-            return Event.IDLE_END;
-        }else if(alarmCodeByte == 0x20){
-            return Event.ADDRESS_REQUESTED;
-        }else if(alarmCodeByte == 0x21){
-            return Event.ALARM_DEVICE_MOUNTED;
-        }else if(alarmCodeByte == 0x22){
-            return Event.ALARM_DEVICE_CASE_CLOSED;
-        }else if(alarmCodeByte == 0x23){
-            return Event.ALARM_BOX_CLOSED;
-        }else if(alarmCodeByte == 0x24){
-            return Event.ALARM_FALL_DOWN_REC;
-        }else if(alarmCodeByte == 0x25){
-            return Event.ALARM_INNER_TEMP_HIGH_REC;
-        }else if(alarmCodeByte == 0x26){
-            return Event.ALARM_MOVE_REC;
-        }else if(alarmCodeByte == 0x27){
-            return Event.ALARM_COLLISION_REC;
-        }else if(alarmCodeByte == 0x28){
-            return Event.ALARM_INCLINE_REC;
-        }else if(alarmCodeByte == 0x29){
-            return Event.ALARM_POWER_ON;
-        }else if(alarmCodeByte == 0x30){
-            return Event.ALARM_INNER_TEMP_LOW;
-        }else if(alarmCodeByte == 0x31){
-            return Event.ALARM_INNER_TEMP_LOW_REC;
-        }
-        return Event.NONE;
-    }
+
     public void build(byte[] bytes,Callback callback) throws ParseException {
         if (bytes != null && bytes.length > HEADER_LENGTH
                 && ((bytes[0] == 0x23 && bytes[1] == 0x23) || (bytes[0] == 0x25 && bytes[1] == 0x25))) {

@@ -277,23 +277,6 @@ public class LocationMessage extends Message{
         this.azimuth = azimuth;
     }
 
-    /**
-     * Gets alarm code.
-     *
-     * @return the alarm
-     */
-    public int getAlarm() {
-        return alarm;
-    }
-
-    /**
-     * Sets alarm.
-     *
-     * @param alarm the alarm
-     */
-    public void setAlarm(int alarm) {
-        this.alarm = alarm;
-    }
 
     /**
      * Gets address description.
@@ -987,7 +970,7 @@ public class LocationMessage extends Message{
     private Long mileage = 0L;          //里程
     private Integer azimuth = 0;        //方位角
 
-    private int alarm = 0;            //报警类型
+
     private String address = "";        //地址
 
     private Float analogInput1 = 0f;    //模拟1

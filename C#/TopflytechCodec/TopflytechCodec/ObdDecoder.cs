@@ -1494,8 +1494,7 @@ namespace TopflytechCodec
             message.IopIgnition = iopIgnition;
             message.IopPowerCutOff = iopPowerCutOff;
             message.IopACOn = iopACOn;
-            message.OriginalAlarmCode = originalAlarmCode;
-            message.Alarm = Event.getEvent(alarmByte);
+            message.OriginalAlarmCode = originalAlarmCode; 
             message.Mileage = mileage;
             try
             {

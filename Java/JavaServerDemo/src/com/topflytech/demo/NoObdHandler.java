@@ -62,7 +62,7 @@ public class NoObdHandler extends SimpleChannelInboundHandler<Message> {
             //8806 ,8803Pro or some old model device,there is no need to reply location info message;
         }else if (message instanceof LocationAlarmMessage){
             LocationAlarmMessage locationAlarmMessage = (LocationAlarmMessage)message;
-            System.out.println("receive location alarm message :" + locationAlarmMessage.getImei() + " Alarm is : "+ getEventDescription(locationAlarmMessage.getAlarm()));
+            System.out.println("receive location alarm message :" + locationAlarmMessage.getImei() + " Alarm is : "+locationAlarmMessage.getOriginalAlarmCode());
             //8806 ,8803Pro or some old model device,there is no need serial no .must reply this message
             byte[] reply = T880xEncoder.getLocationAlarmMsgReply(locationAlarmMessage.getImei(),false ,locationAlarmMessage.getSerialNo(), locationAlarmMessage.getOriginalAlarmCode());
             Utils.write(channel, reply, new Utils.WriteListener() {
@@ -127,7 +127,7 @@ public class NoObdHandler extends SimpleChannelInboundHandler<Message> {
 //            });
         }else if (message instanceof LocationAlarmMessage){
             LocationAlarmMessage locationAlarmMessage = (LocationAlarmMessage)message;
-            System.out.println("receive location alarm message :" + locationAlarmMessage.getImei() + " Alarm is : "+ getEventDescription(locationAlarmMessage.getAlarm()));
+            System.out.println("receive location alarm message :" + locationAlarmMessage.getImei() + " Alarm is : "+ locationAlarmMessage.getOriginalAlarmCode());
             //8806 Plus or some new model device,need serial no,reply this message
             byte[] reply = t880xPlusEncoder.getLocationAlarmMsgReply(locationAlarmMessage.getImei(),true, locationAlarmMessage.getSerialNo(),locationAlarmMessage.getOriginalAlarmCode(),locationAlarmMessage.getProtocolHeadType());
             Utils.write(channel, reply, new Utils.WriteListener() {
@@ -228,58 +228,5 @@ public class NoObdHandler extends SimpleChannelInboundHandler<Message> {
         }
     }
 
-    public String getEventDescription(int eventCode) {
-        if(eventCode ==  Event.ALARM_EXTERNAL_POWER_LOST)
-            return "External power disconnect;";
-        else if(eventCode ==  Event.ALARM_LOW_BATTERY)
-            return "Low power alarm(inner power voltage 3.5V)";
-        else if(eventCode ==  Event.ALARM_SOS)
-            return "SOS alarm";
-        else if(eventCode ==  Event.ALARM_OVER_SPEED)
-            return "Over speed alarm";
-        else if(eventCode ==  Event.ALARM_GEOFENCE_IN)
-            return "In Geofence alarm";
-        else if(eventCode ==  Event.ALARM_GEOFENCE_OUT)
-            return "Out Geofence alarm";
-        else if(eventCode ==  Event.ALARM_TOWING)
-            return "Drag alarm when set;";
-        else if(eventCode ==  Event.ALARM_VIBRATION)
-            return "Vibration alarm";
-        else if(eventCode ==  Event.ADDRESS_REQUESTED)
-            return "Device apply address";
-        else if(eventCode ==  Event.ALARM_ANTI_THEFT)
-            return "Anti-theft alarm";
-        else if(eventCode ==  Event.FILL_TANK)
-            return "Ananlog 1 voltage increase";
-        else if(eventCode ==  Event.ALARM_FUEL_LEAK)
-            return "Analog 1 voltage decrease";
-        else if(eventCode ==  Event.IGNITION)
-            return "ACC from 0 to 1";
-        else if(eventCode ==  Event.PARKING)
-            return "ACC from 1 to 0";
-        else if(eventCode ==  Event.AC_ON)
-            return "Air conditioning opens alarm";
-        else if(eventCode ==  Event.AC_OFF)
-            return "Air conditioning off alarm";
-        else if(eventCode ==  Event.IDLE_START)
-            return "One time idle start, you can define the idle timing";
-        else if(eventCode ==  Event.IDLE_END)
-            return "One time idle end";
-        else if(eventCode ==  Event.GSM_JAMMER_DETECTION_START)
-            return "GSM jammer detection start ,this need config";
-        else if(eventCode ==  Event.GSM_JAMMER_DETECTION_END)
-            return "GSM jammer detection end";
-        else if(eventCode ==  Event.ALARM_EXTERNAL_POWER_RECOVER)
-            return "External power recover";
-        else if(eventCode ==  Event.ALARM_EXTERNAL_POWER_LOWER)
-            return "External power lower than preset external power , this need config";
-        else if(eventCode ==  Event.ALARM_RUDE_DRIVER)
-            return "Rude driver alert, this need config";
-        else if(eventCode ==  Event.ALARM_COLLISION)
-            return "Collision alert, this need config";
-        else if(eventCode ==  Event.ALARM_TURN_OVER)
-            return "Turn over alert, this need config";
-        else
-            return "";
-    }
+
 }

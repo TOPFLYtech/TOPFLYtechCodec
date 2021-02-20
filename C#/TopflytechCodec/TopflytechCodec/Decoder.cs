@@ -287,6 +287,20 @@ namespace TopflytechCodec
                 signInMessage.OrignBytes = bytes;
                 return signInMessage;
             }
+            else if(16 == str.Length){
+                String software = String.Format("V{0}.{1}.{2}.{3}", Convert.ToInt32(str.Substring(0, 1), 16), Convert.ToInt32(str.Substring(1, 1), 16), Convert.ToInt32(str.Substring(2, 1), 16), Convert.ToInt32(str.Substring(3, 1), 16));
+                String firmware = String.Format("V{0}.{1}.{2}.{3}", Convert.ToInt32(str.Substring(10, 1), 16), Convert.ToInt32(str.Substring(11, 1), 16), Convert.ToInt32(str.Substring(12, 1), 16), Convert.ToInt32(str.Substring(13, 1), 16));
+                String hardware = String.Format("{0}.{1}", Convert.ToInt32(str.Substring(14, 1), 16), Convert.ToInt32(str.Substring(15, 1), 16));
+                SignInMessage signInMessage = new SignInMessage();
+                signInMessage.SerialNo = serialNo;
+                //signInMessage.IsNeedResp = isNeedResp;
+                signInMessage.Imei = imei;
+                signInMessage.Software = software;
+                signInMessage.Firmware = firmware; 
+                signInMessage.Hareware = hardware;
+                signInMessage.OrignBytes = bytes;
+                return signInMessage;
+            }
             else
             {
                 throw new Exception("Error login message");
@@ -2290,8 +2304,7 @@ namespace TopflytechCodec
             message.AnalogInput2 = analoginput2;
             message.AnalogInput3 = analoginput3;
             message.Rpm = rpm;
-            message.OriginalAlarmCode = originalAlarmCode;
-            message.Alarm = Event.getEvent(alarmByte);
+            message.OriginalAlarmCode = originalAlarmCode; 
             message.Mileage = mileage;
             message.DeviceTemp = deviceTemp;
             try
@@ -2557,8 +2570,7 @@ namespace TopflytechCodec
             message.AnalogInput2 = analoginput2;
             message.AnalogInput3 = analogInput3;
             message.Rpm = rpm;
-            message.OriginalAlarmCode = originalAlarmCode;
-            message.Alarm = Event.getEvent(alarmByte);
+            message.OriginalAlarmCode = originalAlarmCode; 
             message.Mileage = mileage;
             try
             {

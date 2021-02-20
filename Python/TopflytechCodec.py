@@ -316,7 +316,6 @@ class LocationMessage(Message):
     speed = 0.0 #The speed.The unit is km / h
     mileage = 0 #The vehicle current mileage.The unit is meter.
     azimuth = 0
-    alarm = 0
     address = ""
     analogInput1 = 0
     analogInput2 = 0
@@ -481,114 +480,6 @@ class ObdMessage(Message):
     vin = ""
     clearErrorCodeSuccess = False
 
-class Event:
-    """
-        Device Alarm Type Description.
-    """
-    NONE = 1
-    IGNITION= 2 #ACC from 0 to 1
-    PARKING = 3 #ACC from 1 to 0
-    ALARM_EXTERNAL_POWER_LOST= 4 #External power disconnect;
-    ALARM_LOW_BATTERY = 5 #Low power alarm(inner power voltage 3.5V)
-    ALARM_SOS = 6 #SOS alarm
-    ALARM_OVER_SPEED= 7 #Over speed alarm
-    ALARM_TOWING= 8 #Drag alarm when set
-    ADDRESS_REQUESTED = 9 #Device apply address
-    ALARM_ANTI_THEFT= 10 #Anti-theft alarm
-    FILL_TANK = 11 #Ananlog 1 voltage increase
-    ALARM_FUEL_LEAK = 12 #Analog 1 voltage decrease
-    ALARM_GEOFENCE_OUT= 13 #In Geofence alarm
-    ALARM_GEOFENCE_IN = 14 #Out Geofence alarm
-    AC_ON= 15 #Air conditioning opens alarm
-    AC_OFF= 16 #Air conditioning off alarm
-    IDLE_START= 17 #One time idle start, you can define the idle timing
-    IDLE_END= 18 #One time idle end
-    ALARM_VIBRATION = 19 #Vibration alarm
-    GSM_JAMMER_DETECTION_START= 20 #GSM jammer detection start ,this need config
-    GSM_JAMMER_DETECTION_END= 21 #GSM jammer detection end
-    ALARM_EXTERNAL_POWER_RECOVER = 22 #External power recover
-    ALARM_EXTERNAL_POWER_LOWER = 23 #External power lower than preset external power , this need config
-    ALARM_RUDE_DRIVER = 24 #Rude driver alert, this need config
-    ALARM_COLLISION = 25 #Collision alert, this need config
-    ALARM_TURN_OVER = 26 #Turn over alert, this need config
-    ALARM_TIRE_LEAKS = 27
-    ALARM_TIRE_BLE_POWER_LOWER = 28
-    ALARM_TRACKER_POWER_LOWER = 29
-    ALARM_DEVICE_REMOVE = 30
-    ALARM_DEVICE_CASE_OPEN = 31
-    ALARM_BOX_OPEN = 32
-    ALARM_FALL_DOWN = 33
-    ALARM_BATTERY_POWER_RECOVER = 34
-    ALARM_INNER_TEMP_HIGH = 35
-    ALARM_MOVE = 36
-    ALARM_INCLINE = 37
-    ALARM_USB_RECHARGE_START = 38
-    ALARM_USB_RECHARGE_END = 39
-    ALARM_DEVICE_MOUNTED = 40
-    ALARM_DEVICE_CASE_CLOSED = 41
-    ALARM_BOX_CLOSED = 42
-    ALARM_FALL_DOWN_REC = 43
-    ALARM_INNER_TEMP_HIGH_REC = 44
-    ALARM_MOVE_REC = 45
-    ALARM_COLLISION_REC = 46
-    ALARM_INCLINE_REC = 47
-    ALARM_POWER_ON = 48
-    ALARM_INNER_TEMP_LOW = 49
-    ALARM_INNER_TEMP_LOW_REC = 50
-    @staticmethod
-    def getEvent(eventByte):
-        if eventByte == 0x01:
-            return  Event.ALARM_EXTERNAL_POWER_LOST
-        elif eventByte == 0x02:
-            return Event.ALARM_LOW_BATTERY
-        elif eventByte == 0x03:
-            return Event.ALARM_SOS
-        elif eventByte == 0x04:
-            return Event.ALARM_OVER_SPEED
-        elif eventByte == 0x05:
-            return Event.ALARM_GEOFENCE_IN
-        elif eventByte == 0x06:
-            return Event.ALARM_GEOFENCE_OUT
-        elif eventByte == 0x07:
-            return Event.ALARM_TOWING
-        elif eventByte == 0x08:
-            return Event.ALARM_VIBRATION
-        elif eventByte == 0x09:
-            return Event.ADDRESS_REQUESTED;
-        elif eventByte == 0x10:
-            return Event.ALARM_ANTI_THEFT
-        elif eventByte == 0x11 or eventByte == 0x13:
-            return Event.FILL_TANK
-        elif eventByte == 0x12 or eventByte == 0x14:
-            return Event.ALARM_FUEL_LEAK
-        elif eventByte == 0x15:
-            return Event.IGNITION
-        elif eventByte == 0x16:
-            return Event.PARKING
-        elif eventByte == 0x17:
-            return Event.AC_ON
-        elif eventByte == 0x18:
-            return Event.AC_OFF
-        elif eventByte == 0x19:
-            return Event.IDLE_START
-        elif eventByte == 0x20:
-            return Event.IDLE_END
-        elif eventByte == 0x21:
-            return Event.GSM_JAMMER_DETECTION_START
-        elif eventByte == 0x22:
-            return Event.GSM_JAMMER_DETECTION_END
-        elif eventByte == 0x23:
-            return Event.ALARM_EXTERNAL_POWER_RECOVER
-        elif eventByte == 0x24:
-            return Event.ALARM_EXTERNAL_POWER_LOWER
-        elif eventByte == 0x25:
-            return Event.ALARM_RUDE_DRIVER
-        elif eventByte == 0x26:
-            return Event.ALARM_COLLISION
-        elif eventByte == 0x27:
-            return Event.ALARM_TURN_OVER
-        else:
-            return Event.NONE
 
 
 def byte2HexString(byteArray,index):
@@ -615,9 +506,15 @@ def bytes2Integer(byteArray,offset):
     return (byteArray[offset]<< 24) + (byteArray[offset+1] << 16) + (byteArray[offset+2] << 8) +(byteArray[offset+3] )
 
 def bytes2Float(byteArray,offset):
-    data = [byteArray[offset + 3],byteArray[offset +2],byteArray[offset+1],byteArray[offset]]
-    b = ''.join(chr(i) for i in data)
-    return struct.unpack(">f",b)[0]
+    # data = [byteArray[offset + 3],byteArray[offset +2],byteArray[offset+1],byteArray[offset]]
+    # b = ''.join(chr(i) for i in data)
+    # return struct.unpack(">f",b)[0]
+    ba = bytearray()
+    ba.append(byteArray[offset + 3])
+    ba.append(byteArray[offset + 2])
+    ba.append(byteArray[offset + 1])
+    ba.append(byteArray[offset])
+    return struct.unpack("!f",ba)[0]
 BS = 16
 pad = lambda s: s + (BS - len(s) % BS) * chr(BS - len(s) % BS)
 unpad = lambda s : s[0:-ord(s[-1])]
@@ -915,6 +812,19 @@ class Decoder:
             signInMessage.hareware = hareware
             signInMessage.orignBytes = byteArray
             return signInMessage
+        elif len(str) == 16:
+            software = "V{0}.{1}.{2}.{3}".format((byteArray[15] & 0xf0) >> 4, byteArray[15] & 0xf, (byteArray[16] & 0xf0) >> 4, byteArray[16] & 0xf)
+            firmware = "V{0}.{1}.{2}.{3}".format((byteArray[20] & 0xf0) >> 4, byteArray[20] & 0xf, (byteArray[21] & 0xf0) >> 4, byteArray[21] & 0xf)
+            hareware = "V{0}.{1}".format( (byteArray[22] & 0xf0) >> 4, byteArray[22] & 0xf)
+            signInMessage = SignInMessage()
+            signInMessage.firmware = firmware
+            signInMessage.imei = imei
+            signInMessage.serialNo = serialNo
+            # signInMessage.isNeedResp = isNeedResp
+            signInMessage.software = software
+            signInMessage.hareware = hareware
+            signInMessage.orignBytes = byteArray
+            return signInMessage
         return None
 
 
@@ -983,11 +893,11 @@ class Decoder:
             rs232Message.rs232DataType = RS232Message.RDID_DATA
             dataCount = len(data) / 10
             curIndex = 0
-            for i in range(0,dataCount):
+            for i in range(0,(int)(dataCount)):
                 curIndex = i * 10
                 rs232RfidMessage = Rs232RfidMessage()
                 rfidByte = [data[curIndex + 2],data[curIndex + 3],data[curIndex + 4],data[curIndex + 5], data[curIndex + 6],data[curIndex + 7],data[curIndex + 8],data[curIndex + 9]]
-                rs232RfidMessage.rfid = ''.join(chr(i) for i in rfidByte).decode("UTF-8")
+                rs232RfidMessage.rfid = ''.join(chr(i) for i in rfidByte)
                 messageList.append(rs232RfidMessage)
         elif fingerprintHead is not None and fingerprintHead == self.rs232FingerprintHead:
             rs232Message.rs232DataType = RS232Message.FINGERPRINT_DATA
@@ -1073,7 +983,7 @@ class Decoder:
             rs232FuelMessage = Rs232FuelMessage()
             fuelData = data[2:6]
             if len(fuelData) > 0:
-                fuelStr = ''.join(chr(i) for i in fuelData).decode("UTF-8")
+                fuelStr = ''.join(chr(i) for i in fuelData).encode().decode("UTF-8")
                 try:
                     rs232FuelMessage.fuelPercent = (float)(fuelStr) / 100
                 except:
@@ -2038,27 +1948,27 @@ class Decoder:
         networkOperatorLen = bytes[21]
         networkOperatorStartIndex = 22
         networkOperatorByte = bytes[networkOperatorStartIndex:networkOperatorStartIndex + networkOperatorLen]
-        networkOperator = ''.join(chr(i) for i in networkOperatorByte).decode("UTF-16LE")
+        networkOperator = ''.join(chr(i) for i in networkOperatorByte).encode().decode("UTF-16LE")
         accessTechnologyLen = bytes[networkOperatorStartIndex + networkOperatorLen]
         accessTechnologyStartIndex = networkOperatorStartIndex + networkOperatorLen + 1;
         accessTechnologyByte = bytes[accessTechnologyStartIndex:accessTechnologyStartIndex + accessTechnologyLen]
-        accessTechnology = ''.join(chr(i) for i in accessTechnologyByte).decode("UTF-8")
+        accessTechnology = ''.join(chr(i) for i in accessTechnologyByte).encode().decode("UTF-8")
         bandLen = bytes[accessTechnologyStartIndex + accessTechnologyLen]
         bandStartIndex = accessTechnologyStartIndex + accessTechnologyLen + 1
         bandLenByte = bytes[bandStartIndex:bandStartIndex + bandLen]
-        band = ''.join(chr(i) for i in bandLenByte).decode("UTF-8")
+        band = ''.join(chr(i) for i in bandLenByte).encode().decode("UTF-8")
         msgLen = bytes2Short(bytes,3);
         if msgLen > bandStartIndex + bandLen:
             IMSILen = bytes[bandStartIndex + bandLen]
             IMSIStartIndex = bandStartIndex + bandLen + 1
             IMSILenByte = bytes[IMSIStartIndex:IMSIStartIndex + IMSILen]
-            IMSI = ''.join(chr(i) for i in IMSILenByte).decode("UTF-8")
+            IMSI = ''.join(chr(i) for i in IMSILenByte).encode().decode("UTF-8")
             networkInfoMessage.imsi = IMSI
             if msgLen > IMSIStartIndex + IMSILen:
                 iccidLen = bytes[IMSIStartIndex + IMSILen]
                 iccidStartIndex = IMSIStartIndex + IMSILen + 1
                 iccidLenByte = bytes[iccidStartIndex:iccidStartIndex + iccidLen]
-                iccid = ''.join(chr(i) for i in iccidLenByte).decode("UTF-8")
+                iccid = ''.join(chr(i) for i in iccidLenByte).encode().decode("UTF-8")
                 networkInfoMessage.iccid = iccid
 
         networkInfoMessage.serialNo = serialNo
@@ -2078,7 +1988,7 @@ class Decoder:
         protocol = byteArray[15]
         data = byteArray[16:]
         if protocol == 0x01:
-            messageData = ''.join(chr(i) for i in data).decode("UTF-16LE")
+            messageData = ''.join(chr(i) for i in data).encode().decode("UTF-16LE")
             configMessage = ConfigMessage()
             configMessage.serialNo = serialNo
             # configMessage.isNeedResp = isNeedResp
@@ -2087,7 +1997,7 @@ class Decoder:
             configMessage.orignBytes = byteArray
             return configMessage
         elif protocol == 0x03:
-            messageData = ''.join(chr(i) for i in data).decode("UTF-16LE")
+            messageData = ''.join(chr(i) for i in data).encode().decode("UTF-16LE")
             forwardMessage = ForwardMessage()
             forwardMessage.serialNo = serialNo
             # forwardMessage.isNeedResp = isNeedResp
@@ -2096,7 +2006,7 @@ class Decoder:
             forwardMessage.orignBytes = byteArray
             return forwardMessage
         elif protocol == 0x05:
-            messageData = ''.join(chr(i) for i in data).decode("UTF-16lE")
+            messageData = ''.join(chr(i) for i in data).encode().decode("UTF-16LE")
             ussdMessage = USSDMessage()
             ussdMessage.serialNo = serialNo
             # ussdMessage.isNeedResp = isNeedResp
@@ -2550,7 +2460,6 @@ class Decoder:
         locationMessage.analogInput1 = analoginput
         locationMessage.analogInput2 = analoginput2
         locationMessage.originalAlarmCode = originalAlarmCode
-        locationMessage.alarm = Event.getEvent(data[22])
         locationMessage.mileage = mileage
         locationMessage.externalPowerSupply = externalPowerSupply
         locationMessage.input3 = input3
@@ -2764,7 +2673,6 @@ class Decoder:
         locationMessage.analogInput1 = analoginput
         locationMessage.analogInput2 = analoginput2
         locationMessage.originalAlarmCode = originalAlarmCode
-        locationMessage.alarm = Event.getEvent(data[22])
         locationMessage.mileage = mileage
         locationMessage.is_4g_lbs = is_4g_lbs
         locationMessage.is_2g_lbs = is_2g_lbs
@@ -3382,7 +3290,7 @@ class ObdDecoder:
                                 dataValid = True
                         if len(vinData) and dataValid:
                             obdData.messageType = ObdMessage.VIN_MESSAGE
-                            obdData.vin = ''.join(chr(i) for i in vinData).decode("UTF-8")
+                            obdData.vin = ''.join(chr(i) for i in vinData).encode().decode("UTF-8")
                     elif (data[0] & 0x41) == 0x41 and (data[1] == 0x03 or data[1] == 0x0A):
                         errorCode = data[2]
                         errorDataByte = data[3:len(data) - 1]
@@ -3588,7 +3496,6 @@ class ObdDecoder:
         locationMessage.iopPowerCutOff = iopPowerCutOff
         locationMessage.iopACOn = iopACOn
         locationMessage.originalAlarmCode = originalAlarmCode
-        locationMessage.alarm = Event.getEvent(data[18])
         locationMessage.mileage = mileage
         try:
             charge = (int)(batteryStr)
@@ -4295,27 +4202,27 @@ class ObdDecoder:
         networkOperatorLen = bytes[21]
         networkOperatorStartIndex = 22
         networkOperatorByte = bytes[networkOperatorStartIndex:networkOperatorStartIndex + networkOperatorLen]
-        networkOperator = ''.join(chr(i) for i in networkOperatorByte).decode("UTF-16LE")
+        networkOperator = ''.join(chr(i) for i in networkOperatorByte).encode().decode("UTF-16LE")
         accessTechnologyLen = bytes[networkOperatorStartIndex + networkOperatorLen]
         accessTechnologyStartIndex = networkOperatorStartIndex + networkOperatorLen + 1;
         accessTechnologyByte = bytes[accessTechnologyStartIndex:accessTechnologyStartIndex + accessTechnologyLen]
-        accessTechnology = ''.join(chr(i) for i in accessTechnologyByte).decode("UTF-8")
+        accessTechnology = ''.join(chr(i) for i in accessTechnologyByte).encode().decode("UTF-8")
         bandLen = bytes[accessTechnologyStartIndex + accessTechnologyLen]
         bandStartIndex = accessTechnologyStartIndex + accessTechnologyLen + 1
         bandLenByte = bytes[bandStartIndex:bandStartIndex + bandLen]
-        band = ''.join(chr(i) for i in bandLenByte).decode("UTF-8")
+        band = ''.join(chr(i) for i in bandLenByte).encode().decode("UTF-8")
         msgLen = bytes2Short(bytes,3);
         if msgLen > bandStartIndex + bandLen:
             IMSILen = bytes[bandStartIndex + bandLen]
             IMSIStartIndex = bandStartIndex + bandLen + 1
             IMSILenByte = bytes[IMSIStartIndex:IMSIStartIndex + IMSILen]
-            IMSI = ''.join(chr(i) for i in IMSILenByte).decode("UTF-8")
+            IMSI = ''.join(chr(i) for i in IMSILenByte).encode().decode("UTF-8")
             networkInfoMessage.imsi = IMSI
             if msgLen > IMSIStartIndex + IMSILen:
                 iccidLen = bytes[IMSIStartIndex + IMSILen]
                 iccidStartIndex = IMSIStartIndex + IMSILen + 1
                 iccidLenByte = bytes[iccidStartIndex:iccidStartIndex + iccidLen]
-                iccid = ''.join(chr(i) for i in iccidLenByte).decode("UTF-8")
+                iccid = ''.join(chr(i) for i in iccidLenByte).encode().decode("UTF-8")
                 networkInfoMessage.iccid = iccid
 
         networkInfoMessage.serialNo = serialNo
@@ -4335,7 +4242,7 @@ class ObdDecoder:
         protocol = byteArray[15]
         data = byteArray[16:]
         if protocol == 0x01:
-            messageData = ''.join(chr(i) for i in data).decode("UTF-16LE")
+            messageData = ''.join(chr(i) for i in data).encode().decode("UTF-16LE")
             configMessage = ConfigMessage()
             configMessage.serialNo = serialNo
             # configMessage.isNeedResp = isNeedResp
@@ -4344,7 +4251,7 @@ class ObdDecoder:
             configMessage.orignBytes = byteArray
             return configMessage
         elif protocol == 0x03:
-            messageData = ''.join(chr(i) for i in data).decode("UTF-16LE")
+            messageData = ''.join(chr(i) for i in data).encode().decode("UTF-16LE")
             forwardMessage = ForwardMessage()
             forwardMessage.serialNo = serialNo
             # forwardMessage.isNeedResp = isNeedResp
@@ -4353,7 +4260,7 @@ class ObdDecoder:
             forwardMessage.orignBytes = byteArray
             return forwardMessage
         elif protocol == 0x05:
-            messageData = ''.join(chr(i) for i in data).decode("UTF-16lE")
+            messageData = ''.join(chr(i) for i in data).encode().decode("UTF-16lE")
             ussdMessage = USSDMessage()
             ussdMessage.serialNo = serialNo
             # ussdMessage.isNeedResp = isNeedResp
@@ -4623,7 +4530,7 @@ class PersonalAssetMsgDecoder:
         protocol = byteArray[15]
         data = byteArray[16:]
         if protocol == 0x01:
-            messageData = ''.join(chr(i) for i in data).decode("UTF-16LE")
+            messageData = ''.join(chr(i) for i in data).encode().decode("UTF-16LE")
             configMessage = ConfigMessage()
             configMessage.serialNo = serialNo
             # configMessage.isNeedResp = isNeedResp
@@ -4632,7 +4539,7 @@ class PersonalAssetMsgDecoder:
             configMessage.orignBytes = byteArray
             return configMessage
         elif protocol == 0x03:
-            messageData = ''.join(chr(i) for i in data).decode("UTF-16LE")
+            messageData = ''.join(chr(i) for i in data).encode().decode("UTF-16LE")
             forwardMessage = ForwardMessage()
             forwardMessage.serialNo = serialNo
             # forwardMessage.isNeedResp = isNeedResp
@@ -4641,7 +4548,7 @@ class PersonalAssetMsgDecoder:
             forwardMessage.orignBytes = byteArray
             return forwardMessage
         elif protocol == 0x05:
-            messageData = ''.join(chr(i) for i in data).decode("UTF-16lE")
+            messageData = ''.join(chr(i) for i in data).encode().decode("UTF-16lE")
             ussdMessage = USSDMessage()
             ussdMessage.serialNo = serialNo
             # ussdMessage.isNeedResp = isNeedResp
@@ -5138,27 +5045,27 @@ class PersonalAssetMsgDecoder:
         networkOperatorLen = bytes[21]
         networkOperatorStartIndex = 22
         networkOperatorByte = bytes[networkOperatorStartIndex:networkOperatorStartIndex + networkOperatorLen]
-        networkOperator = ''.join(chr(i) for i in networkOperatorByte).decode("UTF-16LE")
+        networkOperator = ''.join(chr(i) for i in networkOperatorByte).encode().decode("UTF-16LE")
         accessTechnologyLen = bytes[networkOperatorStartIndex + networkOperatorLen]
         accessTechnologyStartIndex = networkOperatorStartIndex + networkOperatorLen + 1;
         accessTechnologyByte = bytes[accessTechnologyStartIndex:accessTechnologyStartIndex + accessTechnologyLen]
-        accessTechnology = ''.join(chr(i) for i in accessTechnologyByte).decode("UTF-8")
+        accessTechnology = ''.join(chr(i) for i in accessTechnologyByte).encode().decode("UTF-8")
         bandLen = bytes[accessTechnologyStartIndex + accessTechnologyLen]
         bandStartIndex = accessTechnologyStartIndex + accessTechnologyLen + 1
         bandLenByte = bytes[bandStartIndex:bandStartIndex + bandLen]
-        band = ''.join(chr(i) for i in bandLenByte).decode("UTF-8")
+        band = ''.join(chr(i) for i in bandLenByte).encode().decode("UTF-8")
         msgLen = bytes2Short(bytes,3);
         if msgLen > bandStartIndex + bandLen:
             IMSILen = bytes[bandStartIndex + bandLen]
             IMSIStartIndex = bandStartIndex + bandLen + 1
             IMSILenByte = bytes[IMSIStartIndex:IMSIStartIndex + IMSILen]
-            IMSI = ''.join(chr(i) for i in IMSILenByte).decode("UTF-8")
+            IMSI = ''.join(chr(i) for i in IMSILenByte).encode().decode("UTF-8")
             networkInfoMessage.imsi = IMSI
             if msgLen > IMSIStartIndex + IMSILen:
                 iccidLen = bytes[IMSIStartIndex + IMSILen]
                 iccidStartIndex = IMSIStartIndex + IMSILen + 1
                 iccidLenByte = bytes[iccidStartIndex:iccidStartIndex + iccidLen]
-                iccid = ''.join(chr(i) for i in iccidLenByte).decode("UTF-8")
+                iccid = ''.join(chr(i) for i in iccidLenByte).encode().decode("UTF-8")
                 networkInfoMessage.iccid = iccid
 
         networkInfoMessage.serialNo = serialNo
@@ -5178,7 +5085,7 @@ class PersonalAssetMsgDecoder:
         protocol = byteArray[15]
         data = byteArray[16:]
         if protocol == 0x01:
-            messageData = ''.join(chr(i) for i in data).decode("UTF-16LE")
+            messageData = ''.join(chr(i) for i in data).encode().decode("UTF-16LE")
             configMessage = ConfigMessage()
             configMessage.serialNo = serialNo
             # configMessage.isNeedResp = isNeedResp
@@ -5187,7 +5094,7 @@ class PersonalAssetMsgDecoder:
             configMessage.orignBytes = byteArray
             return configMessage
         elif protocol == 0x03:
-            messageData = ''.join(chr(i) for i in data).decode("UTF-16LE")
+            messageData = ''.join(chr(i) for i in data).encode().decode("UTF-16LE")
             forwardMessage = ForwardMessage()
             forwardMessage.serialNo = serialNo
             # forwardMessage.isNeedResp = isNeedResp
@@ -5196,7 +5103,7 @@ class PersonalAssetMsgDecoder:
             forwardMessage.orignBytes = byteArray
             return forwardMessage
         elif protocol == 0x05:
-            messageData = ''.join(chr(i) for i in data).decode("UTF-16lE")
+            messageData = ''.join(chr(i) for i in data).encode().decode("UTF-16lE")
             ussdMessage = USSDMessage()
             ussdMessage.serialNo = serialNo
             # ussdMessage.isNeedResp = isNeedResp
@@ -5206,70 +5113,6 @@ class PersonalAssetMsgDecoder:
             return ussdMessage
         return None
 
-    def getEvent(self,alarmCodeByte):
-        if alarmCodeByte == 0x01:
-            return Event.ALARM_DEVICE_REMOVE
-        elif alarmCodeByte == 0x02:
-            return Event.ALARM_DEVICE_CASE_OPEN
-        elif alarmCodeByte == 0x03:
-            return Event.ALARM_SOS
-        elif alarmCodeByte == 0x04:
-            return Event.ALARM_BOX_OPEN
-        elif alarmCodeByte == 0x05:
-            return Event.ALARM_FALL_DOWN
-        elif alarmCodeByte == 0x06:
-            return Event.ALARM_LOW_BATTERY
-        elif alarmCodeByte == 0x07:
-            return Event.ALARM_BATTERY_POWER_RECOVER
-        elif alarmCodeByte == 0x08:
-            return Event.ALARM_INNER_TEMP_HIGH
-        elif alarmCodeByte == 0x09:
-            return Event.ALARM_MOVE
-        elif alarmCodeByte == 0x10:
-            return Event.ALARM_COLLISION
-        elif alarmCodeByte == 0x11:
-            return Event.ALARM_INCLINE
-        elif alarmCodeByte == 0x12:
-            return Event.ALARM_USB_RECHARGE_START
-        elif alarmCodeByte == 0x13:
-            return Event.ALARM_USB_RECHARGE_END
-        elif alarmCodeByte == 0x14:
-            return Event.ALARM_GEOFENCE_IN
-        elif alarmCodeByte == 0x15:
-            return Event.ALARM_GEOFENCE_OUT
-        elif alarmCodeByte == 0x16:
-            return Event.IGNITION
-        elif alarmCodeByte == 0x17:
-            return Event.PARKING
-        elif alarmCodeByte == 0x18:
-            return Event.IDLE_START
-        elif alarmCodeByte == 0x19:
-            return Event.IDLE_END
-        elif alarmCodeByte == 0x20:
-            return Event.ADDRESS_REQUESTED
-        elif alarmCodeByte == 0x21:
-            return Event.ALARM_DEVICE_MOUNTED
-        elif alarmCodeByte == 0x22:
-            return Event.ALARM_DEVICE_CASE_CLOSED
-        elif alarmCodeByte == 0x23:
-            return Event.ALARM_BOX_CLOSED
-        elif alarmCodeByte == 0x24:
-            return Event.ALARM_FALL_DOWN_REC
-        elif alarmCodeByte == 0x25:
-            return Event.ALARM_INNER_TEMP_HIGH_REC
-        elif alarmCodeByte == 0x26:
-            return Event.ALARM_MOVE_REC
-        elif alarmCodeByte == 0x27:
-            return Event.ALARM_COLLISION_REC
-        elif alarmCodeByte == 0x28:
-            return Event.ALARM_INCLINE_REC
-        elif alarmCodeByte == 0x29:
-            return Event.ALARM_POWER_ON
-        elif alarmCodeByte == 0x30:
-            return Event.ALARM_INNER_TEMP_LOW
-        elif alarmCodeByte == 0x31:
-            return Event.ALARM_INNER_TEMP_LOW_REC
-        return Event.NONE
 
     def parseDataMessage(self,byteArray):
         command = byteArray[0:self.HEADER_LENGTH]
@@ -5421,7 +5264,6 @@ class PersonalAssetMsgDecoder:
         locationMessage.satelliteNumber = satelliteNumber
         locationMessage.heartbeatInterval = heartbeatInterval
         locationMessage.originalAlarmCode = originalAlarmCode
-        locationMessage.alarm = self.getEvent(alarmByte)
         locationMessage.mileage = mileage
         locationMessage.batteryPercent = batteryPercent
         locationMessage.date = gtm0

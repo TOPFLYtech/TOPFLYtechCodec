@@ -4,59 +4,7 @@ from TopflytechCodec import *
 import socket
 
 
-def getEventDescription(eventCode):
-    if eventCode ==  Event.ALARM_EXTERNAL_POWER_LOST:
-            return "External power disconnect"
-    elif eventCode ==  Event.ALARM_LOW_BATTERY:
-        return "Low power alarm inner power voltage 3.5V "
-    elif eventCode ==  Event.ALARM_SOS:
-        return "SOS alarm"
-    elif eventCode ==  Event.ALARM_OVER_SPEED:
-        return "Over speed alarm"
-    elif eventCode ==  Event.ALARM_GEOFENCE_IN:
-        return "In Geofence alarm"
-    elif eventCode ==  Event.ALARM_GEOFENCE_OUT:
-        return "Out Geofence alarm"
-    elif eventCode ==  Event.ALARM_TOWING:
-        return "Drag alarm when set"
-    elif eventCode ==  Event.ALARM_VIBRATION:
-        return "Vibration alarm"
-    elif eventCode ==  Event.ADDRESS_REQUESTED:
-        return "Device apply address"
-    elif eventCode ==  Event.ALARM_ANTI_THEFT:
-        return "Anti-theft alarm"
-    elif eventCode ==  Event.FILL_TANK:
-        return "Ananlog 1 voltage increase"
-    elif eventCode ==  Event.ALARM_FUEL_LEAK:
-        return "Analog 1 voltage decrease"
-    elif eventCode ==  Event.IGNITION:
-        return "ACC from 0 to 1"
-    elif eventCode ==  Event.PARKING:
-        return "ACC from 1 to 0"
-    elif eventCode ==  Event.AC_ON:
-        return "Air conditioning opens alarm"
-    elif eventCode ==  Event.AC_OFF:
-        return "Air conditioning off alarm"
-    elif eventCode ==  Event.IDLE_START:
-        return "One time idle start, you can define the idle timing"
-    elif eventCode ==  Event.IDLE_END:
-        return "One time idle end"
-    elif eventCode ==  Event.GSM_JAMMER_DETECTION_START:
-        return "GSM jammer detection start ,this need config"
-    elif eventCode ==  Event.GSM_JAMMER_DETECTION_END:
-        return "GSM jammer detection end"
-    elif eventCode ==  Event.ALARM_EXTERNAL_POWER_RECOVER:
-        return "External power recover"
-    elif eventCode ==  Event.ALARM_EXTERNAL_POWER_LOWER:
-        return "External power lower than preset external power , this need config"
-    elif eventCode ==  Event.ALARM_RUDE_DRIVER:
-        return "Rude driver alert, this need config"
-    elif eventCode ==  Event.ALARM_COLLISION:
-        return "Collision alert, this need config"
-    elif eventCode ==  Event.ALARM_TURN_OVER:
-        return "Turn over alert, this need config"
-    else:
-        return ""
+
 def getGpsDriverBehaviorDescription(behaviorType):
     if behaviorType == GpsDriverBehaviorType.HIGH_SPEED_ACCELERATE:
         return "The vehicle accelerates at the high speed."
@@ -102,7 +50,7 @@ def dealObdDeviceMessage(message,socketClient):
         reply = t880xdEncoder.getLocationMsgReply(message.imei,True,message.serialNo)
         socketClient.send(reply)
     elif isinstance(message,LocationAlarmMessage):
-        print ("receive locationAlarmMessage" + message.imei + "Alarm is : " + getEventDescription(message.alarm))
+        print ("receive locationAlarmMessage" + message.imei + "Alarm is : " + str(message.originalAlarmCode))
         # some new model device,need serial no,reply this message
         # if message.isNeedResp:
         #     reply = t880xdEncoder.getLocationAlarmMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode)
@@ -188,10 +136,10 @@ def dealNoObdDeviceMessage(message,socketClient):
         # if message.isNeedResp:
         #     reply = t880xPlusEncoder.getLocationMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode,message.protocolHeadType)
         #     socketClient.send(reply)
-        reply = t880xPlusEncoder.getLocationMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode,message.protocolHeadType)
+        reply = t880xPlusEncoder.getLocationMsgReply(message.imei,True,message.serialNo,message.protocolHeadType)
         socketClient.send(reply)
     elif isinstance(message,LocationAlarmMessage):
-        print ("receive locationAlarmMessage" + message.imei + "Alarm is : " + getEventDescription(message.alarm))
+        print ("receive locationAlarmMessage" + message.imei + "Alarm is : " + str(message.originalAlarmCode))
         #8806 Plus or some new model device,need serial no,reply this message
         # if message.isNeedResp:
         #     reply = t880xPlusEncoder.getLocationAlarmMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode,message.protocolHeadType)
@@ -277,7 +225,7 @@ def dealPersonalDeviceMessage(message,socketClient):
         reply = personalEncoder.getLocationMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode)
         socketClient.send(reply)
     elif isinstance(message,LocationAlarmMessage):
-        print ("receive locationAlarmMessage" + message.imei + "Alarm is : " + getEventDescription(message.alarm))
+        print ("receive locationAlarmMessage" + message.imei + "Alarm is : " + str(message.originalAlarmCode))
         # if message.isNeedResp:
         #     reply = personalEncoder.getLocationAlarmMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode)
         #     socketClient.send(reply)

@@ -2068,7 +2068,6 @@ public class ObdDecoder {
         message.setIopPowerCutOff(iopPowerCutOff);
         message.setIopACOn(iopACOn);
         message.setOriginalAlarmCode(originalAlarmCode);
-        message.setAlarm(Event.getEvent(alarmByte));
         message.setMileage(mileage);
         try{
             int charge = Integer.parseInt(batteryStr);

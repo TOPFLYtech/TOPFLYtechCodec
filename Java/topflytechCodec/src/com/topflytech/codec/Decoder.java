@@ -1260,7 +1260,7 @@ public class Decoder {
 //            signInMessage.setIsNeedResp(isNeedResp);
             return signInMessage;
         }else if(16 == str.length()){
-            String software = String.format("V%d.%d.%d",  bytes[15] & 0xf, (bytes[16] & 0xf0) >> 4, bytes[16] & 0xf);
+            String software = String.format("V%d.%d.%d.%d", (bytes[15] & 0xf0) >> 4,  bytes[15] & 0xf, (bytes[16] & 0xf0) >> 4, bytes[16] & 0xf);
             String firmware = BytesUtils.bytes2HexString(Arrays.copyOfRange(bytes, 20, 22), 0);
             firmware = String.format("V%s.%s.%s.%s", firmware.substring(0,1), firmware.substring(1, 2), firmware.substring(2,3),firmware.substring(3,4));
             String hardware = BytesUtils.bytes2HexString(Arrays.copyOfRange(bytes, 22, 23), 0);
@@ -2137,7 +2137,6 @@ public class Decoder {
         message.setAnalogInput1(analoginput);
         message.setAnalogInput2(analoginput2);
         message.setOriginalAlarmCode(originalAlarmCode);
-        message.setAlarm(Event.getEvent(alarmByte));
         message.setMileage(mileage);
         message.setOutput12V(output12V);
         message.setOutput2(output2);
@@ -2437,7 +2436,6 @@ public class Decoder {
         message.setAnalogInput1(analoginput);
         message.setAnalogInput2(analoginput2);
         message.setOriginalAlarmCode(originalAlarmCode);
-        message.setAlarm(Event.getEvent(alarmByte));
         message.setMileage(mileage);
         message.setOutput12V(output12V);
         message.setOutput2(output2);

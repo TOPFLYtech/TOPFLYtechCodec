@@ -136,12 +136,7 @@ namespace TopflytechCodec.Entities
             get { return azimuth; }
             set { azimuth = value; }
         }
-        private long alarm = 0L;             
-        public long Alarm
-        {
-            get { return alarm; }
-            set { alarm = value; }
-        }
+   
          
         private float analogInput1 = 0f;   
         /// <summary>
