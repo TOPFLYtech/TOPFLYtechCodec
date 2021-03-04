@@ -1905,6 +1905,8 @@ public class ObdDecoder {
         boolean iopPowerCutOff = (iop & MASK_POWER_CUT) == MASK_POWER_CUT;
         boolean iopACOn = (iop & MASK_AC) == MASK_AC;
         boolean iopRelay =(iop & MASK_RELAY) == MASK_RELAY;
+        int input1 = iopIgnition ? 1 : 0;
+        int input2 = iopACOn ? 1 : 0;
         byte alarmByte = data[18];
         int originalAlarmCode = (int) alarmByte;
         boolean isAlarmData = command[2] == 0x04;
@@ -2044,6 +2046,8 @@ public class ObdDecoder {
         message.setSerialNo(serialNo);
 //        message.setIsNeedResp(isNeedResp);
         message.setImei(imei);
+        message.setInput1(input1);
+        message.setInput2(input2);
         message.setNetworkSignal(networkSignal);
         message.setSamplingIntervalAccOn(samplingIntervalAccOn);
         message.setSamplingIntervalAccOff(samplingIntervalAccOff);

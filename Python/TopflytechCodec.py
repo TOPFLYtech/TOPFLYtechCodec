@@ -366,6 +366,8 @@ class LocationMessage(Message):
     outputVout = False
     analogInput3 = 0
     externalPowerSupply = False
+    input1 = False
+    input2 = False
     input3 = False
     input4 = False
     input5 = False
@@ -2314,6 +2316,8 @@ class Decoder:
         iopPowerCutOff = (input & self.MASK_POWER_CUT) == self.MASK_POWER_CUT
         iopACOn = (input & self.MASK_AC) == self.MASK_AC
         externalPowerSupply = (input & 0x8000) == 0x8000
+        input1 = (iop & 0x100) == 0x100
+        input2 = (iop & 0x2000) == 0x2000
         input3 = (input & 0x1000) == 0x1000
         input4 = (input & 0x800) == 0x800
         input5 = (input & 0x400) == 0x400
@@ -2462,6 +2466,8 @@ class Decoder:
         locationMessage.originalAlarmCode = originalAlarmCode
         locationMessage.mileage = mileage
         locationMessage.externalPowerSupply = externalPowerSupply
+        locationMessage.input1 = input1
+        locationMessage.input2 = input2
         locationMessage.input3 = input3
         locationMessage.input4 = input4
         locationMessage.input5 = input5
@@ -2554,6 +2560,8 @@ class Decoder:
         iopPowerCutOff = (iop & self.MASK_POWER_CUT) == self.MASK_POWER_CUT
         iopACOn = (iop & self.MASK_AC) == self.MASK_AC
         iopRs232DeviceValid = (iop & self.IOP_RS232_DEVICE_VALID) != self.IOP_RS232_DEVICE_VALID
+        input1 = iopIgnition
+        input2 = iopACOn
         output2 = (iop & 0x200) == 0x200
         output3 = (iop & 0x100) == 0x100
         output12V = (iop & 0x10) == 0x10
@@ -2711,6 +2719,8 @@ class Decoder:
         locationMessage.externalPowerVoltage = externalPowerVoltage
         locationMessage.networkSignal = networkSignal
         locationMessage.rs232DeviceValid = iopRs232DeviceValid
+        locationMessage.input1 = input1
+        locationMessage.input2 = input2
         locationMessage.output2 = output2
         locationMessage.output3 = output3
         locationMessage.output12V = output12V
@@ -3354,6 +3364,8 @@ class ObdDecoder:
         iopIgnition = (iop & self.MASK_IGNITION) == self.MASK_IGNITION
         iopPowerCutOff = (iop & self.MASK_POWER_CUT) == self.MASK_POWER_CUT
         iopACOn = (iop & self.MASK_AC) == self.MASK_AC
+        input1 = iopIgnition
+        input2 = iopACOn
         originalAlarmCode = (int) (data[18])
         isAlarmData = command[2] == 0x04
         mileage = bytes2Integer(data, 20)
@@ -3492,6 +3504,8 @@ class ObdDecoder:
         locationMessage.isRelayWaiting = isRelayWaiting
         locationMessage.dragThreshold = dragThreshold
         locationMessage.IOP = iop
+        locationMessage.input1 = input1
+        locationMessage.input2 = input2
         locationMessage.iopIgnition = iopIgnition
         locationMessage.iopPowerCutOff = iopPowerCutOff
         locationMessage.iopACOn = iopACOn

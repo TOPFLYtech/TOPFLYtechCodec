@@ -1317,6 +1317,8 @@ namespace TopflytechCodec
             bool iopIgnition = (iop & MASK_IGNITION) == MASK_IGNITION;
             bool iopPowerCutOff = (iop & MASK_POWER_CUT) == MASK_POWER_CUT;
             bool iopACOn = (iop & MASK_AC) == MASK_AC;
+            int input1 = iopIgnition ? 1 : 0;
+            int input2 = iopACOn ? 1 : 0;
             byte alarmByte = data[18];
             int originalAlarmCode = (int)alarmByte;
             bool isAlarmData = command[2] == 0x04;
@@ -1471,6 +1473,8 @@ namespace TopflytechCodec
             message.SerialNo = serialNo;
             //message.IsNeedResp = isNeedResp;
             message.Imei = imei;
+            message.Input1 = input1;
+            message.Input2 = input2;
             message.NetworkSignal = networkSignal;
             message.SamplingIntervalAccOn = samplingIntervalAccOn;
             message.SamplingIntervalAccOff = samplingIntervalAccOff;

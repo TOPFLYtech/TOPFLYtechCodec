@@ -491,6 +491,18 @@ namespace TopflytechCodec.Entities
             get { return analogInput3; }
             set { analogInput3 = value; }
         }
+        private int input1 = 0;
+        public int Input1
+        {
+            get { return input1; }
+            set { input1 = value; }
+        }
+        private int input2 = 0;
+        public int Input2
+        {
+            get { return input2; }
+            set { input2 = value; }
+        }
 
         private int input3 = 0;
         public int Input3

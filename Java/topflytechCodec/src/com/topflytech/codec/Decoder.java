@@ -1955,6 +1955,8 @@ public class Decoder {
         boolean iopACOn = (iop & MASK_AC) == MASK_AC;
         boolean iopRs232DeviceValid = (iop & IOP_RS232_DEVICE_VALID) != IOP_RS232_DEVICE_VALID;
         boolean iopRelay =(iop & MASK_RELAY) == MASK_RELAY;
+        int input1 = iopIgnition ? 1 : 0;
+        int input2 = iopACOn ? 1 : 0;
         int input3 = (iop & 0x1000) == 0x1000 ? 1 : 0;
         int input4 = (iop & 0x800) == 0x800 ? 1 : 0;
         int output2 = (iop & 0x200) == 0x200 ? 1 : 0;
@@ -2141,6 +2143,8 @@ public class Decoder {
         message.setOutput12V(output12V);
         message.setOutput2(output2);
         message.setOutput3(output3);
+        message.setInput1(input1);
+        message.setInput2(input2);
         message.setInput3(input3);
         message.setInput4(input4);
         message.setOutputVout(outputVout);
@@ -2221,7 +2225,8 @@ public class Decoder {
         boolean iopIgnition = (iop & MASK_IGNITION) == MASK_IGNITION;
         boolean iopPowerCutOff = (iop & MASK_POWER_CUT) == MASK_POWER_CUT;
         boolean iopACOn = (iop & MASK_AC) == MASK_AC;
-
+        int input1 = (iop & 0x100) == 0x100 ? 1 : 0;
+        int input2 = (iop & 0x2000) == 0x2000 ? 1 : 0;
         int input3 = (iop & 0x1000) == 0x1000 ? 1 : 0;
         int input4 = (iop & 0x800) == 0x800 ? 1 : 0;
         int input5 = (iop & 0x400) == 0x400 ? 1 : 0;
@@ -2440,6 +2445,8 @@ public class Decoder {
         message.setOutput12V(output12V);
         message.setOutput2(output2);
         message.setOutput3(output3);
+        message.setInput1(input1);
+        message.setInput2(input2);
         message.setInput3(input3);
         message.setInput4(input4);
         message.setOutputVout(outputVout);

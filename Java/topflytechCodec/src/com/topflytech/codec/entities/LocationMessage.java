@@ -952,6 +952,23 @@ public class LocationMessage extends Message{
         this.outputVout = outputVout;
     }
 
+    public int getInput2() {
+        return input2;
+    }
+
+    public void setInput2(int input2) {
+        this.input2 = input2;
+    }
+
+    public int getInput1() {
+        return input1;
+    }
+
+    public void setInput1(int input1) {
+        this.input1 = input1;
+    }
+
+
     private Boolean gpsWorking = false;//gps is working mode or sleep mode
     private Boolean latlngValid = false;//current is gps data or lbs data
     private Double latitude = 0.0;
@@ -1029,6 +1046,8 @@ public class LocationMessage extends Message{
     private String smartPowerOpenStatus;
 
 
+    private int input1 = 0;
+    private int input2 = 0;
     private int input3 = 0;
     private int input4 = 0;
     private int output2;
