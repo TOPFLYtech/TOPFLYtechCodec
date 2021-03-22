@@ -416,17 +416,19 @@ public class Decoder {
             double latitude = latlngValid ? BytesUtils.bytes2Float(bleData, 19) : 0.0;
             int azimuth = latlngValid ? BytesUtils.bytes2Short(bleData, 25) : 0;
             Float speedf = 0.0f;
-            try{
-                byte[] bytesSpeed = Arrays.copyOfRange(bleData, 23, 25);
-                String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
-                if(strSp.contains("f")){
-                    speedf = -1f;
-                }else {
-                    speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+            if (latlngValid){
+                try{
+                    byte[] bytesSpeed = Arrays.copyOfRange(bleData, 23, 25);
+                    String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
+                    if(strSp.contains("f")){
+                        speedf = -1f;
+                    }else {
+                        speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+                    }
+                }catch (Exception e){
+                    System.out.println("Imei : " + imei);
+                    e.printStackTrace();
                 }
-            }catch (Exception e){
-                System.out.println("Imei : " + imei);
-                e.printStackTrace();
             }
             Boolean is_4g_lbs = false;
             Integer mcc_4g = null;
@@ -523,17 +525,19 @@ public class Decoder {
             double latitude = latlngValid ? BytesUtils.bytes2Float(bleData, 19) : 0.0;
             int azimuth = latlngValid ? BytesUtils.bytes2Short(bleData, 25) : 0;
             Float speedf = 0.0f;
-            try{
-                byte[] bytesSpeed = Arrays.copyOfRange(bleData, 23, 25);
-                String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
-                if(strSp.contains("f")){
-                    speedf = -1f;
-                }else {
-                    speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+            if (latlngValid){
+                try{
+                    byte[] bytesSpeed = Arrays.copyOfRange(bleData, 23, 25);
+                    String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
+                    if(strSp.contains("f")){
+                        speedf = -1f;
+                    }else {
+                        speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+                    }
+                }catch (Exception e){
+                    System.out.println("Imei : " + imei);
+                    e.printStackTrace();
                 }
-            }catch (Exception e){
-                System.out.println("Imei : " + imei);
-                e.printStackTrace();
             }
             Boolean is_4g_lbs = false;
             Integer mcc_4g = null;
@@ -648,13 +652,11 @@ public class Decoder {
                     humidity = humidityTemp * 0.01f;
                 }
                 int lightTemp = BytesUtils.bytes2Short(bleData,i+12);
-                boolean isOpenBox = false;
                 int lightIntensity ;
                 if(lightTemp == 65535){
                     lightIntensity = -999;
                 }else{
-                    lightIntensity = lightTemp & 0xfff;
-                    isOpenBox = (0x8000 & lightTemp) == 0x8000;
+                    lightIntensity = lightTemp & 0x0001;
                 }
                 int rssiTemp = (int) bleData[i + 14] < 0 ? (int) bleData[i + 14] + 256 : (int) bleData[i + 14];
                 int rssi;
@@ -666,7 +668,6 @@ public class Decoder {
                 bleTempData.setRssi(rssi);
                 bleTempData.setMac(mac);
                 bleTempData.setLightIntensity(lightIntensity);
-                bleTempData.setIsOpenBox(isOpenBox);
                 bleTempData.setHumidity(Float.valueOf(decimalFormat.format(humidity)));
                 bleTempData.setVoltage(Float.valueOf(decimalFormat.format(voltage)));
                 bleTempData.setBatteryPercent(batteryPercent);
@@ -858,17 +859,19 @@ public class Decoder {
         double longitude = latlngValid ? BytesUtils.bytes2Float(bytes, 31) : 0.0;
         int azimuth = latlngValid ? BytesUtils.bytes2Short(bytes, 37) : 0;
         Float speedf = 0.0f;
-        try{
-            byte[] bytesSpeed = Arrays.copyOfRange(bytes, 35, 37);
-            String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
-            if(strSp.contains("f")){
-                speedf = -1f;
-            }else {
-                speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+        if(latlngValid){
+            try{
+                byte[] bytesSpeed = Arrays.copyOfRange(bytes, 35, 37);
+                String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
+                if(strSp.contains("f")){
+                    speedf = -1f;
+                }else {
+                    speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+                }
+            }catch (Exception e){
+                System.out.println("Imei : " + imei);
+                e.printStackTrace();
             }
-        }catch (Exception e){
-            System.out.println("Imei : " + imei);
-            e.printStackTrace();
         }
         Boolean is_4g_lbs = false;
         Integer mcc_4g = null;
@@ -1105,13 +1108,11 @@ public class Decoder {
                     humidity = humidityTemp * 0.01f;
                 }
                 int lightTemp = BytesUtils.bytes2Short(bleData,i+12);
-                boolean isOpenBox = false;
                 int lightIntensity ;
                 if(lightTemp == 65535){
                     lightIntensity = -999;
                 }else{
-                    lightIntensity = lightTemp & 0xfff;
-                    isOpenBox = (0x8000 & lightTemp) == 0x8000;
+                    lightIntensity = lightTemp & 0x0001;
                 }
                 int rssiTemp = (int) bleData[i + 14] < 0 ? (int) bleData[i + 14] + 256 : (int) bleData[i + 14];
                 int rssi;
@@ -1123,7 +1124,6 @@ public class Decoder {
                 bleTempData.setRssi(rssi);
                 bleTempData.setMac(mac);
                 bleTempData.setLightIntensity(lightIntensity);
-                bleTempData.setIsOpenBox(isOpenBox);
                 bleTempData.setHumidity(Float.valueOf(decimalFormat.format(humidity)));
                 bleTempData.setVoltage(Float.valueOf(decimalFormat.format(voltage)));
                 bleTempData.setBatteryPercent(batteryPercent);
@@ -1713,7 +1713,7 @@ public class Decoder {
             mcc_2g = BytesUtils.bytes2Short(bytes,curParseIndex + 12);
             mnc_2g = BytesUtils.bytes2Short(bytes,curParseIndex + 14);
             lac_2g_1 = BytesUtils.bytes2Short(bytes,curParseIndex + 16);
-            ci_2g_1 = BytesUtils.bytes2Short(bytes,curParseIndex + 18);
+            ci_2g_1 = BytesUtils.bytes2Short(bytes, curParseIndex + 18);
             lac_2g_2 = BytesUtils.bytes2Short(bytes,curParseIndex + 20);
             ci_2g_2 = BytesUtils.bytes2Short(bytes,curParseIndex + 22);
             lac_2g_3 = BytesUtils.bytes2Short(bytes,curParseIndex + 24);
@@ -2010,15 +2010,17 @@ public class Decoder {
         double latitude = latlngValid ? BytesUtils.bytes2Float(data, 43) : 0.0;
         double longitude = latlngValid ? BytesUtils.bytes2Float(data, 39) : 0.0;
         Float speedf = 0.0f;
-        try{
-            if (latlngValid) {
-                byte[] bytesSpeed = Arrays.copyOfRange(data, 47, 49);
-                String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
-                speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+        if (latlngValid){
+            try{
+                if (latlngValid) {
+                    byte[] bytesSpeed = Arrays.copyOfRange(data, 47, 49);
+                    String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
+                    speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+                }
+            }catch (Exception e){
+                System.out.println("Imei : " + imei);
+                e.printStackTrace();
             }
-        }catch (Exception e){
-            System.out.println("Imei : " + imei);
-            e.printStackTrace();
         }
         int azimuth = latlngValid ? BytesUtils.bytes2Short(data, 49) : 0;
         Boolean is_4g_lbs = false;
@@ -2318,15 +2320,17 @@ public class Decoder {
         double latitude = latlngValid ? BytesUtils.bytes2Float(data, 51) : 0.0;
         double longitude = latlngValid ? BytesUtils.bytes2Float(data, 47) : 0.0;
         Float speedf = 0.0f;
-        try{
-            if (latlngValid) {
-                byte[] bytesSpeed = Arrays.copyOfRange(data, 55, 57);
-                String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
-                speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+        if (latlngValid){
+            try{
+                if (latlngValid) {
+                    byte[] bytesSpeed = Arrays.copyOfRange(data, 55, 57);
+                    String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
+                    speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+                }
+            }catch (Exception e){
+                System.out.println("Imei : " + imei);
+                e.printStackTrace();
             }
-        }catch (Exception e){
-            System.out.println("Imei : " + imei);
-            e.printStackTrace();
         }
         int azimuth = latlngValid ? BytesUtils.bytes2Short(data, 57) : 0;
         Boolean is_4g_lbs = false;

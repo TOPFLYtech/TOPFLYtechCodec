@@ -1257,26 +1257,23 @@ namespace TopflytechCodec
                 }else{
                     humidity = humidityTemp * 0.01f;
                 }
-                int lightTemp = BytesUtils.Bytes2Short(bleData,i+12);
-                Boolean isOpenBox = false;
+                int lightTemp = BytesUtils.Bytes2Short(bleData,i+12); 
                 int lightIntensity ;
                 if(lightTemp == 65535){
                     lightIntensity = -999;
                 }else{
-                    lightIntensity = lightTemp & 0xfff;
-                    isOpenBox = (0x8000 & lightTemp) == 0x8000;
+                    lightIntensity = lightTemp & 0x0001; 
                 }
                 int rssiTemp = (int) bleData[i + 14] < 0 ? (int) bleData[i + 14] + 256 : (int) bleData[i + 14];
                 int rssi;
                 if(rssiTemp == 255){
                     rssi = -999;
                 }else{
-                    rssi = rssiTemp - 128;
+                    rssi = rssiTemp - 256;
                 }
                 bleTempData.Rssi = rssi;
                 bleTempData.Mac = mac;
-                bleTempData.LightIntensity = lightIntensity;
-                bleTempData.IsOpenBox = isOpenBox;
+                bleTempData.LightIntensity = lightIntensity; 
                 bleTempData.Humidity = (float)Math.Round(humidity, 2, MidpointRounding.AwayFromZero);
                 bleTempData.Voltage = (float)Math.Round(voltage, 2, MidpointRounding.AwayFromZero);
                 bleTempData.BatteryPercent = batteryPercent;
@@ -1328,7 +1325,7 @@ namespace TopflytechCodec
                 if(rssiTemp == 255){
                     rssi = -999;
                 }else{
-                    rssi = rssiTemp - 128;
+                    rssi = rssiTemp - 256;
                 }
                 bleDoorData.Rssi = rssi;
                 bleDoorData.Mac = mac;
@@ -1386,7 +1383,7 @@ namespace TopflytechCodec
                 if(rssiTemp == 255){
                     rssi = -999;
                 }else{
-                    rssi = rssiTemp - 128;
+                    rssi = rssiTemp - 256;
                 }
                 bleCtrlData.Rssi = rssi;
                 bleCtrlData.Mac = mac;
@@ -1784,8 +1781,7 @@ namespace TopflytechCodec
                     {
                         humidity = humidityTemp * 0.01f;
                     }
-                    int lightTemp = BytesUtils.Bytes2Short(bleData, i + 12);
-                    bool isOpenBox = false;
+                    int lightTemp = BytesUtils.Bytes2Short(bleData, i + 12); 
                     int lightIntensity;
                     if (lightTemp == 65535)
                     {
@@ -1793,8 +1789,7 @@ namespace TopflytechCodec
                     }
                     else
                     {
-                        lightIntensity = lightTemp & 0xfff;
-                        isOpenBox = (0x8000 & lightTemp) == 0x8000;
+                        lightIntensity = lightTemp & 0x0001; 
                     }
                     int rssiTemp = (int)bleData[i + 14] < 0 ? (int)bleData[i + 14] + 256 : (int)bleData[i + 14];
                     int rssi;
@@ -1804,12 +1799,11 @@ namespace TopflytechCodec
                     }
                     else
                     {
-                        rssi = rssiTemp - 128;
+                        rssi = rssiTemp - 256;
                     }
                     bleTempData.Rssi = rssi;
                     bleTempData.Mac = mac;
-                    bleTempData.LightIntensity = lightIntensity;
-                    bleTempData.IsOpenBox = isOpenBox;
+                    bleTempData.LightIntensity = lightIntensity; 
                     bleTempData.Humidity = (float)Math.Round(humidity, 2, MidpointRounding.AwayFromZero);
                     bleTempData.Voltage = (float)Math.Round(voltage, 2, MidpointRounding.AwayFromZero);
                     bleTempData.BatteryPercent = batteryPercent;
@@ -1876,7 +1870,7 @@ namespace TopflytechCodec
                     }
                     else
                     {
-                        rssi = rssiTemp - 128;
+                        rssi = rssiTemp - 256;
                     }
                     bleDoorData.Rssi = rssi;
                     bleDoorData.Mac = mac;
@@ -1947,7 +1941,7 @@ namespace TopflytechCodec
                     }
                     else
                     {
-                        rssi = rssiTemp - 128;
+                        rssi = rssiTemp - 256;
                     }
                     bleCtrlData.Rssi = rssi;
                     bleCtrlData.Mac = mac;
@@ -2015,7 +2009,7 @@ namespace TopflytechCodec
                     }
                     else
                     {
-                        rssi = rssiTemp - 128;
+                        rssi = rssiTemp - 256;
                     }
                     bleFuelData.Rssi = rssi;
                     bleFuelData.Mac = mac;
@@ -2070,7 +2064,8 @@ namespace TopflytechCodec
             bool iopIgnition = (iop & MASK_IGNITION) == MASK_IGNITION;
             bool iopPowerCutOff = (iop & MASK_POWER_CUT) == MASK_POWER_CUT;
             bool iopACOn = (iop & MASK_AC) == MASK_AC;
-
+            int input1 = (iop & 0x100) == 0x100 ? 1 : 0;
+            int input2 = (iop & 0x2000) == 0x2000 ? 1 : 0;
             int input3 = (iop & 0x1000) == 0x1000 ? 1 : 0;
             int input4 = (iop & 0x800) == 0x800 ? 1 : 0;
             int input5 = (iop & 0x400) == 0x400 ? 1 : 0;
@@ -2335,6 +2330,8 @@ namespace TopflytechCodec
             }
             message.Azimuth = azimuth;
             message.ExternalPowerVoltage = externalPowerVoltage;
+            message.Input1 = input1;
+            message.Input2 = input2;
             message.Input3 = input3;
             message.Input4 = input4;
             message.Input5 = input5;
@@ -2388,6 +2385,8 @@ namespace TopflytechCodec
             bool iopPowerCutOff = (iop & MASK_POWER_CUT) == MASK_POWER_CUT;
             bool iopACOn = (iop & MASK_AC) == MASK_AC;
             bool iopRs232DeviceValid = (iop & IOP_RS232_DEVICE_VALID) != IOP_RS232_DEVICE_VALID;
+            int input1 = iopIgnition ? 1 : 0;
+            int input2 = iopACOn ? 1 : 0;
             int output2 = (iop * 0x200) == 0x200 ? 1 : 0;
             int output3 = (iop * 0x100) == 0x100 ? 1 : 0;
             int output12V = (iop * 0x10) == 0x10 ? 1 : 0;
@@ -2563,7 +2562,9 @@ namespace TopflytechCodec
             message.Rs232DeviceValid = iopRs232DeviceValid;
             message.IopIgnition = iopIgnition;
             message.IopPowerCutOff = iopPowerCutOff;
-            message.IopACOn = iopACOn; 
+            message.IopACOn = iopACOn;
+            message.Input1 = input1;
+            message.Input2 = input2;
             message.Output2 = output2;
             message.Output3 = output3; 
             message.AnalogInput1 = analoginput;

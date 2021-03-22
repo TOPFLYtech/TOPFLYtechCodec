@@ -38,13 +38,6 @@ public class BleTempData extends BleData{
         this.humidity = humidity;
     }
 
-    public Boolean isOpenBox() {
-        return isOpenBox;
-    }
-
-    public void setIsOpenBox(Boolean isOpenBox) {
-        this.isOpenBox = isOpenBox;
-    }
 
     public Integer getLightIntensity() {
         return lightIntensity;
@@ -66,7 +59,6 @@ public class BleTempData extends BleData{
     private Integer batteryPercent;
     private Float temp;
     private Float humidity;
-    private Boolean isOpenBox;
     private Integer lightIntensity;
     private Integer rssi;
 

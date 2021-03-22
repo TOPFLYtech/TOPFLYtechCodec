@@ -549,6 +549,13 @@ namespace _880XServerDemo
                 byte[] reply = personalEncoder.getNetworkMsgReply(networkInfoMessage.Imei, networkInfoMessage.SerialNo);
                 dict[strClientKey].Send(reply);
             }
+            else if (message is WifiMessage)
+            {
+                WifiMessage wifiMessage = (WifiMessage)message;
+                ShowMsg("receive wifi location message :" + wifiMessage.Imei);
+                byte[] reply = personalEncoder.getWifiMsgReply(wifiMessage.Imei, wifiMessage.SerialNo);
+                dict[strClientKey].Send(reply);
+            }
             else if (message is ForwardMessage)
             {
                 ForwardMessage forwardMessage = (ForwardMessage)message;

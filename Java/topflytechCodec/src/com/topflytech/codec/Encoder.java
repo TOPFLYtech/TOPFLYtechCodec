@@ -29,6 +29,13 @@ public class Encoder {
         return encrypt(data,messageEncryptType,aesKey);
     }
 
+
+    public static byte[] getWifiMsgReply(String imei, boolean needSerialNo, int serialNo,byte[] command,int messageEncryptType,String aesKey) throws IOException {
+        String content = "";
+        byte[] data = encode(imei,needSerialNo,serialNo, command, content.getBytes(),0x0F);
+        return encrypt(data,messageEncryptType,aesKey);
+    }
+
     /**
      * Get heartbeat msg reply byte [ ].
      *

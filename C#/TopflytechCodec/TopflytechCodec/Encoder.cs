@@ -42,6 +42,13 @@ namespace TopflytechCodec
             return Encrypt(data, messageEncryptType, aesKey);
         }
 
+        public static byte[] getWifiMsgReply(String imei, bool needSerialNo, int serialNo, byte[] command, int messageEncryptType, String aesKey)
+        {
+            String content = "";
+            byte[] data = Encode(imei, needSerialNo, serialNo, command, System.Text.Encoding.Default.GetBytes(content), 0x0F);
+            return Encrypt(data, messageEncryptType, aesKey);
+        }
+
         public static byte[] getNetworkMsgReply(String imei, int serialNo, byte[] command, int messageEncryptType, String aesKey)
         {
             String content = "";
@@ -153,6 +160,8 @@ namespace TopflytechCodec
             byte[] data = Encode(imei, true, serialNo, command, System.Text.Encoding.Default.GetBytes(content), 0x0F);
             return Encrypt(data, messageEncryptType, aesKey);
         }
+
+
 
         /// <summary>
         /// Get config setting msg byte [ ].

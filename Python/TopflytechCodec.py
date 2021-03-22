@@ -85,6 +85,16 @@ class Rs232FingerprintMessage(Rs232DeviceMessage):
     FINGERPRITN_MSG_STATUS_SUCC = 0
     FINGERPRINT_MSG_STATUS_ERROR = 1
 
+class WifiMessage(Message):
+    date=datetime.datetime
+    selfMac=""
+    ap1Mac=""
+    ap1RSSI=0
+    ap2Mac=""
+    ap2RSSI=0
+    ap3Mac=""
+    ap3RSSI=0
+
 class Rs232FuelMessage(Rs232DeviceMessage):
     fuelPercent = 0.0
     temp = 0.0
@@ -212,7 +222,6 @@ class BleTempData(BleData):
     batteryPercent = 0
     temp = 0
     humidity = 0
-    isOpenBox = False
     lightIntensity = 0
     rssi = 0
 
@@ -1298,13 +1307,11 @@ class Decoder:
                 else:
                     humidity = humidityTemp * 0.01
                 lightTemp = bytes2Short(bleData,i+12)
-                isOpenBox = False
                 lightIntensity = -999
                 if lightTemp == 65535:
                     lightIntensity = -999
                 else:
-                    lightIntensity = lightTemp & 0xfff;
-                    isOpenBox = (0x8000 & lightTemp) == 0x8000
+                    lightIntensity = lightTemp & 0x0001;
                 rssiTemp = (int) (bleData[i + 14])
                 if rssiTemp < 0:
                     rssiTemp += 256
@@ -1312,11 +1319,10 @@ class Decoder:
                 if rssiTemp == 255:
                     rssi = -999
                 else:
-                    rssi = rssiTemp - 128
+                    rssi = rssiTemp - 256
                 bleTempData.rssi = rssi
                 bleTempData.mac = mac
                 bleTempData.lightIntensity = lightIntensity
-                bleTempData.isOpenBox = isOpenBox
                 bleTempData.humidity = formatNumb(humidity)
                 bleTempData.voltage = formatNumb(voltage)
                 bleTempData.batteryPercent = batteryPercent
@@ -1369,7 +1375,7 @@ class Decoder:
                 if rssiTemp == 255:
                     rssi = -999
                 else:
-                    rssi = rssiTemp - 128
+                    rssi = rssiTemp - 256
                 bleDoorData.rssi = rssi
                 bleDoorData.mac = mac
                 bleDoorData.online = online
@@ -1425,7 +1431,7 @@ class Decoder:
                 if rssiTemp == 255:
                     rssi = -999
                 else:
-                    rssi = rssiTemp - 128
+                    rssi = rssiTemp - 256
                 bleCtrlData.rssi = rssi
                 bleCtrlData.mac = mac
                 bleCtrlData.online = online
@@ -1746,13 +1752,11 @@ class Decoder:
                 else:
                     humidity = humidityTemp * 0.01
                 lightTemp = bytes2Short(bleData,i+12)
-                isOpenBox = False
                 lightIntensity = -999
                 if lightTemp == 65535:
                     lightIntensity = -999
                 else:
-                    lightIntensity = lightTemp & 0xfff;
-                    isOpenBox = (0x8000 & lightTemp) == 0x8000
+                    lightIntensity = lightTemp & 0x0001
                 rssiTemp = (int) (bleData[i + 14])
                 if rssiTemp < 0:
                     rssiTemp += 256
@@ -1760,11 +1764,10 @@ class Decoder:
                 if rssiTemp == 255:
                     rssi = -999
                 else:
-                    rssi = rssiTemp - 128
+                    rssi = rssiTemp - 256
                 bleTempData.rssi = rssi
                 bleTempData.mac = mac
                 bleTempData.lightIntensity = lightIntensity
-                bleTempData.isOpenBox = isOpenBox
                 bleTempData.humidity = formatNumb(humidity)
                 bleTempData.voltage = formatNumb(voltage)
                 bleTempData.batteryPercent = batteryPercent
@@ -1817,7 +1820,7 @@ class Decoder:
                 if rssiTemp == 255:
                     rssi = -999
                 else:
-                    rssi = rssiTemp - 128
+                    rssi = rssiTemp - 256
                 bleDoorData.rssi = rssi
                 bleDoorData.mac = mac
                 bleDoorData.online = online
@@ -1873,7 +1876,7 @@ class Decoder:
                 if rssiTemp == 255:
                     rssi = -999
                 else:
-                    rssi = rssiTemp - 128
+                    rssi = rssiTemp - 256
                 bleCtrlData.rssi = rssi
                 bleCtrlData.mac = mac
                 bleCtrlData.online = online
@@ -1927,7 +1930,7 @@ class Decoder:
                 if rssiTemp == 255:
                     rssi = -999
                 else:
-                    rssi = rssiTemp - 128
+                    rssi = rssiTemp - 256
                 bleFuelData.rssi = rssi
                 bleFuelData.mac = mac
                 bleFuelData.online = online
@@ -4066,13 +4069,11 @@ class ObdDecoder:
                 else:
                     humidity = humidityTemp * 0.01
                 lightTemp = bytes2Short(bleData,i+12)
-                isOpenBox = False
                 lightIntensity = -999
                 if lightTemp == 65535:
                     lightIntensity = -999
                 else:
-                    lightIntensity = lightTemp & 0xfff;
-                    isOpenBox = (0x8000 & lightTemp) == 0x8000
+                    lightIntensity = lightTemp & 0x0001
                 rssiTemp = (int) (bleData[i + 14])
                 if rssiTemp < 0:
                     rssiTemp += 256
@@ -4080,11 +4081,10 @@ class ObdDecoder:
                 if rssiTemp == 255:
                     rssi = -999
                 else:
-                    rssi = rssiTemp - 128
+                    rssi = rssiTemp - 256
                 bleTempData.rssi = rssi
                 bleTempData.mac = mac
                 bleTempData.lightIntensity = lightIntensity
-                bleTempData.isOpenBox = isOpenBox
                 bleTempData.humidity = formatNumb(humidity)
                 bleTempData.voltage = formatNumb(voltage)
                 bleTempData.batteryPercent = batteryPercent
@@ -4137,7 +4137,7 @@ class ObdDecoder:
                 if rssiTemp == 255:
                     rssi = -999
                 else:
-                    rssi = rssiTemp - 128
+                    rssi = rssiTemp - 256
                 bleDoorData.rssi = rssi
                 bleDoorData.mac = mac
                 bleDoorData.online = online
@@ -4193,7 +4193,7 @@ class ObdDecoder:
                 if rssiTemp == 255:
                     rssi = -999
                 else:
-                    rssi = rssiTemp - 128
+                    rssi = rssiTemp - 256
                 bleCtrlData.rssi = rssi
                 bleCtrlData.mac = mac
                 bleCtrlData.online = online
@@ -4459,6 +4459,9 @@ class PersonalAssetMsgDecoder:
     NETWORK_INFO_DATA = [0x27, 0x27, 0x05]
 
     BLUETOOTH_DATA = [0x27, 0x27, 0x10]
+
+    WIFI_DATA = [0x27,0x27,0x15]
+
     CONFIG = [0x27, 0x27, 0x81]
     encryptType = 0
     esKey = ""
@@ -4474,7 +4477,8 @@ class PersonalAssetMsgDecoder:
 
     def match (self,byteArray):
         return byteArray == self.SIGNUP or byteArray == self.DATA or byteArray == self.HEARTBEAT \
-               or byteArray == self.ALARM or byteArray == self.NETWORK_INFO_DATA or byteArray == self.BLUETOOTH_DATA or byteArray == self.CONFIG
+               or byteArray == self.ALARM or byteArray == self.NETWORK_INFO_DATA or byteArray == self.BLUETOOTH_DATA \
+               or byteArray == self.CONFIG or byteArray == self.WIFI_DATA
 
 
     decoderBuf = TopflytechByteBuf()
@@ -4530,8 +4534,8 @@ class PersonalAssetMsgDecoder:
                 return self.parseBluetoothDataMessage(byteArray)
             elif byteArray[2] == 0x81:
                 return self.parseInteractMessage(byteArray)
-            elif byteArray[2] == 0x81:
-                return self.parseInteractMessage(byteArray)
+            elif byteArray[2] == 0x15:
+                return self.parseWifiMessage(byteArray)
             else:
                 return None
         return None
@@ -4898,13 +4902,11 @@ class PersonalAssetMsgDecoder:
                 else:
                     humidity = humidityTemp * 0.01
                 lightTemp = bytes2Short(bleData,i+12)
-                isOpenBox = False
                 lightIntensity = -999
                 if lightTemp == 65535:
                     lightIntensity = -999
                 else:
-                    lightIntensity = lightTemp & 0xfff;
-                    isOpenBox = (0x8000 & lightTemp) == 0x8000
+                    lightIntensity = lightTemp & 0x0001
                 rssiTemp = (int) (bleData[i + 14])
                 if rssiTemp < 0:
                     rssiTemp += 256
@@ -4912,11 +4914,10 @@ class PersonalAssetMsgDecoder:
                 if rssiTemp == 255:
                     rssi = -999
                 else:
-                    rssi = rssiTemp - 128
+                    rssi = rssiTemp - 256
                 bleTempData.rssi = rssi
                 bleTempData.mac = mac
                 bleTempData.lightIntensity = lightIntensity
-                bleTempData.isOpenBox = isOpenBox
                 bleTempData.humidity = formatNumb(humidity)
                 bleTempData.voltage = formatNumb(voltage)
                 bleTempData.batteryPercent = batteryPercent
@@ -4969,7 +4970,7 @@ class PersonalAssetMsgDecoder:
                 if rssiTemp == 255:
                     rssi = -999
                 else:
-                    rssi = rssiTemp - 128
+                    rssi = rssiTemp - 256
                 bleDoorData.rssi = rssi
                 bleDoorData.mac = mac
                 bleDoorData.online = online
@@ -5025,7 +5026,7 @@ class PersonalAssetMsgDecoder:
                 if rssiTemp == 255:
                     rssi = -999
                 else:
-                    rssi = rssiTemp - 128
+                    rssi = rssiTemp - 256
                 bleCtrlData.rssi = rssi
                 bleCtrlData.mac = mac
                 bleCtrlData.online = online
@@ -5048,6 +5049,59 @@ class PersonalAssetMsgDecoder:
         heartbeatMessage.imei = imei
         heartbeatMessage.orignBytes = byteArray
         return heartbeatMessage
+
+    def parseWifiMessage(self,bytes):
+        wifiMessage = WifiMessage();
+        serialNo = bytes2Short(bytes,5)
+        imei = decodeImei(bytes,7)
+        dateStr = "20" + byte2HexString(bytes[15:21],0)
+        gtm0 = GTM0(dateStr)
+        selfMacByte = bytes[21:27]
+        selfMac = byte2HexString(selfMacByte,0)
+        ap1MacByte = bytes[27:33]
+        ap1Mac = byte2HexString(ap1MacByte,0)
+        rssiTemp = (int) (bytes[33])
+        if rssiTemp < 0:
+            rssiTemp += 256
+        ap1RSSI = 0
+        if rssiTemp == 255:
+            ap1RSSI = -999
+        else:
+            ap1RSSI = rssiTemp - 256
+        ap2MacByte = bytes[34:40]
+        ap2Mac = byte2HexString(ap2MacByte,0)
+        rssiTemp = (int) (bytes[40])
+        if rssiTemp < 0:
+            rssiTemp += 256
+        ap2RSSI = 0
+        if rssiTemp == 255:
+            ap2RSSI = -999
+        else:
+            ap2RSSI = rssiTemp - 256
+        ap3MacByte = bytes[27:33]
+        ap3Mac = byte2HexString(ap3MacByte,0)
+        rssiTemp = (int) (bytes[33])
+        if rssiTemp < 0:
+            rssiTemp += 256
+        ap3RSSI = 0
+        if rssiTemp == 255:
+            ap3RSSI = -999
+        else:
+            ap3RSSI = rssiTemp - 256
+        wifiMessage.serialNo = serialNo
+        # networkInfoMessage.isNeedResp = isNeedResp
+        wifiMessage.imei= imei
+        wifiMessage.orignBytes = bytes
+        wifiMessage.date = gtm0
+        wifiMessage.selfMac = selfMac
+        wifiMessage.ap1Mac = ap1Mac
+        wifiMessage.ap1RSSI = ap1RSSI
+        wifiMessage.ap2Mac = ap2Mac
+        wifiMessage.ap2RSSI = ap2RSSI
+        wifiMessage.ap3Mac = ap3Mac
+        wifiMessage.ap3RSSI = ap3RSSI
+        return wifiMessage
+
 
     def parseNetworkInfoMessage(self,bytes):
         networkInfoMessage = NetworkInfoMessage()
@@ -5378,7 +5432,9 @@ class PersonalAssetMsgEncoder:
         command = [0x27,0x27,0x04]
         return Encoder.getLocationAlarmMsgReply(imei,needSerialNo,serialNo,sourceAlarmCode,command,self.encryptType,self.aesKey)
 
-
+    def getWifiMsgReply(self,imei,needSerialNo,serialNo):
+        command = [0x27,0x27,0x15]
+        return Encoder.getCommonMsgReply(imei,needSerialNo,serialNo,command,self.encryptType,self.aesKey)
     def getBluetoothPeripheralMsgReply(self,imei,needSerialNo,serialNo):
         command = [0x27,0x27,0x10]
         return Encoder.getCommonMsgReply(imei,needSerialNo,serialNo,command,self.encryptType,self.aesKey)

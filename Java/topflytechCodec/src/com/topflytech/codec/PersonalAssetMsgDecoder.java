@@ -26,6 +26,7 @@ public class PersonalAssetMsgDecoder {
     private static final byte[] CONFIG =          {0x27, 0x27, (byte)0x81};
     private static final byte[] NETWORK_INFO_DATA = {0x27, 0x27, 0x05};
     private static final byte[] BLUETOOTH_DATA =       {0x27, 0x27, (byte)0x10};
+    private static final byte[] WIFI_DATA =  {0x27, 0x27, (byte)0x15};
     private int encryptType = 0;
     private String aesKey;
     public PersonalAssetMsgDecoder(int messageEncryptType,String aesKey){
@@ -42,6 +43,7 @@ public class PersonalAssetMsgDecoder {
                 || Arrays.equals(ALARM, bytes)
                 || Arrays.equals(CONFIG,bytes)
                 || Arrays.equals(BLUETOOTH_DATA,bytes)
+                || Arrays.equals(WIFI_DATA,bytes)
                 || Arrays.equals(NETWORK_INFO_DATA,bytes);
     }
 
@@ -172,6 +174,9 @@ public class PersonalAssetMsgDecoder {
                 case 0x10:
                     BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = parseBluetoothDataMessage(bytes);
                     return bluetoothPeripheralDataMessage;
+                case 0x15:
+                    WifiMessage  wifiMessage = parseWifiMessage(bytes);
+                    return wifiMessage;
                 case (byte)0x81:
                     Message message =  parseInteractMessage(bytes);
                     return message;
@@ -181,6 +186,8 @@ public class PersonalAssetMsgDecoder {
         }
         return null;
     }
+
+
 
     private BluetoothPeripheralDataMessage parseBluetoothDataMessage(byte[] bytes) {
         BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = new BluetoothPeripheralDataMessage();
@@ -263,17 +270,19 @@ public class PersonalAssetMsgDecoder {
             double latitude = latlngValid ? BytesUtils.bytes2Float(bleData, 19) : 0.0;
             int azimuth = latlngValid ? BytesUtils.bytes2Short(bleData, 25) : 0;
             Float speedf = 0.0f;
-            try{
-                byte[] bytesSpeed = Arrays.copyOfRange(bleData, 23, 25);
-                String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
-                if(strSp.contains("f")){
-                    speedf = -1f;
-                }else {
-                    speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+            if (latlngValid){
+                try{
+                    byte[] bytesSpeed = Arrays.copyOfRange(bleData, 23, 25);
+                    String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
+                    if(strSp.contains("f")){
+                        speedf = -1f;
+                    }else {
+                        speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+                    }
+                }catch (Exception e){
+                    System.out.println("Imei : " + imei);
+                    e.printStackTrace();
                 }
-            }catch (Exception e){
-                System.out.println("Imei : " + imei);
-                e.printStackTrace();
             }
             Boolean is_4g_lbs = false;
             Integer mcc_4g = null;
@@ -370,17 +379,19 @@ public class PersonalAssetMsgDecoder {
             double latitude = latlngValid ? BytesUtils.bytes2Float(bleData, 19) : 0.0;
             int azimuth = latlngValid ? BytesUtils.bytes2Short(bleData, 25) : 0;
             Float speedf = 0.0f;
-            try{
-                byte[] bytesSpeed = Arrays.copyOfRange(bleData, 23, 25);
-                String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
-                if(strSp.contains("f")){
-                    speedf = -1f;
-                }else {
-                    speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+            if (latlngValid){
+                try{
+                    byte[] bytesSpeed = Arrays.copyOfRange(bleData, 23, 25);
+                    String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
+                    if(strSp.contains("f")){
+                        speedf = -1f;
+                    }else {
+                        speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+                    }
+                }catch (Exception e){
+                    System.out.println("Imei : " + imei);
+                    e.printStackTrace();
                 }
-            }catch (Exception e){
-                System.out.println("Imei : " + imei);
-                e.printStackTrace();
             }
             Boolean is_4g_lbs = false;
             Integer mcc_4g = null;
@@ -495,13 +506,11 @@ public class PersonalAssetMsgDecoder {
                     humidity = humidityTemp * 0.01f;
                 }
                 int lightTemp = BytesUtils.bytes2Short(bleData,i+12);
-                boolean isOpenBox = false;
                 int lightIntensity ;
                 if(lightTemp == 65535){
                     lightIntensity = -999;
                 }else{
-                    lightIntensity = lightTemp & 0xfff;
-                    isOpenBox = (0x8000 & lightTemp) == 0x8000;
+                    lightIntensity = lightTemp & 0x0001;
                 }
                 int rssiTemp = (int) bleData[i + 14] < 0 ? (int) bleData[i + 14] + 256 : (int) bleData[i + 14];
                 int rssi;
@@ -513,7 +522,6 @@ public class PersonalAssetMsgDecoder {
                 bleTempData.setRssi(rssi);
                 bleTempData.setMac(mac);
                 bleTempData.setLightIntensity(lightIntensity);
-                bleTempData.setIsOpenBox(isOpenBox);
                 bleTempData.setHumidity(Float.valueOf(decimalFormat.format(humidity)));
                 bleTempData.setVoltage(Float.valueOf(decimalFormat.format(voltage)));
                 bleTempData.setBatteryPercent(batteryPercent);
@@ -692,16 +700,18 @@ public class PersonalAssetMsgDecoder {
         double longitude = latlngValid ? BytesUtils.bytes2Float(data,27) : 0;
         double latitude = latlngValid ? BytesUtils.bytes2Float(data,31) : 0;
         Float speedf = 0.0f;
-        try{
-            if (latlngValid) {
-                byte[] bytesSpeed = Arrays.copyOfRange(data, 35, 37);
-                String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
-                if(!strSp.toLowerCase().equals("ffff")){
-                    speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+        if (latlngValid){
+            try{
+                if (latlngValid) {
+                    byte[] bytesSpeed = Arrays.copyOfRange(data, 35, 37);
+                    String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
+                    if(!strSp.toLowerCase().equals("ffff")){
+                        speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+                    }
                 }
+            }catch (Exception e){
+                e.printStackTrace();
             }
-        }catch (Exception e){
-            e.printStackTrace();
         }
         int azimuth = latlngValid ? BytesUtils.bytes2Short(data, 37) : 0;
 
@@ -939,6 +949,9 @@ public class PersonalAssetMsgDecoder {
                 case 0x10:
                     BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = parseBluetoothDataMessage(bytes);
                     callback.receiveBluetoothDataMessage(bluetoothPeripheralDataMessage);
+                case 0x15:
+                    WifiMessage wifiMessage = parseWifiMessage(bytes);
+                    callback.receiveWifiMessage(wifiMessage);
                 case (byte)0x81:
                     Message message =  parseInteractMessage(bytes);
                     if (message instanceof ConfigMessage) {
@@ -953,6 +966,32 @@ public class PersonalAssetMsgDecoder {
             }
         }
 
+    }
+
+    private WifiMessage parseWifiMessage(byte[] bytes) {
+        WifiMessage wifiMessage = new WifiMessage();
+        int serialNo = BytesUtils.bytes2Short(bytes, 5);
+        String imei = BytesUtils.IMEI.decode(bytes, 7);
+        Date date = TimeUtils.getGTM0Date(bytes, 15);
+        String selfMac =  BytesUtils.bytes2HexString(Arrays.copyOfRange(bytes, 21, 27), 0);
+        String ap1Mac =  BytesUtils.bytes2HexString(Arrays.copyOfRange(bytes, 27, 33), 0);
+        int ap1Rssi = (int)bytes[33];
+        String ap2Mac =  BytesUtils.bytes2HexString(Arrays.copyOfRange(bytes,34,40),0);
+        int ap2Rssi = (int)bytes[40];
+        String ap3Mac =  BytesUtils.bytes2HexString(Arrays.copyOfRange(bytes,41,47),0);
+        int ap3Rssi = (int)bytes[47];
+        wifiMessage.setOrignBytes(bytes);
+        wifiMessage.setImei(imei);
+        wifiMessage.setDate(date);
+        wifiMessage.setSerialNo(serialNo);
+        wifiMessage.setSelfMac(selfMac.toUpperCase());
+        wifiMessage.setAp1Mac(ap1Mac.toUpperCase());
+        wifiMessage.setAp1RSSI(ap1Rssi);
+        wifiMessage.setAp2Mac(ap2Mac.toUpperCase());
+        wifiMessage.setAp2RSSI(ap2Rssi);
+        wifiMessage.setAp3Mac(ap3Mac.toUpperCase());
+        wifiMessage.setAp3RSSI(ap3Rssi);
+        return wifiMessage;
     }
 
     private SignInMessage parseLoginMessage(byte[] bytes) throws ParseException {
@@ -1141,6 +1180,8 @@ public class PersonalAssetMsgDecoder {
         void receiveBluetoothDataMessage(BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage);
 
         void receiveNetworkInfoMessage(NetworkInfoMessage networkInfoMessage);
+
+        void receiveWifiMessage(WifiMessage wifiMessage);
         /**
          * Receive error message.
          *

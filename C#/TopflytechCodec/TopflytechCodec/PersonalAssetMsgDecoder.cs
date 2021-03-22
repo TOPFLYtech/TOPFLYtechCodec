@@ -21,7 +21,9 @@ namespace TopflytechCodec
 
         private static byte[] NETWORK_INFO_DATA = { 0x27, 0x27, 0x05 };
 
-         private static byte[] BLUETOOTH_DATA =   {0x27, 0x27, (byte)0x10};
+        private static byte[] BLUETOOTH_DATA =   {0x27, 0x27, (byte)0x10};
+
+        private static byte[] WIFI_DATA = { 0x27, 0x27, (byte)0x15 };
 
         private int encryptType = 0;
         private String aesKey;
@@ -39,6 +41,7 @@ namespace TopflytechCodec
                     || Utils.ArrayEquals(ALARM, bytes)
                     || Utils.ArrayEquals(CONFIG , bytes)
                     || Utils.ArrayEquals(NETWORK_INFO_DATA, bytes)
+                    || Utils.ArrayEquals(WIFI_DATA, bytes)
                     || Utils.ArrayEquals(BLUETOOTH_DATA, bytes);
         }
         private TopflytechByteBuf decoderBuf = new TopflytechByteBuf();
@@ -114,6 +117,9 @@ namespace TopflytechCodec
                     case 0x10:
                         BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = parseBluetoothDataMessage(bytes);
                         return bluetoothPeripheralDataMessage;
+                    case 0x15:
+                        WifiMessage wifiMsg = parseWifiMessage(bytes);
+                        return wifiMsg;
                     case (byte)0x81:
                         Message message =  parseInteractMessage(bytes);
                         return message;
@@ -502,8 +508,7 @@ namespace TopflytechCodec
                     {
                         humidity = humidityTemp * 0.01f;
                     }
-                    int lightTemp = BytesUtils.Bytes2Short(bleData, i + 12);
-                    bool isOpenBox = false;
+                    int lightTemp = BytesUtils.Bytes2Short(bleData, i + 12); 
                     int lightIntensity;
                     if (lightTemp == 65535)
                     {
@@ -511,8 +516,7 @@ namespace TopflytechCodec
                     }
                     else
                     {
-                        lightIntensity = lightTemp & 0xfff;
-                        isOpenBox = (0x8000 & lightTemp) == 0x8000;
+                        lightIntensity = lightTemp & 0x0001; 
                     }
                     int rssiTemp = (int)bleData[i + 14] < 0 ? (int)bleData[i + 14] + 256 : (int)bleData[i + 14];
                     int rssi;
@@ -526,8 +530,7 @@ namespace TopflytechCodec
                     }
                     bleTempData.Rssi = rssi;
                     bleTempData.Mac = mac;
-                    bleTempData.LightIntensity = lightIntensity;
-                    bleTempData.IsOpenBox = isOpenBox;
+                    bleTempData.LightIntensity = lightIntensity; 
                     bleTempData.Humidity = (float)Math.Round(humidity, 2, MidpointRounding.AwayFromZero);
                     bleTempData.Voltage = (float)Math.Round(voltage, 2, MidpointRounding.AwayFromZero);
                     bleTempData.BatteryPercent = batteryPercent;
@@ -1001,6 +1004,61 @@ namespace TopflytechCodec
         //heartbeatMessage.IsNeedResp = isNeedResp;
         heartbeatMessage.Imei = imei;
         return heartbeatMessage;
+    }
+
+    private WifiMessage parseWifiMessage(byte[] bytes)
+    {
+        WifiMessage wifiMessage = new WifiMessage();
+        int serialNo = BytesUtils.Bytes2Short(bytes, 5);
+        //Boolean isNeedResp = (serialNo & 0x8000) != 0x8000;
+        String imei = BytesUtils.IMEI.Decode(bytes, 7);
+        DateTime gmt0 = Utils.getGTM0Date(bytes, 15);
+        String selfMac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 21, 27), 0);
+        String ap1Mac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 27, 33), 0);
+        int ap1Rssi;
+        int rssiTemp = (int)bytes[33] < 0 ? (int)bytes[33] + 256 : (int)bytes[33]; 
+        if (rssiTemp == 255)
+        {
+            ap1Rssi = -999;
+        }
+        else
+        {
+            ap1Rssi = rssiTemp - 256;
+        }
+        String ap2Mac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 34, 40), 0);
+        int ap2Rssi;
+        rssiTemp = (int)bytes[40] < 0 ? (int)bytes[40] + 256 : (int)bytes[40];
+        if (rssiTemp == 255)
+        {
+            ap2Rssi = -999;
+        }
+        else
+        {
+            ap2Rssi = rssiTemp - 256;
+        }
+        String ap3Mac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 41, 47), 0);
+        int ap3Rssi;
+        rssiTemp = (int)bytes[47] < 0 ? (int)bytes[47] + 256 : (int)bytes[47];
+        if (rssiTemp == 255)
+        {
+            ap3Rssi = -999;
+        }
+        else
+        {
+            ap3Rssi = rssiTemp - 256;
+        }
+        wifiMessage.OrignBytes = bytes;
+        wifiMessage.Imei = imei;
+        wifiMessage.SerialNo = serialNo;
+        wifiMessage.Date = gmt0;
+        wifiMessage.SelfMac = selfMac.ToUpper();
+        wifiMessage.Ap1Mac = ap1Mac.ToUpper();
+        wifiMessage.Ap1RSSI = ap1Rssi;
+        wifiMessage.Ap2Mac = ap2Mac.ToUpper();
+        wifiMessage.Ap2RSSI = ap2Rssi;
+        wifiMessage.Ap3Mac = ap3Mac.ToUpper();
+        wifiMessage.Ap3RSSI = ap3Rssi;
+        return wifiMessage;
     }
 
     private NetworkInfoMessage parseNetworkInfoMessage(byte[] bytes)

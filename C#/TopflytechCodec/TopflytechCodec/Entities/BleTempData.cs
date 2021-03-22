@@ -35,13 +35,7 @@ namespace TopflytechCodec.Entities
             get { return humidity; }
             set { humidity = value; }
         }
-        private Boolean isOpenBox;
-
-        public Boolean IsOpenBox
-        {
-            get { return isOpenBox; }
-            set { isOpenBox = value; }
-        }
+      
         private int lightIntensity;
 
         public int LightIntensity

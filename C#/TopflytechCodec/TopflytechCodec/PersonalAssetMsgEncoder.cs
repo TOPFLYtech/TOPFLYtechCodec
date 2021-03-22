@@ -25,6 +25,13 @@ namespace TopflytechCodec
             return Encoder.getHeartbeatMsgReply(imei, needSerialNo, serialNo, command, encryptType, aesKey);
         }
 
+
+        public byte[] getWifiMsgReply(String imei, int serialNo)
+        {
+            byte[] command = { 0x27, 0x27, 0x15 };
+            return Encoder.getWifiMsgReply(imei, true, serialNo, command, encryptType, aesKey);
+        }
+
         public byte[] getLocationMsgReply(String imei, bool needSerialNo, int serialNo)
         {
             byte[] command = { 0x27, 0x27, 0x02 };

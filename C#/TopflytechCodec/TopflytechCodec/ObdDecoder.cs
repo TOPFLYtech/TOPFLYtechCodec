@@ -585,8 +585,7 @@ namespace TopflytechCodec
                     {
                         humidity = humidityTemp * 0.01f;
                     }
-                    int lightTemp = BytesUtils.Bytes2Short(bleData, i + 12);
-                    bool isOpenBox = false;
+                    int lightTemp = BytesUtils.Bytes2Short(bleData, i + 12); 
                     int lightIntensity;
                     if (lightTemp == 65535)
                     {
@@ -594,8 +593,7 @@ namespace TopflytechCodec
                     }
                     else
                     {
-                        lightIntensity = lightTemp & 0xfff;
-                        isOpenBox = (0x8000 & lightTemp) == 0x8000;
+                        lightIntensity = lightTemp & 0x0001; 
                     }
                     int rssiTemp = (int)bleData[i + 14] < 0 ? (int)bleData[i + 14] + 256 : (int)bleData[i + 14];
                     int rssi;
@@ -605,12 +603,11 @@ namespace TopflytechCodec
                     }
                     else
                     {
-                        rssi = rssiTemp - 128;
+                        rssi = rssiTemp - 256;
                     }
                     bleTempData.Rssi = rssi;
                     bleTempData.Mac = mac;
-                    bleTempData.LightIntensity = lightIntensity;
-                    bleTempData.IsOpenBox = isOpenBox;
+                    bleTempData.LightIntensity = lightIntensity; 
                     bleTempData.Humidity = (float)Math.Round(humidity, 2, MidpointRounding.AwayFromZero);
                     bleTempData.Voltage = (float)Math.Round(voltage, 2, MidpointRounding.AwayFromZero);
                     bleTempData.BatteryPercent = batteryPercent;
@@ -677,7 +674,7 @@ namespace TopflytechCodec
                     }
                     else
                     {
-                        rssi = rssiTemp - 128;
+                        rssi = rssiTemp - 256;
                     }
                     bleDoorData.Rssi = rssi;
                     bleDoorData.Mac = mac;
@@ -748,7 +745,7 @@ namespace TopflytechCodec
                     }
                     else
                     {
-                        rssi = rssiTemp - 128;
+                        rssi = rssiTemp - 256;
                     }
                     bleCtrlData.Rssi = rssi;
                     bleCtrlData.Mac = mac;
@@ -819,7 +816,7 @@ namespace TopflytechCodec
                     }
                     else
                     {
-                        rssi = rssiTemp - 128;
+                        rssi = rssiTemp - 256;
                     }
                     bleFuelData.Rssi = rssi;
                     bleFuelData.Mac = mac;

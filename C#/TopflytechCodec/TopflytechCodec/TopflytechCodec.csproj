@@ -77,6 +77,7 @@
     <Compile Include="Entities\Rs232TireMessage.cs" />
     <Compile Include="Entities\SignInMessage.cs" />
     <Compile Include="Entities\USSDMessage.cs" />
+    <Compile Include="Entities\WifiMessage.cs" />
     <Compile Include="ObdDecoder.cs" />
     <Compile Include="PersonalAssetMsgDecoder.cs" />
     <Compile Include="PersonalAssetMsgEncoder.cs" />

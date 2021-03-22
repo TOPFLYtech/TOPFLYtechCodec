@@ -244,6 +244,10 @@ def dealPersonalDeviceMessage(message,socketClient):
         #     socketClient.send(reply)
         reply = personalEncoder.getBluetoothPeripheralMsgReply(message.imei,True,message.serialNo)
         socketClient.send(reply)
+    elif isinstance(message,WifiMessage):
+        print ("receive wifi location Message: " + message.imei)
+        reply = personalEncoder.getWifiMsgReply(message.imei,True,message.serialNo)
+        socketClient.send(reply)
     elif isinstance(message,NetworkInfoMessage):
         print ("receive network info Message: " + message.imei)
         # if message.isNeedResp:
@@ -263,9 +267,9 @@ if __name__ == "__main__":
     while True:
         c, addr = s.accept()
         print("\nConnection received from %s" % str(addr))
-        decoder = Decoder(MessageEncryptType.NONE,"")
+        # decoder = Decoder(MessageEncryptType.NONE,"")
         # decoder = ObdDecoder(MessageEncryptType.NONE,"")
-        # decoder = PersonalAssetMsgDecoder(MessageEncryptType.NONE,"")
+        decoder = PersonalAssetMsgDecoder(MessageEncryptType.NONE,"")
         while True:
             data = c.recv(2048)
             if not data:
@@ -274,9 +278,9 @@ if __name__ == "__main__":
 
             messageList = decoder.decode(data)
             for message in messageList:
-                dealNoObdDeviceMessage(message,c)
+                # dealNoObdDeviceMessage(message,c)
                 # dealObdDeviceMessage(message,c)
-                # dealPersonalDeviceMessage(message,c)
+                dealPersonalDeviceMessage(message,c)
 
         c.close()
 

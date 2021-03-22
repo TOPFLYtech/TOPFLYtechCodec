@@ -35,6 +35,11 @@ public class PersonalAssetMsgEncoder {
         return Encoder.getSignInMsgReply(imei,needSerialNo,serialNo,command,encryptType,aesKey);
     }
 
+
+    public  byte[] getWifiMsgReply(String imei,boolean needSerialNo,int serialNo) throws IOException {
+        byte[] command = {0x27, 0x27, 0x15};
+        return Encoder.getWifiMsgReply(imei,needSerialNo,serialNo,command,encryptType,aesKey);
+    }
     /**
      * Get heartbeat msg reply byte [ ].
      *
