@@ -1,7 +1,7 @@
 package com.topflytech.codec;
 
 import com.topflytech.codec.entities.*;
-
+ 
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -850,8 +850,8 @@ public class Decoder {
         bluetoothPeripheralDataMessage.setSerialNo(serialNo);
 //        bluetoothPeripheralDataMessage.setIsNeedResp(isNeedResp);
         bluetoothPeripheralDataMessage.setImei(imei);
-        boolean latlngValid = (bytes[22] & 0xBF) != 0xBF;
-        boolean isHisData = (bytes[22] & 0x7F) != 0x7F;
+        boolean latlngValid = (bytes[22] & 0x40) == 0x40;
+        boolean isHisData = (bytes[22] & 0x80) == 0x80;
         bluetoothPeripheralDataMessage.setLatlngValid(latlngValid);
         bluetoothPeripheralDataMessage.setIsHistoryData(isHisData);
         double altitude = latlngValid? BytesUtils.bytes2Float(bytes, 23) : 0.0;

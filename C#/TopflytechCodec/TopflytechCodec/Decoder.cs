@@ -981,8 +981,8 @@ namespace TopflytechCodec
         bluetoothPeripheralDataMessage.SerialNo = serialNo;
         //bluetoothPeripheralDataMessage.IsNeedResp = isNeedResp;
         bluetoothPeripheralDataMessage.Imei = imei;
-        bool latlngValid = (bytes[22] & 0xBF) != 0xBF;
-        bool isHisData = (bytes[22] & 0x7F) != 0x7F;
+        bool latlngValid = (bytes[22] & 0x40) == 0x40;
+        bool isHisData = (bytes[22] & 0x80) == 0x80;
         bluetoothPeripheralDataMessage.LatlngValid = latlngValid;
         bluetoothPeripheralDataMessage.IsHistoryData = isHisData;
         double altitude = latlngValid? BytesUtils.Bytes2Short(bytes, 23) : 0.0;

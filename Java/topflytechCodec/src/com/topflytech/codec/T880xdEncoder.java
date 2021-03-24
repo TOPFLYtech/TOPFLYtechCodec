@@ -1,5 +1,5 @@
 package com.topflytech.codec;
-
+ 
 import java.io.IOException;
 
 /**

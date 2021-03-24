@@ -1,7 +1,7 @@
 package com.topflytech.codec;
 
 import com.topflytech.codec.entities.*;
-
+ 
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
 import java.text.ParseException;

@@ -1040,8 +1040,8 @@ class Decoder:
         serialNo = bytes2Short(byteArray,5)
         # isNeedResp = (serialNo & 0x8000) != 0x8000
         imei = decodeImei(byteArray,7)
-        isHistoryData = (bleData[22] & 0xBF) != 0xBF
-        latlngValid = (bleData[22] & 0x7F) != 0x7F
+        isHistoryData = (bleData[22] & 0x40) == 0x40
+        latlngValid = (bleData[22] & 0x80) == 0x80
         altitude = 0
         latitude = 0
         longitude = 0
