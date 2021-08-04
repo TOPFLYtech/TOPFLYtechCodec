@@ -380,6 +380,7 @@ class LocationMessage(Message):
     input3 = False
     input4 = False
     input5 = False
+    input6 = False
     analogInput4 = 0
     analogInput5 = 0
     output1 = False
@@ -875,7 +876,7 @@ class Decoder:
             rs232Message.rs232DataType = RS232Message.TIRE_DATA
             dataCount = (len(data) - 2 ) / 7
             curIndex = 2
-            for i in range(0,dataCount):
+            for i in range(0,(int)(dataCount)):
                 curIndex = i * 7 + 2
                 rs232TireMessage=Rs232TireMessage()
                 airPressureTmp = (int)(data[curIndex + 4])
@@ -1040,14 +1041,14 @@ class Decoder:
         serialNo = bytes2Short(byteArray,5)
         # isNeedResp = (serialNo & 0x8000) != 0x8000
         imei = decodeImei(byteArray,7)
-        isHistoryData = (bleData[22] & 0x40) == 0x40
-        latlngValid = (bleData[22] & 0x80) == 0x80
+        isHistoryData = (byteArray[22] & 0x40) == 0x40
+        latlngValid = (byteArray[22] & 0x80) == 0x80
         altitude = 0
         latitude = 0
         longitude = 0
         azimuth = 0
         speed = 0
-        strSp = byte2HexString(bleData[35:37], 0);
+        strSp = byte2HexString(byteArray[35:37], 0);
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
@@ -1066,32 +1067,32 @@ class Decoder:
         lac_2g_3 = 0
         ci_2g_3 = 0
         if  latlngValid:
-            altitude = bytes2Float(bleData, 23)
-            latitude = bytes2Float(bleData, 27)
-            longitude = bytes2Float(bleData, 31)
-            azimuth = bytes2Short(bleData, 37)
+            altitude = bytes2Float(byteArray, 23)
+            latitude = bytes2Float(byteArray, 27)
+            longitude = bytes2Float(byteArray, 31)
+            azimuth = bytes2Short(byteArray, 37)
         else:
-            if (bleData[23] & 0x8) == 0x8:
+            if (byteArray[23] & 0x8) == 0x8:
                 is_2g_lbs = True
             else:
                 is_4g_lbs = True
         if is_2g_lbs:
-            mcc_2g = bytes2Short(bleData,23)
-            mnc_2g = bytes2Short(bleData,25)
-            lac_2g_1 = bytes2Short(bleData,27)
-            ci_2g_1 = bytes2Short(bleData,29)
-            lac_2g_2 = bytes2Short(bleData,31)
-            ci_2g_2 = bytes2Short(bleData,33)
-            lac_2g_3 = bytes2Short(bleData,35)
-            ci_2g_3 = bytes2Short(bleData,37)
+            mcc_2g = bytes2Short(byteArray,23)
+            mnc_2g = bytes2Short(byteArray,25)
+            lac_2g_1 = bytes2Short(byteArray,27)
+            ci_2g_1 = bytes2Short(byteArray,29)
+            lac_2g_2 = bytes2Short(byteArray,31)
+            ci_2g_2 = bytes2Short(byteArray,33)
+            lac_2g_3 = bytes2Short(byteArray,35)
+            ci_2g_3 = bytes2Short(byteArray,37)
         if is_4g_lbs:
-            mcc_4g = bytes2Short(bleData,23)
-            mnc_4g = bytes2Short(bleData,25)
-            ci_4g = bytes2Integer(bleData, 27)
-            earfcn_4g_1 = bytes2Short(bleData, 31)
-            pcid_4g_1 = bytes2Short(bleData, 33)
-            earfcn_4g_2 = bytes2Short(bleData, 35)
-            pcid_4g_2 = bytes2Short(bleData,37)
+            mcc_4g = bytes2Short(byteArray,23)
+            mnc_4g = bytes2Short(byteArray,25)
+            ci_4g = bytes2Integer(byteArray, 27)
+            earfcn_4g_1 = bytes2Short(byteArray, 31)
+            pcid_4g_1 = bytes2Short(byteArray, 33)
+            earfcn_4g_2 = bytes2Short(byteArray, 35)
+            pcid_4g_2 = bytes2Short(byteArray,37)
         if strSp.find("f") == -1:
                 speed = -1
         else:
@@ -1244,7 +1245,6 @@ class Decoder:
             bleDriverSignInData.isHistoryData = isHistoryData
             bleDriverSignInData.latitude  =latitude
             bleDriverSignInData.latlngValid  =latlngValid
-            bleDriverSignInData.satelliteCount  =satelliteNumber
             bleDriverSignInData.longitude = longitude
             bleDriverSignInData.mac = mac
             bleDriverSignInData.speed = speed
@@ -1441,6 +1441,60 @@ class Decoder:
                 bleCtrlData.temp = formatNumb(temperature)
                 bleDataList.append(bleCtrlData)
                 i+=12
+        elif bleData[0] == 0x00 and bleData[1] == 0x07:
+            bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_FUEL
+            i = 2
+            while i < len(bleData):
+                bleFuelData = BleFuelData()
+                macArray = bleData[i + 0:i + 6]
+                mac = byte2HexString(macArray, 0)
+                voltageTmp = (int) (bleData[i + 6])
+                if voltageTmp < 0:
+                   voltageTmp +=  256
+                voltage = 0
+                if voltageTmp == 255:
+                    voltage = -999
+                else:
+                    voltage = 2 + 0.01 * voltageTmp
+                valueTemp = bytes2Short(bleData,i+7)
+                value=0
+                if valueTemp == 65535:
+                    value = -999
+                else:
+                    value = valueTemp
+                temperatureTemp = bytes2Short(bleData,i+9)
+                tempPositive = 1
+                if (temperatureTemp & 0x8000) == 0:
+                    tempPositive = -1
+                temperature = -999
+                if temperatureTemp == 65535:
+                    temperature = -999
+                else:
+                    temperature = (temperatureTemp & 0x7fff) * 0.01 * tempPositive
+                online = 1
+                status = bleData[i+13]
+                if status == 255:
+                    status = -999
+                    online = 0
+                rssiTemp = 0
+                if (int)(bleData[i + 14]) < 0:
+                    rssiTemp =  (int) (bleData[i + 14]) + 256
+                else:
+                    rssiTemp = (int) (bleData[i + 14])
+                rssi = 0
+                if rssiTemp == 255:
+                    rssi = -999
+                else:
+                    rssi = rssiTemp - 256
+                bleFuelData.rssi = rssi
+                bleFuelData.mac = mac
+                bleFuelData.online = online
+                bleFuelData.alarm = status
+                bleFuelData.value = value
+                bleFuelData.voltage = formatNumb(voltage)
+                bleFuelData.temp = formatNumb(temperature)
+                bleDataList.append(bleFuelData)
+                i+=15
         bluetoothPeripheralDataMessage.bleDataList =bleDataList
         return bluetoothPeripheralDataMessage;
 
@@ -1459,7 +1513,7 @@ class Decoder:
         bluetoothPeripheralDataMessage.orignBytes = byteArray
         bluetoothPeripheralDataMessage.isHistoryData = (byteArray[15] & 0x80) != 0x00
         bluetoothPeripheralDataMessage.serialNo = serialNo
-        bluetoothPeripheralDataMessage.protocolHeadType = 0x10
+        bluetoothPeripheralDataMessage.protocolHeadType = byteArray[2]
         # bluetoothPeripheralDataMessage.isNeedResp = isNeedResp
         bluetoothPeripheralDataMessage.imei = imei
         bleData = byteArray[22:len(byteArray)]
@@ -1939,7 +1993,7 @@ class Decoder:
                 bleFuelData.voltage = formatNumb(voltage)
                 bleFuelData.temp = formatNumb(temperature)
                 bleDataList.append(bleFuelData)
-                i+=12
+                i+=15
         bluetoothPeripheralDataMessage.bleDataList =bleDataList
         return bluetoothPeripheralDataMessage;
 
@@ -2138,7 +2192,7 @@ class Decoder:
         acceleration.ci_2g_2 = ci_2g_2
         acceleration.lac_2g_3 = lac_2g_3
         acceleration.ci_2g_3 = ci_2g_3
-        if len(byteArray) >= 44:
+        if len(byteArray) > 44:
             gyroscopeAxisXDirect = -1
             if (byteArray[curParseIndex + 28] & 0x80) == 0x80:
                 gyroscopeAxisXDirect = 1
@@ -2319,15 +2373,15 @@ class Decoder:
         iopPowerCutOff = (input & self.MASK_POWER_CUT) == self.MASK_POWER_CUT
         iopACOn = (input & self.MASK_AC) == self.MASK_AC
         externalPowerSupply = (input & 0x8000) == 0x8000
-        input1 = (iop & 0x100) == 0x100
-        input2 = (iop & 0x2000) == 0x2000
+        input1 = (input & 0x100) == 0x100
+        input2 = (input & 0x2000) == 0x2000
         input3 = (input & 0x1000) == 0x1000
         input4 = (input & 0x800) == 0x800
         input5 = (input & 0x400) == 0x400
 
-        output1 = (data[18] & 0x10) == 0x10
-        output2 = (data[18] & 0x8) == 0x8
-        output3 = (data[18] & 0x4) == 0x4
+        output1 = (data[18] & 0x20) == 0x20
+        output2 = (data[18] & 0x10) == 0x10
+        output3 = (data[18] & 0x8) == 0x8
         output12V = (data[18] & 0x20) == 0x20
         outputVout = (data[18] & 0x40) == 0x40
         str = byte2HexString(data, 20)
@@ -2422,7 +2476,7 @@ class Decoder:
         batteryVoltageStr = byte2HexString(data[59:61],0)
         batteryVoltage = (float)(batteryVoltageStr) / 100
         externalPowerVoltage = 0
-        externalPowerVoltageStr = byte2HexString(data[51:53], 0)
+        externalPowerVoltageStr = byte2HexString(data[61:63], 0)
         externalPowerVoltage = (float(externalPowerVoltageStr) ) / 100
 
 
@@ -2430,9 +2484,11 @@ class Decoder:
         rpm = bytes2Short(data,63)
         isSmartUploadSupport = (data[65] & 0x8) == 0x8
         supportChangeBattery =  (data[66] & 0x8) == 0x8
-        deviceTemp = byteArray[68] & 0x7F
-        if (byteArray[68] & 0x80) == 0x80:
-            deviceTemp = -1 * deviceTemp
+        deviceTemp = -999
+        if byteArray[68] != 0xff:
+            deviceTemp = byteArray[68] & 0x7F
+            if (byteArray[68] & 0x80) == 0x80:
+                deviceTemp = -1 * deviceTemp
         locationMessage = LocationInfoMessage()
         locationMessage.protocolHeadType = 0x13
         if isAlarmData:
@@ -2565,6 +2621,10 @@ class Decoder:
         iopRs232DeviceValid = (iop & self.IOP_RS232_DEVICE_VALID) != self.IOP_RS232_DEVICE_VALID
         input1 = iopIgnition
         input2 = iopACOn
+        input3 = (iop & 0x1000) == 0x1000
+        input4 = (iop & 0x800) == 0x800
+        input5 = (iop & 0x10) == 0x10
+        input6 = (iop & 0x08) == 0x08
         output2 = (iop & 0x200) == 0x200
         output3 = (iop & 0x100) == 0x100
         output12V = (iop & 0x10) == 0x10
@@ -2617,7 +2677,8 @@ class Decoder:
             longitude = bytes2Float(data,39)
             azimuth = bytes2Short(data,49)
             speedStr = byte2HexString(data[47:49],0)
-            speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+            if speedStr != "ffff":
+                speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
         else:
             if (data[35] & 0x8) == 0x8:
                 is_2g_lbs = True
@@ -2724,6 +2785,10 @@ class Decoder:
         locationMessage.rs232DeviceValid = iopRs232DeviceValid
         locationMessage.input1 = input1
         locationMessage.input2 = input2
+        locationMessage.input3 = input3
+        locationMessage.input4 = input4
+        locationMessage.input5 = input5
+        locationMessage.input6 = input6
         locationMessage.output2 = output2
         locationMessage.output3 = output3
         locationMessage.output12V = output12V
@@ -3122,6 +3187,7 @@ class ObdDecoder:
     OBD_DATA = [0x26, 0x26, 0x09]
     BLUETOOTH_DATA = [0x26, 0x26, 0x10]
     NETWORK_INFO_DATA = [0x26, 0x26, 0x11]
+    SECOND_BLUETOOTH_DATA = [0x26, 0x26, 0x12]
     latlngInvalidData = [0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]
 
     obdHead = [0x55,0xAA]
@@ -3139,7 +3205,7 @@ class ObdDecoder:
                or byteArray == self.ALARM or byteArray == self.CONFIG or \
                byteArray == self.GPS_DRIVER_BEHAVIOR or byteArray == self.ACCELERATION_DRIVER_BEHAVIOR or \
                byteArray == self.ACCELERATION_ALARM or byteArray == self.OBD_DATA\
-               or byteArray == self.BLUETOOTH_DATA or byteArray == self.NETWORK_INFO_DATA
+               or byteArray == self.BLUETOOTH_DATA or byteArray == self.NETWORK_INFO_DATA or byteArray == self.SECOND_BLUETOOTH_DATA
 
     decoderBuf = TopflytechByteBuf()
 
@@ -3200,6 +3266,8 @@ class ObdDecoder:
                 return self.parseBluetoothDataMessage(byteArray)
             elif byteArray[2] == 0x11:
                 return self.parseNetworkInfoMessage(byteArray)
+            elif byteArray[2] == 0x12:
+                return self.parseSecondBluetoothDataMessage(byteArray)
             elif byteArray[2] == 0x81:
                 return self.parseInteractMessage(byteArray)
             else:
@@ -3638,7 +3706,7 @@ class ObdDecoder:
         ci_2g_2 = 0
         lac_2g_3 = 0
         ci_2g_3 = 0
-        if  latlngValid:
+        if  acceleration.latlngValid:
             acceleration.altitude = bytes2Float(byteArray,curParseIndex + 12)
             acceleration.longitude = bytes2Float(byteArray,curParseIndex + 16)
             acceleration.latitude = bytes2Float(byteArray,curParseIndex + 20)
@@ -3761,6 +3829,469 @@ class ObdDecoder:
         accelerationDriverBehaviorMessage.accelerationData = accelerationData
         return accelerationDriverBehaviorMessage
 
+
+    def parseSecondBluetoothDataMessage(self,byteArray):
+        bluetoothPeripheralDataMessage = BluetoothPeripheralDataMessage()
+        serialNo = bytes2Short(byteArray,5)
+        # isNeedResp = (serialNo & 0x8000) != 0x8000
+        imei = decodeImei(byteArray,7)
+        isHistoryData = (byteArray[22] & 0x40) == 0x40
+        latlngValid = (byteArray[22] & 0x80) == 0x80
+        altitude = 0
+        latitude = 0
+        longitude = 0
+        azimuth = 0
+        speed = 0
+        strSp = byte2HexString(byteArray[35:37], 0);
+        is_4g_lbs = False
+        mcc_4g = 0
+        mnc_4g = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
+        pcid_4g_1 = 0
+        earfcn_4g_2 = 0
+        pcid_4g_2 = 0
+        is_2g_lbs = False
+        mcc_2g = 0
+        mnc_2g = 0
+        lac_2g_1 = 0
+        ci_2g_1 = 0
+        lac_2g_2 = 0
+        ci_2g_2 = 0
+        lac_2g_3 = 0
+        ci_2g_3 = 0
+        if  latlngValid:
+            altitude = bytes2Float(byteArray, 23)
+            latitude = bytes2Float(byteArray, 27)
+            longitude = bytes2Float(byteArray, 31)
+            azimuth = bytes2Short(byteArray, 37)
+        else:
+            if (byteArray[23] & 0x8) == 0x8:
+                is_2g_lbs = True
+            else:
+                is_4g_lbs = True
+        if is_2g_lbs:
+            mcc_2g = bytes2Short(byteArray,23)
+            mnc_2g = bytes2Short(byteArray,25)
+            lac_2g_1 = bytes2Short(byteArray,27)
+            ci_2g_1 = bytes2Short(byteArray,29)
+            lac_2g_2 = bytes2Short(byteArray,31)
+            ci_2g_2 = bytes2Short(byteArray,33)
+            lac_2g_3 = bytes2Short(byteArray,35)
+            ci_2g_3 = bytes2Short(byteArray,37)
+        if is_4g_lbs:
+            mcc_4g = bytes2Short(byteArray,23)
+            mnc_4g = bytes2Short(byteArray,25)
+            ci_4g = bytes2Integer(byteArray, 27)
+            earfcn_4g_1 = bytes2Short(byteArray, 31)
+            pcid_4g_1 = bytes2Short(byteArray, 33)
+            earfcn_4g_2 = bytes2Short(byteArray, 35)
+            pcid_4g_2 = bytes2Short(byteArray,37)
+        if strSp.find("f") == -1:
+                speed = -1
+        else:
+            speed = (float)("{0}.{1}".format(strSp[0:3],strSp[3:]))
+        if (byteArray[21] & 0x01) == 0x01:
+            bluetoothPeripheralDataMessage.isIgnition = True
+        else:
+            bluetoothPeripheralDataMessage.isIgnition = False
+        dateStr = "20" + byte2HexString(byteArray[15:21],0)
+        gtm0 = GTM0(dateStr)
+        bluetoothPeripheralDataMessage.date = gtm0
+        bluetoothPeripheralDataMessage.orignBytes = byteArray
+        bluetoothPeripheralDataMessage.isHistoryData = isHistoryData
+        bluetoothPeripheralDataMessage.serialNo = serialNo
+        bluetoothPeripheralDataMessage.latlngValid = latlngValid
+        bluetoothPeripheralDataMessage.altitude = altitude
+        bluetoothPeripheralDataMessage.latitude = latitude
+        bluetoothPeripheralDataMessage.longitude = longitude
+        bluetoothPeripheralDataMessage.azimuth = azimuth
+        bluetoothPeripheralDataMessage.isHadLocationInfo = True
+        bluetoothPeripheralDataMessage.protocolHeadType = 0x12
+        # bluetoothPeripheralDataMessage.isNeedResp = isNeedResp
+        bluetoothPeripheralDataMessage.imei = imei
+        bluetoothPeripheralDataMessage.is_4g_lbs = is_4g_lbs
+        bluetoothPeripheralDataMessage.is_2g_lbs = is_2g_lbs
+        bluetoothPeripheralDataMessage.mcc_4g = mcc_4g
+        bluetoothPeripheralDataMessage.mnc_4g = mnc_4g
+        bluetoothPeripheralDataMessage.ci_4g = ci_4g
+        bluetoothPeripheralDataMessage.earfcn_4g_1 = earfcn_4g_1
+        bluetoothPeripheralDataMessage.pcid_4g_1 = pcid_4g_1
+        bluetoothPeripheralDataMessage.earfcn_4g_2 = earfcn_4g_2
+        bluetoothPeripheralDataMessage.pcid_4g_2 = pcid_4g_2
+        bluetoothPeripheralDataMessage.mcc_2g = mcc_2g
+        bluetoothPeripheralDataMessage.mnc_2g = mnc_2g
+        bluetoothPeripheralDataMessage.lac_2g_1 = lac_2g_1
+        bluetoothPeripheralDataMessage.ci_2g_1 = ci_2g_1
+        bluetoothPeripheralDataMessage.lac_2g_2 = lac_2g_2
+        bluetoothPeripheralDataMessage.ci_2g_2 = ci_2g_2
+        bluetoothPeripheralDataMessage.lac_2g_3 = lac_2g_3
+        bluetoothPeripheralDataMessage.ci_2g_3 = ci_2g_3
+        bleData = byteArray[39:len(byteArray)]
+        bleDataList = []
+        if bleData[0] == 0x00 and bleData[1] == 0x01:
+            bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_TIRE
+            i = 2
+            while i < len(bleData):
+                bleTireData = BleTireData()
+                macArray = bleData[i:i + 6]
+                mac = byte2HexString(macArray, 0);
+                voltageTmp = (int) (bleData[i + 6])
+                if voltageTmp < 0:
+                    voltageTmp += 256
+                voltage = -999
+                if voltageTmp == 255:
+                    voltage = -999
+                else:
+                    voltage = 1.22 + 0.01 * voltageTmp
+                airPressureTmp = (int) (bleData[i + 7])
+                if airPressureTmp < 0:
+                    airPressureTmp += 256
+                airPressure = - 999
+                if airPressureTmp == 255:
+                    airPressure = -999;
+                else:
+                    airPressure = 1.572 * 2 * airPressureTmp
+                airTempTmp = (int) (bleData[i + 8])
+                if airTempTmp < 0:
+                    airTempTmp += 256
+                airTemp = 0
+                if airTempTmp == 255:
+                    airTemp = -999
+                else:
+                    airTemp = airTempTmp - 55
+                bleTireData.mac = mac
+                bleTireData.voltage = voltage
+                bleTireData.airPressure = airPressure
+                bleTireData.airTemp = airTemp
+                alarm = (int) (bleData[i + 9])
+                if alarm == -1:
+                    alarm = 0
+                bleTireData.status  = alarm
+                bleDataList.append(bleTireData)
+                i+=10
+        elif bleData[0] == 0x00 and bleData[1] == 0x02:
+            bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_SOS
+            bleAlertData = BleAlertData()
+            macArray = bleData[2: 8]
+            mac = byte2HexString(macArray, 0)
+            voltageStr = byte2HexString(bleData,8)[0:2]
+            voltage = 0
+            try:
+                voltage = (float)(voltageStr) / 10
+            except:
+                print ("voltage error")
+            alertByte = bleData[9]
+            alert = BleAlertData.ALERT_TYPE_LOW_BATTERY
+            if alertByte == 0x01:
+                alert = BleAlertData.ALERT_TYPE_LOW_BATTERY
+            else:
+                alert = BleAlertData.ALERT_TYPE_SOS
+            bleAlertData.alertType = alert
+            bleAlertData.altitude = altitude
+            bleAlertData.azimuth = azimuth
+            bleAlertData.innerVoltage = voltage
+            bleAlertData.isHistoryData = isHistoryData
+            bleAlertData.latitude  =latitude
+            bleAlertData.latlngValid  =latlngValid
+            bleAlertData.longitude = longitude
+            bleAlertData.mac = mac
+            bleAlertData.speed = speed
+            bleAlertData.is_4g_lbs = is_4g_lbs
+            bleAlertData.is_2g_lbs = is_2g_lbs
+            bleAlertData.mcc_4g = mcc_4g
+            bleAlertData.mnc_4g = mnc_4g
+            bleAlertData.ci_4g = ci_4g
+            bleAlertData.earfcn_4g_1 = earfcn_4g_1
+            bleAlertData.pcid_4g_1 = pcid_4g_1
+            bleAlertData.earfcn_4g_2 = earfcn_4g_2
+            bleAlertData.pcid_4g_2 = pcid_4g_2
+            bleAlertData.mcc_2g = mcc_2g
+            bleAlertData.mnc_2g = mnc_2g
+            bleAlertData.lac_2g_1 = lac_2g_1
+            bleAlertData.ci_2g_1 = ci_2g_1
+            bleAlertData.lac_2g_2 = lac_2g_2
+            bleAlertData.ci_2g_2 = ci_2g_2
+            bleAlertData.lac_2g_3 = lac_2g_3
+            bleAlertData.ci_2g_3 = ci_2g_3
+            bleDataList.append(bleAlertData);
+        elif bleData[0] == 0x00 and bleData[1] == 0x03:
+            bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_DRIVER
+            bleDriverSignInData = BleDriverSignInData()
+            macArray = bleData[2:8]
+            mac = byte2HexString(macArray, 0);
+            voltageStr = byte2HexString(bleData,8)[0: 2]
+            voltage = 0;
+            try:
+                voltage = (float)(voltageStr) / 10
+            except:
+                print ("voltage error")
+            alertByte = bleData[9];
+            alert = BleAlertData.ALERT_TYPE_LOW_BATTERY
+            if alertByte == 0x01:
+                alert = BleAlertData.ALERT_TYPE_LOW_BATTERY
+            else:
+                alert = BleAlertData.ALERT_TYPE_SOS
+            bleDriverSignInData.alert = alert
+            bleDriverSignInData.altitude = altitude
+            bleDriverSignInData.azimuth = azimuth
+            bleDriverSignInData.voltage = voltage
+            bleDriverSignInData.isHistoryData = isHistoryData
+            bleDriverSignInData.latitude  =latitude
+            bleDriverSignInData.latlngValid  =latlngValid
+            bleDriverSignInData.longitude = longitude
+            bleDriverSignInData.mac = mac
+            bleDriverSignInData.speed = speed
+            bleDriverSignInData.is_4g_lbs = is_4g_lbs
+            bleDriverSignInData.is_2g_lbs = is_2g_lbs
+            bleDriverSignInData.mcc_4g = mcc_4g
+            bleDriverSignInData.mnc_4g = mnc_4g
+            bleDriverSignInData.ci_4g = ci_4g
+            bleDriverSignInData.earfcn_4g_1 = earfcn_4g_1
+            bleDriverSignInData.pcid_4g_1 = pcid_4g_1
+            bleDriverSignInData.earfcn_4g_2 = earfcn_4g_2
+            bleDriverSignInData.pcid_4g_2 = pcid_4g_2
+            bleDriverSignInData.mcc_2g = mcc_2g
+            bleDriverSignInData.mnc_2g = mnc_2g
+            bleDriverSignInData.lac_2g_1 = lac_2g_1
+            bleDriverSignInData.ci_2g_1 = ci_2g_1
+            bleDriverSignInData.lac_2g_2 = lac_2g_2
+            bleDriverSignInData.ci_2g_2 = ci_2g_2
+            bleDriverSignInData.lac_2g_3 = lac_2g_3
+            bleDriverSignInData.ci_2g_3 = ci_2g_3
+            bleDataList.append(bleDriverSignInData);
+        elif bleData[0] == 0x00 and bleData[1] == 0x04:
+            bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_TEMP
+            i = 2
+            while i < len(bleData):
+                bleTempData = BleTempData()
+                macArray = bleData[i + 0:i + 6]
+                mac = byte2HexString(macArray, 0)
+                if mac.startswith('0000'):
+                    mac = mac[4:12]
+                voltageTmp = (int) (bleData[i + 6])
+                if voltageTmp < 0:
+                   voltageTmp +=  256
+                voltage = 0
+                if voltageTmp == 255:
+                    voltage = -999
+                else:
+                    voltage = 2 + 0.01 * voltageTmp
+                batteryPercentTemp = (int) (bleData[i + 7])
+                if batteryPercentTemp < 0:
+                    batteryPercentTemp += 256
+                batteryPercent=0
+                if batteryPercentTemp == 255:
+                    batteryPercent = -999
+                else:
+                    batteryPercent = batteryPercentTemp
+                temperatureTemp = bytes2Short(bleData,i+8)
+                tempPositive = 1
+                if (temperatureTemp & 0x8000) == 0:
+                    tempPositive = -1
+                temperature = -999
+                if temperatureTemp == 65535:
+                    temperature = -999
+                else:
+                    temperature = (temperatureTemp & 0x7fff) * 0.01 * tempPositive
+                humidityTemp = bytes2Short(bleData,i+10)
+                humidity = -999
+                if humidityTemp == 65535:
+                    humidity = -999
+                else:
+                    humidity = humidityTemp * 0.01
+                lightTemp = bytes2Short(bleData,i+12)
+                lightIntensity = -999
+                if lightTemp == 65535:
+                    lightIntensity = -999
+                else:
+                    lightIntensity = lightTemp & 0x0001;
+                rssiTemp = (int) (bleData[i + 14])
+                if rssiTemp < 0:
+                    rssiTemp += 256
+                rssi = 0
+                if rssiTemp == 255:
+                    rssi = -999
+                else:
+                    rssi = rssiTemp - 256
+                bleTempData.rssi = rssi
+                bleTempData.mac = mac
+                bleTempData.lightIntensity = lightIntensity
+                bleTempData.humidity = formatNumb(humidity)
+                bleTempData.voltage = formatNumb(voltage)
+                bleTempData.batteryPercent = batteryPercent
+                bleTempData.temp = formatNumb(temperature)
+                bleDataList.append(bleTempData);
+                i+=15
+        elif bleData[0] == 0x00 and bleData[1] == 0x05:
+            bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_DOOR
+            i = 2
+            while i < len(bleData):
+                bleDoorData = BleDoorData()
+                macArray = bleData[i + 0:i + 6]
+                mac = byte2HexString(macArray, 0)
+                voltageTmp = (int) (bleData[i + 6])
+                if voltageTmp < 0:
+                   voltageTmp +=  256
+                voltage = 0
+                if voltageTmp == 255:
+                    voltage = -999
+                else:
+                    voltage = 2 + 0.01 * voltageTmp
+                batteryPercentTemp = (int) (bleData[i + 7])
+                if batteryPercentTemp < 0:
+                    batteryPercentTemp += 256
+                batteryPercent=0
+                if batteryPercentTemp == 255:
+                    batteryPercent = -999
+                else:
+                    batteryPercent = batteryPercentTemp
+                temperatureTemp = bytes2Short(bleData,i+8)
+                tempPositive = 1
+                if (temperatureTemp & 0x8000) == 0:
+                    tempPositive = -1
+                temperature = -999
+                if temperatureTemp == 65535:
+                    temperature = -999
+                else:
+                    temperature = (temperatureTemp & 0x7fff) * 0.01 * tempPositive
+                online = 1
+                doorStatus = bleData[i+10]
+                if doorStatus == 255:
+                    doorStatus = -999
+                    online = 0
+                rssiTemp = 0
+                if (int)(bleData[i + 11]) < 0:
+                    rssiTemp =  (int) (bleData[i + 11]) + 256
+                else:
+                    rssiTemp = (int) (bleData[i + 11])
+                rssi = 0
+                if rssiTemp == 255:
+                    rssi = -999
+                else:
+                    rssi = rssiTemp - 256
+                bleDoorData.rssi = rssi
+                bleDoorData.mac = mac
+                bleDoorData.online = online
+                bleDoorData.doorStatus = doorStatus
+                bleDoorData.voltage = formatNumb(voltage)
+                bleDoorData.batteryPercent = batteryPercent
+                bleDoorData.temp = formatNumb(temperature)
+                bleDataList.append(bleDoorData)
+                i+=12
+        elif bleData[0] == 0x00 and bleData[1] == 0x06:
+            bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_CTRL
+            i = 2
+            while i < len(bleData):
+                bleCtrlData = BleCtrlData()
+                macArray = bleData[i + 0:i + 6]
+                mac = byte2HexString(macArray, 0)
+                voltageTmp = (int) (bleData[i + 6])
+                if voltageTmp < 0:
+                   voltageTmp +=  256
+                voltage = 0
+                if voltageTmp == 255:
+                    voltage = -999
+                else:
+                    voltage = 2 + 0.01 * voltageTmp
+                batteryPercentTemp = (int) (bleData[i + 7])
+                if batteryPercentTemp < 0:
+                    batteryPercentTemp += 256
+                batteryPercent=0
+                if batteryPercentTemp == 255:
+                    batteryPercent = -999
+                else:
+                    batteryPercent = batteryPercentTemp
+                temperatureTemp = bytes2Short(bleData,i+8)
+                tempPositive = 1
+                if (temperatureTemp & 0x8000) == 0:
+                    tempPositive = -1
+                temperature = -999
+                if temperatureTemp == 65535:
+                    temperature = -999
+                else:
+                    temperature = (temperatureTemp & 0x7fff) * 0.01 * tempPositive
+                online = 1
+                ctrlStatus = bleData[i+10]
+                if ctrlStatus == 255:
+                    ctrlStatus = -999
+                    online = 0
+                rssiTemp = 0
+                if (int)(bleData[i + 11]) < 0:
+                    rssiTemp =  (int) (bleData[i + 11]) + 256
+                else:
+                    rssiTemp = (int) (bleData[i + 11])
+                rssi = 0
+                if rssiTemp == 255:
+                    rssi = -999
+                else:
+                    rssi = rssiTemp - 256
+                bleCtrlData.rssi = rssi
+                bleCtrlData.mac = mac
+                bleCtrlData.online = online
+                bleCtrlData.ctrlStatus = ctrlStatus
+                bleCtrlData.voltage = formatNumb(voltage)
+                bleCtrlData.batteryPercent = batteryPercent
+                bleCtrlData.temp = formatNumb(temperature)
+                bleDataList.append(bleCtrlData)
+                i+=12
+        elif bleData[0] == 0x00 and bleData[1] == 0x07:
+            bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_FUEL
+            i = 2
+            while i < len(bleData):
+                bleFuelData = BleFuelData()
+                macArray = bleData[i + 0:i + 6]
+                mac = byte2HexString(macArray, 0)
+                voltageTmp = (int) (bleData[i + 6])
+                if voltageTmp < 0:
+                   voltageTmp +=  256
+                voltage = 0
+                if voltageTmp == 255:
+                    voltage = -999
+                else:
+                    voltage = 2 + 0.01 * voltageTmp
+                valueTemp = bytes2Short(bleData,i+7)
+                value=0
+                if valueTemp == 65535:
+                    value = -999
+                else:
+                    value = valueTemp
+                temperatureTemp = bytes2Short(bleData,i+9)
+                tempPositive = 1
+                if (temperatureTemp & 0x8000) == 0:
+                    tempPositive = -1
+                temperature = -999
+                if temperatureTemp == 65535:
+                    temperature = -999
+                else:
+                    temperature = (temperatureTemp & 0x7fff) * 0.01 * tempPositive
+                online = 1
+                status = bleData[i+13]
+                if status == 255:
+                    status = -999
+                    online = 0
+                rssiTemp = 0
+                if (int)(bleData[i + 14]) < 0:
+                    rssiTemp =  (int) (bleData[i + 14]) + 256
+                else:
+                    rssiTemp = (int) (bleData[i + 14])
+                rssi = 0
+                if rssiTemp == 255:
+                    rssi = -999
+                else:
+                    rssi = rssiTemp - 256
+                bleFuelData.rssi = rssi
+                bleFuelData.mac = mac
+                bleFuelData.online = online
+                bleFuelData.alarm = status
+                bleFuelData.value = value
+                bleFuelData.voltage = formatNumb(voltage)
+                bleFuelData.temp = formatNumb(temperature)
+                bleDataList.append(bleFuelData)
+                i+=15
+        bluetoothPeripheralDataMessage.bleDataList =bleDataList
+        return bluetoothPeripheralDataMessage;
+
     def parseBluetoothDataMessage(self,byteArray):
         bluetoothPeripheralDataMessage = BluetoothPeripheralDataMessage()
         serialNo = bytes2Short(byteArray,5)
@@ -3774,6 +4305,7 @@ class ObdDecoder:
         gtm0 = GTM0(dateStr)
         bluetoothPeripheralDataMessage.date = gtm0
         bluetoothPeripheralDataMessage.orignBytes = byteArray
+        bluetoothPeripheralDataMessage.protocolHeadType = byteArray[2]
         bluetoothPeripheralDataMessage.isHistoryData = (byteArray[15] & 0x80) != 0x00
         bluetoothPeripheralDataMessage.serialNo = serialNo
         # bluetoothPeripheralDataMessage.isNeedResp = isNeedResp
@@ -4203,6 +4735,60 @@ class ObdDecoder:
                 bleCtrlData.temp = formatNumb(temperature)
                 bleDataList.append(bleCtrlData)
                 i+=12
+        elif bleData[0] == 0x00 and bleData[1] == 0x07:
+            bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_FUEL
+            i = 2
+            while i < len(bleData):
+                bleFuelData = BleFuelData()
+                macArray = bleData[i + 0:i + 6]
+                mac = byte2HexString(macArray, 0)
+                voltageTmp = (int) (bleData[i + 6])
+                if voltageTmp < 0:
+                   voltageTmp +=  256
+                voltage = 0
+                if voltageTmp == 255:
+                    voltage = -999
+                else:
+                    voltage = 2 + 0.01 * voltageTmp
+                valueTemp = bytes2Short(bleData,i+7)
+                value=0
+                if valueTemp == 65535:
+                    value = -999
+                else:
+                    value = valueTemp
+                temperatureTemp = bytes2Short(bleData,i+9)
+                tempPositive = 1
+                if (temperatureTemp & 0x8000) == 0:
+                    tempPositive = -1
+                temperature = -999
+                if temperatureTemp == 65535:
+                    temperature = -999
+                else:
+                    temperature = (temperatureTemp & 0x7fff) * 0.01 * tempPositive
+                online = 1
+                status = bleData[i+13]
+                if status == 255:
+                    status = -999
+                    online = 0
+                rssiTemp = 0
+                if (int)(bleData[i + 14]) < 0:
+                    rssiTemp =  (int) (bleData[i + 14]) + 256
+                else:
+                    rssiTemp = (int) (bleData[i + 14])
+                rssi = 0
+                if rssiTemp == 255:
+                    rssi = -999
+                else:
+                    rssi = rssiTemp - 256
+                bleFuelData.rssi = rssi
+                bleFuelData.mac = mac
+                bleFuelData.online = online
+                bleFuelData.alarm = status
+                bleFuelData.value = value
+                bleFuelData.voltage = formatNumb(voltage)
+                bleFuelData.temp = formatNumb(temperature)
+                bleDataList.append(bleFuelData)
+                i+=15
         bluetoothPeripheralDataMessage.bleDataList =bleDataList
         return bluetoothPeripheralDataMessage;
 
@@ -4381,8 +4967,8 @@ class T880xdEncoder:
         return Encoder.getCommonMsgReply(imei,needSerialNo,serialNo,command,self.encryptType,self.aesKey)
 
 
-    def getBluetoothPeripheralMsgReply(self,imei,needSerialNo,serialNo):
-        command = [0x26,0x26,0x10]
+    def getBluetoothPeripheralMsgReply(self,imei,needSerialNo,serialNo,protocolHeadType):
+        command = [0x26,0x26,protocolHeadType]
         return Encoder.getCommonMsgReply(imei,needSerialNo,serialNo,command,self.encryptType,self.aesKey)
 
     def getObdMsgReply(self,imei,needSerialNo,serialNo):
@@ -4528,7 +5114,7 @@ class PersonalAssetMsgDecoder:
                 return self.parseHeartbeatMessage(byteArray)
             elif byteArray[2] == 0x02 or byteArray[2] == 0x04:
                 return self.parseDataMessage(byteArray)
-            elif byteArray[2] == 0x11:
+            elif byteArray[2] == 0x05:
                 return self.parseNetworkInfoMessage(byteArray)
             elif byteArray[2] == 0x10:
                 return self.parseBluetoothDataMessage(byteArray)
@@ -4608,6 +5194,7 @@ class PersonalAssetMsgDecoder:
         gtm0 = GTM0(dateStr)
         bluetoothPeripheralDataMessage.date = gtm0
         bluetoothPeripheralDataMessage.orignBytes = byteArray
+        bluetoothPeripheralDataMessage.protocolHeadType = byteArray[2]
         bluetoothPeripheralDataMessage.isHistoryData = (byteArray[15] & 0x80) != 0x00
         bluetoothPeripheralDataMessage.serialNo = serialNo
         # bluetoothPeripheralDataMessage.isNeedResp = isNeedResp
@@ -5265,10 +5852,12 @@ class PersonalAssetMsgDecoder:
             batteryPercent = (int)(batteryPercentStr)
             if  batteryPercent == 0:
                 batteryPercent = 100
-        deviceTemp = byteArray[45] & 0x7F
-        if (byteArray[45] & 0x80) == 0x80:
-            deviceTemp = -1 * deviceTemp
-        lightSensorBytes = [byteArray[46]]
+        deviceTemp = -999
+        if byteArray[45] != 0xff:
+            deviceTemp = byteArray[45] & 0x7F
+            if (byteArray[45] & 0x80) == 0x80:
+                deviceTemp = -1 * deviceTemp
+            lightSensorBytes = [byteArray[46]]
         lightSensorStr = byte2HexString(lightSensorBytes, 0)
         lightSensor = 0
         if lightSensorStr.lower() == "ff":
@@ -5439,7 +6028,7 @@ class PersonalAssetMsgEncoder:
         command = [0x27,0x27,0x10]
         return Encoder.getCommonMsgReply(imei,needSerialNo,serialNo,command,self.encryptType,self.aesKey)
     def getNetworkMsgReply(self,imei,needSerialNo,serialNo):
-        command = [0x27,0x27,0x11]
+        command = [0x27,0x27,0x05]
         return Encoder.getCommonMsgReply(imei,needSerialNo,serialNo,command,self.encryptType,self.aesKey)
     def getConfigSettingMsg(self,imei,content):
         """

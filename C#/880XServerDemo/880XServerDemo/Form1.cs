@@ -409,6 +409,13 @@ namespace _880XServerDemo
                 byte[] reply = t880xdEncoder.getGpsDriverBehaviorMsgReply(gpsDriverBehaviorMessage.Imei, gpsDriverBehaviorMessage.SerialNo);
                 dict[strClientKey].Send(reply);
             }
+            else if (message is ObdMessage)
+            {
+                ObdMessage obdMsg = (ObdMessage)message;
+                ShowMsg("receive OBD message :" + obdMsg.Imei);
+                byte[] reply = t880xdEncoder.getObdMsgReply(obdMsg.Imei, obdMsg.SerialNo);
+                dict[strClientKey].Send(reply);
+            }
             else if (message is TopflytechCodec.Entities.ConfigMessage)
             {
                 ConfigMessage configMessage = (ConfigMessage)message;

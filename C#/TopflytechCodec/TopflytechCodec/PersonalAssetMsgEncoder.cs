@@ -69,7 +69,7 @@ namespace TopflytechCodec
 
         public byte[] getNetworkMsgReply(String imei, int serialNo)
         {
-            byte[] command = { 0x27, 0x27, 0x11 };
+            byte[] command = { 0x27, 0x27, 0x05 };
             return Encoder.getNetworkMsgReply(imei, serialNo, command, encryptType, aesKey);
         }
     }

@@ -27,6 +27,8 @@ public class PersonalAssetMsgDecoder {
     private static final byte[] NETWORK_INFO_DATA = {0x27, 0x27, 0x05};
     private static final byte[] BLUETOOTH_DATA =       {0x27, 0x27, (byte)0x10};
     private static final byte[] WIFI_DATA =  {0x27, 0x27, (byte)0x15};
+    private static final byte[] LOCK_DATA =  {0x27, 0x27, (byte)0x14};
+
     private int encryptType = 0;
     private String aesKey;
     public PersonalAssetMsgDecoder(int messageEncryptType,String aesKey){
@@ -44,6 +46,7 @@ public class PersonalAssetMsgDecoder {
                 || Arrays.equals(CONFIG,bytes)
                 || Arrays.equals(BLUETOOTH_DATA,bytes)
                 || Arrays.equals(WIFI_DATA,bytes)
+                || Arrays.equals(LOCK_DATA,bytes)
                 || Arrays.equals(NETWORK_INFO_DATA,bytes);
     }
 
@@ -174,6 +177,9 @@ public class PersonalAssetMsgDecoder {
                 case 0x10:
                     BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = parseBluetoothDataMessage(bytes);
                     return bluetoothPeripheralDataMessage;
+                case 0x14:
+                    LockMessage lockMessage = parseLockMessage(bytes);
+                    return lockMessage;
                 case 0x15:
                     WifiMessage  wifiMessage = parseWifiMessage(bytes);
                     return wifiMessage;
@@ -210,7 +216,7 @@ public class PersonalAssetMsgDecoder {
         List<BleData> bleDataList = new ArrayList<BleData>();
         if(bleData[0] == 0x00 && bleData[1] == 0x01){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_TIRE);
-            for (int i = 2;i < bleData.length;i+=10){
+            for (int i = 2;i+10 <= bleData.length;i+=10){
                 BleTireData bleTireData = new BleTireData();
                 byte[] macArray = Arrays.copyOfRange(bleData, i, i + 6);
                 String mac = BytesUtils.bytes2HexString(macArray, 0);
@@ -469,7 +475,7 @@ public class PersonalAssetMsgDecoder {
         }else if (bleData[0] == 0x00 && bleData[1] == 0x04){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_TEMP);
             DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            for (int i = 2;i < bleData.length;i+=15){
+            for (int i = 2;i+15 <= bleData.length;i+=15){
                 BleTempData bleTempData = new BleTempData();
                 byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
                 String mac = BytesUtils.bytes2HexString(macArray, 0);
@@ -531,7 +537,7 @@ public class PersonalAssetMsgDecoder {
         }else if (bleData[0] == 0x00 && bleData[1] == 0x05){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_DOOR);
             DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            for (int i = 2;i < bleData.length;i+=12){
+            for (int i = 2;i+12 <= bleData.length;i+=12){
                 BleDoorData bleDoorData = new BleDoorData();
                 byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
                 String mac = BytesUtils.bytes2HexString(macArray, 0);
@@ -583,7 +589,7 @@ public class PersonalAssetMsgDecoder {
         }else if (bleData[0] == 0x00 && bleData[1] == 0x06){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_CTRL);
             DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            for (int i = 2;i < bleData.length;i+=12){
+            for (int i = 2;i+12 <= bleData.length;i+=12){
                 BleCtrlData bleCtrlData = new BleCtrlData();
                 byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
                 String mac = BytesUtils.bytes2HexString(macArray, 0);
@@ -635,7 +641,7 @@ public class PersonalAssetMsgDecoder {
         }else if (bleData[0] == 0x00 && bleData[1] == 0x07){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_FUEL);
             DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            for (int i = 2;i < bleData.length;i+=15){
+            for (int i = 2;i+15 <= bleData.length;i+=15){
                 BleFuelData bleFuelData = new BleFuelData();
                 byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
                 String mac = BytesUtils.bytes2HexString(macArray, 0);
@@ -784,8 +790,10 @@ public class PersonalAssetMsgDecoder {
                 e.printStackTrace();
             }
         }
-
-        float deviceTemp = (data[45] & 0x7F) * ((data[45] & 0x80) == 0x80 ? -1 : 1);
+        float deviceTemp = -999;
+        if ( data[45] != 0xff){
+            deviceTemp = (data[45] & 0x7F) * ((data[45] & 0x80) == 0x80 ? -1 : 1);
+        }
         byte[] lightSensorBytes = new byte[]{data[46]};
         String lightSensorStr = BytesUtils.bytes2HexString(lightSensorBytes, 0);
         float lightSensor = 0;
@@ -949,6 +957,9 @@ public class PersonalAssetMsgDecoder {
                 case 0x10:
                     BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = parseBluetoothDataMessage(bytes);
                     callback.receiveBluetoothDataMessage(bluetoothPeripheralDataMessage);
+                case 0x14:
+                    LockMessage lockMessage = parseLockMessage(bytes);
+                    callback.receiveLockMessage(lockMessage);
                 case 0x15:
                     WifiMessage wifiMessage = parseWifiMessage(bytes);
                     callback.receiveWifiMessage(wifiMessage);
@@ -966,6 +977,56 @@ public class PersonalAssetMsgDecoder {
             }
         }
 
+    }
+
+    private LockMessage parseLockMessage(byte[] bytes) {
+        LockMessage lockMessage = new LockMessage();
+        int serialNo = BytesUtils.bytes2Short(bytes, 5);
+        String imei = BytesUtils.IMEI.decode(bytes, 7);
+        Date date = TimeUtils.getGTM0Date(bytes, 15);
+        boolean latlngValid = bytes[21] == 0x01;
+        double altitude = latlngValid ? BytesUtils.bytes2Float(bytes, 22) : 0;
+        double longitude = latlngValid ? BytesUtils.bytes2Float(bytes,26) : 0;
+        double latitude = latlngValid ? BytesUtils.bytes2Float(bytes,30) : 0;
+        Float speedf = 0.0f;
+        if (latlngValid){
+            try{
+                if (latlngValid) {
+                    byte[] bytesSpeed = Arrays.copyOfRange(bytes, 34, 36);
+                    String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
+                    if(!strSp.toLowerCase().equals("ffff")){
+                        speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+                    }
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        int azimuth = latlngValid ? BytesUtils.bytes2Short(bytes, 36) : 0;
+        int lockType = bytes[38] & 0xff;
+        int lockResult = bytes[39] & 0xff;
+        int idLen = (bytes[40] & 0xff) * 2;
+        String idStr = BytesUtils.bytes2HexString(bytes,41);
+        String id = idStr;
+        if (idStr.length() > idLen){
+            id = idStr.substring(0,idLen);
+        }
+        id = id.toUpperCase();
+        lockMessage.setSerialNo(serialNo);
+        lockMessage.setImei(imei);
+        lockMessage.setDate(date);
+        lockMessage.setOrignBytes(bytes);
+        lockMessage.setLatlngValid(latlngValid);
+        lockMessage.setAltitude(altitude);
+        lockMessage.setLongitude(longitude);
+        lockMessage.setLatitude(latitude);
+        lockMessage.setLatlngValid(latlngValid);
+        lockMessage.setSpeed(speedf);
+        lockMessage.setAzimuth(azimuth);
+        lockMessage.setLockType(lockType);
+        lockMessage.setLockResult(lockResult);
+        lockMessage.setLockId(id);
+        return lockMessage;
     }
 
     private WifiMessage parseWifiMessage(byte[] bytes) {
@@ -1182,6 +1243,8 @@ public class PersonalAssetMsgDecoder {
         void receiveNetworkInfoMessage(NetworkInfoMessage networkInfoMessage);
 
         void receiveWifiMessage(WifiMessage wifiMessage);
+
+        void receiveLockMessage(LockMessage lockMessage);
         /**
          * Receive error message.
          *

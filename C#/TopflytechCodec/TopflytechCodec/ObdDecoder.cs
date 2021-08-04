@@ -8,7 +8,7 @@ namespace TopflytechCodec
 {
     public class ObdDecoder
     {
-        private static int HEADER_LENGTH = 3; 
+        private static int HEADER_LENGTH = 3;
 
         private static byte[] SIGNUP = { 0x26, 0x26, 0x01 };
 
@@ -147,6 +147,9 @@ namespace TopflytechCodec
                     case 0x11:
                         NetworkInfoMessage networkInfoMessage = parseNetworkInfoMessage(bytes);
                         return networkInfoMessage;
+                    case 0x12:
+                        BluetoothPeripheralDataMessage bluetoothPeripheralDataSecondMessage = parseSecondBluetoothDataMessage(bytes);
+                        return bluetoothPeripheralDataSecondMessage;
                     case (byte)0x81:
                         Message message = parseInteractMessage(bytes);
                         return message;
@@ -205,6 +208,585 @@ namespace TopflytechCodec
             return networkInfoMessage;
         }
 
+        private BluetoothPeripheralDataMessage parseSecondBluetoothDataMessage(byte[] bytes)
+        {
+            BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = new BluetoothPeripheralDataMessage();
+            int serialNo = BytesUtils.Bytes2Short(bytes, 5);
+            //Boolean isNeedResp = (serialNo & 0x8000) != 0x8000; 
+            String imei = BytesUtils.IMEI.Decode(bytes, 7);
+            if ((bytes[21] & 0x01) == 0x01)
+            {
+                bluetoothPeripheralDataMessage.IsIgnition = true;
+            }
+            else
+            {
+                bluetoothPeripheralDataMessage.IsIgnition = false;
+            }
+            bluetoothPeripheralDataMessage.Date = Utils.getGTM0Date(bytes, 15);
+            bluetoothPeripheralDataMessage.ProtocolHeadType = 0x12;
+            bluetoothPeripheralDataMessage.OrignBytes = bytes;
+            bluetoothPeripheralDataMessage.IsHistoryData = (bytes[15] & 0x80) != 0x00;
+            bluetoothPeripheralDataMessage.SerialNo = serialNo;
+            //bluetoothPeripheralDataMessage.IsNeedResp = isNeedResp;
+            bluetoothPeripheralDataMessage.Imei = imei;
+            bool latlngValid = (bytes[22] & 0x40) == 0x40;
+            bool isHisData = (bytes[22] & 0x80) == 0x80;
+            bluetoothPeripheralDataMessage.LatlngValid = latlngValid;
+            bluetoothPeripheralDataMessage.IsHistoryData = isHisData;
+            double altitude = latlngValid ? BytesUtils.Bytes2Short(bytes, 23) : 0.0;
+            double latitude = latlngValid ? BytesUtils.Bytes2Short(bytes, 27) : 0.0;
+            double longitude = latlngValid ? BytesUtils.Bytes2Short(bytes, 31) : 0.0;
+            int azimuth = latlngValid ? BytesUtils.Bytes2Short(bytes, 37) : 0;
+            float speedf = 0.0f;
+            try
+            {
+                byte[] bytesSpeed = new byte[2];
+                Array.Copy(bytes, 35, bytesSpeed, 0, 2);
+                String strSp = BytesUtils.Bytes2HexString(bytesSpeed, 0);
+                if (strSp.Contains("f"))
+                {
+                    speedf = -1f;
+                }
+                else
+                {
+                    speedf = (float)Convert.ToDouble(String.Format("{0}.{1}", Convert.ToInt32(strSp.Substring(0, 3)), Convert.ToInt32(strSp.Substring(3, strSp.Length - 3))));
+                }
+            }
+            catch (Exception e)
+            {
+
+            }
+            Boolean is_4g_lbs = false;
+            Int32 mcc_4g = -1;
+            Int32 mnc_4g = -1;
+            Int64 ci_4g = -1;
+            Int32 earfcn_4g_1 = -1;
+            Int32 pcid_4g_1 = -1;
+            Int32 earfcn_4g_2 = -1;
+            Int32 pcid_4g_2 = -1;
+            Boolean is_2g_lbs = false;
+            Int32 mcc_2g = -1;
+            Int32 mnc_2g = -1;
+            Int32 lac_2g_1 = -1;
+            Int32 ci_2g_1 = -1;
+            Int32 lac_2g_2 = -1;
+            Int32 ci_2g_2 = -1;
+            Int32 lac_2g_3 = -1;
+            Int32 ci_2g_3 = -1;
+            if (!latlngValid)
+            {
+                byte lbsByte = bytes[23];
+                if ((lbsByte & 0x8) == 0x8)
+                {
+                    is_2g_lbs = true;
+                }
+                else
+                {
+                    is_4g_lbs = true;
+                }
+            }
+            if (is_2g_lbs)
+            {
+                mcc_2g = BytesUtils.Bytes2Short(bytes, 23);
+                mnc_2g = BytesUtils.Bytes2Short(bytes, 25);
+                lac_2g_1 = BytesUtils.Bytes2Short(bytes, 27);
+                ci_2g_1 = BytesUtils.Bytes2Short(bytes, 29);
+                lac_2g_2 = BytesUtils.Bytes2Short(bytes, 31);
+                ci_2g_2 = BytesUtils.Bytes2Short(bytes, 33);
+                lac_2g_3 = BytesUtils.Bytes2Short(bytes, 35);
+                ci_2g_3 = BytesUtils.Bytes2Short(bytes, 37);
+            }
+            if (is_4g_lbs)
+            {
+                mcc_4g = BytesUtils.Bytes2Short(bytes, 23);
+                mnc_4g = BytesUtils.Bytes2Short(bytes, 25);
+                ci_4g = BytesUtils.Byte2Int(bytes, 27);
+                earfcn_4g_1 = BytesUtils.Bytes2Short(bytes, 31);
+                pcid_4g_1 = BytesUtils.Bytes2Short(bytes, 33);
+                earfcn_4g_2 = BytesUtils.Bytes2Short(bytes, 35);
+                pcid_4g_2 = BytesUtils.Bytes2Short(bytes, 37);
+            }
+            bluetoothPeripheralDataMessage.IsHadLocationInfo = true;
+            bluetoothPeripheralDataMessage.Altitude = altitude;
+            bluetoothPeripheralDataMessage.Azimuth = azimuth;
+            bluetoothPeripheralDataMessage.Latitude = latitude;
+            bluetoothPeripheralDataMessage.Longitude = longitude;
+            bluetoothPeripheralDataMessage.Speed = speedf;
+            bluetoothPeripheralDataMessage.Is_2g_lbs = is_2g_lbs;
+            bluetoothPeripheralDataMessage.Is_4g_lbs = is_4g_lbs;
+            bluetoothPeripheralDataMessage.Mcc_4g = mcc_4g;
+            bluetoothPeripheralDataMessage.Mnc_4g = mnc_4g;
+            bluetoothPeripheralDataMessage.Ci_4g = ci_4g;
+            bluetoothPeripheralDataMessage.Earfcn_4g_1 = earfcn_4g_1;
+            bluetoothPeripheralDataMessage.Pcid_4g_1 = pcid_4g_1;
+            bluetoothPeripheralDataMessage.Earfcn_4g_2 = earfcn_4g_2;
+            bluetoothPeripheralDataMessage.Pcid_4g_2 = pcid_4g_2;
+            bluetoothPeripheralDataMessage.Mcc_2g = mcc_2g;
+            bluetoothPeripheralDataMessage.Mnc_2g = mnc_2g;
+            bluetoothPeripheralDataMessage.Lac_2g_1 = lac_2g_1;
+            bluetoothPeripheralDataMessage.Ci_2g_1 = ci_2g_1;
+            bluetoothPeripheralDataMessage.Lac_2g_2 = lac_2g_2;
+            bluetoothPeripheralDataMessage.Ci_2g_2 = ci_2g_2;
+            bluetoothPeripheralDataMessage.Lac_2g_3 = lac_2g_3;
+            bluetoothPeripheralDataMessage.Ci_2g_3 = ci_2g_3;
+
+            byte[] bleData = new byte[bytes.Length - 39];
+            Array.Copy(bytes, 39, bleData, 0, bleData.Length);
+            List<BleData> bleDataList = new List<BleData>();
+            if (bleData[0] == 0x00 && bleData[1] == 0x01)
+            {
+                bluetoothPeripheralDataMessage.MessageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_TIRE;
+                for (int i = 2; i+10 <= bleData.Length; i += 10)
+                {
+                    BleTireData bleTireData = new BleTireData();
+                    byte[] macArray = new byte[6];
+                    Array.Copy(bleData, i, macArray, 0, 6);
+                    String mac = BytesUtils.Bytes2HexString(macArray, 0);
+                    int voltageTmp = (int)bleData[i + 6] < 0 ? (int)bleData[i + 6] + 256 : (int)bleData[i + 6];
+                    double voltage;
+                    if (voltageTmp == 255)
+                    {
+                        voltage = -999;
+                    }
+                    else
+                    {
+                        voltage = 1.22 + 0.01 * voltageTmp;
+                    }
+                    int airPressureTmp = (int)bleData[i + 7] < 0 ? (int)bleData[i + 7] + 256 : (int)bleData[i + 7];
+                    double airPressure;
+                    if (airPressureTmp == 255)
+                    {
+                        airPressure = -999;
+                    }
+                    else
+                    {
+                        airPressure = 1.572 * 2 * airPressureTmp;
+                    }
+                    int airTempTmp = (int)bleData[i + 8] < 0 ? (int)bleData[i + 8] + 256 : (int)bleData[i + 8];
+                    int airTemp;
+                    if (airTempTmp == 255)
+                    {
+                        airTemp = -999;
+                    }
+                    else
+                    {
+                        airTemp = airTempTmp - 55;
+                    }
+                    //            boolean isTireLeaks = (bleData[i+5] == 0x01);
+                    bleTireData.Mac = mac;
+                    bleTireData.Voltage = voltage;
+                    bleTireData.AirPressure = airPressure;
+                    bleTireData.AirTemp = airTemp;
+                    //            bleTireData.setIsTireLeaks(isTireLeaks);
+                    int alarm = (int)bleData[i + 9];
+                    if (alarm == -1)
+                    {
+                        alarm = 0;
+                    }
+                    bleTireData.Status = alarm;
+                    bleDataList.Add(bleTireData);
+                }
+            }
+            else if (bleData[0] == 0x00 && bleData[1] == 0x02)
+            {
+                bluetoothPeripheralDataMessage.MessageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_SOS;
+                BleAlertData bleAlertData = new BleAlertData();
+                byte[] macArray = new byte[6];
+                Array.Copy(bleData, 2, macArray, 0, 6);
+                String mac = BytesUtils.Bytes2HexString(macArray, 0);
+                String voltageStr = BytesUtils.Bytes2HexString(bleData, 8).Substring(0, 2);
+                float voltage = 0;
+                try
+                {
+                    voltage = (float)Convert.ToDouble(voltageStr) / 10;
+                }
+                catch (Exception e)
+                {
+
+                }
+                byte alertByte = bleData[9];
+                int alert = alertByte == 0x01 ? BleAlertData.ALERT_TYPE_LOW_BATTERY : BleAlertData.ALERT_TYPE_SOS;
+
+                bleAlertData.AlertType = alert;
+                bleAlertData.Altitude = altitude;
+                bleAlertData.Azimuth = azimuth;
+                bleAlertData.InnerVoltage = voltage;
+                bleAlertData.IsHistoryData = isHisData;
+                bleAlertData.Latitude = latitude;
+                bleAlertData.LatlngValid = latlngValid;
+                bleAlertData.Longitude = longitude;
+                bleAlertData.Mac = mac;
+                bleAlertData.Speed = speedf;
+                bleAlertData.Is_2g_lbs = is_2g_lbs;
+                bleAlertData.Is_4g_lbs = is_4g_lbs;
+                bleAlertData.Mcc_4g = mcc_4g;
+                bleAlertData.Mnc_4g = mnc_4g;
+                bleAlertData.Ci_4g = ci_4g;
+                bleAlertData.Earfcn_4g_1 = earfcn_4g_1;
+                bleAlertData.Pcid_4g_1 = pcid_4g_1;
+                bleAlertData.Earfcn_4g_2 = earfcn_4g_2;
+                bleAlertData.Pcid_4g_2 = pcid_4g_2;
+                bleAlertData.Mcc_2g = mcc_2g;
+                bleAlertData.Mnc_2g = mnc_2g;
+                bleAlertData.Lac_2g_1 = lac_2g_1;
+                bleAlertData.Ci_2g_1 = ci_2g_1;
+                bleAlertData.Lac_2g_2 = lac_2g_2;
+                bleAlertData.Ci_2g_2 = ci_2g_2;
+                bleAlertData.Lac_2g_3 = lac_2g_3;
+                bleAlertData.Ci_2g_3 = ci_2g_3;
+                bleDataList.Add(bleAlertData);
+            }
+            else if (bleData[0] == 0x00 && bleData[1] == 0x03)
+            {
+                bluetoothPeripheralDataMessage.MessageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_DRIVER;
+                BleDriverSignInData bleDriverSignInData = new BleDriverSignInData();
+                byte[] macArray = new byte[6];
+                Array.Copy(bleData, 2, macArray, 0, 6);
+                String mac = BytesUtils.Bytes2HexString(macArray, 0);
+                String voltageStr = BytesUtils.Bytes2HexString(bleData, 8).Substring(0, 2);
+                float voltage = 0;
+                try
+                {
+                    voltage = (float)Convert.ToDouble(voltageStr) / 10;
+                }
+                catch (Exception e)
+                {
+                }
+                byte alertByte = bleData[9];
+                int alert = alertByte == 0x01 ? BleDriverSignInData.ALERT_TYPE_LOW_BATTERY : BleDriverSignInData.ALERT_TYPE_DRIVER;
+
+                bleDriverSignInData.Alert = alert;
+                bleDriverSignInData.Altitude = altitude;
+                bleDriverSignInData.Azimuth = azimuth;
+                bleDriverSignInData.Voltage = voltage;
+                bleDriverSignInData.IsHistoryData = isHisData;
+                bleDriverSignInData.Latitude = latitude;
+                bleDriverSignInData.LatlngValid = latlngValid;
+                bleDriverSignInData.Longitude = longitude;
+                bleDriverSignInData.Mac = mac;
+                bleDriverSignInData.Speed = speedf;
+                bleDriverSignInData.Is_2g_lbs = is_2g_lbs;
+                bleDriverSignInData.Is_4g_lbs = is_4g_lbs;
+                bleDriverSignInData.Mcc_4g = mcc_4g;
+                bleDriverSignInData.Mnc_4g = mnc_4g;
+                bleDriverSignInData.Ci_4g = ci_4g;
+                bleDriverSignInData.Earfcn_4g_1 = earfcn_4g_1;
+                bleDriverSignInData.Pcid_4g_1 = pcid_4g_1;
+                bleDriverSignInData.Earfcn_4g_2 = earfcn_4g_2;
+                bleDriverSignInData.Pcid_4g_2 = pcid_4g_2;
+                bleDriverSignInData.Mcc_2g = mcc_2g;
+                bleDriverSignInData.Mnc_2g = mnc_2g;
+                bleDriverSignInData.Lac_2g_1 = lac_2g_1;
+                bleDriverSignInData.Ci_2g_1 = ci_2g_1;
+                bleDriverSignInData.Lac_2g_2 = lac_2g_2;
+                bleDriverSignInData.Ci_2g_2 = ci_2g_2;
+                bleDriverSignInData.Lac_2g_3 = lac_2g_3;
+                bleDriverSignInData.Ci_2g_3 = ci_2g_3;
+                bleDataList.Add(bleDriverSignInData);
+            }
+            else if (bleData[0] == 0x00 && bleData[1] == 0x04)
+            {
+                bluetoothPeripheralDataMessage.MessageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_TEMP;
+                for (int i = 2; i+15 <= bleData.Length; i += 15)
+                {
+                    BleTempData bleTempData = new BleTempData();
+                    byte[] macArray = new byte[6];
+                    Array.Copy(bleData, i + 0, macArray, 0, 6);
+                    String mac = BytesUtils.Bytes2HexString(macArray, 0);
+                    if (mac.StartsWith("0000"))
+                    {
+                        mac = mac.Substring(4, 8);
+                    }
+                    int voltageTmp = (int)bleData[i + 6] < 0 ? (int)bleData[i + 6] + 256 : (int)bleData[i + 6];
+                    float voltage;
+                    if (voltageTmp == 255)
+                    {
+                        voltage = -999;
+                    }
+                    else
+                    {
+                        voltage = 2 + 0.01f * voltageTmp;
+                    }
+                    int batteryPercentTemp = (int)bleData[i + 7] < 0 ? (int)bleData[i + 7] + 256 : (int)bleData[i + 7];
+                    int batteryPercent;
+                    if (batteryPercentTemp == 255)
+                    {
+                        batteryPercent = -999;
+                    }
+                    else
+                    {
+                        batteryPercent = batteryPercentTemp;
+                    }
+                    int temperatureTemp = BytesUtils.Bytes2Short(bleData, i + 8);
+                    int tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
+                    float temperature;
+                    if (temperatureTemp == 65535)
+                    {
+                        temperature = -999;
+                    }
+                    else
+                    {
+                        temperature = (temperatureTemp & 0x7fff) * 0.01f * tempPositive;
+                    }
+                    int humidityTemp = BytesUtils.Bytes2Short(bleData, i + 10);
+                    float humidity;
+                    if (humidityTemp == 65535)
+                    {
+                        humidity = -999;
+                    }
+                    else
+                    {
+                        humidity = humidityTemp * 0.01f;
+                    }
+                    int lightTemp = BytesUtils.Bytes2Short(bleData, i + 12);
+                    int lightIntensity;
+                    if (lightTemp == 65535)
+                    {
+                        lightIntensity = -999;
+                    }
+                    else
+                    {
+                        lightIntensity = lightTemp & 0x0001;
+                    }
+                    int rssiTemp = (int)bleData[i + 14] < 0 ? (int)bleData[i + 14] + 256 : (int)bleData[i + 14];
+                    int rssi;
+                    if (rssiTemp == 255)
+                    {
+                        rssi = -999;
+                    }
+                    else
+                    {
+                        rssi = rssiTemp - 256;
+                    }
+                    bleTempData.Rssi = rssi;
+                    bleTempData.Mac = mac;
+                    bleTempData.LightIntensity = lightIntensity;
+                    bleTempData.Humidity = (float)Math.Round(humidity, 2, MidpointRounding.AwayFromZero);
+                    bleTempData.Voltage = (float)Math.Round(voltage, 2, MidpointRounding.AwayFromZero);
+                    bleTempData.BatteryPercent = batteryPercent;
+                    bleTempData.Temp = (float)Math.Round(temperature, 2, MidpointRounding.AwayFromZero);
+                    bleDataList.Add(bleTempData);
+                }
+            }
+            else if (bleData[0] == 0x00 && bleData[1] == 0x05)
+            {
+                bluetoothPeripheralDataMessage.MessageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_DOOR;
+                for (int i = 2; i+12 <= bleData.Length; i += 12)
+                {
+                    BleDoorData bleDoorData = new BleDoorData();
+                    byte[] macArray = new byte[6];
+                    Array.Copy(bleData, i + 0, macArray, 0, 6);
+                    String mac = BytesUtils.Bytes2HexString(macArray, 0);
+                    if (mac.StartsWith("0000"))
+                    {
+                        mac = mac.Substring(4, 8);
+                    }
+                    int voltageTmp = (int)bleData[i + 6] < 0 ? (int)bleData[i + 6] + 256 : (int)bleData[i + 6];
+                    float voltage;
+                    if (voltageTmp == 255)
+                    {
+                        voltage = -999;
+                    }
+                    else
+                    {
+                        voltage = 2 + 0.01f * voltageTmp;
+                    }
+                    int batteryPercentTemp = (int)bleData[i + 7] < 0 ? (int)bleData[i + 7] + 256 : (int)bleData[i + 7];
+                    int batteryPercent;
+                    if (batteryPercentTemp == 255)
+                    {
+                        batteryPercent = -999;
+                    }
+                    else
+                    {
+                        batteryPercent = batteryPercentTemp;
+                    }
+                    int temperatureTemp = BytesUtils.Bytes2Short(bleData, i + 8);
+                    int tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
+                    float temperature;
+                    if (temperatureTemp == 65535)
+                    {
+                        temperature = -999;
+                    }
+                    else
+                    {
+                        temperature = (temperatureTemp & 0x7fff) * 0.01f * tempPositive;
+                    }
+                    int doorStatus = (int)bleData[i + 10] < 0 ? (int)bleData[i + 10] + 256 : (int)bleData[i + 10];
+                    int online = 1;
+                    if (doorStatus == 255)
+                    {
+                        doorStatus = -999;
+                        online = 0;
+                    }
+
+                    int rssiTemp = (int)bleData[i + 11] < 0 ? (int)bleData[i + 11] + 256 : (int)bleData[i + 11];
+                    int rssi;
+                    if (rssiTemp == 255)
+                    {
+                        rssi = -999;
+                    }
+                    else
+                    {
+                        rssi = rssiTemp - 256;
+                    }
+                    bleDoorData.Rssi = rssi;
+                    bleDoorData.Mac = mac;
+                    bleDoorData.DoorStatus = doorStatus;
+                    bleDoorData.Online = online;
+                    bleDoorData.Voltage = (float)Math.Round(voltage, 2, MidpointRounding.AwayFromZero);
+                    bleDoorData.BatteryPercent = batteryPercent;
+                    bleDoorData.Temp = (float)Math.Round(temperature, 2, MidpointRounding.AwayFromZero);
+                    bleDataList.Add(bleDoorData);
+                }
+            }
+            else if (bleData[0] == 0x00 && bleData[1] == 0x06)
+            {
+                bluetoothPeripheralDataMessage.MessageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_CTRL;
+                for (int i = 2; i+12 <= bleData.Length; i += 12)
+                {
+                    BleCtrlData bleCtrlData = new BleCtrlData();
+                    byte[] macArray = new byte[6];
+                    Array.Copy(bleData, i + 0, macArray, 0, 6);
+                    String mac = BytesUtils.Bytes2HexString(macArray, 0);
+                    if (mac.StartsWith("0000"))
+                    {
+                        mac = mac.Substring(4, 8);
+                    }
+                    int voltageTmp = (int)bleData[i + 6] < 0 ? (int)bleData[i + 6] + 256 : (int)bleData[i + 6];
+                    float voltage;
+                    if (voltageTmp == 255)
+                    {
+                        voltage = -999;
+                    }
+                    else
+                    {
+                        voltage = 2 + 0.01f * voltageTmp;
+                    }
+                    int batteryPercentTemp = (int)bleData[i + 7] < 0 ? (int)bleData[i + 7] + 256 : (int)bleData[i + 7];
+                    int batteryPercent;
+                    if (batteryPercentTemp == 255)
+                    {
+                        batteryPercent = -999;
+                    }
+                    else
+                    {
+                        batteryPercent = batteryPercentTemp;
+                    }
+                    int temperatureTemp = BytesUtils.Bytes2Short(bleData, i + 8);
+                    int tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
+                    float temperature;
+                    if (temperatureTemp == 65535)
+                    {
+                        temperature = -999;
+                    }
+                    else
+                    {
+                        temperature = (temperatureTemp & 0x7fff) * 0.01f * tempPositive;
+                    }
+                    int ctrlStatus = (int)bleData[i + 10] < 0 ? (int)bleData[i + 10] + 256 : (int)bleData[i + 10];
+                    int online = 1;
+                    if (ctrlStatus == 255)
+                    {
+                        ctrlStatus = -999;
+                        online = 0;
+                    }
+
+                    int rssiTemp = (int)bleData[i + 11] < 0 ? (int)bleData[i + 11] + 256 : (int)bleData[i + 11];
+                    int rssi;
+                    if (rssiTemp == 255)
+                    {
+                        rssi = -999;
+                    }
+                    else
+                    {
+                        rssi = rssiTemp - 256;
+                    }
+                    bleCtrlData.Rssi = rssi;
+                    bleCtrlData.Mac = mac;
+                    bleCtrlData.CtrlStatus = ctrlStatus;
+                    bleCtrlData.Online = online;
+                    bleCtrlData.Voltage = (float)Math.Round(voltage, 2, MidpointRounding.AwayFromZero);
+                    bleCtrlData.BatteryPercent = batteryPercent;
+                    bleCtrlData.Temp = (float)Math.Round(temperature, 2, MidpointRounding.AwayFromZero);
+                    bleDataList.Add(bleCtrlData);
+                }
+            }
+            else if (bleData[0] == 0x00 && bleData[1] == 0x07)
+            {
+                bluetoothPeripheralDataMessage.MessageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_FUEL;
+                for (int i = 2; i+15 <= bleData.Length; i += 15)
+                {
+                    BleFuelData bleFuelData = new BleFuelData();
+                    byte[] macArray = new byte[6];
+                    Array.Copy(bleData, i + 0, macArray, 0, 6);
+                    String mac = BytesUtils.Bytes2HexString(macArray, 0);
+                    if (mac.StartsWith("0000"))
+                    {
+                        mac = mac.Substring(4, 8);
+                    }
+                    int voltageTmp = (int)bleData[i + 6] < 0 ? (int)bleData[i + 6] + 256 : (int)bleData[i + 6];
+                    float voltage;
+                    if (voltageTmp == 255)
+                    {
+                        voltage = -999;
+                    }
+                    else
+                    {
+                        voltage = 2 + 0.01f * voltageTmp;
+                    }
+                    int valueTemp = BytesUtils.Bytes2Short(bleData, i + 7);
+                    int value;
+                    if (valueTemp == 255)
+                    {
+                        value = -999;
+                    }
+                    else
+                    {
+                        value = valueTemp;
+                    }
+                    int temperatureTemp = BytesUtils.Bytes2Short(bleData, i + 9);
+                    int tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
+                    float temperature;
+                    if (temperatureTemp == 65535)
+                    {
+                        temperature = -999;
+                    }
+                    else
+                    {
+                        temperature = (temperatureTemp & 0x7fff) * 0.01f * tempPositive;
+                    }
+                    int status = (int)bleData[i + 13] < 0 ? (int)bleData[i + 13] + 256 : (int)bleData[i + 13];
+                    int online = 1;
+                    if (status == 255)
+                    {
+                        status = 0;
+                        online = 0;
+                    }
+                    int rssiTemp = (int)bleData[i + 14] < 0 ? (int)bleData[i + 14] + 256 : (int)bleData[i + 14];
+                    int rssi;
+                    if (rssiTemp == 255)
+                    {
+                        rssi = -999;
+                    }
+                    else
+                    {
+                        rssi = rssiTemp - 256;
+                    }
+                    bleFuelData.Rssi = rssi;
+                    bleFuelData.Mac = mac;
+                    bleFuelData.Alarm = status;
+                    bleFuelData.Online = online;
+                    bleFuelData.Voltage = (float)Math.Round(voltage, 2, MidpointRounding.AwayFromZero);
+                    bleFuelData.Value = value;
+                    bleFuelData.Temp = (float)Math.Round(temperature, 2, MidpointRounding.AwayFromZero);
+                    bleDataList.Add(bleFuelData);
+                }
+            }
+            bluetoothPeripheralDataMessage.BleDataList = bleDataList;
+            return bluetoothPeripheralDataMessage;
+
+        }
 
         private BluetoothPeripheralDataMessage parseBluetoothDataMessage(byte[] bytes)
         {
@@ -232,7 +814,7 @@ namespace TopflytechCodec
             if (bleData[0] == 0x00 && bleData[1] == 0x01)
             {
                 bluetoothPeripheralDataMessage.MessageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_TIRE;
-                for (int i = 2; i < bleData.Length; i += 10)
+                for (int i = 2; i+10 <= bleData.Length; i += 10)
                 {
                     BleTireData bleTireData = new BleTireData();
                     byte[] macArray = new byte[6];
@@ -534,7 +1116,7 @@ namespace TopflytechCodec
             else if (bleData[0] == 0x00 && bleData[1] == 0x04)
             {
                 bluetoothPeripheralDataMessage.MessageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_TEMP;
-                for (int i = 2; i < bleData.Length; i += 15)
+                for (int i = 2; i+15 <= bleData.Length; i += 15)
                 {
                     BleTempData bleTempData = new BleTempData();
                     byte[] macArray = new byte[6];
@@ -585,7 +1167,7 @@ namespace TopflytechCodec
                     {
                         humidity = humidityTemp * 0.01f;
                     }
-                    int lightTemp = BytesUtils.Bytes2Short(bleData, i + 12); 
+                    int lightTemp = BytesUtils.Bytes2Short(bleData, i + 12);
                     int lightIntensity;
                     if (lightTemp == 65535)
                     {
@@ -593,7 +1175,7 @@ namespace TopflytechCodec
                     }
                     else
                     {
-                        lightIntensity = lightTemp & 0x0001; 
+                        lightIntensity = lightTemp & 0x0001;
                     }
                     int rssiTemp = (int)bleData[i + 14] < 0 ? (int)bleData[i + 14] + 256 : (int)bleData[i + 14];
                     int rssi;
@@ -607,7 +1189,7 @@ namespace TopflytechCodec
                     }
                     bleTempData.Rssi = rssi;
                     bleTempData.Mac = mac;
-                    bleTempData.LightIntensity = lightIntensity; 
+                    bleTempData.LightIntensity = lightIntensity;
                     bleTempData.Humidity = (float)Math.Round(humidity, 2, MidpointRounding.AwayFromZero);
                     bleTempData.Voltage = (float)Math.Round(voltage, 2, MidpointRounding.AwayFromZero);
                     bleTempData.BatteryPercent = batteryPercent;
@@ -618,7 +1200,7 @@ namespace TopflytechCodec
             else if (bleData[0] == 0x00 && bleData[1] == 0x05)
             {
                 bluetoothPeripheralDataMessage.MessageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_DOOR;
-                for (int i = 2; i < bleData.Length; i += 12)
+                for (int i = 2; i+12 <= bleData.Length; i += 12)
                 {
                     BleDoorData bleDoorData = new BleDoorData();
                     byte[] macArray = new byte[6];
@@ -689,7 +1271,7 @@ namespace TopflytechCodec
             else if (bleData[0] == 0x00 && bleData[1] == 0x06)
             {
                 bluetoothPeripheralDataMessage.MessageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_CTRL;
-                for (int i = 2; i < bleData.Length; i += 12)
+                for (int i = 2; i+12 <= bleData.Length; i += 12)
                 {
                     BleCtrlData bleCtrlData = new BleCtrlData();
                     byte[] macArray = new byte[6];
@@ -737,7 +1319,7 @@ namespace TopflytechCodec
                         ctrlStatus = -999;
                         online = 0;
                     }
-                    int rssiTemp = (int)bleData[i + 14] < 0 ? (int)bleData[i + 14] + 256 : (int)bleData[i + 14];
+                    int rssiTemp = (int)bleData[i + 11] < 0 ? (int)bleData[i + 11] + 256 : (int)bleData[i + 11];
                     int rssi;
                     if (rssiTemp == 255)
                     {
@@ -760,7 +1342,7 @@ namespace TopflytechCodec
             else if (bleData[0] == 0x00 && bleData[1] == 0x07)
             {
                 bluetoothPeripheralDataMessage.MessageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_FUEL;
-                for (int i = 2; i < bleData.Length; i += 15)
+                for (int i = 2; i+15 <= bleData.Length; i += 15)
                 {
                     BleFuelData bleFuelData = new BleFuelData();
                     byte[] macArray = new byte[6];
@@ -998,7 +1580,7 @@ namespace TopflytechCodec
                             if (errorDataStr != null)
                             {
                                 String errorDataSum = "";
-                                for (int i = 0; i < errorDataStr.Length; i += 6)
+                                for (int i = 0; i+6 <= errorDataStr.Length; i += 6)
                                 {
                                     String errorDataItem = errorDataStr.Substring(i, 6);
                                     String srcFlag = errorDataItem.Substring(0, 1);
@@ -1495,7 +2077,7 @@ namespace TopflytechCodec
             message.IopIgnition = iopIgnition;
             message.IopPowerCutOff = iopPowerCutOff;
             message.IopACOn = iopACOn;
-            message.OriginalAlarmCode = originalAlarmCode; 
+            message.OriginalAlarmCode = originalAlarmCode;
             message.Mileage = mileage;
             try
             {

@@ -457,7 +457,7 @@ public class ObdDecoder {
         List<BleData> bleDataList = new ArrayList<BleData>();
         if(bleData[0] == 0x00 && bleData[1] == 0x01){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_TIRE);
-            for (int i = 2;i < bleData.length;i+=10){
+            for (int i = 2;i+10 <= bleData.length;i+=10){
                 BleTireData bleTireData = new BleTireData();
                 byte[] macArray = Arrays.copyOfRange(bleData, i, i + 6);
                 String mac = BytesUtils.bytes2HexString(macArray, 0);
@@ -584,7 +584,7 @@ public class ObdDecoder {
         }else if (bleData[0] == 0x00 && bleData[1] == 0x04){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_TEMP);
             DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            for (int i = 2;i < bleData.length;i+=15){
+            for (int i = 2;i+15 <= bleData.length;i+=15){
                 BleTempData bleTempData = new BleTempData();
                 byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
                 String mac = BytesUtils.bytes2HexString(macArray, 0);
@@ -646,7 +646,7 @@ public class ObdDecoder {
         }else if (bleData[0] == 0x00 && bleData[1] == 0x05){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_DOOR);
             DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            for (int i = 2;i < bleData.length;i+=12){
+            for (int i = 2;i+12 <= bleData.length;i+=12){
                 BleDoorData bleDoorData = new BleDoorData();
                 byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
                 String mac = BytesUtils.bytes2HexString(macArray, 0);
@@ -698,7 +698,7 @@ public class ObdDecoder {
         }else if (bleData[0] == 0x00 && bleData[1] == 0x06){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_CTRL);
             DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            for (int i = 2;i < bleData.length;i+=12){
+            for (int i = 2;i+12 <= bleData.length;i+=12){
                 BleCtrlData bleCtrlData = new BleCtrlData();
                 byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
                 String mac = BytesUtils.bytes2HexString(macArray, 0);
@@ -750,7 +750,7 @@ public class ObdDecoder {
         }else if (bleData[0] == 0x00 && bleData[1] == 0x07){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_FUEL);
             DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            for (int i = 2;i < bleData.length;i+=15){
+            for (int i = 2;i +15 <= bleData.length;i+=15){
                 BleFuelData bleFuelData = new BleFuelData();
                 byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
                 String mac = BytesUtils.bytes2HexString(macArray, 0);
@@ -823,7 +823,7 @@ public class ObdDecoder {
         List<BleData> bleDataList = new ArrayList<BleData>();
         if(bleData[0] == 0x00 && bleData[1] == 0x01){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_TIRE);
-            for (int i = 2;i < bleData.length;i+=10){
+            for (int i = 2;i+10 <= bleData.length;i+=10){
                 BleTireData bleTireData = new BleTireData();
                 byte[] macArray = Arrays.copyOfRange(bleData, i, i + 6);
                 String mac = BytesUtils.bytes2HexString(macArray, 0);
@@ -882,19 +882,17 @@ public class ObdDecoder {
             double longitude = latlngValid ? BytesUtils.bytes2Float(bleData, 15) : 0.0;
             double latitude = latlngValid ? BytesUtils.bytes2Float(bleData, 19) : 0.0;
             Float speedf = 0.0f;
-            if (latlngValid){
-                try{
-                    byte[] bytesSpeed = Arrays.copyOfRange(bleData, 23, 25);
-                    String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
-                    if(strSp.contains("f")){
-                        speedf = -1f;
-                    }else {
-                        speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
-                    }
-                }catch (Exception e){
-                    System.out.println("Imei : " + imei);
-                    e.printStackTrace();
+            try{
+                byte[] bytesSpeed = Arrays.copyOfRange(bleData, 23, 25);
+                String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
+                if(strSp.contains("f")){
+                    speedf = -1f;
+                }else {
+                    speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
                 }
+            }catch (Exception e){
+                System.out.println("Imei : " + imei);
+                e.printStackTrace();
             }
             int azimuth = latlngValid ? BytesUtils.bytes2Short(bleData, 25) : 0;
             Boolean is_4g_lbs = false;
@@ -992,19 +990,17 @@ public class ObdDecoder {
             double latitude = latlngValid ? BytesUtils.bytes2Float(bleData, 19) : 0.0;
             int azimuth = latlngValid ? BytesUtils.bytes2Short(bleData, 25) : 0;
             Float speedf = 0.0f;
-            if (latlngValid){
-                try{
-                    byte[] bytesSpeed = Arrays.copyOfRange(bleData, 23, 25);
-                    String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
-                    if(strSp.contains("f")){
-                        speedf = -1f;
-                    }else {
-                        speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
-                    }
-                }catch (Exception e){
-                    System.out.println("Imei : " + imei);
-                    e.printStackTrace();
+            try{
+                byte[] bytesSpeed = Arrays.copyOfRange(bleData, 23, 25);
+                String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
+                if(strSp.contains("f")){
+                    speedf = -1f;
+                }else {
+                    speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
                 }
+            }catch (Exception e){
+                System.out.println("Imei : " + imei);
+                e.printStackTrace();
             }
             Boolean is_4g_lbs = false;
             Integer mcc_4g = null;
@@ -1082,7 +1078,7 @@ public class ObdDecoder {
         }else if (bleData[0] == 0x00 && bleData[1] == 0x04){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_TEMP);
             DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            for (int i = 2;i < bleData.length;i+=15){
+            for (int i = 2;i +15 <= bleData.length;i+=15){
                 BleTempData bleTempData = new BleTempData();
                 byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
                 String mac = BytesUtils.bytes2HexString(macArray, 0);
@@ -1144,7 +1140,7 @@ public class ObdDecoder {
         }else if (bleData[0] == 0x00 && bleData[1] == 0x05){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_DOOR);
             DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            for (int i = 2;i < bleData.length;i+=12){
+            for (int i = 2;i+12 <= bleData.length;i+=12){
                 BleDoorData bleDoorData = new BleDoorData();
                 byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
                 String mac = BytesUtils.bytes2HexString(macArray, 0);
@@ -1196,7 +1192,7 @@ public class ObdDecoder {
         }else if (bleData[0] == 0x00 && bleData[1] == 0x06){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_CTRL);
             DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            for (int i = 2;i < bleData.length;i+=12){
+            for (int i = 2;i+12 <= bleData.length;i+=12){
                 BleCtrlData bleCtrlData = new BleCtrlData();
                 byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
                 String mac = BytesUtils.bytes2HexString(macArray, 0);
@@ -1485,7 +1481,7 @@ public class ObdDecoder {
                         String errorDataStr = BytesUtils.bytes2HexString(errorDataByte,0);
                         if(errorDataStr != null){
                             String errorDataSum = "";
-                            for(int i = 0 ;i < errorDataStr.length();i+=6){
+                            for(int i = 0 ;i+6 <= errorDataStr.length();i+=6){
                                 String errorDataItem = errorDataStr.substring(i,i+6);
                                 String srcFlag = errorDataItem.substring(0,1);
                                 String errorDataCode =  getObdErrorFlag(srcFlag) + errorDataItem.substring(1,4);
@@ -2087,11 +2083,7 @@ public class ObdDecoder {
         message.setAltitude(altitude);
         message.setLatitude(latitude);
         message.setLongitude(longitude);
-        if(message.isLatlngValid()) {
-            message.setSpeed(speedf);
-        } else {
-            message.setSpeed(0.0f);
-        }
+        message.setSpeed(speedf);
         message.setAzimuth(azimuth);
         message.setExternalPowerVoltage(externalPowerVoltage);
         message.setAccumulatingFuelConsumption(accumulatingFuelConsumption);

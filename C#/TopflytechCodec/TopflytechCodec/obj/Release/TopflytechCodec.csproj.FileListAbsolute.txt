@@ -10,3 +10,9 @@ D:\trunk-2\server\tool\TopflytechCodec\TopflytechCodec\bin\Release\TopflytechCod
 D:\trunk-2\server\tool\TopflytechCodec\TopflytechCodec\bin\Release\TopflytechCodec.dll
 D:\trunk-2\server\tool\TopflytechCodec\TopflytechCodec\bin\Release\TopflytechCodec.pdb
 D:\trunk-2\server\tool\TopflytechCodec\TopflytechCodec\obj\Release\TopflytechCodec.pdb
+D:\trunk-new\other-tool\DecoderLib\TopflytechCodec\TopflytechCodec\bin\Release\TopflytechCodec.XML
+D:\trunk-new\other-tool\DecoderLib\TopflytechCodec\TopflytechCodec\bin\Release\TopflytechCodec.dll
+D:\trunk-new\other-tool\DecoderLib\TopflytechCodec\TopflytechCodec\bin\Release\TopflytechCodec.pdb
+D:\trunk-new\other-tool\DecoderLib\TopflytechCodec\TopflytechCodec\obj\Release\TopflytechCodec.csprojResolveAssemblyReference.cache
+D:\trunk-new\other-tool\DecoderLib\TopflytechCodec\TopflytechCodec\obj\Release\TopflytechCodec.dll
+D:\trunk-new\other-tool\DecoderLib\TopflytechCodec\TopflytechCodec\obj\Release\TopflytechCodec.pdb

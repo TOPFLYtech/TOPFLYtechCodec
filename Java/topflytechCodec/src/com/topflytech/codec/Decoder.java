@@ -356,7 +356,7 @@ public class Decoder {
         List<BleData> bleDataList = new ArrayList<BleData>();
         if(bleData[0] == 0x00 && bleData[1] == 0x01){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_TIRE);
-            for (int i = 2;i < bleData.length;i+=10){
+            for (int i = 2;i+10 <= bleData.length;i+=10){
                 BleTireData bleTireData = new BleTireData();
                 byte[] macArray = Arrays.copyOfRange(bleData, i, i + 6);
                 String mac = BytesUtils.bytes2HexString(macArray, 0);
@@ -615,7 +615,7 @@ public class Decoder {
         }else if (bleData[0] == 0x00 && bleData[1] == 0x04){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_TEMP);
             DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            for (int i = 2;i < bleData.length;i+=15){
+            for (int i = 2;i +15 <= bleData.length;i+=15){
                 BleTempData bleTempData = new BleTempData();
                 byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
                 String mac = BytesUtils.bytes2HexString(macArray, 0);
@@ -677,7 +677,7 @@ public class Decoder {
         }else if (bleData[0] == 0x00 && bleData[1] == 0x05){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_DOOR);
             DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            for (int i = 2;i < bleData.length;i+=12){
+            for (int i = 2;i+12 <= bleData.length;i+=12){
                 BleDoorData bleDoorData = new BleDoorData();
                 byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
                 String mac = BytesUtils.bytes2HexString(macArray, 0);
@@ -729,7 +729,7 @@ public class Decoder {
         }else if (bleData[0] == 0x00 && bleData[1] == 0x06){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_CTRL);
             DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            for (int i = 2;i < bleData.length;i+=12){
+            for (int i = 2;i+12 <= bleData.length;i+=12){
                 BleCtrlData bleCtrlData = new BleCtrlData();
                 byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
                 String mac = BytesUtils.bytes2HexString(macArray, 0);
@@ -781,7 +781,7 @@ public class Decoder {
         }else if (bleData[0] == 0x00 && bleData[1] == 0x07){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_FUEL);
             DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            for (int i = 2;i < bleData.length;i+=15){
+            for (int i = 2;i+15 <= bleData.length;i+=15){
                 BleFuelData bleFuelData = new BleFuelData();
                 byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
                 String mac = BytesUtils.bytes2HexString(macArray, 0);
@@ -944,7 +944,7 @@ public class Decoder {
         List<BleData> bleDataList = new ArrayList<BleData>();
         if(bleData[0] == 0x00 && bleData[1] == 0x01){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_TIRE);
-            for (int i = 2;i < bleData.length;i+=10){
+            for (int i = 2;i+10 <= bleData.length;i+=10){
                 BleTireData bleTireData = new BleTireData();
                 byte[] macArray = Arrays.copyOfRange(bleData, i, i + 6);
                 String mac = BytesUtils.bytes2HexString(macArray, 0);
@@ -1071,7 +1071,7 @@ public class Decoder {
         }else if (bleData[0] == 0x00 && bleData[1] == 0x04){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_TEMP);
             DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            for (int i = 2;i < bleData.length;i+=15){
+            for (int i = 2;i+15 <= bleData.length;i+=15){
                 BleTempData bleTempData = new BleTempData();
                 byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
                 String mac = BytesUtils.bytes2HexString(macArray, 0);
@@ -1133,7 +1133,7 @@ public class Decoder {
         }else if (bleData[0] == 0x00 && bleData[1] == 0x05){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_DOOR);
             DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            for (int i = 2;i < bleData.length;i+=12){
+            for (int i = 2;i +12 <= bleData.length;i+=12){
                 BleDoorData bleDoorData = new BleDoorData();
                 byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
                 String mac = BytesUtils.bytes2HexString(macArray, 0);
@@ -1185,7 +1185,7 @@ public class Decoder {
         }else if (bleData[0] == 0x00 && bleData[1] == 0x06){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_CTRL);
             DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            for (int i = 2;i < bleData.length;i+=12){
+            for (int i = 2;i + 12 <= bleData.length;i+=12){
                 BleCtrlData bleCtrlData = new BleCtrlData();
                 byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
                 String mac = BytesUtils.bytes2HexString(macArray, 0);
@@ -1233,6 +1233,57 @@ public class Decoder {
                 bleCtrlData.setBatteryPercent(batteryPercent);
                 bleCtrlData.setTemp(Float.valueOf(decimalFormat.format(temperature)));
                 bleDataList.add(bleCtrlData);
+            }
+        }else if (bleData[0] == 0x00 && bleData[1] == 0x07){
+            bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_FUEL);
+            DecimalFormat decimalFormat = new DecimalFormat("0.00");
+            for (int i = 2;i+15 <= bleData.length;i+=15){
+                BleFuelData bleFuelData = new BleFuelData();
+                byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
+                String mac = BytesUtils.bytes2HexString(macArray, 0);
+                int voltageTmp = (int) bleData[i + 6] < 0 ? (int) bleData[i + 6] + 256 : (int) bleData[i + 6];
+                float voltage;
+                if(voltageTmp == 255){
+                    voltage = -999;
+                }else{
+                    voltage = 2 + 0.01f * voltageTmp;
+                }
+                int valueTemp = BytesUtils.bytes2Short(bleData,i+7);
+                int value;
+                if(valueTemp == 65535){
+                    value = -999;
+                }else{
+                    value = valueTemp;
+                }
+                int temperatureTemp = BytesUtils.bytes2Short(bleData,i+9);
+                int tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
+                float temperature;
+                if(temperatureTemp == 65535){
+                    temperature = -999;
+                }else{
+                    temperature = (temperatureTemp & 0x7fff) * 0.01f * tempPositive;
+                }
+                int status =(int) bleData[i+13] < 0 ? (int) bleData[i+13] + 256 : (int) bleData[i+13];
+                int online = 1;
+                if(status == 255){
+                    status = 0;
+                    online = 0;
+                }
+                int rssiTemp = (int) bleData[i + 14] < 0 ? (int) bleData[i + 14] + 256 : (int) bleData[i + 14];
+                int rssi;
+                if(rssiTemp == 255){
+                    rssi = -999;
+                }else{
+                    rssi = rssiTemp - 128;
+                }
+                bleFuelData.setRssi(rssi);
+                bleFuelData.setMac(mac);
+                bleFuelData.setOnline(online);
+                bleFuelData.setAlarm(status);
+                bleFuelData.setVoltage(Float.valueOf(decimalFormat.format(voltage)));
+                bleFuelData.setValue(value);
+                bleFuelData.setTemp(Float.valueOf(decimalFormat.format(temperature)));
+                bleDataList.add(bleFuelData);
             }
         }
         bluetoothPeripheralDataMessage.setBleDataList(bleDataList);
@@ -1959,6 +2010,8 @@ public class Decoder {
         int input2 = iopACOn ? 1 : 0;
         int input3 = (iop & 0x1000) == 0x1000 ? 1 : 0;
         int input4 = (iop & 0x800) == 0x800 ? 1 : 0;
+        int input5 = (iop & 0x10) == 0x10 ? 1 : 0;
+        int input6 = (iop & 0x08) == 0x08 ? 1 : 0;
         int output2 = (iop & 0x200) == 0x200 ? 1 : 0;
         int output3 = (iop & 0x100) == 0x100 ? 1 : 0;
         boolean output12V = (iop & 0x10) == 0x10;
@@ -2149,6 +2202,8 @@ public class Decoder {
         message.setInput2(input2);
         message.setInput3(input3);
         message.setInput4(input4);
+        message.setInput5(input5);
+        message.setInput6(input6);
         message.setOutputVout(outputVout);
         message.setAnalogInput3(analogInput3);
         message.setRpm(rpm);
@@ -2233,9 +2288,9 @@ public class Decoder {
         int input4 = (iop & 0x800) == 0x800 ? 1 : 0;
         int input5 = (iop & 0x400) == 0x400 ? 1 : 0;
         int input6 = (iop & 0x200) == 0x200 ? 1 : 0;
-        int output1 = (data[18] & 0x10) == 0x10 ? 1 : 0;
-        int output2 = (data[18] & 0x8) == 0x8 ? 1 : 0;
-        int output3 = (data[18] & 0x4) == 0x4 ? 1 : 0;
+        int output1 = (data[18] & 0x20) == 0x20 ? 1 : 0;
+        int output2 = (data[18] & 0x10) == 0x10 ? 1 : 0;
+        int output3 = (data[18] & 0x8) == 0x8 ? 1 : 0;
         boolean output12V = (data[18] & 0x20) == 0x20 ;
         boolean outputVout = (data[18] & 0x40) == 0x40;
         String str = BytesUtils.bytes2HexString(data, 20);
@@ -2403,7 +2458,7 @@ public class Decoder {
         boolean isSmartUploadSupport = (data[65] & 0x8) == 0x8;
         boolean supportChangeBattery =  (data[66] & 0x8) == 0x8;
         float deviceTemp = -999;
-        if (data.length >= 69){
+        if (data.length >= 69 && data[68] != 0xff){
             deviceTemp = (data[68] & 0x7F) * ((data[68] & 0x80) == 0x80 ? -1 : 1);
         }
         LocationMessage message;

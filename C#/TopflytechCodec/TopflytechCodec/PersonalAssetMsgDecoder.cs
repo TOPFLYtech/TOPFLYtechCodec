@@ -155,7 +155,7 @@ namespace TopflytechCodec
             if (bleData[0] == 0x00 && bleData[1] == 0x01)
             {
                 bluetoothPeripheralDataMessage.MessageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_TIRE;
-                for (int i = 2; i < bleData.Length; i += 10)
+                for (int i = 2; i+10 <= bleData.Length; i += 10)
                 {
                     BleTireData bleTireData = new BleTireData();
                     byte[] macArray = new byte[6];
@@ -457,7 +457,7 @@ namespace TopflytechCodec
             else if (bleData[0] == 0x00 && bleData[1] == 0x04)
             {
                 bluetoothPeripheralDataMessage.MessageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_TEMP;
-                for (int i = 2; i < bleData.Length; i += 15)
+                for (int i = 2; i+15 <= bleData.Length; i += 15)
                 {
                     BleTempData bleTempData = new BleTempData();
                     byte[] macArray = new byte[6];
@@ -541,7 +541,7 @@ namespace TopflytechCodec
             else if (bleData[0] == 0x00 && bleData[1] == 0x05)
             {
                 bluetoothPeripheralDataMessage.MessageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_DOOR;
-                for (int i = 2; i < bleData.Length; i += 12)
+                for (int i = 2; i+12 <= bleData.Length; i += 12)
                 {
                     BleDoorData bleDoorData = new BleDoorData();
                     byte[] macArray = new byte[6];
@@ -612,7 +612,7 @@ namespace TopflytechCodec
             else if (bleData[0] == 0x00 && bleData[1] == 0x06)
             {
                 bluetoothPeripheralDataMessage.MessageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_CTRL;
-                for (int i = 2; i < bleData.Length; i += 12)
+                for (int i = 2; i+12 <= bleData.Length; i += 12)
                 {
                     BleCtrlData bleCtrlData = new BleCtrlData();
                     byte[] macArray = new byte[6];
@@ -683,7 +683,7 @@ namespace TopflytechCodec
             else if (bleData[0] == 0x00 && bleData[1] == 0x07)
             {
                 bluetoothPeripheralDataMessage.MessageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_FUEL;
-                for (int i = 2; i < bleData.Length; i += 15)
+                for (int i = 2; i+15 <= bleData.Length; i += 15)
                 {
                     BleFuelData bleFuelData = new BleFuelData();
                     byte[] macArray = new byte[6];
@@ -847,7 +847,11 @@ namespace TopflytechCodec
             }
         }
 
-        float deviceTemp = (data[45] & 0x7F) * ((data[45] & 0x80) == 0x80 ? -1 : 1);
+        float deviceTemp = -999;
+        if (data[45] != 0xff)
+        {
+            deviceTemp = (data[45] & 0x7F) * ((data[45] & 0x80) == 0x80 ? -1 : 1);
+        }
         byte[] lightSensorBytes = new byte[]{data[46]};
         String lightSensorStr = BytesUtils.Bytes2HexString(lightSensorBytes, 0);
         float lightSensor = 0;

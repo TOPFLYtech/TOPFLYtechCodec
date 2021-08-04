@@ -32,6 +32,11 @@ public class TimeUtils {
         byte[] dateData = Bytes.concat(new byte[]{0x20}, Arrays.copyOfRange(bytes, startIndex, startIndex + 6)); // 20130512122356
         String datetime = BytesUtils.bytes2HexString(dateData, 0);
         int year = Integer.parseInt(datetime.substring(0, 4));
+        Calendar calendar = Calendar.getInstance();
+        int curYear = calendar.get(Calendar.YEAR);
+        if (year > curYear){
+            year = year - 100;
+        }
         int month = Integer.parseInt(datetime.substring(4, 6));
         int day = Integer.parseInt(datetime.substring(6, 8));
         int hour = Integer.parseInt(datetime.substring(8, 10));

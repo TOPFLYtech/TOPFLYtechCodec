@@ -5,7 +5,7 @@ using System.Text;
 
 namespace TopflytechCodec.Entities
 {
-    class ObdMessage:Message
+    public class ObdMessage:Message
     {
         private String errorCode;
 

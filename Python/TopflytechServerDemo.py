@@ -96,7 +96,7 @@ def dealObdDeviceMessage(message,socketClient):
         # if message.isNeedResp:
         #     reply = t880xdEncoder.getBluetoothPeripheralMsgReply(message.imei,True,message.serialNo)
         #     socketClient.send(reply)
-        reply = t880xdEncoder.getBluetoothPeripheralMsgReply(message.imei,True,message.serialNo)
+        reply = t880xdEncoder.getBluetoothPeripheralMsgReply(message.imei,True,message.serialNo,message.protocolHeadType)
         socketClient.send(reply)
     elif isinstance(message,NetworkInfoMessage):
         print ("receive network info Message: " + message.imei)
@@ -222,7 +222,7 @@ def dealPersonalDeviceMessage(message,socketClient):
         # if message.isNeedResp:
         #     reply = personalEncoder.getLocationMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode)
         #     socketClient.send(reply)
-        reply = personalEncoder.getLocationMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode)
+        reply = personalEncoder.getLocationMsgReply(message.imei,True,message.serialNo)
         socketClient.send(reply)
     elif isinstance(message,LocationAlarmMessage):
         print ("receive locationAlarmMessage" + message.imei + "Alarm is : " + str(message.originalAlarmCode))

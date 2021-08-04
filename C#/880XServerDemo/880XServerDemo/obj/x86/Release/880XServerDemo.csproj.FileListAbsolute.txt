@@ -22,3 +22,15 @@ D:\trunk-2\server\tool\880XServerDemo\880XServerDemo\obj\x86\Release\880XServerD
 D:\trunk-2\server\tool\880XServerDemo\880XServerDemo\obj\x86\Release\_880XServerDemo.topflytech880xServer.resources
 D:\trunk-2\server\tool\880XServerDemo\880XServerDemo\obj\x86\Release\_880XServerDemo.Properties.Resources.resources
 D:\trunk-2\server\tool\880XServerDemo\880XServerDemo\obj\x86\Release\880XServerDemo.csproj.GenerateResource.Cache
+D:\trunk-new\other-tool\DecoderLib\880XServerDemo\880XServerDemo\bin\Release\880XServerDemo.XML
+D:\trunk-new\other-tool\DecoderLib\880XServerDemo\880XServerDemo\obj\x86\Release\880XServerDemo.exe
+D:\trunk-new\other-tool\DecoderLib\880XServerDemo\880XServerDemo\obj\x86\Release\880XServerDemo.pdb
+D:\trunk-new\other-tool\DecoderLib\880XServerDemo\880XServerDemo\bin\Release\880XServerDemo.exe
+D:\trunk-new\other-tool\DecoderLib\880XServerDemo\880XServerDemo\bin\Release\880XServerDemo.pdb
+D:\trunk-new\other-tool\DecoderLib\880XServerDemo\880XServerDemo\bin\Release\TopflytechCodec.dll
+D:\trunk-new\other-tool\DecoderLib\880XServerDemo\880XServerDemo\bin\Release\TopflytechCodec.pdb
+D:\trunk-new\other-tool\DecoderLib\880XServerDemo\880XServerDemo\bin\Release\TopflytechCodec.xml
+D:\trunk-new\other-tool\DecoderLib\880XServerDemo\880XServerDemo\obj\x86\Release\880XServerDemo.csprojResolveAssemblyReference.cache
+D:\trunk-new\other-tool\DecoderLib\880XServerDemo\880XServerDemo\obj\x86\Release\_880XServerDemo.topflytech880xServer.resources
+D:\trunk-new\other-tool\DecoderLib\880XServerDemo\880XServerDemo\obj\x86\Release\_880XServerDemo.Properties.Resources.resources
+D:\trunk-new\other-tool\DecoderLib\880XServerDemo\880XServerDemo\obj\x86\Release\880XServerDemo.csproj.GenerateResource.Cache
