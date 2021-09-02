@@ -900,8 +900,17 @@ namespace TopflytechCodec
         String smartPowerOpenStatus = "close";
         if ((status1 & 0x01) == 0x01)
         {
-            smartPowerOpenStatus = "enable";
+            smartPowerOpenStatus = "open";
         }
+        byte status2 = data[66];
+        bool isLockSim = (status2 & 0x80) == 0x80;
+        bool isLockDevice = (status2 & 0x40) == 0x40;
+        bool AGPSEphemerisDataDownloadSettingStatus = (status2 & 0x20) == 0x10;
+        bool gSensorSettingStatus = (status2 & 0x10) == 0x10;
+        bool frontSensorSettingStatus = (status2 & 0x08) == 0x08;
+        bool deviceRemoveAlarmSettingStatus = (status2 & 0x04) == 0x04;
+        bool openCaseAlarmSettingStatus = (status2 & 0x02) == 0x02;
+        bool deviceInternalTempReadingANdUploadingSettingStatus = (status2 & 0x01) == 0x01;
         byte status3 = data[67];
         String smartPowerSettingStatus = "disable";
         if ((status3 & 0x80) == 0x80)
@@ -938,6 +947,14 @@ namespace TopflytechCodec
         locationMessage.LatlngValid=latlngValid;
         locationMessage.Altitude=altitude;
         locationMessage.Latitude=latitude;
+        locationMessage.IsLockSim = isLockSim;
+        locationMessage.IsLockDevice = isLockDevice;
+        locationMessage.AGPSEphemerisDataDownloadSettingStatus = AGPSEphemerisDataDownloadSettingStatus;
+        locationMessage.GSensorSettingStatus = gSensorSettingStatus;
+        locationMessage.FrontSensorSettingStatus = frontSensorSettingStatus;
+        locationMessage.DeviceRemoveAlarmSettingStatus = deviceRemoveAlarmSettingStatus;
+        locationMessage.OpenCaseAlarmSettingStatus = openCaseAlarmSettingStatus;
+        locationMessage.DeviceInternalTempReadingANdUploadingSettingStatus = deviceInternalTempReadingANdUploadingSettingStatus;
         locationMessage.Longitude=longitude;
         if(locationMessage.LatlngValid) {
             locationMessage.Speed=speedf;

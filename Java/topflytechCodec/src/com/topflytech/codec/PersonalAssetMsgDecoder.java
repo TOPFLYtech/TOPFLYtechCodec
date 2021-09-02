@@ -856,6 +856,15 @@ public class PersonalAssetMsgDecoder {
         if((status1 & 0x01) == 0x01){
             smartPowerOpenStatus = "open";
         }
+        byte status2 = data[66];
+        boolean isLockSim = (status2 & 0x80) == 0x80;
+        boolean isLockDevice = (status2 & 0x40) == 0x40;
+        boolean AGPSEphemerisDataDownloadSettingStatus = (status2 & 0x20) == 0x10;
+        boolean gSensorSettingStatus = (status2 & 0x10) == 0x10;
+        boolean frontSensorSettingStatus = (status2 & 0x08) == 0x08;
+        boolean deviceRemoveAlarmSettingStatus = (status2 & 0x04) == 0x04;
+        boolean openCaseAlarmSettingStatus = (status2 & 0x02) == 0x02;
+        boolean deviceInternalTempReadingANdUploadingSettingStatus = (status2 & 0x01) == 0x01;
         byte status3 = data[67];
         String smartPowerSettingStatus = "disable";
         if((status3 & 0x80) == 0x80){
@@ -888,13 +897,21 @@ public class PersonalAssetMsgDecoder {
         locationMessage.setOriginalAlarmCode(originalAlarmCode);
         locationMessage.setMileage(mileage);
         locationMessage.setIopIgnition(iopIgnition);
-        locationMessage.setIOP(locationMessage.isIopIgnition() ? 0x4000l :0x0000l);
+        locationMessage.setIOP(locationMessage.isIopIgnition() ? 0x4000l : 0x0000l);
         locationMessage.setBatteryCharge(batteryPercent);
         locationMessage.setDate(date);
         locationMessage.setLatlngValid(latlngValid);
         locationMessage.setAltitude(altitude);
         locationMessage.setLatitude(latitude);
         locationMessage.setLongitude(longitude);
+        locationMessage.setIsLockSim(isLockSim);
+        locationMessage.setIsLockDevice(isLockDevice);
+        locationMessage.setAGPSEphemerisDataDownloadSettingStatus(AGPSEphemerisDataDownloadSettingStatus);
+        locationMessage.setgSensorSettingStatus(gSensorSettingStatus);
+        locationMessage.setFrontSensorSettingStatus(frontSensorSettingStatus);
+        locationMessage.setDeviceRemoveAlarmSettingStatus(deviceRemoveAlarmSettingStatus);
+        locationMessage.setOpenCaseAlarmSettingStatus(openCaseAlarmSettingStatus);
+        locationMessage.setDeviceInternalTempReadingANdUploadingSettingStatus(deviceInternalTempReadingANdUploadingSettingStatus);
         if(locationMessage.isLatlngValid()) {
             locationMessage.setSpeed(speedf);
         } else {

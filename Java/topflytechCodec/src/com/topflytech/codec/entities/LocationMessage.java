@@ -968,6 +968,46 @@ public class LocationMessage extends Message{
         this.input1 = input1;
     }
 
+    public Integer getRlyMode() {
+        return rlyMode;
+    }
+
+    public void setRlyMode(Integer rlyMode) {
+        this.rlyMode = rlyMode;
+    }
+
+    public Integer getSmsLanguageType() {
+        return smsLanguageType;
+    }
+
+    public void setSmsLanguageType(Integer smsLanguageType) {
+        this.smsLanguageType = smsLanguageType;
+    }
+
+    public int getSpeakerStatus() {
+        return speakerStatus;
+    }
+
+    public void setSpeakerStatus(int speakerStatus) {
+        this.speakerStatus = speakerStatus;
+    }
+
+    public int getRs232PowerOf5V() {
+        return rs232PowerOf5V;
+    }
+
+    public void setRs232PowerOf5V(int rs232PowerOf5V) {
+        this.rs232PowerOf5V = rs232PowerOf5V;
+    }
+
+    public int getAccdetSettingStatus() {
+        return accdetSettingStatus;
+    }
+
+    public void setAccdetSettingStatus(int accdetSettingStatus) {
+        this.accdetSettingStatus = accdetSettingStatus;
+    }
+
 
     private Boolean gpsWorking = false;//gps is working mode or sleep mode
     private Boolean latlngValid = false;//current is gps data or lbs data
@@ -976,6 +1016,10 @@ public class LocationMessage extends Message{
     private Double altitude = 0.0;
 
     private Integer relayStatus = 0;
+
+    private Integer rlyMode = 0;
+
+    private Integer smsLanguageType = 0;
     private Integer antitheftedStatus = 0;
     private Date date;                  //这个点的时间
     private Long IOP = 0L;              //报警信息
@@ -1045,6 +1089,9 @@ public class LocationMessage extends Message{
     private String smartPowerSettingStatus;
     private String smartPowerOpenStatus;
 
+    private int speakerStatus = 0;
+    private int rs232PowerOf5V = 0;
+    private int accdetSettingStatus = 0;
 
     private int input1 = 0;
     private int input2 = 0;
@@ -1064,7 +1111,6 @@ public class LocationMessage extends Message{
     private Boolean outputVout;
     private Boolean isSmartUploadSupport;
     private Boolean supportChangeBattery;
-
 
     private Boolean is_4g_lbs = false;
     private Integer mcc_4g;
@@ -1086,6 +1132,119 @@ public class LocationMessage extends Message{
     private Integer ci_2g_2;
     private Integer lac_2g_3;
     private Integer ci_2g_3;
+    private Integer externalPowerReduceStatus;
+
+    private boolean isSendSmsAlarmToManagerPhone = false;
+    private boolean isSendSmsAlarmWhenDigitalInput2Change = false;
+    private int jammerDetectionStatus = 0;
+    private boolean isLockSim = false;
+    private boolean isLockDevice = false;
+    private boolean AGPSEphemerisDataDownloadSettingStatus = false;
+    private boolean gSensorSettingStatus = false;
+    private boolean frontSensorSettingStatus = false;
+    private boolean deviceRemoveAlarmSettingStatus = false;
+    private boolean openCaseAlarmSettingStatus = false;
+    private boolean deviceInternalTempReadingANdUploadingSettingStatus = false;
+
+
+    public boolean isLockSim() {
+        return isLockSim;
+    }
+
+    public void setIsLockSim(boolean isLockSim) {
+        this.isLockSim = isLockSim;
+    }
+
+    public boolean isLockDevice() {
+        return isLockDevice;
+    }
+
+    public void setIsLockDevice(boolean isLockDevice) {
+        this.isLockDevice = isLockDevice;
+    }
+
+    public boolean isAGPSEphemerisDataDownloadSettingStatus() {
+        return AGPSEphemerisDataDownloadSettingStatus;
+    }
+
+    public void setAGPSEphemerisDataDownloadSettingStatus(boolean AGPSEphemerisDataDownloadSettingStatus) {
+        this.AGPSEphemerisDataDownloadSettingStatus = AGPSEphemerisDataDownloadSettingStatus;
+    }
+
+    public boolean isgSensorSettingStatus() {
+        return gSensorSettingStatus;
+    }
+
+    public void setgSensorSettingStatus(boolean gSensorSettingStatus) {
+        this.gSensorSettingStatus = gSensorSettingStatus;
+    }
+
+    public boolean isFrontSensorSettingStatus() {
+        return frontSensorSettingStatus;
+    }
+
+    public void setFrontSensorSettingStatus(boolean frontSensorSettingStatus) {
+        this.frontSensorSettingStatus = frontSensorSettingStatus;
+    }
+
+    public boolean isDeviceRemoveAlarmSettingStatus() {
+        return deviceRemoveAlarmSettingStatus;
+    }
+
+    public void setDeviceRemoveAlarmSettingStatus(boolean deviceRemoveAlarmSettingStatus) {
+        this.deviceRemoveAlarmSettingStatus = deviceRemoveAlarmSettingStatus;
+    }
+
+    public boolean isOpenCaseAlarmSettingStatus() {
+        return openCaseAlarmSettingStatus;
+    }
+
+    public void setOpenCaseAlarmSettingStatus(boolean openCaseAlarmSettingStatus) {
+        this.openCaseAlarmSettingStatus = openCaseAlarmSettingStatus;
+    }
+
+    public boolean isDeviceInternalTempReadingANdUploadingSettingStatus() {
+        return deviceInternalTempReadingANdUploadingSettingStatus;
+    }
+
+    public void setDeviceInternalTempReadingANdUploadingSettingStatus(boolean deviceInternalTempReadingANdUploadingSettingStatus) {
+        this.deviceInternalTempReadingANdUploadingSettingStatus = deviceInternalTempReadingANdUploadingSettingStatus;
+    }
+
+
+
+    public boolean isSendSmsAlarmToManagerPhone() {
+        return isSendSmsAlarmToManagerPhone;
+    }
+
+    public void setIsSendSmsAlarmToManagerPhone(boolean isSendSmsAlarmToManagerPhone) {
+        this.isSendSmsAlarmToManagerPhone = isSendSmsAlarmToManagerPhone;
+    }
+
+    public boolean isSendSmsAlarmWhenDigitalInput2Change() {
+        return isSendSmsAlarmWhenDigitalInput2Change;
+    }
+
+    public void setIsSendSmsAlarmWhenDigtalInput2Change(boolean isSendSmsAlarmWhenDigtalInput2Change) {
+        this.isSendSmsAlarmWhenDigitalInput2Change = isSendSmsAlarmWhenDigtalInput2Change;
+    }
+
+    public int getJammerDetectionStatus() {
+        return jammerDetectionStatus;
+    }
+
+    public void setJammerDetectionStatus(int jammerDetectionStatus) {
+        this.jammerDetectionStatus = jammerDetectionStatus;
+    }
+
+    public Integer getExternalPowerReduceStatus() {
+        return externalPowerReduceStatus;
+    }
+
+    public void setExternalPowerReduceStatus(Integer externalPowerReduceStatus) {
+        this.externalPowerReduceStatus = externalPowerReduceStatus;
+    }
+
 
     public Boolean is_4g_lbs() {
         return is_4g_lbs;

@@ -1888,8 +1888,9 @@ namespace TopflytechCodec
             bool isManagerConfigured4 = (data[10] & 0x08) != 0x00;
             int antitheftedStatus = (data[11] & 0x10) != 0x00 ? 1 : 0;
             int heartbeatInterval = data[12] & 0x00FF;
-            bool isRelayWorking = (data[13] & 0xC0) == 0xC0;
-            int relayStatus = isRelayWorking ? 1 : 0;
+            int relayStatus = data[13] & 0x3F;
+            int rlyMode =  data[13] & 0xCF;
+            int smsLanguageType = data[13] & 0xF;
             bool isRelayWaiting = ((data[13] & 0xC0) != 0x00) && ((data[13] & 0x80) == 0x00);
             int dragThreshold = BytesUtils.Bytes2Short(data, 14);
             long iop = (long)BytesUtils.Bytes2Short(data, 16);
@@ -1898,8 +1899,13 @@ namespace TopflytechCodec
             bool iopACOn = (iop & MASK_AC) == MASK_AC;
             int input1 = iopIgnition ? 1 : 0;
             int input2 = iopACOn ? 1 : 0;
+            int speakerStatus = (iop & 0x40) ==  0x40  ? 1 : 0;
+            int rs232PowerOf5V = (iop & 0x20) ==  0x20  ? 1 : 0;
             byte alarmByte = data[18];
             int originalAlarmCode = (int)alarmByte;
+            bool isSendSmsAlarmToManagerPhone = (data[19] & 0x20) == 0x20;
+            bool isSendSmsAlarmWhenDigitalInput2Change = (data[19] & 0x10) == 0x10;
+            int jammerDetectionStatus = (data[19] & 0xC);
             bool isAlarmData = command[2] == 0x04;
             long mileage = BytesUtils.Byte2Int(data, 20);
             byte[] batteryBytes = new byte[] { data[24] };
@@ -2071,11 +2077,15 @@ namespace TopflytechCodec
             message.AntitheftedStatus = antitheftedStatus;
             message.HeartbeatInterval = heartbeatInterval;
             message.RelayStatus = relayStatus;
+            message.RlyMode = rlyMode;
+            message.SmsLanguageType = smsLanguageType;
             message.IsRelayWaiting = isRelayWaiting;
             message.DragThreshold = dragThreshold;
             message.IOP = iop;
             message.IopIgnition = iopIgnition;
             message.IopPowerCutOff = iopPowerCutOff;
+            message.SpeakerStatus = speakerStatus;
+            message.Rs232PowerOf5V = rs232PowerOf5V;
             message.IopACOn = iopACOn;
             message.OriginalAlarmCode = originalAlarmCode;
             message.Mileage = mileage;
@@ -2136,6 +2146,9 @@ namespace TopflytechCodec
             message.Ci_2g_2 = ci_2g_2;
             message.Lac_2g_3 = lac_2g_3;
             message.Ci_2g_3 = ci_2g_3;
+            message.IsSendSmsAlarmWhenDigitalInput2Change = isSendSmsAlarmWhenDigitalInput2Change;
+            message.IsSendSmsAlarmToManagerPhone = isSendSmsAlarmToManagerPhone;
+            message.JammerDetectionStatus = jammerDetectionStatus;
             return message;
         }
     }

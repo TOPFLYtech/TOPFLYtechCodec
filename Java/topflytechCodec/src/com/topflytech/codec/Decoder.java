@@ -1994,8 +1994,9 @@ public class Decoder {
         boolean isManagerConfigured4 = (data[10] & 0x08) != 0x00;
         int antitheftedStatus = (data[11] & 0x10) != 0x00 ? 1 : 0;
         int heartbeatInterval = data[12] & 0x00FF;
-        boolean isRelayWorking = (data[13] & 0xC0) == 0xC0;
-        int relayStatus = isRelayWorking ? 1 : 0;
+        int relayStatus = data[13] & 0x3F;
+        int rlyMode =  data[13] & 0xCF;
+        int smsLanguageType = data[13] & 0xF;
         boolean isRelayWaiting = ((data[13] & 0xC0) != 0x00) && ((data[13] & 0x80) == 0x00);
 
         int dragThreshold = BytesUtils.bytes2Short(data, 14);
@@ -2016,6 +2017,9 @@ public class Decoder {
         int output3 = (iop & 0x100) == 0x100 ? 1 : 0;
         boolean output12V = (iop & 0x10) == 0x10;
         boolean outputVout = (iop & 0x8) == 0x8;
+        int speakerStatus = (iop & 0x40) ==  0x40  ? 1 : 0;
+        int rs232PowerOf5V = (iop & 0x20) ==  0x20  ? 1 : 0;
+        int accdetSettingStatus = (iop & 0x1) ==  0x1  ? 1 : 0;
         String str = BytesUtils.bytes2HexString(data, 18);
         float analoginput = 0;
         if (!str.toLowerCase().equals("ffff")){
@@ -2043,6 +2047,10 @@ public class Decoder {
 
         byte alarmByte = data[22];
         int originalAlarmCode = (int) alarmByte;
+        int externalPowerReduceValue = (data[23] & 0x11);
+        boolean isSendSmsAlarmToManagerPhone = (data[23] & 0x20) == 0x20;
+        boolean isSendSmsAlarmWhenDigitalInput2Change = (data[23] & 0x10) == 0x10;
+        int jammerDetectionStatus = (data[23] & 0xC);
         boolean isAlarmData = command[2] == 0x04;
         long mileage =  BytesUtils.unsigned4BytesToInt(data, 24);
         byte[] batteryBytes = new byte[]{data[28]};
@@ -2183,7 +2191,9 @@ public class Decoder {
         message.setIsManagerConfigured4(isManagerConfigured4);
         message.setAntitheftedStatus(antitheftedStatus);
         message.setHeartbeatInterval(heartbeatInterval);
-        message.setRelayStatus(iopRelay ? 1 : 0);
+        message.setRelayStatus(relayStatus);
+        message.setRlyMode(rlyMode);
+        message.setSmsLanguageType(smsLanguageType);
         message.setIsRelayWaiting(isRelayWaiting);
         message.setDragThreshold(dragThreshold);
         message.setIOP(iop);
@@ -2193,6 +2203,7 @@ public class Decoder {
         message.setRs232DeviceValid(iopRs232DeviceValid);
         message.setAnalogInput1(analoginput);
         message.setAnalogInput2(analoginput2);
+        message.setExternalPowerReduceStatus(externalPowerReduceValue);
         message.setOriginalAlarmCode(originalAlarmCode);
         message.setMileage(mileage);
         message.setOutput12V(output12V);
@@ -2206,6 +2217,9 @@ public class Decoder {
         message.setInput6(input6);
         message.setOutputVout(outputVout);
         message.setAnalogInput3(analogInput3);
+        message.setSpeakerStatus(speakerStatus);
+        message.setRs232PowerOf5V(rs232PowerOf5V);
+        message.setAccdetSettingStatus(accdetSettingStatus);
         message.setRpm(rpm);
         try{
             int charge = Integer.parseInt(batteryStr);
@@ -2245,6 +2259,9 @@ public class Decoder {
         message.setPcid_4g_1(pcid_4g_1);
         message.setEarfcn_4g_2(earfcn_4g_2);
         message.setPcid_4g_2(pcid_4g_2);
+        message.setIsSendSmsAlarmWhenDigtalInput2Change(isSendSmsAlarmWhenDigitalInput2Change);
+        message.setIsSendSmsAlarmToManagerPhone(isSendSmsAlarmToManagerPhone);
+        message.setJammerDetectionStatus(jammerDetectionStatus);
         return message;
     }
     private LocationMessage parseSecondDataMessage(byte[] bytes) throws ParseException {
@@ -2272,8 +2289,9 @@ public class Decoder {
         boolean isManagerConfigured4 = (data[10] & 0x08) != 0x00;
         int antitheftedStatus = (data[11] & 0x10) != 0x00 ? 1 : 0;
         int heartbeatInterval = data[12] & 0x00FF;
-        boolean isRelayWorking = (data[13] & 0xC0) == 0xC0;
-        int relayStatus = isRelayWorking ? 1 : 0;
+        int relayStatus = data[13] & 0x3F;
+        int rlyMode =  data[13] & 0xCF;
+        int smsLanguageType = data[13] & 0xF;
         boolean isRelayWaiting = ((data[13] & 0xC0) != 0x00) && ((data[13] & 0x80) == 0x00);
 
         int dragThreshold = BytesUtils.bytes2Short(data, 14);
@@ -2293,6 +2311,7 @@ public class Decoder {
         int output3 = (data[18] & 0x8) == 0x8 ? 1 : 0;
         boolean output12V = (data[18] & 0x20) == 0x20 ;
         boolean outputVout = (data[18] & 0x40) == 0x40;
+        int accdetSettingStatus = (iop & 0x1) ==  0x1  ? 1 : 0;
         String str = BytesUtils.bytes2HexString(data, 20);
         float analoginput = 0;
         if (!str.toLowerCase().equals("ffff")){
@@ -2355,6 +2374,10 @@ public class Decoder {
 
         byte alarmByte = data[30];
         int originalAlarmCode = (int) alarmByte;
+        int externalPowerReduceValue = (data[31] & 0x11);
+        boolean isSendSmsAlarmToManagerPhone = (data[31] & 0x20) == 0x20;
+        boolean isSendSmsAlarmWhenDigitalInput2Change = (data[31] & 0x10) == 0x10;
+        int jammerDetectionStatus = (data[31] & 0xC);
         boolean isAlarmData = command[2] == 0x14;
         long mileage =  BytesUtils.unsigned4BytesToInt(data, 32);
         byte[] batteryBytes = new byte[]{data[36]};
@@ -2490,7 +2513,9 @@ public class Decoder {
         message.setIsManagerConfigured4(isManagerConfigured4);
         message.setAntitheftedStatus(antitheftedStatus);
         message.setHeartbeatInterval(heartbeatInterval);
-        message.setRelayStatus(output1);
+        message.setRelayStatus(relayStatus);
+        message.setRlyMode(rlyMode);
+        message.setSmsLanguageType(smsLanguageType);
         message.setIsRelayWaiting(isRelayWaiting);
         message.setDragThreshold(dragThreshold);
         message.setIOP(iop);
@@ -2510,6 +2535,7 @@ public class Decoder {
         message.setInput4(input4);
         message.setOutputVout(outputVout);
         message.setAnalogInput3(analoginput3);
+        message.setAccdetSettingStatus(accdetSettingStatus);
         message.setRpm(rpm);
         message.setDeviceTemp(deviceTemp);
         try{
@@ -2557,6 +2583,10 @@ public class Decoder {
         message.setPcid_4g_1(pcid_4g_1);
         message.setEarfcn_4g_2(earfcn_4g_2);
         message.setPcid_4g_2(pcid_4g_2);
+        message.setExternalPowerReduceStatus(externalPowerReduceValue);
+        message.setIsSendSmsAlarmWhenDigtalInput2Change(isSendSmsAlarmWhenDigitalInput2Change);
+        message.setIsSendSmsAlarmToManagerPhone(isSendSmsAlarmToManagerPhone);
+        message.setJammerDetectionStatus(jammerDetectionStatus);
         return message;
     }
 

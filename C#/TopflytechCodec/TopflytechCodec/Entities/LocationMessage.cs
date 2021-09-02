@@ -657,5 +657,106 @@ namespace TopflytechCodec.Entities
             get { return ci_2g_3; }
             set { ci_2g_3 = value; }
         }
+
+        private Int32 rlyMode = 0;
+        public Int32 RlyMode
+        {
+            get { return rlyMode;}
+            set{rlyMode = value; }
+        }
+
+        private Int32 smsLanguageType = 0;
+        public Int32 SmsLanguageType
+        {
+            get { return smsLanguageType;}
+            set{smsLanguageType = value; }
+        }
+
+        private Int32 speakerStatus = 0;
+         public Int32 SpeakerStatus
+        {
+            get { return speakerStatus;}
+            set{speakerStatus = value; }
+        }
+        private Int32 rs232PowerOf5V = 0;
+         public Int32 Rs232PowerOf5V
+        {
+            get { return rs232PowerOf5V;}
+            set{rs232PowerOf5V = value; }
+        }
+        private Int32 accdetSettingStatus = 0;
+        public Int32 AccdetSettingStatus
+        {
+            get { return accdetSettingStatus;}
+            set{accdetSettingStatus = value; }
+        }
+
+        private bool isSendSmsAlarmToManagerPhone = false;
+        public Boolean IsSendSmsAlarmToManagerPhone
+        {
+            get { return isSendSmsAlarmToManagerPhone; }
+            set { isSendSmsAlarmToManagerPhone = value; }
+        }
+        private bool isSendSmsAlarmWhenDigitalInput2Change = false;
+        public Boolean IsSendSmsAlarmWhenDigitalInput2Change
+        {
+            get { return isSendSmsAlarmWhenDigitalInput2Change; }
+            set { isSendSmsAlarmWhenDigitalInput2Change = value; }
+        }
+        private Int32 jammerDetectionStatus = 0;
+        public Int32 JammerDetectionStatus
+        {
+            get { return jammerDetectionStatus;}
+            set{jammerDetectionStatus = value; }
+        }
+        private bool isLockSim = false;
+        public Boolean IsLockSim
+        {
+            get { return isLockSim; }
+            set { isLockSim = value; }
+        }
+        private bool isLockDevice = false;
+        public Boolean IsLockDevice
+        {
+            get { return isLockDevice; }
+            set { isLockDevice = value; }
+        }
+        private bool aGPSEphemerisDataDownloadSettingStatus = false;
+        public Boolean AGPSEphemerisDataDownloadSettingStatus
+        {
+            get { return aGPSEphemerisDataDownloadSettingStatus; }
+            set { aGPSEphemerisDataDownloadSettingStatus = value; }
+        }
+        private bool gSensorSettingStatus = false;
+        public Boolean GSensorSettingStatus
+        {
+            get { return gSensorSettingStatus; }
+            set { gSensorSettingStatus = value; }
+        }
+        private bool frontSensorSettingStatus = false;
+        public Boolean FrontSensorSettingStatus
+        {
+            get { return frontSensorSettingStatus; }
+            set { frontSensorSettingStatus = value; }
+        }
+        private bool deviceRemoveAlarmSettingStatus = false;
+        public Boolean DeviceRemoveAlarmSettingStatus
+        {
+            get { return deviceRemoveAlarmSettingStatus; }
+            set { deviceRemoveAlarmSettingStatus = value; }
+        }
+        private bool openCaseAlarmSettingStatus = false;
+        public Boolean OpenCaseAlarmSettingStatus
+        {
+            get { return openCaseAlarmSettingStatus; }
+            set { openCaseAlarmSettingStatus = value; }
+        }
+        private bool deviceInternalTempReadingANdUploadingSettingStatus = false;
+        public Boolean DeviceInternalTempReadingANdUploadingSettingStatus
+        {
+            get { return deviceInternalTempReadingANdUploadingSettingStatus; }
+            set { deviceInternalTempReadingANdUploadingSettingStatus = value; }
+        }
+
     }
 }

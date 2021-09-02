@@ -1892,8 +1892,9 @@ public class ObdDecoder {
         boolean isManagerConfigured4 = (data[10] & 0x08) != 0x00;
         int antitheftedStatus = (data[11] & 0x10) != 0x00 ? 1 : 0;
         int heartbeatInterval = data[12] & 0x00FF;
-        boolean isRelayWorking = (data[13] & 0xC0) == 0xC0;
-        int relayStatus = isRelayWorking ? 1 : 0;
+        int relayStatus = data[13] & 0x3F;
+        int rlyMode =  data[13] & 0xCF;
+        int smsLanguageType = data[13] & 0xF;
         boolean isRelayWaiting = ((data[13] & 0xC0) != 0x00) && ((data[13] & 0x80) == 0x00);
         int dragThreshold = BytesUtils.bytes2Short(data, 14);
         long iop = (long) BytesUtils.bytes2Short(data, 16);
@@ -1903,8 +1904,14 @@ public class ObdDecoder {
         boolean iopRelay =(iop & MASK_RELAY) == MASK_RELAY;
         int input1 = iopIgnition ? 1 : 0;
         int input2 = iopACOn ? 1 : 0;
+        int speakerStatus = (iop & 0x40) ==  0x40  ? 1 : 0;
+        int rs232PowerOf5V = (iop & 0x20) ==  0x20  ? 1 : 0;
         byte alarmByte = data[18];
         int originalAlarmCode = (int) alarmByte;
+        int externalPowerReduceValue = (data[19] & 0x11);
+        boolean isSendSmsAlarmToManagerPhone = (data[19] & 0x20) == 0x20;
+        boolean isSendSmsAlarmWhenDigitalInput2Change = (data[19] & 0x10) == 0x10;
+        int jammerDetectionStatus = (data[19] & 0xC);
         boolean isAlarmData = command[2] == 0x04;
         long mileage = BytesUtils.unsigned4BytesToInt(data, 20);
         byte[] batteryBytes = new byte[]{data[24]};
@@ -2060,14 +2067,19 @@ public class ObdDecoder {
         message.setIsManagerConfigured4(isManagerConfigured4);
         message.setAntitheftedStatus(antitheftedStatus);
         message.setHeartbeatInterval(heartbeatInterval);
-        message.setRelayStatus(iopRelay ? 1 : 0);
+        message.setRelayStatus(relayStatus);
+        message.setRlyMode(rlyMode);
+        message.setSmsLanguageType(smsLanguageType);
         message.setIsRelayWaiting(isRelayWaiting);
         message.setDragThreshold(dragThreshold);
         message.setIOP(iop);
         message.setIopIgnition(iopIgnition);
+        message.setExternalPowerReduceStatus(externalPowerReduceValue);
         message.setIopPowerCutOff(iopPowerCutOff);
         message.setIopACOn(iopACOn);
         message.setOriginalAlarmCode(originalAlarmCode);
+        message.setSpeakerStatus(speakerStatus);
+        message.setRs232PowerOf5V(rs232PowerOf5V);
         message.setMileage(mileage);
         try{
             int charge = Integer.parseInt(batteryStr);
@@ -2113,6 +2125,9 @@ public class ObdDecoder {
         message.setPcid_4g_1(pcid_4g_1);
         message.setEarfcn_4g_2(earfcn_4g_2);
         message.setPcid_4g_2(pcid_4g_2);
+        message.setIsSendSmsAlarmWhenDigtalInput2Change(isSendSmsAlarmWhenDigitalInput2Change);
+        message.setIsSendSmsAlarmToManagerPhone(isSendSmsAlarmToManagerPhone);
+        message.setJammerDetectionStatus(jammerDetectionStatus);
         return message;
     }
 

@@ -404,6 +404,22 @@ class LocationMessage(Message):
     ci_2g_2 = 0
     lac_2g_3 = 0
     ci_2g_3 = 0
+    rlyMode = 0
+    smsLanguageType = 0
+    speakerStatus = 0
+    rs232PowerOf5V = 0
+    accdetSettingStatus = 0
+    isSendSmsAlarmToManagerPhone = False
+    isSendSmsAlarmWhenDigitalInput2Change = False
+    jammerDetectionStatus = 0
+    isLockSim = False
+    isLockDevice = False
+    AGPSEphemerisDataDownloadSettingStatus = False
+    gSensorSettingStatus = False
+    frontSensorSettingStatus = False
+    deviceRemoveAlarmSettingStatus = False
+    openCaseAlarmSettingStatus = False
+    deviceInternalTempReadingANdUploadingSettingStatus = False
 
 
 class LocationInfoMessage(LocationMessage):
@@ -2361,10 +2377,9 @@ class Decoder:
         if (data[11] & 0x10) != 0x00:
             antitheftedStatus = 1
         heartbeatInterval = data[12] & 0x00FF
-        isRelayWorking = (data[13] & 0xC0) == 0xC0
-        relayStatus = 0
-        if isRelayWorking:
-            relayStatus = 1
+        relayStatus = data[13] & 0x3F
+        rlyMode =  data[13] & 0xCF
+        smsLanguageType = data[13] & 0xF
         isRelayWaiting = ((data[13] & 0xC0) != 0x00) and ((data[13] & 0x80) == 0x00)
         dragThreshold = bytes2Short(data, 14)
 
@@ -2384,6 +2399,9 @@ class Decoder:
         output3 = (data[18] & 0x8) == 0x8
         output12V = (data[18] & 0x20) == 0x20
         outputVout = (data[18] & 0x40) == 0x40
+        accdetSettingStatus = 0
+        if (input & 0x1) == 0x1:
+            accdetSettingStatus = 1
         str = byte2HexString(data, 20)
         analoginput = 0
         try:
@@ -2416,6 +2434,9 @@ class Decoder:
             print ("alalog5 error")
         originalAlarmCode = (int) (data[30])
         isAlarmData = command[2] == 0x14
+        isSendSmsAlarmToManagerPhone = (data[31] & 0x20) == 0x20
+        isSendSmsAlarmWhenDigitalInput2Change = (data[31] & 0x10) == 0x10
+        jammerDetectionStatus = (data[31] & 0xC)
         mileage = bytes2Integer(data, 32)
         batteryBytes = [data[36]]
         batteryStr = byte2HexString(batteryBytes, 0)
@@ -2579,6 +2600,12 @@ class Decoder:
         locationMessage.outputVout = outputVout
         locationMessage.rpm = rpm
         locationMessage.analogInput3 = analoginput3
+        locationMessage.rlyMode = rlyMode
+        locationMessage.smsLanguageType = smsLanguageType
+        locationMessage.accdetSettingStatus = accdetSettingStatus
+        locationMessage.isSendSmsAlarmWhenDigitalInput2Change = isSendSmsAlarmWhenDigitalInput2Change
+        locationMessage.isSendSmsAlarmToManagerPhone = isSendSmsAlarmToManagerPhone
+        locationMessage.jammerDetectionStatus = jammerDetectionStatus
         return locationMessage
 
     def parseDataMessage(self,byteArray):
@@ -2608,10 +2635,9 @@ class Decoder:
         if (data[11] & 0x10) != 0x00:
             antitheftedStatus = 1
         heartbeatInterval = data[12] & 0x00FF
-        isRelayWorking = (data[13] & 0xC0) == 0xC0
-        relayStatus = 0
-        if isRelayWorking:
-            relayStatus = 1
+        relayStatus = data[13] & 0x3F
+        rlyMode =  data[13] & 0xCF
+        smsLanguageType = data[13] & 0xF
         isRelayWaiting = ((data[13] & 0xC0) != 0x00) and ((data[13] & 0x80) == 0x00)
         dragThreshold = bytes2Short(data, 14)
         iop = bytes2Short(data, 16)
@@ -2629,6 +2655,15 @@ class Decoder:
         output3 = (iop & 0x100) == 0x100
         output12V = (iop & 0x10) == 0x10
         outputVout = (iop & 0x8) == 0x8
+        speakerStatus = 0
+        if (iop & 0x40) ==  0x40:
+            speakerStatus = 1
+        rs232PowerOf5V = 0
+        if (iop & 0x20) ==  0x20:
+            rs232PowerOf5V = 1
+        accdetSettingStatus = 0
+        if (iop & 0x1) ==  0x1:
+            accdetSettingStatus = 1
         str = byte2HexString(data, 18)
         analoginput = 0
         try:
@@ -2643,6 +2678,9 @@ class Decoder:
             print ("analog2 error")
         originalAlarmCode = (int) (data[22])
         isAlarmData = command[2] == 0x04
+        isSendSmsAlarmToManagerPhone = (data[23] & 0x20) == 0x20
+        isSendSmsAlarmWhenDigitalInput2Change = (data[23] & 0x10) == 0x10
+        jammerDetectionStatus = (data[23] & 0xC)
         mileage = bytes2Integer(data, 24)
         batteryBytes = [data[28]]
         batteryStr = byte2HexString(batteryBytes, 0)
@@ -2795,6 +2833,14 @@ class Decoder:
         locationMessage.outputVout = outputVout
         locationMessage.rpm = rpm
         locationMessage.analogInput3 = analogInput3
+        locationMessage.rlyMode = rlyMode
+        locationMessage.smsLanguageType = smsLanguageType
+        locationMessage.speakerStatus = speakerStatus
+        locationMessage.rs232PowerOf5V = rs232PowerOf5V
+        locationMessage.isSendSmsAlarmWhenDigitalInput2Change = isSendSmsAlarmWhenDigitalInput2Change
+        locationMessage.isSendSmsAlarmToManagerPhone = isSendSmsAlarmToManagerPhone
+        locationMessage.jammerDetectionStatus = jammerDetectionStatus
+        locationMessage.accdetSettingStatus = accdetSettingStatus
         return locationMessage
 
 
@@ -3425,10 +3471,9 @@ class ObdDecoder:
         if (data[11] & 0x10) != 0x00:
             antitheftedStatus = 1
         heartbeatInterval = data[12] & 0x00FF
-        isRelayWorking = (data[13] & 0xC0) == 0xC0
-        relayStatus = 0
-        if isRelayWorking:
-            relayStatus = 1
+        relayStatus = data[13] & 0x3F
+        rlyMode =  data[13] & 0xCF
+        smsLanguageType = data[13] & 0xF
         isRelayWaiting = ((data[13] & 0xC0) != 0x00) and ((data[13] & 0x80) == 0x00)
         dragThreshold = bytes2Short(data, 14)
         iop = bytes2Short(data, 16)
@@ -3437,8 +3482,17 @@ class ObdDecoder:
         iopACOn = (iop & self.MASK_AC) == self.MASK_AC
         input1 = iopIgnition
         input2 = iopACOn
+        speakerStatus = 0
+        if (iop & 0x40) ==  0x40:
+            speakerStatus = 1
+        rs232PowerOf5V = 0
+        if (iop & 0x20) ==  0x20:
+            rs232PowerOf5V = 1
         originalAlarmCode = (int) (data[18])
         isAlarmData = command[2] == 0x04
+        isSendSmsAlarmToManagerPhone = (data[19] & 0x20) == 0x20
+        isSendSmsAlarmWhenDigitalInput2Change = (data[19] & 0x10) == 0x10
+        jammerDetectionStatus = (data[19] & 0xC)
         mileage = bytes2Integer(data, 20)
         batteryBytes = [data[24]]
         batteryStr = byte2HexString(batteryBytes, 0)
@@ -3628,6 +3682,13 @@ class ObdDecoder:
         locationMessage.engineLoad = engineLoad
         locationMessage.throttlePosition = throttlePosition
         locationMessage.remainFuelRate  =remainFuelRate
+        locationMessage.rlyMode = rlyMode
+        locationMessage.smsLanguageType = smsLanguageType
+        locationMessage.speakerStatus = speakerStatus
+        locationMessage.rs232PowerOf5V = rs232PowerOf5V
+        locationMessage.isSendSmsAlarmWhenDigitalInput2Change = isSendSmsAlarmWhenDigitalInput2Change
+        locationMessage.isSendSmsAlarmToManagerPhone = isSendSmsAlarmToManagerPhone
+        locationMessage.jammerDetectionStatus = jammerDetectionStatus
         return locationMessage
 
     def parseGpsDriverBehaviorMessage(self,byteArray):
@@ -5898,6 +5959,15 @@ class PersonalAssetMsgDecoder:
         smartPowerOpenStatus = "close"
         if (status1 & 0x01) == 0x01:
             smartPowerOpenStatus = "enable"
+        status2 = byteArray[66]
+        isLockSim = (status2 & 0x80) == 0x80
+        isLockDevice = (status2 & 0x40) == 0x40
+        AGPSEphemerisDataDownloadSettingStatus = (status2 & 0x20) == 0x10
+        gSensorSettingStatus = (status2 & 0x10) == 0x10
+        frontSensorSettingStatus = (status2 & 0x08) == 0x08
+        deviceRemoveAlarmSettingStatus = (status2 & 0x04) == 0x04
+        openCaseAlarmSettingStatus = (status2 & 0x02) == 0x02
+        deviceInternalTempReadingANdUploadingSettingStatus = (status2 & 0x01) == 0x01
         status3 = byteArray[67];
         smartPowerSettingStatus = "disable"
         if (status3 & 0x80) == 0x80:
@@ -5956,6 +6026,14 @@ class PersonalAssetMsgDecoder:
         locationMessage.solarVoltage = solarVoltage
         locationMessage.smartPowerOpenStatus = smartPowerOpenStatus
         locationMessage.smartPowerSettingStatus = smartPowerSettingStatus
+        locationMessage.isLockSim = isLockSim
+        locationMessage.isLockDevice = isLockDevice
+        locationMessage.AGPSEphemerisDataDownloadSettingStatus = AGPSEphemerisDataDownloadSettingStatus
+        locationMessage.gSensorSettingStatus = gSensorSettingStatus
+        locationMessage.frontSensorSettingStatus = frontSensorSettingStatus
+        locationMessage.deviceRemoveAlarmSettingStatus = deviceRemoveAlarmSettingStatus
+        locationMessage.openCaseAlarmSettingStatus = openCaseAlarmSettingStatus
+        locationMessage.deviceInternalTempReadingANdUploadingSettingStatus = deviceInternalTempReadingANdUploadingSettingStatus
         return locationMessage
 
 
