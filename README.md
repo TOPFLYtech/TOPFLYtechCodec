@@ -5,3 +5,6 @@
 &#8195;&#8195;We also have an online device message decoder to verify the data sent by the device. Please visit: https://www.topflytech.com/Decoder.html
 
 &#8195;&#8195;To purchase equipment from TOPFLYtech, please visit: http://www.topflytech.com  
+
+
+&#8195;&#8195;If you do not know the corresponding relationship between the protocol and the Lib library, please refer to https://github.com/TOPFLYtech/TOPFLYtechCodec/blob/master/TOPFLYtechCodec.bmp .You can download the picture and zoom in to see the code structure.
