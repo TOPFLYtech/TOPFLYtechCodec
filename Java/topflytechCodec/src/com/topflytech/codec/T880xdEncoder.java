@@ -57,8 +57,8 @@ public class T880xdEncoder {
      * @return the byte [ ]
      * @throws IOException the io exception
      */
-    public  byte[] getLocationMsgReply(String imei,boolean needSerialNo,int serialNo) throws IOException{
-        byte[] command = {0x26, 0x26, 0x02};
+    public  byte[] getLocationMsgReply(String imei,boolean needSerialNo,int serialNo,int protocolHeadType) throws IOException{
+        byte[] command = {0x26, 0x26, (byte)protocolHeadType};
         return Encoder.getLocationMsgReply(imei, needSerialNo, serialNo, command, encryptType, aesKey);
     }
 
@@ -72,8 +72,8 @@ public class T880xdEncoder {
      * @return the byte [ ]
      * @throws IOException the io exception
      */
-    public  byte[] getLocationAlarmMsgReply(String imei,boolean needSerialNo,int serialNo,int sourceAlarmCode) throws IOException {
-        byte[] command = {0x26, 0x26, 0x04};
+    public  byte[] getLocationAlarmMsgReply(String imei,boolean needSerialNo,int serialNo,int sourceAlarmCode,int protocolHeadType) throws IOException {
+        byte[] command = {0x26, 0x26, (byte)protocolHeadType};
         return Encoder.getLocationAlarmMsgReply(imei, needSerialNo, serialNo, sourceAlarmCode, command, encryptType, aesKey);
     }
 

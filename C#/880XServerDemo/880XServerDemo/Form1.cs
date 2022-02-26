@@ -378,7 +378,7 @@ namespace _880XServerDemo
                 //    byte[] reply = t880xdEncoder.getLocationMsgReply(locationInfoMessage.Imei, true, locationInfoMessage.SerialNo);
                 //    dict[strClientKey].Send(reply);
                 //}
-                byte[] reply = t880xdEncoder.getLocationMsgReply(locationInfoMessage.Imei, true, locationInfoMessage.SerialNo);
+                byte[] reply = t880xdEncoder.getLocationMsgReply(locationInfoMessage.Imei, true, locationInfoMessage.SerialNo,locationInfoMessage.ProtocolHeadType);
                 dict[strClientKey].Send(reply);
             }
             else if (message is TopflytechCodec.Entities.LocationAlarmMessage)
@@ -392,7 +392,7 @@ namespace _880XServerDemo
                 //    byte[] reply = t880xdEncoder.getLocationAlarmMsgReply(locationAlarmMessage.Imei, true, locationAlarmMessage.SerialNo, locationAlarmMessage.OriginalAlarmCode);
                 //    dict[strClientKey].Send(reply);
                 //}
-                byte[] reply = t880xdEncoder.getLocationAlarmMsgReply(locationAlarmMessage.Imei, true, locationAlarmMessage.SerialNo, locationAlarmMessage.OriginalAlarmCode);
+                byte[] reply = t880xdEncoder.getLocationAlarmMsgReply(locationAlarmMessage.Imei, true, locationAlarmMessage.SerialNo, locationAlarmMessage.OriginalAlarmCode, locationAlarmMessage.ProtocolHeadType);
                 dict[strClientKey].Send(reply);
             }
             else if (message is GpsDriverBehaviorMessage)
@@ -561,6 +561,13 @@ namespace _880XServerDemo
                 WifiMessage wifiMessage = (WifiMessage)message;
                 ShowMsg("receive wifi location message :" + wifiMessage.Imei);
                 byte[] reply = personalEncoder.getWifiMsgReply(wifiMessage.Imei, wifiMessage.SerialNo);
+                dict[strClientKey].Send(reply);
+            }
+            else if (message is LockMessage)
+            {
+                LockMessage lockMessage = (LockMessage)message;
+                ShowMsg("receive lock message :" + lockMessage.Imei + " id:" + lockMessage.LockId);
+                byte[] reply = personalEncoder.getLockMsgReply(lockMessage.Imei, lockMessage.SerialNo);
                 dict[strClientKey].Send(reply);
             }
             else if (message is ForwardMessage)

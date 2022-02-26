@@ -1,6 +1,5 @@
 package com.topflytech.demo;
 
-import com.topflytech.codec.Event;
 import com.topflytech.codec.PersonalAssetMsgEncoder;
 import com.topflytech.codec.entities.*;
 import io.netty.channel.Channel;
@@ -87,6 +86,36 @@ public class PersonalHandler extends SimpleChannelInboundHandler<Message> {
         }else if (message instanceof NetworkInfoMessage){
             NetworkInfoMessage NetworkInfoMessage = (NetworkInfoMessage)message;
             System.out.println("receive network info message :" + NetworkInfoMessage.getImei());
+        }else if (message instanceof WifiMessage){
+            WifiMessage wifiMessage = (WifiMessage)message;
+            System.out.println("receive wifi message :" + wifiMessage.getImei());
+            byte[] reply = personalAssetMsgEncoder.getWifiMsgReply(wifiMessage.getImei(), true, wifiMessage.getSerialNo());
+            Utils.write(channel, reply, new Utils.WriteListener() {
+                @Override
+                public void messageRespond(boolean success) {
+                    System.out.println(success ? "reply wifi message success" : "reply location info fail");
+                }
+            });
+        }else if (message instanceof LockMessage){
+            LockMessage lockMessage = (LockMessage)message;
+            System.out.println("receive lock message :" + lockMessage.getImei());
+            byte[] reply = personalAssetMsgEncoder.getLockMsgReply(lockMessage.getImei(), true, lockMessage.getSerialNo(), lockMessage.getProtocolHeadType());
+            Utils.write(channel, reply, new Utils.WriteListener() {
+                @Override
+                public void messageRespond(boolean success) {
+                    System.out.println(success ? "reply lock message success" : "reply location info fail");
+                }
+            });
+        }else if (message instanceof LockMessage){
+            LockMessage lockMessage = (LockMessage)message;
+            System.out.println("receive lock message :" + lockMessage.getImei());
+            byte[] reply = personalAssetMsgEncoder.getWifiMsgReply(lockMessage.getImei(), true, lockMessage.getSerialNo());
+            Utils.write(channel, reply, new Utils.WriteListener() {
+                @Override
+                public void messageRespond(boolean success) {
+                    System.out.println(success ? "reply lock message success" : "reply location info fail");
+                }
+            });
         }else if (message instanceof BluetoothPeripheralDataMessage){
             BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = (BluetoothPeripheralDataMessage)message;
             System.out.println("receive bluetooth ignition message :" + bluetoothPeripheralDataMessage.getImei());

@@ -104,7 +104,7 @@
             this.txtIP.Name = "txtIP";
             this.txtIP.Size = new System.Drawing.Size(100, 21);
             this.txtIP.TabIndex = 11;
-            this.txtIP.Text = "192.168.1.8";
+            this.txtIP.Text = "192.168.1.53";
             // 
             // label1
             // 

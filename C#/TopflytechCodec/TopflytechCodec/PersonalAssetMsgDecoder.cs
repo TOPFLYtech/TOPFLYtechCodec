@@ -25,6 +25,8 @@ namespace TopflytechCodec
 
         private static byte[] WIFI_DATA = { 0x27, 0x27, (byte)0x15 };
 
+        private static byte[] LOCK_DATA =  {0x27, 0x27, (byte)0x17};
+
         private int encryptType = 0;
         private String aesKey;
         public PersonalAssetMsgDecoder(int messageEncryptType, String aesKey)
@@ -42,7 +44,8 @@ namespace TopflytechCodec
                     || Utils.ArrayEquals(CONFIG , bytes)
                     || Utils.ArrayEquals(NETWORK_INFO_DATA, bytes)
                     || Utils.ArrayEquals(WIFI_DATA, bytes)
-                    || Utils.ArrayEquals(BLUETOOTH_DATA, bytes);
+                    || Utils.ArrayEquals(BLUETOOTH_DATA, bytes)
+                    || Utils.ArrayEquals(LOCK_DATA, bytes);
         }
         private TopflytechByteBuf decoderBuf = new TopflytechByteBuf();
 
@@ -120,6 +123,9 @@ namespace TopflytechCodec
                     case 0x15:
                         WifiMessage wifiMsg = parseWifiMessage(bytes);
                         return wifiMsg;
+                    case 0x17:
+                        LockMessage lockMessage = parseLockMessage(bytes);
+                        return lockMessage;;
                     case (byte)0x81:
                         Message message =  parseInteractMessage(bytes);
                         return message;
@@ -129,6 +135,55 @@ namespace TopflytechCodec
             }
             return null;
         }
+        private LockMessage parseLockMessage(byte[] bytes){
+            LockMessage lockMessage = new LockMessage();
+            int serialNo = BytesUtils.Bytes2Short(bytes, 5);
+            String imei = BytesUtils.IMEI.Decode(bytes, 7);
+            DateTime date = Utils.getGTM0Date(bytes, 15);
+            bool latlngValid = bytes[21] == 0x01;
+            double altitude = latlngValid ? BytesUtils.Bytes2Float(bytes, 22) : 0;
+            double longitude = latlngValid ? BytesUtils.Bytes2Float(bytes,26) : 0;
+            double latitude = latlngValid ? BytesUtils.Bytes2Float(bytes,30) : 0;
+         
+            float speedf = 0.0f;
+            try
+            {
+                if (latlngValid)
+                {
+                    byte[] bytesSpeed = new byte[2];
+                    Array.Copy(bytes, 34, bytesSpeed, 0, 2);
+                    String strSp = BytesUtils.Bytes2HexString(bytesSpeed, 0);
+                    speedf = (float)Convert.ToDouble(String.Format("{0}.{1}", Convert.ToInt32(strSp.Substring(0, 3)), Convert.ToInt32(strSp.Substring(3, strSp.Length - 3))));
+                }
+            }
+            catch (Exception e)
+            {
+            } 
+            int azimuth = latlngValid ? BytesUtils.Bytes2Short(bytes, 36) : 0;
+            int lockType = bytes[38] & 0xff; 
+            int idLen = (bytes[39] & 0xff) * 2;
+            String idStr = BytesUtils.Bytes2HexString(bytes,40);
+            String id = idStr;
+            if (idStr.Length > idLen){
+                id = idStr.Substring(0,idLen);
+            }
+            id = id.ToUpper();
+            lockMessage.SerialNo = serialNo;
+            lockMessage.Imei = imei;
+            lockMessage.Date = date;
+            lockMessage.OrignBytes = bytes;
+            lockMessage.LatlngValid = latlngValid;
+            lockMessage.Altitude = altitude;
+            lockMessage.Longitude = longitude;
+            lockMessage.Latitude = latitude;
+            lockMessage.LatlngValid = latlngValid;
+            lockMessage.Speed = speedf;
+            lockMessage.Azimuth = azimuth;
+            lockMessage.LockType = lockType; 
+            lockMessage.LockId = id;
+            return lockMessage;
+        }
+
         private BluetoothPeripheralDataMessage parseBluetoothDataMessage(byte[] bytes)
         {
             BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = new BluetoothPeripheralDataMessage();
@@ -917,6 +972,13 @@ namespace TopflytechCodec
         {
             smartPowerSettingStatus = "enable";
         }
+
+        int lockType = 0xff;
+        if (data.Length >= 71)
+        {
+            lockType = (int)data[70];
+        }
+
         LocationMessage locationMessage;
         if (isAlarmData){
             locationMessage = new LocationAlarmMessage();
@@ -988,6 +1050,7 @@ namespace TopflytechCodec
         locationMessage.Ci_2g_2 = ci_2g_2;
         locationMessage.Lac_2g_3 = lac_2g_3;
         locationMessage.Ci_2g_3 = ci_2g_3;
+        locationMessage.LockType = lockType;
         return locationMessage;
     }
      

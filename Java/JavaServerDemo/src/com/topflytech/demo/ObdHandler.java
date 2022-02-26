@@ -1,6 +1,5 @@
 package com.topflytech.demo;
 
-import com.topflytech.codec.Event;
 import com.topflytech.codec.T880xdEncoder;
 import com.topflytech.codec.entities.*;
 import io.netty.channel.Channel;
@@ -66,7 +65,7 @@ public class ObdHandler extends SimpleChannelInboundHandler<Message> {
         }else if (message instanceof LocationAlarmMessage){
             LocationAlarmMessage locationAlarmMessage = (LocationAlarmMessage)message;
             System.out.println("receive location alarm message :" + locationAlarmMessage.getImei() + " Alarm is : "+ locationAlarmMessage.getOriginalAlarmCode());
-            byte[] reply = t880xdEncoder.getLocationAlarmMsgReply(locationAlarmMessage.getImei(),true, locationAlarmMessage.getSerialNo(),locationAlarmMessage.getOriginalAlarmCode());
+            byte[] reply = t880xdEncoder.getLocationAlarmMsgReply(locationAlarmMessage.getImei(),true, locationAlarmMessage.getSerialNo(),locationAlarmMessage.getOriginalAlarmCode(),locationAlarmMessage.getProtocolHeadType());
             Utils.write(channel, reply, new Utils.WriteListener() {
                 @Override
                 public void messageRespond(boolean success) {

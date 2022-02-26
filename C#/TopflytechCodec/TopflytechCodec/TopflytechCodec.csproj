@@ -65,6 +65,7 @@
     <Compile Include="Entities\LocationAlarmMessage.cs" />
     <Compile Include="Entities\LocationInfoMessage.cs" />
     <Compile Include="Entities\LocationMessage.cs" />
+    <Compile Include="Entities\LockMessage.cs" />
     <Compile Include="Entities\Message.cs" />
     <Compile Include="Entities\MessageEncryptType.cs" />
     <Compile Include="Entities\NetworkInfoMessage.cs" />

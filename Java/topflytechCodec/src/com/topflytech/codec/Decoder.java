@@ -1,7 +1,8 @@
 package com.topflytech.codec;
 
 import com.topflytech.codec.entities.*;
- 
+
+import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -47,7 +48,8 @@ public class Decoder {
     private static final byte[] LOCATION_SECOND_DATA =      {0x25, 0x25, (byte)0x13};
     private static final byte[] ALARM_SECOND_DATA =      {0x25, 0x25, (byte)0x14};
     private static final byte[] RS232 = {0x25, 0x25, (byte)0x09};
-
+    private static final byte[] LOCATION_DATA_WITH_SENSOR =  {0x25, 0x25, (byte)0x16};
+    private static final byte[] LOCATION_ALARM_WITH_SENSOR =  {0x25, 0x25, (byte)0x18};
 
     private static final byte[] latlngInvalidData = {(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,
                                                      (byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF};
@@ -57,6 +59,7 @@ public class Decoder {
     private static final byte[] rs232FingerprintHead = {(byte)0x00,(byte)0x02,(byte)0x6C,(byte)0x62,(byte)0x63};
     private static final byte[] rs232CapacitorFuelHead = {(byte)0x00,(byte)0x04};
     private static final byte[] rs232UltrasonicFuelHead = {(byte)0x00,(byte)0x05};
+
     private int encryptType = 0;
     private String aesKey;
 
@@ -99,7 +102,9 @@ public class Decoder {
                 || Arrays.equals(BLUETOOTH_SECOND_DATA, bytes)
                 || Arrays.equals(LOCATION_SECOND_DATA, bytes)
                 || Arrays.equals(ALARM_SECOND_DATA, bytes)
-                || Arrays.equals(RS232,bytes);
+                || Arrays.equals(RS232,bytes)
+                || Arrays.equals(LOCATION_DATA_WITH_SENSOR,bytes)
+                || Arrays.equals(LOCATION_ALARM_WITH_SENSOR,bytes);
     }
 
 
@@ -224,6 +229,8 @@ public class Decoder {
                     return heartbeatMessage;
                 case 0x02:
                 case 0x04:
+                case 0x16:
+                case 0x18:
                     LocationMessage locationMessage = parseDataMessage(bytes);
                     return locationMessage;
                 case 0x05:
@@ -274,6 +281,8 @@ public class Decoder {
                     break;
                 case 0x02:
                 case 0x04:
+                case 0x16:
+                case 0x18:
                     LocationMessage locationMessage = parseDataMessage(bytes);
                     if (locationMessage instanceof LocationAlarmMessage){
                         callback.receiveAlarmMessage((LocationAlarmMessage)locationMessage);
@@ -353,6 +362,10 @@ public class Decoder {
 //        bluetoothPeripheralDataMessage.setIsNeedResp(isNeedResp);
         bluetoothPeripheralDataMessage.setImei(imei);
         byte[] bleData = Arrays.copyOfRange(bytes,22,bytes.length);
+        if (bleData.length <= 0){
+            System.out.println("Error len ble Data:" +BytesUtils.bytes2HexString(bytes,0));
+            return bluetoothPeripheralDataMessage;
+        }
         List<BleData> bleDataList = new ArrayList<BleData>();
         if(bleData[0] == 0x00 && bleData[1] == 0x01){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_TIRE);
@@ -941,6 +954,10 @@ public class Decoder {
         bluetoothPeripheralDataMessage.setEarfcn_4g_2(earfcn_4g_2);
         bluetoothPeripheralDataMessage.setPcid_4g_2(pcid_4g_2);
         byte[] bleData = Arrays.copyOfRange(bytes,39,bytes.length);
+        if (bleData.length <= 0){
+            System.out.println("Error len ble Data:" +BytesUtils.bytes2HexString(bytes,0));
+            return bluetoothPeripheralDataMessage;
+        }
         List<BleData> bleDataList = new ArrayList<BleData>();
         if(bleData[0] == 0x00 && bleData[1] == 0x01){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_TIRE);
@@ -1311,7 +1328,7 @@ public class Decoder {
 //            signInMessage.setIsNeedResp(isNeedResp);
             return signInMessage;
         }else if(16 == str.length()){
-            String software = String.format("V%d.%d.%d.%d", (bytes[15] & 0xf0) >> 4,  bytes[15] & 0xf, (bytes[16] & 0xf0) >> 4, bytes[16] & 0xf);
+            String software = String.format("V%d.%d.%d", bytes[15] & 0xf, (bytes[16] & 0xf0) >> 4, bytes[16] & 0xf);
             String firmware = BytesUtils.bytes2HexString(Arrays.copyOfRange(bytes, 20, 22), 0);
             firmware = String.format("V%s.%s.%s.%s", firmware.substring(0,1), firmware.substring(1, 2), firmware.substring(2,3),firmware.substring(3,4));
             String hardware = BytesUtils.bytes2HexString(Arrays.copyOfRange(bytes, 22, 23), 0);
@@ -1551,21 +1568,23 @@ public class Decoder {
             }
             messageList.add(rs232FingerprintMessage);
         } else if(Arrays.equals(rs232Head,rs232CapacitorFuelHead)){
-            rs232Message.setRs232DataType(RS232Message.CAPACITOR_FUEL_DATA);
-            Rs232FuelMessage rs232FuelMessage = new Rs232FuelMessage();
-            byte[] fuelData = Arrays.copyOfRange(data,2,6);
-            if(fuelData.length > 0){
-                String fuelStr = new String(fuelData);
-                try {
-                    if(!fuelStr.trim().equals("")){
-                        rs232FuelMessage.setFuelPercent((Float.valueOf(fuelStr)) / 100);
+            if(data.length == 7){
+                rs232Message.setRs232DataType(RS232Message.CAPACITOR_FUEL_DATA);
+                Rs232FuelMessage rs232FuelMessage = new Rs232FuelMessage();
+                byte[] fuelData = Arrays.copyOfRange(data,2,6);
+                if(fuelData.length > 0){
+                    String fuelStr = new String(fuelData);
+                    try {
+                        if(!fuelStr.trim().equals("")){
+                            rs232FuelMessage.setFuelPercent((Float.valueOf(fuelStr)) / 100);
+                        }
+                    }catch (Exception e){
+                        System.out.println("empty fuel:" + fuelStr + " " + BytesUtils.bytes2HexString(fuelData,0));
                     }
-                }catch (Exception e){
-                    System.out.println("empty fuel:" + fuelStr + " " + BytesUtils.bytes2HexString(fuelData,0));
                 }
+                rs232FuelMessage.setAlarm((int)(data[6]));
+                messageList.add(rs232FuelMessage);
             }
-            rs232FuelMessage.setAlarm((int)(data[6]));
-            messageList.add(rs232FuelMessage);
         }else if(Arrays.equals(rs232Head,rs232UltrasonicFuelHead)){
             rs232Message.setRs232DataType(RS232Message.ULTRASONIC_FUEL_DATA);
             Rs232FuelMessage rs232FuelMessage = new Rs232FuelMessage();
@@ -1621,26 +1640,59 @@ public class Decoder {
         gpsDriverBehaviorMessage.setOrignBytes(bytes);
         Date startDate = TimeUtils.getGTM0Date(bytes, 16);
         gpsDriverBehaviorMessage.setStartDate(startDate);
-        gpsDriverBehaviorMessage.setStartAltitude(BytesUtils.bytes2Float(bytes, 22));
-        gpsDriverBehaviorMessage.setStartLongitude(BytesUtils.bytes2Float(bytes, 26));
-        gpsDriverBehaviorMessage.setStartLatitude(BytesUtils.bytes2Float(bytes,30));
+        float startAltitude = BytesUtils.bytes2Float(bytes, 22);
+        if(Float.compare(startAltitude,Float.NaN) != 0){
+            gpsDriverBehaviorMessage.setStartAltitude(startAltitude);
+        }
+        float startLongitude = BytesUtils.bytes2Float(bytes, 26);
+        if(Float.compare(startLongitude,Float.NaN) != 0){
+            gpsDriverBehaviorMessage.setStartLongitude(startLongitude);
+        }
+        float startLatitude = BytesUtils.bytes2Float(bytes, 30);
+        if(Float.compare(startLatitude,Float.NaN) != 0){
+            gpsDriverBehaviorMessage.setStartLatitude(startLatitude);
+        }
         byte[] bytesSpeed = Arrays.copyOfRange(bytes, 34, 36);
         String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
-        Float speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+        Float speedf = 0f;
+        if (!strSp.toLowerCase().equals("ffff")){
+            speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+        }
         gpsDriverBehaviorMessage.setStartSpeed(speedf);
         int azimuth = BytesUtils.bytes2Short(bytes, 36);
+        if (azimuth == 255){
+            azimuth = 0;
+        }
         gpsDriverBehaviorMessage.setStartAzimuth(azimuth);
 
         Date endDate = TimeUtils.getGTM0Date(bytes, 38);
         gpsDriverBehaviorMessage.setEndDate(endDate);
-        gpsDriverBehaviorMessage.setEndAltitude(BytesUtils.bytes2Float(bytes, 44));
-        gpsDriverBehaviorMessage.setEndLongitude(BytesUtils.bytes2Float(bytes, 48));
-        gpsDriverBehaviorMessage.setEndLatitude(BytesUtils.bytes2Float(bytes, 52));
+        float endAltitude = BytesUtils.bytes2Float(bytes, 44);
+        if(Float.compare(endAltitude,Float.NaN) != 0){
+            gpsDriverBehaviorMessage.setEndAltitude(endAltitude);
+        }
+
+        float endLongitude = BytesUtils.bytes2Float(bytes, 48);
+        if(Float.compare(endLongitude,Float.NaN) != 0){
+            gpsDriverBehaviorMessage.setEndLongitude(endLongitude);
+        }
+
+        float endLatitude = BytesUtils.bytes2Float(bytes, 52);
+        if(Float.compare(endLatitude,Float.NaN) != 0){
+            gpsDriverBehaviorMessage.setEndLatitude(endLatitude);
+        }
+
         bytesSpeed = Arrays.copyOfRange(bytes, 56, 58);
+        speedf = 0f;
         strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
-        speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+        if (!strSp.toLowerCase().equals("ffff")){
+            speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+        }
         gpsDriverBehaviorMessage.setEndSpeed(speedf);
         azimuth = BytesUtils.bytes2Short(bytes, 58);
+        if (azimuth == 255){
+            azimuth = 0;
+        }
         gpsDriverBehaviorMessage.setEndAzimuth(azimuth);
         return gpsDriverBehaviorMessage;
     }
@@ -1716,21 +1768,39 @@ public class Decoder {
         float axisZ = ((bytes[curParseIndex + 10] & 0x7F & 0xff) + (((bytes[curParseIndex + 11] & 0xf0) >> 4) & 0xff) /10.0f) * axisZDirect;
         acceleration.setAxisZ(axisZ);
 
-        acceleration.setAltitude(BytesUtils.bytes2Float(bytes, curParseIndex + 12));
-        acceleration.setLongitude(BytesUtils.bytes2Float(bytes, curParseIndex + 16));
-        acceleration.setLatitude(BytesUtils.bytes2Float(bytes, curParseIndex + 20));
+        float altitude = BytesUtils.bytes2Float(bytes, curParseIndex + 12);
+
+        if(Float.compare(altitude,Float.NaN) != 0){
+            acceleration.setAltitude(altitude);
+        }
+
+        float longitude = BytesUtils.bytes2Float(bytes, curParseIndex + 16);
+        if(Float.compare(longitude,Float.NaN) != 0){
+            acceleration.setLongitude(longitude);
+        }
+
+        float latitude = BytesUtils.bytes2Float(bytes, curParseIndex + 20);
+        if(Float.compare(latitude,Float.NaN) != 0){
+            acceleration.setLatitude(latitude);
+        }
+
         byte[] bytesSpeed = Arrays.copyOfRange(bytes, curParseIndex + 24, curParseIndex + 26);
         float speedf = 0;
         String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
-        try {
-            speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
-        }catch (Exception e){
-            System.out.println("GPS Acceleration Speed Error ; imei is :" + imei);
+        if (!strSp.toLowerCase().equals("ffff")){
+            try {
+                speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+            }catch (Exception e){
+                System.out.println("GPS Acceleration Speed Error ; imei is :" + imei);
+            }
         }
         acceleration.setSpeed(speedf);
         int azimuth = 0;
         try {
             azimuth = BytesUtils.bytes2Short(bytes, curParseIndex + 26);
+            if (azimuth == 255){
+                azimuth = 0;
+            }
         }catch (Exception e){
             System.out.println("GPS Acceleration azimuth Error ; imei is :" + imei + ":" + BytesUtils.bytes2HexString(bytes,0));
         }
@@ -1837,16 +1907,30 @@ public class Decoder {
         float axisZ = ((bytes[curParseIndex + 10] & 0x7F & 0xff) + (((bytes[curParseIndex + 11] & 0xf0) >> 4) & 0xff) /10.0f) * axisZDirect;
         acceleration.setAxisZ(axisZ);
 
-        acceleration.setAltitude(BytesUtils.bytes2Float(bytes, curParseIndex + 12));
-        acceleration.setLongitude(BytesUtils.bytes2Float(bytes, curParseIndex + 16));
-        acceleration.setLatitude(BytesUtils.bytes2Float(bytes, curParseIndex + 20));
+        float altitude = BytesUtils.bytes2Float(bytes, curParseIndex + 12);
+        if(Float.compare(altitude,Float.NaN) != 0){
+            acceleration.setAltitude(altitude);
+        }
+
+        float longitude = BytesUtils.bytes2Float(bytes, curParseIndex + 16);
+        if(Float.compare(longitude,Float.NaN) != 0){
+            acceleration.setLongitude(longitude);
+        }
+
+        float latitude = BytesUtils.bytes2Float(bytes, curParseIndex + 20);
+        if(Float.compare(latitude,Float.NaN) != 0){
+            acceleration.setLatitude(latitude);
+        }
+
         byte[] bytesSpeed = Arrays.copyOfRange(bytes, curParseIndex + 24, curParseIndex + 26);
         float speedf = 0;
         String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
-        try {
-            speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
-        }catch (Exception e){
-            System.out.println("GPS Acceleration Speed Error ; imei is :" + imei);
+        if (!strSp.toLowerCase().equals("ffff")){
+            try {
+                speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+            }catch (Exception e){
+                System.out.println("GPS Acceleration Speed Error ; imei is :" + imei);
+            }
         }
         acceleration.setSpeed(speedf);
         Boolean is_4g_lbs = false;
@@ -1896,6 +1980,9 @@ public class Decoder {
         int azimuth = 0;
         try {
             azimuth = BytesUtils.bytes2Short(bytes, curParseIndex + 26);
+            if (azimuth == 255){
+                azimuth = 0;
+            }
         }catch (Exception e){
             System.out.println("GPS Acceleration azimuth Error ; imei is :" + imei + ":" + BytesUtils.bytes2HexString(bytes,0));
         }
@@ -2013,6 +2100,7 @@ public class Decoder {
         int input4 = (iop & 0x800) == 0x800 ? 1 : 0;
         int input5 = (iop & 0x10) == 0x10 ? 1 : 0;
         int input6 = (iop & 0x08) == 0x08 ? 1 : 0;
+        int output1 = (iop & 0x0400) == 0x0400 ? 1 : 0;
         int output2 = (iop & 0x200) == 0x200 ? 1 : 0;
         int output3 = (iop & 0x100) == 0x100 ? 1 : 0;
         boolean output12V = (iop & 0x10) == 0x10;
@@ -2051,7 +2139,7 @@ public class Decoder {
         boolean isSendSmsAlarmToManagerPhone = (data[23] & 0x20) == 0x20;
         boolean isSendSmsAlarmWhenDigitalInput2Change = (data[23] & 0x10) == 0x10;
         int jammerDetectionStatus = (data[23] & 0xC);
-        boolean isAlarmData = command[2] == 0x04;
+        boolean isAlarmData = command[2] == 0x04 || command[2] == 0x18;
         long mileage =  BytesUtils.unsigned4BytesToInt(data, 24);
         byte[] batteryBytes = new byte[]{data[28]};
         String batteryStr = BytesUtils.bytes2HexString(batteryBytes, 0);
@@ -2138,30 +2226,7 @@ public class Decoder {
                 System.out.println("externalPowerVoltage error, imei = " + imei + " externalPowerVoltage :" + externalPowerVoltageStr);
             }
         }
-        float analogInput3 = 0;
-        int rpm = 0;
-        if(data.length >= 55){
-            byte adc2Din = data[53];
-            byte[] analogInput3Bytes = Arrays.copyOfRange(data,54,56);
-            str = BytesUtils.bytes2HexString(analogInput3Bytes, 0);
 
-            if (!str.toLowerCase().equals("ffff")){
-                analogInput3 = -999;
-            }else{
-                try {
-                    analogInput3 = Float.parseFloat(String.format("%d.%s", Integer.parseInt(str.substring(0, 2)),str.substring(2, 4)));
-                }catch (Exception e){
-//            e.printStackTrace();
-                }
-            }
-
-
-            byte[] rpmBytes = Arrays.copyOfRange(data, 56, 58);
-            rpm = BytesUtils.bytes2Short(rpmBytes,0);
-            if (rpm == 32768){
-                rpm = -999;
-            }
-        }
         LocationMessage message;
         if (isAlarmData){
             message = new LocationAlarmMessage();
@@ -2170,6 +2235,35 @@ public class Decoder {
             message = new LocationInfoMessage();
             message.setProtocolHeadType(0x2);
         }
+        int protocolHead = bytes[2];
+        if ((protocolHead == 0x16 || protocolHead == 0x18) && data.length >= 65){
+            byte[] axisXByte = Arrays.copyOfRange(data,53,55);
+            BigInteger axisXB = new BigInteger(axisXByte);
+            byte[] axisYByte = Arrays.copyOfRange(data,55,57);
+            BigInteger axisYB = new BigInteger(axisYByte);
+            byte[] axisZByte = Arrays.copyOfRange(data,57,59);
+            BigInteger axisZB = new BigInteger(axisZByte);
+            int axisX = axisXB.shortValue();
+            int axisY = axisYB.shortValue();
+            int axisZ =  axisZB.shortValue();
+            byte[] gyroscopeAxisXByte = Arrays.copyOfRange(data,59,61);
+            BigInteger gyroscopeAxisXB = new BigInteger(gyroscopeAxisXByte);
+            byte[] gyroscopeAxisYByte = Arrays.copyOfRange(data,61,63);
+            BigInteger gyroscopeAxisYB = new BigInteger(gyroscopeAxisYByte);
+            byte[] gyroscopeAxisZByte = Arrays.copyOfRange(data, 63, 65);
+            BigInteger gyroscopeAxisZB = new BigInteger(gyroscopeAxisZByte);
+            int gyroscopeAxisX =  gyroscopeAxisXB.shortValue();
+            int gyroscopeAxisY =  gyroscopeAxisYB.shortValue();
+            int gyroscopeAxisZ =  gyroscopeAxisZB.shortValue();
+            message.setAxisX(axisX);
+            message.setAxisY(axisY);
+            message.setAxisZ(axisZ);
+            message.setGyroscopeAxisX(gyroscopeAxisX);
+            message.setGyroscopeAxisY(gyroscopeAxisY);
+            message.setGyroscopeAxisZ(gyroscopeAxisZ);
+
+        }
+        message.setProtocolHeadType(protocolHead);
         message.setOrignBytes(bytes);
 //        boolean isNeedResp = (serialNo & 0x8000) != 0x8000;
         message.setSerialNo(serialNo);
@@ -2207,6 +2301,7 @@ public class Decoder {
         message.setOriginalAlarmCode(originalAlarmCode);
         message.setMileage(mileage);
         message.setOutput12V(output12V);
+        message.setOutput1(output1);
         message.setOutput2(output2);
         message.setOutput3(output3);
         message.setInput1(input1);
@@ -2216,11 +2311,9 @@ public class Decoder {
         message.setInput5(input5);
         message.setInput6(input6);
         message.setOutputVout(outputVout);
-        message.setAnalogInput3(analogInput3);
         message.setSpeakerStatus(speakerStatus);
         message.setRs232PowerOf5V(rs232PowerOf5V);
         message.setAccdetSettingStatus(accdetSettingStatus);
-        message.setRpm(rpm);
         try{
             int charge = Integer.parseInt(batteryStr);
             if (0 == charge) {
@@ -2527,6 +2620,7 @@ public class Decoder {
         message.setOriginalAlarmCode(originalAlarmCode);
         message.setMileage(mileage);
         message.setOutput12V(output12V);
+        message.setOutput1(output1);
         message.setOutput2(output2);
         message.setOutput3(output3);
         message.setInput1(input1);

@@ -26,6 +26,8 @@ namespace TopflytechCodec
         private static byte[] OBD_DATA = { 0x26, 0x26, (byte)0x09 };
         private static byte[] BLUETOOTH_DATA = { 0x26, 0x26, (byte)0x10 };
         private static byte[] NETWORK_INFO_DATA = { 0x26, 0x26, (byte)0x11 };
+        private static byte[] LOCATION_DATA_WITH_SENSOR =  {0x26, 0x26, (byte)0x16};
+        private static byte[] LOCATION_ALARM_WITH_SENSOR =  {0x26, 0x26, (byte)0x18};
         private static byte[] latlngInvalidData = {(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,
             (byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF};
 
@@ -55,7 +57,9 @@ namespace TopflytechCodec
                     || Utils.ArrayEquals(BLUETOOTH_MAC, bytes)
                     || Utils.ArrayEquals(OBD_DATA, bytes)
                     || Utils.ArrayEquals(BLUETOOTH_DATA, bytes)
-                    || Utils.ArrayEquals(NETWORK_INFO_DATA, bytes);
+                    || Utils.ArrayEquals(NETWORK_INFO_DATA, bytes)
+                    || Utils.ArrayEquals(LOCATION_DATA_WITH_SENSOR, bytes)
+                    || Utils.ArrayEquals(LOCATION_ALARM_WITH_SENSOR, bytes);
         }
 
         private TopflytechByteBuf decoderBuf = new TopflytechByteBuf();
@@ -127,6 +131,8 @@ namespace TopflytechCodec
                         return heartbeatMessage;
                     case 0x02:
                     case 0x04:
+                    case 0x16:
+                    case 0x18:
                         LocationMessage locationMessage = parseDataMessage(bytes);
                         return locationMessage;
                     case 0x05:
@@ -1899,6 +1905,7 @@ namespace TopflytechCodec
             bool iopACOn = (iop & MASK_AC) == MASK_AC;
             int input1 = iopIgnition ? 1 : 0;
             int input2 = iopACOn ? 1 : 0;
+            int output1 = (iop & 0x0400) == 0x0400 ? 1 : 0;
             int speakerStatus = (iop & 0x40) ==  0x40  ? 1 : 0;
             int rs232PowerOf5V = (iop & 0x20) ==  0x20  ? 1 : 0;
             byte alarmByte = data[18];
@@ -1906,7 +1913,7 @@ namespace TopflytechCodec
             bool isSendSmsAlarmToManagerPhone = (data[19] & 0x20) == 0x20;
             bool isSendSmsAlarmWhenDigitalInput2Change = (data[19] & 0x10) == 0x10;
             int jammerDetectionStatus = (data[19] & 0xC);
-            bool isAlarmData = command[2] == 0x04;
+            bool isAlarmData = command[2] == 0x04 || command[2] == 0x18;
             long mileage = BytesUtils.Byte2Int(data, 20);
             byte[] batteryBytes = new byte[] { data[24] };
             String batteryStr = BytesUtils.Bytes2HexString(batteryBytes, 0);
@@ -2054,12 +2061,35 @@ namespace TopflytechCodec
             {
                 message = new LocationInfoMessage();
             }
+            int protocolHead = bytes[2];
+            if ((protocolHead == 0x16 || protocolHead == 0x18) && data.Length >= 80){
+                byte[] axisXByte = Utils.ArrayCopyOfRange(data,68,70);
+                int axisX = BytesUtils.bytes2SingleShort(axisXByte,0); 
+                byte[] axisYByte = Utils.ArrayCopyOfRange(data,70,72);
+                int axisY = BytesUtils.bytes2SingleShort(axisYByte,0); 
+                byte[] axisZByte= Utils.ArrayCopyOfRange(data,72,74);
+                int axisZ  = BytesUtils.bytes2SingleShort(axisZByte,0);  
+                byte[] gyroscopeAxisXByte = Utils.ArrayCopyOfRange(data,74,76);
+                int gyroscopeAxisX = BytesUtils.bytes2SingleShort(gyroscopeAxisXByte,0); 
+                byte[] gyroscopeAxisYByte = Utils.ArrayCopyOfRange(data,76,78);
+                int gyroscopeAxisY = BytesUtils.bytes2SingleShort(gyroscopeAxisYByte,0); 
+                byte[] gyroscopeAxisZByte = Utils.ArrayCopyOfRange(data, 78, 80);
+                int gyroscopeAxisZ = BytesUtils.bytes2SingleShort(gyroscopeAxisZByte,0);  
+                message.AxisX = axisX;
+                message.AxisY = axisY;
+                message.AxisZ = axisZ;
+                message.GyroscopeAxisX = gyroscopeAxisX;
+                message.GyroscopeAxisY = gyroscopeAxisY;
+                message.GyroscopeAxisZ = gyroscopeAxisZ;
+            }
+            message.ProtocolHeadType = protocolHead; 
             message.OrignBytes = bytes;
             message.SerialNo = serialNo;
             //message.IsNeedResp = isNeedResp;
             message.Imei = imei;
             message.Input1 = input1;
             message.Input2 = input2;
+            message.Output1 = output1;
             message.NetworkSignal = networkSignal;
             message.SamplingIntervalAccOn = samplingIntervalAccOn;
             message.SamplingIntervalAccOff = samplingIntervalAccOff;

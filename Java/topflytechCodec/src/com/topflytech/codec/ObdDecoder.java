@@ -1,7 +1,8 @@
 package com.topflytech.codec;
 
 import com.topflytech.codec.entities.*;
- 
+
+import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -41,6 +42,8 @@ public class ObdDecoder {
             (byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF};
 
     private static final byte[] obdHead = {0x55,(byte)0xAA};
+    private static final byte[] LOCATION_DATA_WITH_SENSOR =  {0x26, 0x26, (byte)0x16};
+    private static final byte[] LOCATION_ALARM_WITH_SENSOR =  {0x26, 0x26, (byte)0x18};
     private int encryptType = 0;
     private String aesKey;
     private static final long MASK_IGNITION =   0x4000;
@@ -73,7 +76,10 @@ public class ObdDecoder {
                 || Arrays.equals(OBD_DATA, bytes)
                 || Arrays.equals(BLUETOOTH_DATA, bytes)
                 || Arrays.equals(BLUETOOTH_SECOND_DATA, bytes)
-                || Arrays.equals(NETWORK_INFO_DATA,bytes);
+                || Arrays.equals(NETWORK_INFO_DATA,bytes)
+                || Arrays.equals(LOCATION_DATA_WITH_SENSOR,bytes)
+                || Arrays.equals(LOCATION_ALARM_WITH_SENSOR,bytes)
+                ;
     }
 
 
@@ -196,6 +202,8 @@ public class ObdDecoder {
                     return heartbeatMessage;
                 case 0x02:
                 case 0x04:
+                case 0x16:
+                case 0x18:
                     LocationMessage locationMessage = parseDataMessage(bytes);
                     return locationMessage;
                 case 0x05:
@@ -295,6 +303,8 @@ public class ObdDecoder {
                     break;
                 case 0x02:
                 case 0x04:
+                case 0x16:
+                case 0x18:
                     LocationMessage locationMessage = parseDataMessage(bytes);
                     if (locationMessage instanceof LocationAlarmMessage){
                         callback.receiveAlarmMessage((LocationAlarmMessage)locationMessage);
@@ -454,6 +464,10 @@ public class ObdDecoder {
         bluetoothPeripheralDataMessage.setEarfcn_4g_2(earfcn_4g_2);
         bluetoothPeripheralDataMessage.setPcid_4g_2(pcid_4g_2);
         byte[] bleData = Arrays.copyOfRange(bytes,39,bytes.length);
+        if (bleData.length <= 0){
+            System.out.println("Error len ble Data:" +BytesUtils.bytes2HexString(bytes,0));
+            return bluetoothPeripheralDataMessage;
+        }
         List<BleData> bleDataList = new ArrayList<BleData>();
         if(bleData[0] == 0x00 && bleData[1] == 0x01){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_TIRE);
@@ -820,6 +834,10 @@ public class ObdDecoder {
 //        bluetoothPeripheralDataMessage.setIsNeedResp(isNeedResp);
         bluetoothPeripheralDataMessage.setImei(imei);
         byte[] bleData = Arrays.copyOfRange(bytes,22,bytes.length);
+        if (bleData.length <= 0){
+            System.out.println("Error len ble Data:" +BytesUtils.bytes2HexString(bytes,0));
+            return bluetoothPeripheralDataMessage;
+        }
         List<BleData> bleDataList = new ArrayList<BleData>();
         if(bleData[0] == 0x00 && bleData[1] == 0x01){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_TIRE);
@@ -1548,14 +1566,32 @@ public class ObdDecoder {
         gpsDriverBehaviorMessage.setOrignBytes(bytes);
         Date startDate = TimeUtils.getGTM0Date(bytes, 16);
         gpsDriverBehaviorMessage.setStartDate(startDate);
-        gpsDriverBehaviorMessage.setStartAltitude(BytesUtils.bytes2Float(bytes, 22));
-        gpsDriverBehaviorMessage.setStartLongitude(BytesUtils.bytes2Float(bytes, 26));
-        gpsDriverBehaviorMessage.setStartLatitude(BytesUtils.bytes2Float(bytes,30));
+        float startAltitude = BytesUtils.bytes2Float(bytes, 22);
+        if(Float.compare(startAltitude,Float.NaN) != 0){
+            gpsDriverBehaviorMessage.setStartAltitude(startAltitude);
+        }
+
+        float startLongitude = BytesUtils.bytes2Float(bytes, 26);
+        if(Float.compare(startLongitude,Float.NaN) != 0){
+            gpsDriverBehaviorMessage.setStartLongitude(startLongitude);
+        }
+
+        float startLatitude = BytesUtils.bytes2Float(bytes, 30);
+        if(Float.compare(startLatitude,Float.NaN) != 0){
+            gpsDriverBehaviorMessage.setStartLatitude(startLatitude);
+        }
+
         byte[] bytesSpeed = Arrays.copyOfRange(bytes, 34, 36);
         String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
-        Float speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+        Float speedf = 0f;
+        if (!strSp.toLowerCase().equals("ffff")){
+            speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+        }
         gpsDriverBehaviorMessage.setStartSpeed(speedf);
         int azimuth = BytesUtils.bytes2Short(bytes, 36);
+        if (azimuth == 255){
+            azimuth = 0;
+        }
         gpsDriverBehaviorMessage.setStartAzimuth(azimuth);
 
         int rpm = BytesUtils.bytes2Short(bytes, 38);
@@ -1567,14 +1603,32 @@ public class ObdDecoder {
 
         Date endDate = TimeUtils.getGTM0Date(bytes, 40);
         gpsDriverBehaviorMessage.setEndDate(endDate);
-        gpsDriverBehaviorMessage.setEndAltitude(BytesUtils.bytes2Float(bytes, 46));
-        gpsDriverBehaviorMessage.setEndLongitude(BytesUtils.bytes2Float(bytes, 50));
-        gpsDriverBehaviorMessage.setEndLatitude(BytesUtils.bytes2Float(bytes, 54));
+        float endAltitude = BytesUtils.bytes2Float(bytes, 46);
+        if(Float.compare(endAltitude,Float.NaN) != 0){
+            gpsDriverBehaviorMessage.setEndAltitude(endAltitude);
+        }
+
+        float endLongitude = BytesUtils.bytes2Float(bytes, 50);
+        if(Float.compare(endLongitude,Float.NaN) != 0){
+            gpsDriverBehaviorMessage.setEndLongitude(endLongitude);
+        }
+
+        float endLatitude = BytesUtils.bytes2Float(bytes, 54);
+        if(Float.compare(endLatitude,Float.NaN) != 0){
+            gpsDriverBehaviorMessage.setEndLatitude(endLatitude);
+        }
+
         bytesSpeed = Arrays.copyOfRange(bytes, 58, 60);
         strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
-        speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+        speedf = 0f;
+        if (!strSp.toLowerCase().equals("ffff")){
+            speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+        }
         gpsDriverBehaviorMessage.setEndSpeed(speedf);
         azimuth = BytesUtils.bytes2Short(bytes, 60);
+        if (azimuth == 255){
+            azimuth = 0;
+        }
         gpsDriverBehaviorMessage.setEndAzimuth(azimuth);
         rpm = BytesUtils.bytes2Short(bytes, 62);
         if(rpm == 65535){
@@ -1666,15 +1720,20 @@ public class ObdDecoder {
         byte[] bytesSpeed = Arrays.copyOfRange(bytes, curParseIndex + 24, curParseIndex + 26);
         float speedf = 0;
         String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
-        try {
-            speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
-        }catch (Exception e){
-            System.out.println("GPS Acceleration Speed Error ; imei is :" + imei);
+        if (!strSp.toLowerCase().equals("ffff")){
+            try {
+                speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+            }catch (Exception e){
+                System.out.println("GPS Acceleration Speed Error ; imei is :" + imei);
+            }
         }
         acceleration.setSpeed(speedf);
         int azimuth = 0;
         try {
             azimuth = BytesUtils.bytes2Short(bytes, curParseIndex + 26);
+            if (azimuth == 255){
+                azimuth = 0;
+            }
         }catch (Exception e){
             System.out.println("GPS Acceleration azimuth Error ; imei is :" + imei + ":" + BytesUtils.bytes2HexString(bytes,0));
         }
@@ -1785,15 +1844,20 @@ public class ObdDecoder {
         byte[] bytesSpeed = Arrays.copyOfRange(bytes, curParseIndex + 24, curParseIndex + 26);
         float speedf = 0;
         String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
-        try {
-            speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
-        }catch (Exception e){
-            System.out.println("GPS Acceleration Speed Error ; imei is :" + imei);
+        if (!strSp.toLowerCase().equals("ffff")){
+            try {
+                speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+            }catch (Exception e){
+                System.out.println("GPS Acceleration Speed Error ; imei is :" + imei);
+            }
         }
         acceleration.setSpeed(speedf);
         int azimuth = 0;
         try {
             azimuth = BytesUtils.bytes2Short(bytes, curParseIndex + 26);
+            if (azimuth == 255){
+                azimuth = 0;
+            }
         }catch (Exception e){
             System.out.println("GPS Acceleration azimuth Error ; imei is :" + imei + ":" + BytesUtils.bytes2HexString(bytes,0));
         }
@@ -1904,6 +1968,7 @@ public class ObdDecoder {
         boolean iopRelay =(iop & MASK_RELAY) == MASK_RELAY;
         int input1 = iopIgnition ? 1 : 0;
         int input2 = iopACOn ? 1 : 0;
+        int output1 = (iop & 0x0400) == 0x0400 ? 1 : 0;
         int speakerStatus = (iop & 0x40) ==  0x40  ? 1 : 0;
         int rs232PowerOf5V = (iop & 0x20) ==  0x20  ? 1 : 0;
         byte alarmByte = data[18];
@@ -1912,7 +1977,7 @@ public class ObdDecoder {
         boolean isSendSmsAlarmToManagerPhone = (data[19] & 0x20) == 0x20;
         boolean isSendSmsAlarmWhenDigitalInput2Change = (data[19] & 0x10) == 0x10;
         int jammerDetectionStatus = (data[19] & 0xC);
-        boolean isAlarmData = command[2] == 0x04;
+        boolean isAlarmData = command[2] == 0x04  || command[2] == 0x18;
         long mileage = BytesUtils.unsigned4BytesToInt(data, 20);
         byte[] batteryBytes = new byte[]{data[24]};
         String batteryStr = BytesUtils.bytes2HexString(batteryBytes, 0);
@@ -2044,11 +2109,41 @@ public class ObdDecoder {
             message = new LocationInfoMessage();
             message.setProtocolHeadType(0x02);
         }
+        int protocolHead = bytes[2];
+        if ((protocolHead == 0x16 || protocolHead == 0x18) && data.length >= 80){
+            byte[] axisXByte = Arrays.copyOfRange(data,68,70);
+            BigInteger axisXB = new BigInteger(axisXByte);
+            byte[] axisYByte = Arrays.copyOfRange(data,70,72);
+            BigInteger axisYB = new BigInteger(axisYByte);
+            byte[] axisZByte = Arrays.copyOfRange(data,72,74);
+            BigInteger axisZB = new BigInteger(axisZByte);
+            int axisX = axisXB.shortValue();
+            int axisY = axisYB.shortValue();
+            int axisZ =  axisZB.shortValue();
+            byte[] gyroscopeAxisXByte = Arrays.copyOfRange(data,74,76);
+            BigInteger gyroscopeAxisXB = new BigInteger(gyroscopeAxisXByte);
+            byte[] gyroscopeAxisYByte = Arrays.copyOfRange(data,76,78);
+            BigInteger gyroscopeAxisYB = new BigInteger(gyroscopeAxisYByte);
+            byte[] gyroscopeAxisZByte = Arrays.copyOfRange(data, 78, 80);
+            BigInteger gyroscopeAxisZB = new BigInteger(gyroscopeAxisZByte);
+            int gyroscopeAxisX =  gyroscopeAxisXB.shortValue();
+            int gyroscopeAxisY =  gyroscopeAxisYB.shortValue();
+            int gyroscopeAxisZ =  gyroscopeAxisZB.shortValue();
+            message.setAxisX(axisX);
+            message.setAxisY(axisY);
+            message.setAxisZ(axisZ);
+            message.setGyroscopeAxisX(gyroscopeAxisX);
+            message.setGyroscopeAxisY(gyroscopeAxisY);
+            message.setGyroscopeAxisZ(gyroscopeAxisZ);
+
+        }
         message.setOrignBytes(bytes);
 //        boolean isNeedResp = (serialNo & 0x8000) != 0x8000;
         message.setSerialNo(serialNo);
 //        message.setIsNeedResp(isNeedResp);
         message.setImei(imei);
+        message.setProtocolHeadType(protocolHead);
+        message.setOutput1(output1);
         message.setInput1(input1);
         message.setInput2(input2);
         message.setNetworkSignal(networkSignal);

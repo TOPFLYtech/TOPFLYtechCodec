@@ -10,10 +10,9 @@ public class LockMessage extends Message{
     private Double latitude = 0.0;
     private Double longitude = 0.0;
     private Double altitude = 0.0;
-    private Float speed = 0.0f;         //速度
-    private Integer azimuth = 0;        //方位角
+    private Float speed = 0.0f;
+    private Integer azimuth = 0;
     private int lockType;
-    private int lockResult;
     private String lockId;
     private Date date;
 
@@ -80,14 +79,6 @@ public class LockMessage extends Message{
 
     public void setLockType(int lockType) {
         this.lockType = lockType;
-    }
-
-    public int getLockResult() {
-        return lockResult;
-    }
-
-    public void setLockResult(int lockResult) {
-        this.lockResult = lockResult;
     }
 
     public String getLockId() {

@@ -7,6 +7,17 @@ namespace TopflytechCodec
 {
     class BytesUtils
     {
+        public static int bytes2SingleShort(byte[] bytes,int offset){
+            if(bytes.Length < offset + 2){
+                return 0;
+            }
+            byte first = bytes[offset];
+            byte second = bytes[offset + 1];
+            int firstValue = first & 0x7F;
+            int sourceValue = (first & 0x80) == 0x80 ? -32768 : 0;
+            int incValue = (firstValue << 8) + (int)second;
+            return sourceValue + incValue;
+        }
         public static int Bytes2Short(byte[] bytes, int offset)
         {
             if (bytes != null && bytes.Length > 0 && bytes.Length > offset)

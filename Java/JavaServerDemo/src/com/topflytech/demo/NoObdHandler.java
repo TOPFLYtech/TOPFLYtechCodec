@@ -1,7 +1,6 @@
 package com.topflytech.demo;
 
 import com.topflytech.codec.*;
-import com.topflytech.codec.Event;
 import com.topflytech.codec.entities.*;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;

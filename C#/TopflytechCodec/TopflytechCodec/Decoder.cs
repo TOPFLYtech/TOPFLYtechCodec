@@ -46,7 +46,8 @@ namespace TopflytechCodec
         private static byte[] BLUETOOTH_SECOND_DATA = { 0x25, 0x25, (byte)0x12 };
         private static byte[] LOCATION_SECOND_DATA = { 0x25, 0x25, (byte)0x13 };
         private static byte[] ALARM_SECOND_DATA = { 0x25, 0x25, (byte)0x14 };
-
+        private static byte[] LOCATION_DATA_WITH_SENSOR =  {0x25, 0x25, (byte)0x16};
+        private static byte[] LOCATION_ALARM_WITH_SENSOR =  {0x25, 0x25, (byte)0x18};
         private static byte[] latlngInvalidData = {(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,
                                                      (byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF};
 
@@ -77,7 +78,9 @@ namespace TopflytechCodec
                     || Utils.ArrayEquals(NETWORK_INFO_DATA, bytes)
                     || Utils.ArrayEquals(BLUETOOTH_SECOND_DATA, bytes)
                     || Utils.ArrayEquals(LOCATION_SECOND_DATA, bytes)
-                    || Utils.ArrayEquals(ALARM_SECOND_DATA, bytes);
+                    || Utils.ArrayEquals(ALARM_SECOND_DATA, bytes)
+                    || Utils.ArrayEquals(LOCATION_DATA_WITH_SENSOR, bytes)
+                    || Utils.ArrayEquals(LOCATION_ALARM_WITH_SENSOR, bytes);
         }
 
 
@@ -178,6 +181,8 @@ namespace TopflytechCodec
                         return heartbeatMessage;
                     case 0x02:
                     case 0x04:
+                    case 0x16:
+                    case 0x18:
                         LocationMessage locationMessage = parseDataMessage(bytes);
                         return locationMessage;
                     case 0x05:
@@ -289,7 +294,7 @@ namespace TopflytechCodec
             }
             else if (16 == str.Length)
             {
-                String software = String.Format("V{0}.{1}.{2}.{3}", Convert.ToInt32(str.Substring(0, 1), 16), Convert.ToInt32(str.Substring(1, 1), 16), Convert.ToInt32(str.Substring(2, 1), 16), Convert.ToInt32(str.Substring(3, 1), 16));
+                String software = String.Format("V{1}.{2}.{3}", Convert.ToInt32(str.Substring(1, 1), 16), Convert.ToInt32(str.Substring(2, 1), 16), Convert.ToInt32(str.Substring(3, 1), 16));
                 String firmware = String.Format("V{0}.{1}.{2}.{3}", Convert.ToInt32(str.Substring(10, 1), 16), Convert.ToInt32(str.Substring(11, 1), 16), Convert.ToInt32(str.Substring(12, 1), 16), Convert.ToInt32(str.Substring(13, 1), 16));
                 String hardware = String.Format("{0}.{1}", Convert.ToInt32(str.Substring(14, 1), 16), Convert.ToInt32(str.Substring(15, 1), 16));
                 SignInMessage signInMessage = new SignInMessage();
@@ -2230,7 +2235,7 @@ namespace TopflytechCodec
             {
                 try
                 {
-                    analoginput = (float)(Convert.ToDouble(String.Format("{0}.{1}", Convert.ToInt32(str.Substring(0, 2)), Convert.ToInt32(str.Substring(2, 2)))));
+                    analoginput = (float)(Convert.ToDouble(String.Format("{0}.{1}", str.Substring(0, 2), str.Substring(2, 2))));
                 }
                 catch (Exception e)
                 {
@@ -2248,7 +2253,7 @@ namespace TopflytechCodec
             {
                 try
                 {
-                    analoginput2 = (float)(Convert.ToDouble(String.Format("{0}.{1}", Convert.ToInt32(str.Substring(0, 2)), Convert.ToInt32(str.Substring(2, 2)))));
+                    analoginput2 = (float)(Convert.ToDouble(String.Format("{0}.{1}", str.Substring(0, 2), str.Substring(2, 2))));
                 }
                 catch (Exception e)
                 {
@@ -2266,7 +2271,7 @@ namespace TopflytechCodec
             {
                 try
                 {
-                    analoginput3 = (float)(Convert.ToDouble(String.Format("{0}.{1}", Convert.ToInt32(str.Substring(0, 2)), Convert.ToInt32(str.Substring(2, 2)))));
+                    analoginput3 = (float)(Convert.ToDouble(String.Format("{0}.{1}", str.Substring(0, 2),str.Substring(2, 2))));
                 }
                 catch (Exception e)
                 {
@@ -2284,7 +2289,7 @@ namespace TopflytechCodec
             {
                 try
                 {
-                    analoginput4 = (float)(Convert.ToDouble(String.Format("{0}.{1}", Convert.ToInt32(str.Substring(0, 2)), Convert.ToInt32(str.Substring(2, 2)))));
+                    analoginput4 = (float)(Convert.ToDouble(String.Format("{0}.{1}", str.Substring(0, 2), str.Substring(2, 2))));
                 }
                 catch (Exception e)
                 {
@@ -2302,7 +2307,7 @@ namespace TopflytechCodec
             {
                 try
                 {
-                    analoginput5 = (float)(Convert.ToDouble(String.Format("{0}.{1}", Convert.ToInt32(str.Substring(0, 2)), Convert.ToInt32(str.Substring(2, 2)))));
+                    analoginput5 = (float)(Convert.ToDouble(String.Format("{0}.{1}", str.Substring(0, 2), str.Substring(2, 2))));
                 }
                 catch (Exception e)
                 {
@@ -2476,6 +2481,7 @@ namespace TopflytechCodec
             message.IopPowerCutOff = iopPowerCutOff;
             message.IopACOn = iopACOn;
             message.Output12V = output12V;
+            message.Output1 = output1;
             message.Output2 = output2;
             message.Output3 = output3;
             message.OutputVout = outputVout;
@@ -2596,6 +2602,7 @@ namespace TopflytechCodec
             int input4 = (iop & 0x800) == 0x800 ? 1 : 0;
             int input5 = (iop & 0x10) == 0x10 ? 1 : 0;
             int input6 = (iop & 0x08) == 0x08 ? 1 : 0;
+            int output1 = (iop & 0x0400) == 0x0400 ? 1 : 0;
             int output2 = (iop * 0x200) == 0x200 ? 1 : 0;
             int output3 = (iop * 0x100) == 0x100 ? 1 : 0;
             int output12V = (iop * 0x10) == 0x10 ? 1 : 0;
@@ -2607,7 +2614,7 @@ namespace TopflytechCodec
             float analoginput = 0;
             try
             {
-                analoginput = (float)(Convert.ToDouble(String.Format("{0}.{1}", Convert.ToInt32(str.Substring(0, 2)), Convert.ToInt32(str.Substring(2, 2)))));
+                analoginput = (float)(Convert.ToDouble(String.Format("{0}.{1}", str.Substring(0, 2), str.Substring(2, 2))));
             }
             catch (Exception e)
             {
@@ -2617,7 +2624,7 @@ namespace TopflytechCodec
             float analoginput2 = 0;
             try
             {
-                analoginput2 = (float)(Convert.ToDouble(String.Format("{0}.{1}", Convert.ToInt32(str.Substring(0, 2)), Convert.ToInt32(str.Substring(2, 2)))));
+                analoginput2 = (float)(Convert.ToDouble(String.Format("{0}.{1}", str.Substring(0, 2), str.Substring(2, 2))));
             }
             catch (Exception e)
             {
@@ -2625,7 +2632,7 @@ namespace TopflytechCodec
             }
             byte alarmByte = data[22];
             int originalAlarmCode = (int)alarmByte;
-            bool isAlarmData = command[2] == 0x04;
+            bool isAlarmData = command[2] == 0x04 || command[2] == 0x18;
             bool isSendSmsAlarmToManagerPhone = (data[23] & 0x20) == 0x20;
             bool isSendSmsAlarmWhenDigitalInput2Change = (data[23] & 0x10) == 0x10;
             int jammerDetectionStatus = (data[23] & 0xC);
@@ -2723,33 +2730,29 @@ namespace TopflytechCodec
                 message = new LocationInfoMessage();
                 message.ProtocolHeadType = 0x02;
             }
-            float analogInput3 = 0;
-            int rpm = 0;
-            if (data.Length >= 55)
-            {
-                byte adc2Din = data[53];
-                str = BytesUtils.Bytes2HexString(data, 54);
-
-                if (str.ToLower().Equals("ffff"))
-                {
-                    analogInput3 = -999;
-                }
-                else
-                {
-                    try
-                    {
-                        analogInput3 = (float)Convert.ToDouble(String.Format("%d.%s", Convert.ToInt32(str.Substring(0, 2)), str.Substring(2, 4)));
-                    }
-                    catch (Exception e)
-                    {
-                        //            e.printStackTrace();
-                    }
-                }
-
-
-                rpm = BytesUtils.Bytes2Short(data, 56);
+             int protocolHead = bytes[2];
+            if ((protocolHead == 0x16 || protocolHead == 0x18) && data.Length >= 65){
+                byte[] axisXByte = Utils.ArrayCopyOfRange(data,53,55);
+                int axisX = BytesUtils.bytes2SingleShort(axisXByte,0); 
+                byte[] axisYByte = Utils.ArrayCopyOfRange(data,55,57);
+                int axisY = BytesUtils.bytes2SingleShort(axisYByte,0);
+                byte[] axisZByte = Utils.ArrayCopyOfRange(data,57,59);
+                int axisZ = BytesUtils.bytes2SingleShort(axisZByte,0); 
+                byte[] gyroscopeAxisXByte = Utils.ArrayCopyOfRange(data,59,61);
+                int gyroscopeAxisX = BytesUtils.bytes2SingleShort(gyroscopeAxisXByte,0);
+                byte[] gyroscopeAxisYByte = Utils.ArrayCopyOfRange(data,61,63);
+                int gyroscopeAxisY = BytesUtils.bytes2SingleShort(gyroscopeAxisYByte,0);
+                byte[] gyroscopeAxisZByte = Utils.ArrayCopyOfRange(data, 63, 65);
+                int gyroscopeAxisZ = BytesUtils.bytes2SingleShort(gyroscopeAxisZByte,0); 
+                message.AxisX = axisX;
+                message.AxisY = axisY;
+                message.AxisZ = axisZ;
+                message.GyroscopeAxisX = gyroscopeAxisX;
+                message.GyroscopeAxisY = gyroscopeAxisY;
+                message.GyroscopeAxisZ = gyroscopeAxisZ;
 
             }
+            message.ProtocolHeadType = protocolHead; 
             message.OrignBytes = bytes;
             message.SerialNo = serialNo;
             //message.IsNeedResp = isNeedResp;
@@ -2786,15 +2789,14 @@ namespace TopflytechCodec
             message.Input4 = input4;
             message.Input5 = input5;
             message.Input6 = input6;
+            message.Output1 = output1;
             message.Output2 = output2;
             message.Output3 = output3;
             message.AnalogInput1 = analoginput;
-            message.AnalogInput2 = analoginput2;
-            message.AnalogInput3 = analogInput3;
+            message.AnalogInput2 = analoginput2; 
             message.SpeakerStatus = speakerStatus;
             message.Rs232PowerOf5V = rs232PowerOf5V;
-            message.AccdetSettingStatus = accdetSettingStatus;
-            message.Rpm = rpm;
+            message.AccdetSettingStatus = accdetSettingStatus; 
             message.OriginalAlarmCode = originalAlarmCode;
             message.Mileage = mileage;
             try

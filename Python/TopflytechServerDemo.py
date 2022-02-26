@@ -47,15 +47,15 @@ def dealObdDeviceMessage(message,socketClient):
         # if message.isNeedResp:
         #     reply = t880xdEncoder.getLocationMsgReply(message.imei,True,message.serialNo)
         #     socketClient.send(reply)
-        reply = t880xdEncoder.getLocationMsgReply(message.imei,True,message.serialNo)
+        reply = t880xdEncoder.getLocationMsgReply(message.imei,True,message.serialNo,message.protocolHeadType)
         socketClient.send(reply)
     elif isinstance(message,LocationAlarmMessage):
-        print ("receive locationAlarmMessage" + message.imei + "Alarm is : " + str(message.originalAlarmCode))
+        print ("receive locationAlarmMessage" + message.imei + " Alarm is : " + str(message.originalAlarmCode))
         # some new model device,need serial no,reply this message
         # if message.isNeedResp:
         #     reply = t880xdEncoder.getLocationAlarmMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode)
         #     socketClient.send(reply)
-        reply = t880xdEncoder.getLocationAlarmMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode)
+        reply = t880xdEncoder.getLocationAlarmMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode,message.protocolHeadType)
         socketClient.send(reply)
     elif isinstance(message,GpsDriverBehaviorMessage):
         print ("receive gpsDriverBehaviorMessage" + message.imei + " behavior is :" + getGpsDriverBehaviorDescription(message.behaviorType))
@@ -225,7 +225,7 @@ def dealPersonalDeviceMessage(message,socketClient):
         reply = personalEncoder.getLocationMsgReply(message.imei,True,message.serialNo)
         socketClient.send(reply)
     elif isinstance(message,LocationAlarmMessage):
-        print ("receive locationAlarmMessage" + message.imei + "Alarm is : " + str(message.originalAlarmCode))
+        print ("receive locationAlarmMessage" + message.imei + " Alarm is : " + str(message.originalAlarmCode))
         # if message.isNeedResp:
         #     reply = personalEncoder.getLocationAlarmMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode)
         #     socketClient.send(reply)
@@ -248,6 +248,10 @@ def dealPersonalDeviceMessage(message,socketClient):
         print ("receive wifi location Message: " + message.imei)
         reply = personalEncoder.getWifiMsgReply(message.imei,True,message.serialNo)
         socketClient.send(reply)
+    elif isinstance(message,LockMessage):
+        print ("receive lock Message: " + message.imei)
+        reply = personalEncoder.getLockMsgReply(message.imei,True,message.serialNo)
+        socketClient.send(reply)
     elif isinstance(message,NetworkInfoMessage):
         print ("receive network info Message: " + message.imei)
         # if message.isNeedResp:
@@ -257,7 +261,7 @@ def dealPersonalDeviceMessage(message,socketClient):
         socketClient.send(reply)
 
 if __name__ == "__main__":
-    HOST, PORT = "192.168.1.8", 1001
+    HOST, PORT = "192.168.1.53", 1001
     s = socket.socket()
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind((HOST, PORT))
@@ -267,9 +271,9 @@ if __name__ == "__main__":
     while True:
         c, addr = s.accept()
         print("\nConnection received from %s" % str(addr))
-        # decoder = Decoder(MessageEncryptType.NONE,"")
+        decoder = Decoder(MessageEncryptType.NONE,"")
         # decoder = ObdDecoder(MessageEncryptType.NONE,"")
-        decoder = PersonalAssetMsgDecoder(MessageEncryptType.NONE,"")
+        # decoder = PersonalAssetMsgDecoder(MessageEncryptType.NONE,"")
         while True:
             data = c.recv(2048)
             if not data:
@@ -278,9 +282,9 @@ if __name__ == "__main__":
 
             messageList = decoder.decode(data)
             for message in messageList:
-                # dealNoObdDeviceMessage(message,c)
+                dealNoObdDeviceMessage(message,c)
                 # dealObdDeviceMessage(message,c)
-                dealPersonalDeviceMessage(message,c)
+                # dealPersonalDeviceMessage(message,c)
 
         c.close()
 

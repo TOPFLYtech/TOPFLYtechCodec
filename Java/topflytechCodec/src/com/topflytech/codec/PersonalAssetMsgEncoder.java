@@ -41,8 +41,13 @@ public class PersonalAssetMsgEncoder {
         return Encoder.getWifiMsgReply(imei, needSerialNo, serialNo, command, encryptType, aesKey);
     }
 
-    public  byte[] getLockMsgReply(String imei,boolean needSerialNo,int serialNo) throws IOException {
-        byte[] command = {0x27, 0x27, 0x14};
+//    public  byte[] getLockMsgReply(String imei,boolean needSerialNo,int serialNo) throws IOException {
+//        byte[] command = {0x27, 0x27, 0x14};
+//        return Encoder.getWifiMsgReply(imei,needSerialNo,serialNo,command,encryptType,aesKey);
+//    }
+
+    public  byte[] getLockMsgReply(String imei,boolean needSerialNo,int serialNo,int protocolHeadType) throws IOException {
+        byte[] command = {0x27, 0x27, (byte)protocolHeadType};
         return Encoder.getWifiMsgReply(imei,needSerialNo,serialNo,command,encryptType,aesKey);
     }
     /**

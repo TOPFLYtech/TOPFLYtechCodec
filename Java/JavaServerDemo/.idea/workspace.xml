@@ -1,141 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="43b57fe3-6f21-4d05-abf6-9392920f35ac" name="Default" comment="" />
-    <ignored path="javaServerDemo.iws" />
-    <ignored path=".idea/workspace.xml" />
-    <ignored path="$PROJECT_DIR$/target/" />
-    <ignored path=".idea/dataSources.local.xml" />
-    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
-    <option name="TRACKING_ENABLED" value="true" />
+    <list default="true" id="43b57fe3-6f21-4d05-abf6-9392920f35ac" name="Default" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/topflytechCodec_1_0_7.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../C#/880XServerDemo/880XServerDemo.suo" beforeDir="false" afterPath="$PROJECT_DIR$/../../C#/880XServerDemo/880XServerDemo.suo" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../C#/880XServerDemo/880XServerDemo/Form1.Designer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../C#/880XServerDemo/880XServerDemo/Form1.Designer.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../C#/880XServerDemo/880XServerDemo/obj/x86/Release/880XServerDemo.csproj.FileListAbsolute.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../../C#/880XServerDemo/880XServerDemo/obj/x86/Release/880XServerDemo.csproj.FileListAbsolute.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../C#/880XServerDemo/880XServerDemo/obj/x86/Release/880XServerDemo.csproj.GenerateResource.Cache" beforeDir="false" afterPath="$PROJECT_DIR$/../../C#/880XServerDemo/880XServerDemo/obj/x86/Release/880XServerDemo.csproj.GenerateResource.Cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../C#/880XServerDemo/880XServerDemo/obj/x86/Release/880XServerDemo.csprojResolveAssemblyReference.cache" beforeDir="false" afterPath="$PROJECT_DIR$/../../C#/880XServerDemo/880XServerDemo/obj/x86/Release/880XServerDemo.csprojResolveAssemblyReference.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../C#/880XServerDemo/880XServerDemo/obj/x86/Release/880XServerDemo.exe" beforeDir="false" afterPath="$PROJECT_DIR$/../../C#/880XServerDemo/880XServerDemo/obj/x86/Release/880XServerDemo.exe" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../C#/880XServerDemo/880XServerDemo/obj/x86/Release/880XServerDemo.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/../../C#/880XServerDemo/880XServerDemo/obj/x86/Release/880XServerDemo.pdb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../C#/880XServerDemo/880XServerDemo/obj/x86/Release/DesignTimeResolveAssemblyReferences.cache" beforeDir="false" afterPath="$PROJECT_DIR$/../../C#/880XServerDemo/880XServerDemo/obj/x86/Release/DesignTimeResolveAssemblyReferences.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../C#/880XServerDemo/880XServerDemo/obj/x86/Release/DesignTimeResolveAssemblyReferencesInput.cache" beforeDir="false" afterPath="$PROJECT_DIR$/../../C#/880XServerDemo/880XServerDemo/obj/x86/Release/DesignTimeResolveAssemblyReferencesInput.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../C#/TopflytechCodec/TopflytechCodec/Decoder.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../C#/TopflytechCodec/TopflytechCodec/Decoder.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../C#/TopflytechCodec/TopflytechCodec/Entities/LocationMessage.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../C#/TopflytechCodec/TopflytechCodec/Entities/LocationMessage.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../C#/TopflytechCodec/TopflytechCodec/Entities/LockMessage.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../C#/TopflytechCodec/TopflytechCodec/Entities/LockMessage.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../C#/TopflytechCodec/TopflytechCodec/PersonalAssetMsgDecoder.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../C#/TopflytechCodec/TopflytechCodec/PersonalAssetMsgDecoder.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../C#/TopflytechCodec/TopflytechCodec/PersonalAssetMsgEncoder.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../C#/TopflytechCodec/TopflytechCodec/PersonalAssetMsgEncoder.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../C#/TopflytechCodec/TopflytechCodec/obj/Release/DesignTimeResolveAssemblyReferencesInput.cache" beforeDir="false" afterPath="$PROJECT_DIR$/../../C#/TopflytechCodec/TopflytechCodec/obj/Release/DesignTimeResolveAssemblyReferencesInput.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../C#/TopflytechCodec/TopflytechCodec/obj/Release/TopflytechCodec.csproj.FileListAbsolute.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../../C#/TopflytechCodec/TopflytechCodec/obj/Release/TopflytechCodec.csproj.FileListAbsolute.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../C#/TopflytechCodec/TopflytechCodec/obj/Release/TopflytechCodec.dll" beforeDir="false" afterPath="$PROJECT_DIR$/../../C#/TopflytechCodec/TopflytechCodec/obj/Release/TopflytechCodec.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../C#/TopflytechCodec/TopflytechCodec/obj/Release/TopflytechCodec.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/../../C#/TopflytechCodec/TopflytechCodec/obj/Release/TopflytechCodec.pdb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__com_topflytech_topflytechCodec_1_0_5.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/javaServerDemo.iml" beforeDir="false" afterPath="$PROJECT_DIR$/javaServerDemo.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/topflytechCodec-1.0.7.jar" beforeDir="false" afterPath="$PROJECT_DIR$/lib/topflytechCodec-1.0.7.jar" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/topflytech/demo/NoObdHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/topflytech/demo/NoObdHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/topflytech/demo/PersonalHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/topflytech/demo/PersonalHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../topflytechCodec/src/com/topflytech/codec/Decoder.java" beforeDir="false" afterPath="$PROJECT_DIR$/../topflytechCodec/src/com/topflytech/codec/Decoder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../topflytechCodec/src/com/topflytech/codec/ObdDecoder.java" beforeDir="false" afterPath="$PROJECT_DIR$/../topflytechCodec/src/com/topflytech/codec/ObdDecoder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../topflytechCodec/src/com/topflytech/codec/PersonalAssetMsgDecoder.java" beforeDir="false" afterPath="$PROJECT_DIR$/../topflytechCodec/src/com/topflytech/codec/PersonalAssetMsgDecoder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../topflytechCodec/src/com/topflytech/codec/PersonalAssetMsgEncoder.java" beforeDir="false" afterPath="$PROJECT_DIR$/../topflytechCodec/src/com/topflytech/codec/PersonalAssetMsgEncoder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../topflytechCodec/src/com/topflytech/codec/TimeUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/../topflytechCodec/src/com/topflytech/codec/TimeUtils.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../topflytechCodec/src/com/topflytech/codec/entities/LocationMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/../topflytechCodec/src/com/topflytech/codec/entities/LocationMessage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../topflytechCodec/src/com/topflytech/codec/entities/LockMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/../topflytechCodec/src/com/topflytech/codec/entities/LockMessage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Python/TopflytechCodec.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Python/TopflytechCodec.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Python/TopflytechServerDemo.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Python/TopflytechServerDemo.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="ChangesViewManager" flattened_view="true" show_ignored="false" />
   <component name="CreatePatchCommitExecutor">
     <option name="PATCH_PATH" value="" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
-  <component name="FavoritesManager">
-    <favorites_list name="javaServerDemo" />
-  </component>
-  <component name="FileEditorManager">
-    <leaf>
-      <file leaf-file-name="NoObdDecoder.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/topflytech/demo/NoObdDecoder.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="22" column="66" selection-start-line="22" selection-start-column="62" selection-end-line="22" selection-end-column="66" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ObdDecoder.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/topflytech/demo/ObdDecoder.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="13" column="13" selection-start-line="13" selection-start-column="13" selection-end-line="13" selection-end-column="13" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ObdDevicePipelineFactory.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/topflytech/demo/ObdDevicePipelineFactory.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="25" column="20" selection-start-line="25" selection-start-column="20" selection-end-line="25" selection-end-column="20" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="NoObdHandler.java" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/com/topflytech/demo/NoObdHandler.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="3.7089872">
-              <caret line="206" column="54" selection-start-line="206" selection-start-column="54" selection-end-line="206" selection-end-column="54" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Entry.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/topflytech/demo/Entry.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="12" column="81" selection-start-line="12" selection-start-column="81" selection-end-line="12" selection-end-column="81" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ObdHandler.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/topflytech/demo/ObdHandler.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="133" column="9" selection-start-line="133" selection-start-column="9" selection-end-line="133" selection-end-column="9" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="PersonalHandler.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/topflytech/demo/PersonalHandler.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="89" column="9" selection-start-line="86" selection-start-column="9" selection-end-line="89" selection-end-column="9" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="PersonalDecoder.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/topflytech/demo/PersonalDecoder.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="2" column="0" selection-start-line="2" selection-start-column="0" selection-end-line="2" selection-end-column="0" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="PersonalDevicePipelineFactory.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/topflytech/demo/PersonalDevicePipelineFactory.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="26" column="74" selection-start-line="26" selection-start-column="74" selection-end-line="26" selection-end-column="74" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="NoObdDevicePipelineFactory.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/topflytech/demo/NoObdDevicePipelineFactory.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="11" column="39" selection-start-line="11" selection-start-column="13" selection-end-line="11" selection-end-column="39" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
@@ -163,15 +80,8 @@
   <component name="JsGulpfileManager">
     <detection-done>true</detection-done>
   </component>
-  <component name="MavenImportPreferences">
-    <option name="generalSettings">
-      <MavenGeneralSettings>
-        <option name="mavenHome" value="Bundled (Maven 3)" />
-      </MavenGeneralSettings>
-    </option>
-  </component>
-  <component name="NamedScopeManager">
-    <order />
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
   </component>
   <component name="ProjectFrameBounds">
     <option name="x" value="-8" />
@@ -179,16 +89,8 @@
     <option name="width" value="1936" />
     <option name="height" value="1056" />
   </component>
-  <component name="ProjectLevelVcsManager" settingsEditedManually="false">
-    <OptionsSetting value="true" id="Add" />
-    <OptionsSetting value="true" id="Remove" />
-    <OptionsSetting value="true" id="Checkout" />
-    <OptionsSetting value="true" id="Update" />
-    <OptionsSetting value="true" id="Status" />
-    <OptionsSetting value="true" id="Edit" />
-    <ConfirmationsSetting value="0" id="Add" />
-    <ConfirmationsSetting value="0" id="Remove" />
-  </component>
+  <component name="ProjectId" id="25dR13IdKk60gigYhymsJdVfexP" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
     <navigator currentView="ProjectPane" proportions="" version="1">
       <flattenPackages />
@@ -329,62 +231,45 @@
       <pane id="Scratches" />
     </panes>
   </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
   <component name="PropertiesComponent">
-    <property name="aspect.path.notification.shown" value="true" />
+    <property name="Downloaded.Files.Path.Enabled" value="false" />
+    <property name="GenerateAntBuildDialog.backupFiles" value="true" />
+    <property name="GenerateAntBuildDialog.enableUiFormCompile" value="true" />
+    <property name="GenerateAntBuildDialog.forceTargetJdk" value="true" />
+    <property name="GenerateAntBuildDialog.generateIdeaHomeProperty" value="false" />
+    <property name="GenerateAntBuildDialog.generateSingleFile" value="false" />
+    <property name="GenerateAntBuildDialog.inclineRuntiemClasspath" value="false" />
+    <property name="GenerateAntBuildDialog.outputFileNameProperty" value="javaserverdemo" />
+    <property name="Repository.Attach.JavaDocs" value="false" />
+    <property name="Repository.Attach.Sources" value="false" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="aspect.path.notification.shown" value="true" />
+    <property name="dynamic.classpath" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/lib/topflytechCodec-1.0.7.jar" />
     <property name="project.structure.last.edited" value="Modules" />
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
-    <property name="GenerateAntBuildDialog.generateSingleFile" value="false" />
-    <property name="GenerateAntBuildDialog.enableUiFormCompile" value="true" />
-    <property name="GenerateAntBuildDialog.forceTargetJdk" value="true" />
-    <property name="GenerateAntBuildDialog.backupFiles" value="true" />
-    <property name="GenerateAntBuildDialog.inclineRuntiemClasspath" value="false" />
-    <property name="GenerateAntBuildDialog.generateIdeaHomeProperty" value="false" />
-    <property name="GenerateAntBuildDialog.outputFileNameProperty" value="javaserverdemo" />
-    <property name="Downloaded.Files.Path.Enabled" value="false" />
-    <property name="Repository.Attach.JavaDocs" value="false" />
-    <property name="Repository.Attach.Sources" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/lib/topflytechCodec-1.0.7.jar!/" />
-    <property name="recentsLimit" value="5" />
-    <property name="restartRequiresConfirmation" value="true" />
-    <property name="dynamic.classpath" value="false" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\trunk-2\TOOFLYtechCodec\TOPFLYtechCodec\Java\JavaServerDemo\lib" />
       <recent name="F:\trunk-2\server\tool\JavaServerDemo\lib" />
     </key>
     <key name="CopyClassDialog.RECENTS_KEY">
       <recent name="com.topflytech.demo" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.main">
-    <configuration default="true" type="#org.jetbrains.idea.devkit.run.PluginConfigurationType" factoryName="Plugin">
-      <module name="" />
-      <option name="VM_PARAMETERS" value="-Xmx512m -Xms256m -XX:MaxPermSize=250m -ea" />
-      <option name="PROGRAM_PARAMETERS" />
-      <method />
-    </configuration>
+  <component name="RunManager">
     <configuration default="true" type="Applet" factoryName="Applet">
       <option name="WIDTH" value="400" />
       <option name="HEIGHT" value="300" />
       <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
       <module />
-      <method />
-    </configuration>
-    <configuration default="true" type="Application" factoryName="Application">
-      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
-      <option name="MAIN_CLASS_NAME" />
-      <option name="VM_PARAMETERS" />
-      <option name="PROGRAM_PARAMETERS" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" />
-      <option name="ENABLE_SWING_INSPECTOR" value="false" />
-      <option name="ENV_VARIABLES" />
-      <option name="PASS_PARENT_ENVS" value="true" />
-      <module name="" />
-      <envs />
       <method />
     </configuration>
     <configuration default="true" type="CucumberJavaRunConfigurationType" factoryName="Cucumber java">
@@ -465,75 +350,13 @@
       <setting name="launchBrowser" value="false" />
       <method />
     </configuration>
-    <configuration default="true" type="JUnit" factoryName="JUnit">
-      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
-      <module name="" />
-      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" />
-      <option name="PACKAGE_NAME" />
-      <option name="MAIN_CLASS_NAME" />
-      <option name="METHOD_NAME" />
-      <option name="TEST_OBJECT" value="class" />
-      <option name="VM_PARAMETERS" value="-ea" />
-      <option name="PARAMETERS" />
-      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
-      <option name="ENV_VARIABLES" />
-      <option name="PASS_PARENT_ENVS" value="true" />
-      <option name="TEST_SEARCH_SCOPE">
-        <value defaultName="singleModule" />
-      </option>
-      <envs />
-      <patterns />
-      <method />
-    </configuration>
-    <configuration default="true" type="JarApplication" factoryName="JAR Application">
-      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
-      <envs />
-      <method />
-    </configuration>
     <configuration default="true" type="JavascriptDebugType" factoryName="JavaScript Debug">
-      <method />
-    </configuration>
-    <configuration default="true" type="Remote" factoryName="Remote">
-      <option name="USE_SOCKET_TRANSPORT" value="true" />
-      <option name="SERVER_MODE" value="false" />
-      <option name="SHMEM_ADDRESS" value="javadebug" />
-      <option name="HOST" value="localhost" />
-      <option name="PORT" value="5005" />
       <method />
     </configuration>
     <configuration default="true" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
       <module name="" />
       <envs />
-      <method />
-    </configuration>
-    <configuration default="true" type="TestNG" factoryName="TestNG">
-      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
-      <module name="" />
-      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" />
-      <option name="SUITE_NAME" />
-      <option name="PACKAGE_NAME" />
-      <option name="MAIN_CLASS_NAME" />
-      <option name="METHOD_NAME" />
-      <option name="GROUP_NAME" />
-      <option name="TEST_OBJECT" value="CLASS" />
-      <option name="VM_PARAMETERS" value="-ea" />
-      <option name="PARAMETERS" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="OUTPUT_DIRECTORY" />
-      <option name="ANNOTATION_TYPE" />
-      <option name="ENV_VARIABLES" />
-      <option name="PASS_PARENT_ENVS" value="true" />
-      <option name="TEST_SEARCH_SCOPE">
-        <value defaultName="singleModule" />
-      </option>
-      <option name="USE_DEFAULT_REPORTERS" value="false" />
-      <option name="PROPERTIES_FILE" />
-      <envs />
-      <properties />
-      <listeners />
       <method />
     </configuration>
     <configuration default="true" type="js.build_tools.gulp" factoryName="Gulp.js">
@@ -545,31 +368,53 @@
       <envs />
       <method />
     </configuration>
-    <configuration default="false" name="main" type="Application" factoryName="Application">
-      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
-      <option name="MAIN_CLASS_NAME" value="com.topflytech.demo.Entry" />
-      <option name="VM_PARAMETERS" value="" />
-      <option name="PROGRAM_PARAMETERS" value="" />
-      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
-      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" value="" />
-      <option name="ENABLE_SWING_INSPECTOR" value="false" />
-      <option name="ENV_VARIABLES" />
-      <option name="PASS_PARENT_ENVS" value="true" />
-      <module name="javaServerDemo" />
-      <envs />
-      <method />
+    <configuration default="true" type="Application" factoryName="Application">
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
     </configuration>
-    <list size="1">
-      <item index="0" class="java.lang.String" itemvalue="Application.main" />
-    </list>
+    <configuration name="main" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="com.topflytech.demo.Entry" />
+      <module name="javaServerDemo" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="JUnit" factoryName="JUnit">
+      <option name="TEST_OBJECT" value="class" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="TestNG">
+      <option name="TEST_OBJECT" value="CLASS" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <properties />
+      <listeners />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="#org.jetbrains.idea.devkit.run.PluginConfigurationType">
+      <module name="" />
+      <option name="VM_PARAMETERS" value="-Xmx512m -Xms256m -XX:MaxPermSize=250m -ea" />
+      <option name="PROGRAM_PARAMETERS" />
+      <predefined_log_file enabled="true" id="idea.log" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
   </component>
-  <component name="ShelveChangesManager" show_recycled="false" />
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="43b57fe3-6f21-4d05-abf6-9392920f35ac" name="Default" comment="" />
       <created>1568084675227</created>
       <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
       <updated>1568084675227</updated>
       <workItem from="1568084677985" duration="1256000" />
       <workItem from="1568164516886" duration="5568000" />
@@ -610,14 +455,16 @@
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
     </layout>
   </component>
-  <component name="VcsContentAnnotationSettings">
-    <option name="myLimit" value="2678400000" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <option name="time" value="1" />
-    </breakpoint-manager>
-    <watches-manager />
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="antWorkspaceConfiguration">
     <option name="IS_AUTOSCROLL_TO_SOURCE" value="false" />

@@ -27,7 +27,8 @@ public class PersonalAssetMsgDecoder {
     private static final byte[] NETWORK_INFO_DATA = {0x27, 0x27, 0x05};
     private static final byte[] BLUETOOTH_DATA =       {0x27, 0x27, (byte)0x10};
     private static final byte[] WIFI_DATA =  {0x27, 0x27, (byte)0x15};
-    private static final byte[] LOCK_DATA =  {0x27, 0x27, (byte)0x14};
+    private static final byte[] TEMP_LOCK_DATA =  {0x27, 0x27, (byte)0x14};
+    private static final byte[] LOCK_DATA =  {0x27, 0x27, (byte)0x17};
 
     private int encryptType = 0;
     private String aesKey;
@@ -46,6 +47,7 @@ public class PersonalAssetMsgDecoder {
                 || Arrays.equals(CONFIG,bytes)
                 || Arrays.equals(BLUETOOTH_DATA,bytes)
                 || Arrays.equals(WIFI_DATA,bytes)
+                || Arrays.equals(TEMP_LOCK_DATA,bytes)
                 || Arrays.equals(LOCK_DATA,bytes)
                 || Arrays.equals(NETWORK_INFO_DATA,bytes);
     }
@@ -178,6 +180,9 @@ public class PersonalAssetMsgDecoder {
                     BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = parseBluetoothDataMessage(bytes);
                     return bluetoothPeripheralDataMessage;
                 case 0x14:
+                    LockMessage oldLockMessage = parseOldLockMessage(bytes);
+                    return oldLockMessage;
+                case 0x17:
                     LockMessage lockMessage = parseLockMessage(bytes);
                     return lockMessage;
                 case 0x15:
@@ -213,6 +218,10 @@ public class PersonalAssetMsgDecoder {
 //        bluetoothPeripheralDataMessage.setIsNeedResp(isNeedResp);
         bluetoothPeripheralDataMessage.setImei(imei);
         byte[] bleData = Arrays.copyOfRange(bytes,22,bytes.length);
+        if (bleData.length <= 0){
+            System.out.println("Error len ble Data:" +BytesUtils.bytes2HexString(bytes,0));
+            return bluetoothPeripheralDataMessage;
+        }
         List<BleData> bleDataList = new ArrayList<BleData>();
         if(bleData[0] == 0x00 && bleData[1] == 0x01){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_TIRE);
@@ -870,6 +879,10 @@ public class PersonalAssetMsgDecoder {
         if((status3 & 0x80) == 0x80){
             smartPowerSettingStatus = "enable";
         }
+        Integer lockType = null;
+        if (data.length >= 71){
+            lockType = (int)data[70];
+        }
         LocationMessage locationMessage;
         if (isAlarmData){
             locationMessage = new LocationAlarmMessage();
@@ -944,6 +957,7 @@ public class PersonalAssetMsgDecoder {
         locationMessage.setPcid_4g_1(pcid_4g_1);
         locationMessage.setEarfcn_4g_2(earfcn_4g_2);
         locationMessage.setPcid_4g_2(pcid_4g_2);
+        locationMessage.setLockType(lockType);
         return locationMessage;
     }
 
@@ -974,9 +988,12 @@ public class PersonalAssetMsgDecoder {
                 case 0x10:
                     BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = parseBluetoothDataMessage(bytes);
                     callback.receiveBluetoothDataMessage(bluetoothPeripheralDataMessage);
-                case 0x14:
+                case 0x17:
                     LockMessage lockMessage = parseLockMessage(bytes);
                     callback.receiveLockMessage(lockMessage);
+                case 0x14:
+                    LockMessage oldLockMessage = parseOldLockMessage(bytes);
+                    callback.receiveLockMessage(oldLockMessage);
                 case 0x15:
                     WifiMessage wifiMessage = parseWifiMessage(bytes);
                     callback.receiveWifiMessage(wifiMessage);
@@ -995,7 +1012,54 @@ public class PersonalAssetMsgDecoder {
         }
 
     }
-
+    private LockMessage parseOldLockMessage(byte[] bytes){
+        LockMessage lockMessage = new LockMessage();
+        int serialNo = BytesUtils.bytes2Short(bytes, 5);
+        String imei = BytesUtils.IMEI.decode(bytes, 7);
+        Date date = TimeUtils.getGTM0Date(bytes, 15);
+        boolean latlngValid = bytes[21] == 0x01;
+        double altitude = latlngValid ? BytesUtils.bytes2Float(bytes, 22) : 0;
+        double longitude = latlngValid ? BytesUtils.bytes2Float(bytes,26) : 0;
+        double latitude = latlngValid ? BytesUtils.bytes2Float(bytes,30) : 0;
+        Float speedf = 0.0f;
+        if (latlngValid){
+            try{
+                if (latlngValid) {
+                    byte[] bytesSpeed = Arrays.copyOfRange(bytes, 34, 36);
+                    String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
+                    if(!strSp.toLowerCase().equals("ffff")){
+                        speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+                    }
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        int azimuth = latlngValid ? BytesUtils.bytes2Short(bytes, 36) : 0;
+        int lockType = bytes[38] & 0xff;
+        int idLen = (bytes[40] & 0xff) * 2;
+        String idStr = BytesUtils.bytes2HexString(bytes,41);
+        String id = idStr;
+        if (idStr.length() > idLen){
+            id = idStr.substring(0,idLen);
+        }
+        id = id.toUpperCase();
+        lockMessage.setProtocolHeadType(bytes[2]);
+        lockMessage.setSerialNo(serialNo);
+        lockMessage.setImei(imei);
+        lockMessage.setDate(date);
+        lockMessage.setOrignBytes(bytes);
+        lockMessage.setLatlngValid(latlngValid);
+        lockMessage.setAltitude(altitude);
+        lockMessage.setLongitude(longitude);
+        lockMessage.setLatitude(latitude);
+        lockMessage.setLatlngValid(latlngValid);
+        lockMessage.setSpeed(speedf);
+        lockMessage.setAzimuth(azimuth);
+        lockMessage.setLockType(lockType);
+        lockMessage.setLockId(id);
+        return lockMessage;
+    }
     private LockMessage parseLockMessage(byte[] bytes) {
         LockMessage lockMessage = new LockMessage();
         int serialNo = BytesUtils.bytes2Short(bytes, 5);
@@ -1021,14 +1085,14 @@ public class PersonalAssetMsgDecoder {
         }
         int azimuth = latlngValid ? BytesUtils.bytes2Short(bytes, 36) : 0;
         int lockType = bytes[38] & 0xff;
-        int lockResult = bytes[39] & 0xff;
-        int idLen = (bytes[40] & 0xff) * 2;
-        String idStr = BytesUtils.bytes2HexString(bytes,41);
+        int idLen = (bytes[39] & 0xff) * 2;
+        String idStr = BytesUtils.bytes2HexString(bytes,40);
         String id = idStr;
         if (idStr.length() > idLen){
             id = idStr.substring(0,idLen);
         }
         id = id.toUpperCase();
+        lockMessage.setProtocolHeadType(bytes[2]);
         lockMessage.setSerialNo(serialNo);
         lockMessage.setImei(imei);
         lockMessage.setDate(date);
@@ -1041,7 +1105,6 @@ public class PersonalAssetMsgDecoder {
         lockMessage.setSpeed(speedf);
         lockMessage.setAzimuth(azimuth);
         lockMessage.setLockType(lockType);
-        lockMessage.setLockResult(lockResult);
         lockMessage.setLockId(id);
         return lockMessage;
     }

@@ -460,7 +460,12 @@ namespace TopflytechCodec.Entities
             get { return smartPowerOpenStatus; }
             set { smartPowerOpenStatus = value; }
         }
-
+        private int output1;
+        public int Output1
+        {
+            get { return output1; }
+            set { output1 = value; }
+        }
         private int output2;
         public int Output2
         {
@@ -758,5 +763,30 @@ namespace TopflytechCodec.Entities
             set { deviceInternalTempReadingANdUploadingSettingStatus = value; }
         }
 
+        private float gyroscopeAxisX;
+        public float GyroscopeAxisX
+        {
+            get { return gyroscopeAxisX; }
+            set { gyroscopeAxisX = value; }
+        }
+        private float gyroscopeAxisY;
+        public float GyroscopeAxisY
+        {
+            get { return gyroscopeAxisY; }
+            set { gyroscopeAxisY = value; }
+        }
+        private float gyroscopeAxisZ;
+        public float GyroscopeAxisZ
+        {
+            get { return gyroscopeAxisZ; }
+            set { gyroscopeAxisZ = value; }
+        }
+
+        private int lockType;
+        public int LockType
+        {
+            get { return lockType; }
+            set { lockType = value; }
+        }
     }
 }

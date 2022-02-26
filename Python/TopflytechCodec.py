@@ -95,6 +95,17 @@ class WifiMessage(Message):
     ap3Mac=""
     ap3RSSI=0
 
+class LockMessage(Message):
+    latlngValid = False
+    latitude = 0.0
+    longitude = 0.0
+    altitude = 0.0
+    speed = 0.0
+    azimuth = 0
+    date = datetime.datetime
+    lockType = 0
+    lockId = ""
+
 class Rs232FuelMessage(Rs232DeviceMessage):
     fuelPercent = 0.0
     temp = 0.0
@@ -420,6 +431,10 @@ class LocationMessage(Message):
     deviceRemoveAlarmSettingStatus = False
     openCaseAlarmSettingStatus = False
     deviceInternalTempReadingANdUploadingSettingStatus = False
+    gyroscopeAxisX = 0
+    gyroscopeAxisY = 0
+    gyroscopeAxisZ = 0
+    lockType = 0xff
 
 
 class LocationInfoMessage(LocationMessage):
@@ -514,21 +529,33 @@ def byte2HexString(byteArray,index):
     return ''.join('{:02x}'.format(x) for x in byteArray[index:])
 
 def hexString2Bytes(hexStr):
-     # hexData = hexStr.decode("hex")
-     return bytes.fromhex(hexStr)
-     # return map(ord,hexData)
+     hexData = hexStr.decode("hex")
+     # return bytes.fromhex(hexStr)
+     return map(ord,hexData)
 
 def formatNumb(numb):
     return Decimal(numb).quantize(Decimal('0.00'))
 
 def short2Bytes(number):
     str = '{:04x}'.format(number)
-    return bytes.fromhex(str)
-
-    # return map(ord,'{:04x}'.format(number).decode("hex"))
+    # return bytes.fromhex(str)
+    return map(ord,'{:04x}'.format(number).decode("hex"))
 
 def bytes2Short(byteArray,offset):
     return (byteArray[offset]  << 8 & 0xFF00) + (byteArray[offset+1] & 0xFF)
+
+def bytes2SingleShort(byteArray,offset):
+    if len(byteArray) < offset + 2:
+        return 0
+    first = byteArray[offset]
+    second = byteArray[offset + 1]
+    firstValue = first & 0x7f
+    sourceValue = 0
+    if (first & 0x80) == 0x80:
+        sourceValue = -32768
+    incValue = (firstValue << 8) + int(second)
+    return sourceValue + incValue
+    
 
 def bytes2Integer(byteArray,offset):
     return (byteArray[offset]<< 24) + (byteArray[offset+1] << 16) + (byteArray[offset+2] << 8) +(byteArray[offset+3] )
@@ -716,6 +743,8 @@ class Decoder:
     BLUETOOTH_SECOND_DATA = [0x25,0x25,0x12]
     LOCATION_SECOND_DATA = [0x25,0x25,0x13]
     ALARM_SECOND_DATA = [0x25,0x25,0x14]
+    LOCATION_DATA_WITH_SENSOR = [0x25,0x25,0x16]
+    LOCATION_ALARM_WITH_SENSOR = [0x25,0x25,0x18]
     latlngInvalidData = [0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]
     rs232TireHead = [0x00,0x01]
     rs232RfidHead = [0x00,0x03]
@@ -748,7 +777,7 @@ class Decoder:
                byteArray == self.ACCELERATION_ALARM or byteArray == self.BLUETOOTH_MAC or byteArray == self.RS232\
                or byteArray == self.BLUETOOTH_DATA or byteArray == self.NETWORK_INFO_DATA or \
                byteArray == self.BLUETOOTH_SECOND_DATA or byteArray == self.LOCATION_SECOND_DATA or \
-               byteArray == self.ALARM_SECOND_DATA
+               byteArray == self.ALARM_SECOND_DATA or byteArray == self.LOCATION_DATA_WITH_SENSOR or byteArray == self.LOCATION_ALARM_WITH_SENSOR
 
     decoderBuf = TopflytechByteBuf()
 
@@ -795,7 +824,7 @@ class Decoder:
                 return self.parseSignInMessage(byteArray)
             elif byteArray[2] == 0x03:
                 return self.parseHeartbeatMessage(byteArray)
-            elif byteArray[2] == 0x02 or byteArray[2] == 0x04:
+            elif byteArray[2] == 0x02 or byteArray[2] == 0x04 or byteArray[2] == 0x16 or byteArray[2] == 0x18:
                 return self.parseDataMessage(byteArray)
             elif byteArray[2] == 0x05:
                 return self.parseGpsDriverBehaviorMessage(byteArray)
@@ -1150,6 +1179,8 @@ class Decoder:
         bluetoothPeripheralDataMessage.lac_2g_3 = lac_2g_3
         bluetoothPeripheralDataMessage.ci_2g_3 = ci_2g_3
         bleData = byteArray[39:len(byteArray)]
+        if len(bleData) <= 0:
+            return bluetoothPeripheralDataMessage
         bleDataList = []
         if bleData[0] == 0x00 and bleData[1] == 0x01:
             bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_TIRE
@@ -1533,6 +1564,8 @@ class Decoder:
         # bluetoothPeripheralDataMessage.isNeedResp = isNeedResp
         bluetoothPeripheralDataMessage.imei = imei
         bleData = byteArray[22:len(byteArray)]
+        if len(bleData) <= 0:
+            return bluetoothPeripheralDataMessage
         bleDataList = []
         if bleData[0] == 0x00 and bleData[1] == 0x01:
             bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_TIRE
@@ -2651,6 +2684,7 @@ class Decoder:
         input4 = (iop & 0x800) == 0x800
         input5 = (iop & 0x10) == 0x10
         input6 = (iop & 0x08) == 0x08
+        output1 = (iop & 0x0400) == 0x0400
         output2 = (iop & 0x200) == 0x200
         output3 = (iop & 0x100) == 0x100
         output12V = (iop & 0x10) == 0x10
@@ -2677,7 +2711,7 @@ class Decoder:
         except:
             print ("analog2 error")
         originalAlarmCode = (int) (data[22])
-        isAlarmData = command[2] == 0x04
+        isAlarmData = command[2] == 0x04 or command[2] == 0x18
         isSendSmsAlarmToManagerPhone = (data[23] & 0x20) == 0x20
         isSendSmsAlarmWhenDigitalInput2Change = (data[23] & 0x10) == 0x10
         jammerDetectionStatus = (data[23] & 0xC)
@@ -2745,15 +2779,24 @@ class Decoder:
             externalPowerVoltage = (float(externalPowerVoltageStr) ) / 100
         analogInput3 = 0
         rpm = 0
-        if len(data) >= 55:
-            str = byte2HexString(data, 54)
-            analogInput3 = (float)("{0}.{1}".format(str[0:2],str[2:4]))
-            rpm = bytes2Short(data,56)
+        protocolHead = byteArray[2]
         locationMessage = LocationInfoMessage()
-        locationMessage.protocolHeadType = 0x02
         if isAlarmData:
             locationMessage = LocationAlarmMessage()
-            locationMessage.protocolHeadType = 0x04
+        locationMessage.protocolHeadType = protocolHead
+        if len(data) >= 65 and (protocolHead == 0x16 or protocolHead == 0x18):
+            axisX = bytes2SingleShort(data[53:55],0)
+            axisY = bytes2SingleShort(data[55:57],0)
+            axisZ = bytes2SingleShort(data[57:59],0)
+            gyroscopeAxisX = bytes2SingleShort(data[59:61],0)
+            gyroscopeAxisY = bytes2SingleShort(data[61:63],0)
+            gyroscopeAxisZ = bytes2SingleShort(data[63:65],0)
+            locationMessage.axisX = axisX
+            locationMessage.axisY = axisY
+            locationMessage.axisZ = axisZ
+            locationMessage.gyroscopeAxisX = gyroscopeAxisX
+            locationMessage.gyroscopeAxisY = gyroscopeAxisY
+            locationMessage.gyroscopeAxisZ = gyroscopeAxisZ
         locationMessage.orignBytes = byteArray
         locationMessage.serialNo = serialNo
         # locationMessage.isNeedResp = isNeedResp
@@ -2827,6 +2870,7 @@ class Decoder:
         locationMessage.input4 = input4
         locationMessage.input5 = input5
         locationMessage.input6 = input6
+        locationMessage.output1 = output1
         locationMessage.output2 = output2
         locationMessage.output3 = output3
         locationMessage.output12V = output12V
@@ -3234,6 +3278,8 @@ class ObdDecoder:
     BLUETOOTH_DATA = [0x26, 0x26, 0x10]
     NETWORK_INFO_DATA = [0x26, 0x26, 0x11]
     SECOND_BLUETOOTH_DATA = [0x26, 0x26, 0x12]
+    LOCATION_DATA_WITH_SENSOR = [0x26, 0x26, 0x16]
+    LOCATION_ALARM_WITH_SENSOR = [0x26, 0x26, 0x18]
     latlngInvalidData = [0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]
 
     obdHead = [0x55,0xAA]
@@ -3251,7 +3297,8 @@ class ObdDecoder:
                or byteArray == self.ALARM or byteArray == self.CONFIG or \
                byteArray == self.GPS_DRIVER_BEHAVIOR or byteArray == self.ACCELERATION_DRIVER_BEHAVIOR or \
                byteArray == self.ACCELERATION_ALARM or byteArray == self.OBD_DATA\
-               or byteArray == self.BLUETOOTH_DATA or byteArray == self.NETWORK_INFO_DATA or byteArray == self.SECOND_BLUETOOTH_DATA
+               or byteArray == self.BLUETOOTH_DATA or byteArray == self.NETWORK_INFO_DATA or byteArray == self.SECOND_BLUETOOTH_DATA\
+               or byteArray == self.LOCATION_DATA_WITH_SENSOR or byteArray == self.LOCATION_ALARM_WITH_SENSOR
 
     decoderBuf = TopflytechByteBuf()
 
@@ -3298,7 +3345,7 @@ class ObdDecoder:
                 return self.parseSignInMessage(byteArray)
             elif byteArray[2] == 0x03:
                 return self.parseHeartbeatMessage(byteArray)
-            elif byteArray[2] == 0x02 or byteArray[2] == 0x04:
+            elif byteArray[2] == 0x02 or byteArray[2] == 0x04 or byteArray[2] == 0x16 or byteArray[2] == 0x18:
                 return self.parseDataMessage(byteArray)
             elif byteArray[2] == 0x05:
                 return self.parseGpsDriverBehaviorMessage(byteArray)
@@ -3480,6 +3527,7 @@ class ObdDecoder:
         iopIgnition = (iop & self.MASK_IGNITION) == self.MASK_IGNITION
         iopPowerCutOff = (iop & self.MASK_POWER_CUT) == self.MASK_POWER_CUT
         iopACOn = (iop & self.MASK_AC) == self.MASK_AC
+        output1 = (iop & 0x0400) == 0x0400
         input1 = iopIgnition
         input2 = iopACOn
         speakerStatus = 0
@@ -3489,7 +3537,7 @@ class ObdDecoder:
         if (iop & 0x20) ==  0x20:
             rs232PowerOf5V = 1
         originalAlarmCode = (int) (data[18])
-        isAlarmData = command[2] == 0x04
+        isAlarmData = command[2] == 0x04 or command[2] == 0x18
         isSendSmsAlarmToManagerPhone = (data[19] & 0x20) == 0x20
         isSendSmsAlarmWhenDigitalInput2Change = (data[19] & 0x10) == 0x10
         jammerDetectionStatus = (data[19] & 0xC)
@@ -3606,6 +3654,21 @@ class ObdDecoder:
         locationMessage = LocationInfoMessage()
         if isAlarmData:
             locationMessage = LocationAlarmMessage()
+        protocolHead = byteArray[2]
+        locationMessage.protocolHeadType = protocolHead
+        if len(data) >= 80 and (protocolHead == 0x16 or protocolHead == 0x18):
+            axisX = bytes2SingleShort(data[68:70],0)
+            axisY = bytes2SingleShort(data[70:72],0)
+            axisZ = bytes2SingleShort(data[72:74],0)
+            gyroscopeAxisX = bytes2SingleShort(data[74:76],0)
+            gyroscopeAxisY = bytes2SingleShort(data[76:78],0)
+            gyroscopeAxisZ = bytes2SingleShort(data[78:80],0)
+            locationMessage.axisX = axisX
+            locationMessage.axisY = axisY
+            locationMessage.axisZ = axisZ
+            locationMessage.gyroscopeAxisX = gyroscopeAxisX
+            locationMessage.gyroscopeAxisY = gyroscopeAxisY
+            locationMessage.gyroscopeAxisZ = gyroscopeAxisZ
         locationMessage.orignBytes = byteArray
         locationMessage.serialNo = serialNo
         # locationMessage.isNeedResp = isNeedResp
@@ -3631,6 +3694,7 @@ class ObdDecoder:
         locationMessage.IOP = iop
         locationMessage.input1 = input1
         locationMessage.input2 = input2
+        locationMessage.output1 = output1
         locationMessage.iopIgnition = iopIgnition
         locationMessage.iopPowerCutOff = iopPowerCutOff
         locationMessage.iopACOn = iopACOn
@@ -3989,6 +4053,8 @@ class ObdDecoder:
         bluetoothPeripheralDataMessage.lac_2g_3 = lac_2g_3
         bluetoothPeripheralDataMessage.ci_2g_3 = ci_2g_3
         bleData = byteArray[39:len(byteArray)]
+        if len(bleData) <= 0:
+            return bluetoothPeripheralDataMessage
         bleDataList = []
         if bleData[0] == 0x00 and bleData[1] == 0x01:
             bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_TIRE
@@ -3996,7 +4062,7 @@ class ObdDecoder:
             while i < len(bleData):
                 bleTireData = BleTireData()
                 macArray = bleData[i:i + 6]
-                mac = byte2HexString(macArray, 0);
+                mac = byte2HexString(macArray, 0)
                 voltageTmp = (int) (bleData[i + 6])
                 if voltageTmp < 0:
                     voltageTmp += 256
@@ -4372,6 +4438,8 @@ class ObdDecoder:
         # bluetoothPeripheralDataMessage.isNeedResp = isNeedResp
         bluetoothPeripheralDataMessage.imei = imei
         bleData = byteArray[22:len(byteArray)]
+        if len(bleData) <= 0:
+            return bluetoothPeripheralDataMessage
         bleDataList = []
         if bleData[0] == 0x00 and bleData[1] == 0x01:
             bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_TIRE
@@ -4966,7 +5034,7 @@ class T880xdEncoder:
         return Encoder.getCommonMsgReply(imei,needSerialNo,serialNo,command,self.encryptType,self.aesKey)
 
 
-    def getLocationMsgReply(self,imei,needSerialNo,serialNo):
+    def getLocationMsgReply(self,imei,needSerialNo,serialNo,protocolHead):
         """
         Get location message reply
         :param imei:The imei,the type is string
@@ -4974,11 +5042,11 @@ class T880xdEncoder:
         :param serialNo:The serial No.The type is int.
         :return:The message reply.The type is bytearray
         """
-        command = [0x26,0x26,0x02]
+        command = [0x26,0x26,protocolHead]
         return Encoder.getCommonMsgReply(imei,needSerialNo,serialNo,command,self.encryptType,self.aesKey)
 
 
-    def getLocationAlarmMsgReply(self,imei,needSerialNo,serialNo,sourceAlarmCode):
+    def getLocationAlarmMsgReply(self,imei,needSerialNo,serialNo,sourceAlarmCode,protocolHead):
         """
         Get location alarm message reply
         :param imei:The imei,the type is string
@@ -4987,7 +5055,7 @@ class T880xdEncoder:
         :param sourceAlarmCode: the source alarm code from the source message.The type is int.
         :return:The message reply.The type is bytearray
         """
-        command = [0x26,0x26,0x04]
+        command = [0x26,0x26,protocolHead]
         return Encoder.getLocationAlarmMsgReply(imei,needSerialNo,serialNo,sourceAlarmCode,command,self.encryptType,self.aesKey)
 
 
@@ -5108,6 +5176,8 @@ class PersonalAssetMsgDecoder:
     BLUETOOTH_DATA = [0x27, 0x27, 0x10]
 
     WIFI_DATA = [0x27,0x27,0x15]
+    
+    LOCK_DATA = [0x27,0x27,0x17]
 
     CONFIG = [0x27, 0x27, 0x81]
     encryptType = 0
@@ -5125,7 +5195,7 @@ class PersonalAssetMsgDecoder:
     def match (self,byteArray):
         return byteArray == self.SIGNUP or byteArray == self.DATA or byteArray == self.HEARTBEAT \
                or byteArray == self.ALARM or byteArray == self.NETWORK_INFO_DATA or byteArray == self.BLUETOOTH_DATA \
-               or byteArray == self.CONFIG or byteArray == self.WIFI_DATA
+               or byteArray == self.CONFIG or byteArray == self.WIFI_DATA or byteArray == self.LOCK_DATA
 
 
     decoderBuf = TopflytechByteBuf()
@@ -5183,11 +5253,54 @@ class PersonalAssetMsgDecoder:
                 return self.parseInteractMessage(byteArray)
             elif byteArray[2] == 0x15:
                 return self.parseWifiMessage(byteArray)
+            elif byteArray[2] == 0x17:
+                return self.parseLockMessage(byteArray)
             else:
                 return None
         return None
 
 
+    def parseLockMessage(self,byteArray):
+        serialNo = bytes2Short(byteArray,5)
+        # isNeedResp = (serialNo & 0x8000) != 0x8000
+        imei = decodeImei(byteArray,7)
+        dateStr = "20" + byte2HexString(byteArray[15:21],0)
+        gtm0 = GTM0(dateStr)
+        latlngValid = byteArray[21] == 0x01
+        altitude = 0
+        latitude = 0
+        longitude = 0
+        speed = 0
+        azimuth = 0
+        if  latlngValid:
+            altitude = bytes2Float(byteArray,22)
+            latitude = bytes2Float(byteArray,26)
+            longitude = bytes2Float(byteArray,30)
+            azimuth = bytes2Short(byteArray,36)
+            speedStr = byte2HexString(byteArray[34:36],0)
+            speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+        lockType = byteArray[38] & 0xff
+        idLen = (byteArray[39] & 0xff) * 2
+        idStr = byte2HexString(byteArray[40:],0)
+        id = idStr
+        if len(idStr) > idLen:
+            id = idStr[0:idLen]
+        lockMessage = LockMessage()
+        lockMessage.serialNo = serialNo
+        lockMessage.imei= imei
+        lockMessage.orignBytes = bytes
+        lockMessage.date = gtm0
+        lockMessage.latlngValid = latlngValid
+        lockMessage.altitude = altitude
+        lockMessage.latitude = latitude
+        lockMessage.longitude =longitude
+        lockMessage.speed = speed
+        lockMessage.azimuth = azimuth
+        lockMessage.lockType = lockType
+        lockMessage.lockId = id
+        return lockMessage
+		
+        
     def parseInteractMessage(self,byteArray):
         serialNo = bytes2Short(byteArray,5)
         # isNeedResp = (serialNo & 0x8000) != 0x8000
@@ -5844,6 +5957,7 @@ class PersonalAssetMsgDecoder:
         altitude = 0
         latitude = 0
         longitude = 0
+        speed = 0
         azimuth = 0
         is_4g_lbs = False
         mcc_4g = 0
@@ -5972,6 +6086,9 @@ class PersonalAssetMsgDecoder:
         smartPowerSettingStatus = "disable"
         if (status3 & 0x80) == 0x80:
             smartPowerSettingStatus = "enable"
+        lockType = 0xff
+        if len(byteArray) >= 71:
+            lockType = byteArray[70]
         locationMessage = LocationInfoMessage()
         if isAlarmData:
             locationMessage = LocationAlarmMessage()
@@ -6034,6 +6151,7 @@ class PersonalAssetMsgDecoder:
         locationMessage.deviceRemoveAlarmSettingStatus = deviceRemoveAlarmSettingStatus
         locationMessage.openCaseAlarmSettingStatus = openCaseAlarmSettingStatus
         locationMessage.deviceInternalTempReadingANdUploadingSettingStatus = deviceInternalTempReadingANdUploadingSettingStatus
+        locationMessage.lockType = lockType
         return locationMessage
 
 
@@ -6099,6 +6217,9 @@ class PersonalAssetMsgEncoder:
         command = [0x27,0x27,0x04]
         return Encoder.getLocationAlarmMsgReply(imei,needSerialNo,serialNo,sourceAlarmCode,command,self.encryptType,self.aesKey)
 
+    def getLockMsgReply(self,imei,needSerialNo,serialNo):
+        command = [0x27,0x27,0x17]
+        return Encoder.getCommonMsgReply(imei,needSerialNo,serialNo,command,self.encryptType,self.aesKey)
     def getWifiMsgReply(self,imei,needSerialNo,serialNo):
         command = [0x27,0x27,0x15]
         return Encoder.getCommonMsgReply(imei,needSerialNo,serialNo,command,self.encryptType,self.aesKey)

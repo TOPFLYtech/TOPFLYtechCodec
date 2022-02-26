@@ -28,16 +28,16 @@ namespace TopflytechCodec
         }
 
 
-        public byte[] getLocationMsgReply(String imei, bool needSerialNo, int serialNo)
+        public byte[] getLocationMsgReply(String imei, bool needSerialNo, int serialNo, int protocolHeadType)
         {
-            byte[] command = { 0x26, 0x26, 0x02 };
+            byte[] command = { 0x26, 0x26, (byte)protocolHeadType };
             return Encoder.getLocationMsgReply(imei, needSerialNo, serialNo, command, encryptType, aesKey);
         }
 
 
-        public byte[] getLocationAlarmMsgReply(String imei, bool needSerialNo, int serialNo, int sourceAlarmCode)
+        public byte[] getLocationAlarmMsgReply(String imei, bool needSerialNo, int serialNo, int sourceAlarmCode, int protocolHeadType)
         {
-            byte[] command = { 0x26, 0x26, 0x04 };
+            byte[] command = { 0x26, 0x26, (byte)protocolHeadType };
             return Encoder.getLocationAlarmMsgReply(imei, needSerialNo, serialNo, sourceAlarmCode, command, encryptType, aesKey);
         }
 

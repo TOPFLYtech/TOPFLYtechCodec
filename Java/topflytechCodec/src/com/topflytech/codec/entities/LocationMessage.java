@@ -1009,6 +1009,14 @@ public class LocationMessage extends Message{
     }
 
 
+    public int getOutput1() {
+        return output1;
+    }
+
+    public void setOutput1(int output1) {
+        this.output1 = output1;
+    }
+
     private Boolean gpsWorking = false;//gps is working mode or sleep mode
     private Boolean latlngValid = false;//current is gps data or lbs data
     private Double latitude = 0.0;
@@ -1097,6 +1105,8 @@ public class LocationMessage extends Message{
     private int input2 = 0;
     private int input3 = 0;
     private int input4 = 0;
+
+    private int output1 = 0;
     private int output2;
     private int output3;
 
@@ -1145,6 +1155,47 @@ public class LocationMessage extends Message{
     private boolean deviceRemoveAlarmSettingStatus = false;
     private boolean openCaseAlarmSettingStatus = false;
     private boolean deviceInternalTempReadingANdUploadingSettingStatus = false;
+
+
+    private float gyroscopeAxisX;
+    private float gyroscopeAxisY;
+    private float gyroscopeAxisZ;
+
+    private Integer lockType;
+    public Integer getLockType() {
+        return lockType;
+    }
+
+    public void setLockType(Integer lockType) {
+        this.lockType = lockType;
+    }
+
+
+
+    public float getGyroscopeAxisX() {
+        return gyroscopeAxisX;
+    }
+
+    public void setGyroscopeAxisX(float gyroscopeAxisX) {
+        this.gyroscopeAxisX = gyroscopeAxisX;
+    }
+
+    public float getGyroscopeAxisY() {
+        return gyroscopeAxisY;
+    }
+
+    public void setGyroscopeAxisY(float gyroscopeAxisY) {
+        this.gyroscopeAxisY = gyroscopeAxisY;
+    }
+
+    public float getGyroscopeAxisZ() {
+        return gyroscopeAxisZ;
+    }
+
+    public void setGyroscopeAxisZ(float gyroscopeAxisZ) {
+        this.gyroscopeAxisZ = gyroscopeAxisZ;
+    }
+
 
 
     public boolean isLockSim() {

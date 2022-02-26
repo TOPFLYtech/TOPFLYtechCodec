@@ -29,20 +29,26 @@ public class TimeUtils {
     }
 
     public static Date getGTM0Date(byte[] bytes,int startIndex) {
-        byte[] dateData = Bytes.concat(new byte[]{0x20}, Arrays.copyOfRange(bytes, startIndex, startIndex + 6)); // 20130512122356
-        String datetime = BytesUtils.bytes2HexString(dateData, 0);
-        int year = Integer.parseInt(datetime.substring(0, 4));
-        Calendar calendar = Calendar.getInstance();
-        int curYear = calendar.get(Calendar.YEAR);
-        if (year > curYear){
-            year = year - 100;
+        try {
+            byte[] dateData = Bytes.concat(new byte[]{0x20}, Arrays.copyOfRange(bytes, startIndex, startIndex + 6)); // 20130512122356
+            String datetime = BytesUtils.bytes2HexString(dateData, 0);
+            int year = Integer.parseInt(datetime.substring(0, 4));
+            Calendar calendar = Calendar.getInstance();
+            int curYear = calendar.get(Calendar.YEAR);
+            if (year > curYear){
+                year = year - 100;
+            }
+            int month = Integer.parseInt(datetime.substring(4, 6));
+            int day = Integer.parseInt(datetime.substring(6, 8));
+            int hour = Integer.parseInt(datetime.substring(8, 10));
+            int minutes = Integer.parseInt(datetime.substring(10, 12));
+            int seconds = Integer.parseInt(datetime.substring(12, 14));
+            return GMT0(year, month, day, hour, minutes, seconds);
+        }catch (Exception e){
+//            e.printStackTrace();
+            return GMT0(1970, 1, 1, 0, 0, 0);
         }
-        int month = Integer.parseInt(datetime.substring(4, 6));
-        int day = Integer.parseInt(datetime.substring(6, 8));
-        int hour = Integer.parseInt(datetime.substring(8, 10));
-        int minutes = Integer.parseInt(datetime.substring(10, 12));
-        int seconds = Integer.parseInt(datetime.substring(12, 14));
-        return GMT0(year, month, day, hour, minutes, seconds);
+
     }
 
 
