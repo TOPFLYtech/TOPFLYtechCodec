@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"  android:background="@color/bg_color_white"
+    >
+<LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/edit_item_high"
+        android:orientation="horizontal"
+        android:gravity="center"
+    >
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/bg_color_white"
+        android:id="@+id/tx_panel_desc"
+        android:layout_marginRight="1dp"
+        android:layout_marginBottom="1dp"
+        android:layout_marginLeft="@dimen/list_item_margin_left"
+        android:layout_weight="3"
+        android:textColor="@color/tx_black"
+        android:textSize="@dimen/btn_size" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/bg_color_white"
+        android:layout_weight="4"
+        android:layout_marginBottom="1dp"
+        android:layout_marginRight="1dp"
+        android:id="@+id/tx_panel_value"
+        android:textColor="@color/tx_black"
+        android:textSize="@dimen/btn_size" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_weight="5"
+        android:layout_height="match_parent"
+        android:gravity="center">
+        <ImageView
+            android:textAllCaps="false"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_margin="7dp"
+            android:id="@+id/img_panel_edit"
+            android:src="@mipmap/ic_edit" >
+        </ImageView>
+    </LinearLayout>
+</LinearLayout>
+
+</LinearLayout>

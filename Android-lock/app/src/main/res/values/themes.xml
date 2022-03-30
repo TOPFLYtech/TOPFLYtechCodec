@@ -1,0 +1,28 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="MyAppTheme" parent="QMUI.Compat">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
+        <!-- Customize your theme here. -->
+    </style>
+
+    <style name="editTextStyle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:background">@drawable/search_edit_text_bg</item>
+        <item name="android:drawablePadding">@dimen/dp_2</item>
+        <item name="android:drawableStart">@mipmap/ic_edit_search</item>
+        <item name="android:gravity">center_vertical</item>
+        <!--<item name="android:imeOptions">actionSearch</item>-->
+        <item name="android:paddingLeft">@dimen/dp_15</item>
+        <item name="android:paddingRight">@dimen/dp_15</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:textSize">@dimen/sp_11</item>
+        <item name="android:hint">@string/please_input_search_name</item>
+        <item name="android:textColorHint">#B3B3B3</item>
+    </style>
+</resources>

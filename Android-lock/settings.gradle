@@ -1,0 +1,3 @@
+include ':sweetAlert'
+include ':app'
+rootProject.name = "lockBleActive"
