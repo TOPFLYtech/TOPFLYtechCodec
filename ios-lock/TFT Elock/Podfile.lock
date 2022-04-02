@@ -1,0 +1,72 @@
+PODS:
+  - ActionSheetPicker-3.0 (2.4.2)
+  - Bugly (2.4.7)
+  - Charts (3.4.0):
+    - Charts/Core (= 3.4.0)
+  - Charts/Core (3.4.0)
+  - CLXToast (0.4.2):
+    - CLXToast/Objc-Toast (= 0.4.2)
+  - CLXToast/Objc-Toast (0.4.2)
+  - DateTimePicker (2.4.1)
+  - JXMarqueeView (0.0.8)
+  - SwiftPopMenu (2.0.2)
+  - swiftScan (1.2.0)
+
+DEPENDENCIES:
+  - ActionSheetPicker-3.0 (from `https://github.com/skywinder/ActionSheetPicker-3.0.git`)
+  - Bugly
+  - Charts (from `https://github.com/danielgindi/Charts.git`)
+  - CLXToast
+  - DateTimePicker (from `https://github.com/itsmeichigo/DateTimePicker.git`)
+  - JXMarqueeView
+  - SwiftPopMenu (from `https://github.com/TangledHusky/SwiftPopMenu.git`)
+  - swiftScan (from `https://github.com/MxABC/swiftScan.git`)
+
+SPEC REPOS:
+  https://github.com/CocoaPods/Specs.git:
+    - Bugly
+    - CLXToast
+    - JXMarqueeView
+
+EXTERNAL SOURCES:
+  ActionSheetPicker-3.0:
+    :git: https://github.com/skywinder/ActionSheetPicker-3.0.git
+  Charts:
+    :git: https://github.com/danielgindi/Charts.git
+  DateTimePicker:
+    :git: https://github.com/itsmeichigo/DateTimePicker.git
+  SwiftPopMenu:
+    :git: https://github.com/TangledHusky/SwiftPopMenu.git
+  swiftScan:
+    :git: https://github.com/MxABC/swiftScan.git
+
+CHECKOUT OPTIONS:
+  ActionSheetPicker-3.0:
+    :commit: f30766dabee91a513d8ce282cfedbdae0e402cf8
+    :git: https://github.com/skywinder/ActionSheetPicker-3.0.git
+  Charts:
+    :commit: 56effcf413ef25144fa89d8483613a0f10c7ab23
+    :git: https://github.com/danielgindi/Charts.git
+  DateTimePicker:
+    :commit: 05b2fc533866a03faeac9dfa20f137a427a66a05
+    :git: https://github.com/itsmeichigo/DateTimePicker.git
+  SwiftPopMenu:
+    :commit: cba2bf540b52ee9c0cc13b6ea639cd102f1ebbf1
+    :git: https://github.com/TangledHusky/SwiftPopMenu.git
+  swiftScan:
+    :commit: fd652ea645b29841f5990ed1583ce6038f190e56
+    :git: https://github.com/MxABC/swiftScan.git
+
+SPEC CHECKSUMS:
+  ActionSheetPicker-3.0: 5b62e07b00bd970509cf5ece99cb7447eae5dd0d
+  Bugly: 2c256069145f550171907c5cb1c0f84ad291f6c1
+  Charts: ef59ae1e7eaa53f10a16a0009c434051292ba808
+  CLXToast: 01c075036feabfebe256856018996f10bd73f24f
+  DateTimePicker: 997176ea28954f3c18817b9565a53b28ee4400b8
+  JXMarqueeView: dfb4eadb1bf7245c9b41706e907c889fbf53c2dc
+  SwiftPopMenu: e8ad0724497781abec06c16e158d08d741c794cd
+  swiftScan: d7f91607b1a47cc04e6eb654c2c01e2e940e337d
+
+PODFILE CHECKSUM: b371a7a0ceb8f90d87ad5af0d7f30af82afa6f31
+
+COCOAPODS: 1.11.2

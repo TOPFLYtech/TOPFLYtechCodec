@@ -402,12 +402,14 @@ public class MainActivity extends AppCompatActivity {
                 String software = null;
                 String hardware = null;
                 String model = null;
+                String voltageStr = null;
                 byte protocolByte = 0x00;
-                if (versionInfo != null){
+                if (versionInfo != null && versionInfo.length >= 7){
                     protocolByte = versionInfo[2];
                     String versionStr = MyByteUtils.bytes2HexString(versionInfo,3);
                     hardware = String.format("V%s.%s",versionStr.substring(0,1),versionStr.substring(1,2));
-                    software = versionStr.substring(2,versionStr.length());
+                    software =  String.format("V%d",Integer.valueOf(versionStr.substring(2,6)));;
+                    voltageStr = String.format("%s.%s",versionStr.substring(6,7),versionStr.substring(7,8));
                     model = BleDeviceData.parseModel(protocolByte);
                 }
                 if (protocolByte != (byte)0x62) {
@@ -432,6 +434,9 @@ public class MainActivity extends AppCompatActivity {
                     if (imei != null){
                         bleDeviceData.setImei(imei);
                     }
+                    if (voltageStr != null){
+                        bleDeviceData.setVoltage(Float.valueOf(voltageStr));
+                    }
                     bleDeviceData.setDeviceName(device.getName());
 
 //                        updateShowItem(bleDeviceData);
@@ -453,6 +458,9 @@ public class MainActivity extends AppCompatActivity {
                     }
                     if (model != null){
                         bleDeviceData.setModel(model);
+                    }
+                    if (voltageStr != null){
+                        bleDeviceData.setVoltage(Float.valueOf(voltageStr));
                     }
                     bleDeviceData.setDeviceName(device.getName());
                     allBleDeviceDataList.add(bleDeviceData);

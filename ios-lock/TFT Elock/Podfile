@@ -1,0 +1,18 @@
+# Uncomment the next line to define a global platform for your project
+platform :ios, '10.0'
+source 'https://github.com/CocoaPods/Specs.git'
+target 'TFT Elock' do
+
+use_frameworks!
+pod 'Bugly'
+#pod 'iOSDFULibrary' 
+pod 'CLXToast' 
+pod 'JXMarqueeView'
+pod 'Charts',:git =>'https://github.com/danielgindi/Charts.git'
+pod 'DateTimePicker', :git => 'https://github.com/itsmeichigo/DateTimePicker.git'
+pod 'ActionSheetPicker-3.0', :git => 'https://github.com/skywinder/ActionSheetPicker-3.0.git' 
+pod 'SwiftPopMenu', :git => 'https://github.com/TangledHusky/SwiftPopMenu.git'
+#pod 'PDFGenerator', :git => 'https://github.com/sgr-ksmt/PDFGenerator.git'
+#pod 'libxlsxwriter'
+pod 'swiftScan', :git => 'https://github.com/MxABC/swiftScan.git'
+end

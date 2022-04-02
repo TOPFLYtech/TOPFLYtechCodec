@@ -1,0 +1,724 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 51;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		91DFBD1027F586B2007F24E8 /* ic_lock.png in Resources */ = {isa = PBXBuildFile; fileRef = 91DFBD0B27F586B2007F24E8 /* ic_lock.png */; };
+		91DFBD1127F586B2007F24E8 /* ic_unlock.png in Resources */ = {isa = PBXBuildFile; fileRef = 91DFBD0C27F586B2007F24E8 /* ic_unlock.png */; };
+		91DFBD1227F586B2007F24E8 /* ic_suocut.png in Resources */ = {isa = PBXBuildFile; fileRef = 91DFBD0D27F586B2007F24E8 /* ic_suocut.png */; };
+		91DFBD1327F586B2007F24E8 /* ic_unlock_error.png in Resources */ = {isa = PBXBuildFile; fileRef = 91DFBD0E27F586B2007F24E8 /* ic_unlock_error.png */; };
+		91DFBD1427F586B2007F24E8 /* ic_lock_error.png in Resources */ = {isa = PBXBuildFile; fileRef = 91DFBD0F27F586B2007F24E8 /* ic_lock_error.png */; };
+		A2A2CB3EF654F472A8E464E8 /* Pods_TFT_Elock.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 535091048AEDBF7507B93187 /* Pods_TFT_Elock.framework */; };
+		E805099D244568D800ED7C75 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E805099C244568D800ED7C75 /* MessageUI.framework */; };
+		E81CC888269FE04B00340C50 /* SwiftPriorityQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81CC887269FE04A00340C50 /* SwiftPriorityQueue.swift */; };
+		E81CC88B26A000F400340C50 /* MsgQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81CC88A26A000F400340C50 /* MsgQueue.swift */; };
+		E82EFE6F248F195400F89E68 /* ic_btn_bg.png in Resources */ = {isa = PBXBuildFile; fileRef = E82EFE6E248F195300F89E68 /* ic_btn_bg.png */; };
+		E84A30C3267B2ABA00365EB1 /* ic_network_dark.png in Resources */ = {isa = PBXBuildFile; fileRef = E84A30B7267B2AB900365EB1 /* ic_network_dark.png */; };
+		E84A30C4267B2ABA00365EB1 /* ic_sensor_blue.png in Resources */ = {isa = PBXBuildFile; fileRef = E84A30B8267B2ABA00365EB1 /* ic_sensor_blue.png */; };
+		E84A30C5267B2ABA00365EB1 /* ic_status_blue.png in Resources */ = {isa = PBXBuildFile; fileRef = E84A30B9267B2ABA00365EB1 /* ic_status_blue.png */; };
+		E84A30C7267B2ABA00365EB1 /* ic_network_blue.png in Resources */ = {isa = PBXBuildFile; fileRef = E84A30BB267B2ABA00365EB1 /* ic_network_blue.png */; };
+		E84A30C9267B2ABA00365EB1 /* ic_status_dark.png in Resources */ = {isa = PBXBuildFile; fileRef = E84A30BD267B2ABA00365EB1 /* ic_status_dark.png */; };
+		E84A30CA267B2ABA00365EB1 /* ic_sensor_dark.png in Resources */ = {isa = PBXBuildFile; fileRef = E84A30BE267B2ABA00365EB1 /* ic_sensor_dark.png */; };
+		E8684E8D243C0B3100D83C6D /* ic_edit.png in Resources */ = {isa = PBXBuildFile; fileRef = E8684E8C243C0B3000D83C6D /* ic_edit.png */; };
+		E86DB35A23A0EC7B002BAACA /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86DB35923A0EC7B002BAACA /* AppDelegate.swift */; };
+		E86DB35C23A0EC7B002BAACA /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86DB35B23A0EC7B002BAACA /* SceneDelegate.swift */; };
+		E86DB35E23A0EC7B002BAACA /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86DB35D23A0EC7B002BAACA /* ViewController.swift */; };
+		E86DB36323A0EC8C002BAACA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E86DB36223A0EC8C002BAACA /* Assets.xcassets */; };
+		E86DB36623A0EC8C002BAACA /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E86DB36423A0EC8C002BAACA /* LaunchScreen.storyboard */; };
+		E86DB37023A1CC15002BAACA /* UIColor+Nordic.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86DB36F23A1CC15002BAACA /* UIColor+Nordic.swift */; };
+		E86DB39423A335DD002BAACA /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB37823A335DB002BAACA /* Default-568h@2x.png */; };
+		E86DB39523A335DD002BAACA /* Default-667h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB37923A335DB002BAACA /* Default-667h@2x.png */; };
+		E86DB39623A335DD002BAACA /* Default-736h@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB37A23A335DB002BAACA /* Default-736h@3x.png */; };
+		E86DB39723A335DD002BAACA /* Default-812h@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB37B23A335DB002BAACA /* Default-812h@3x.png */; };
+		E86DB39823A335DD002BAACA /* Default-896h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB37C23A335DB002BAACA /* Default-896h@2x.png */; };
+		E86DB39923A335DD002BAACA /* Default-896h@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB37D23A335DB002BAACA /* Default-896h@3x.png */; };
+		E86DB39A23A335DD002BAACA /* Default-Landscape-1112h@2x~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB37E23A335DB002BAACA /* Default-Landscape-1112h@2x~ipad.png */; };
+		E86DB39B23A335DD002BAACA /* Default-Landscape-1194h@2x~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB37F23A335DB002BAACA /* Default-Landscape-1194h@2x~ipad.png */; };
+		E86DB39C23A335DD002BAACA /* Default-Landscape-1366h@2x~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB38023A335DB002BAACA /* Default-Landscape-1366h@2x~ipad.png */; };
+		E86DB39D23A335DD002BAACA /* Default-Landscape-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB38123A335DB002BAACA /* Default-Landscape-568h@2x.png */; };
+		E86DB39E23A335DD002BAACA /* Default-Landscape-667h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB38223A335DB002BAACA /* Default-Landscape-667h@2x.png */; };
+		E86DB39F23A335DD002BAACA /* Default-Landscape-736h@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB38323A335DB002BAACA /* Default-Landscape-736h@3x.png */; };
+		E86DB3A023A335DD002BAACA /* Default-Landscape-812h@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB38423A335DB002BAACA /* Default-Landscape-812h@3x.png */; };
+		E86DB3A123A335DD002BAACA /* Default-Landscape-896h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB38523A335DB002BAACA /* Default-Landscape-896h@2x.png */; };
+		E86DB3A223A335DD002BAACA /* Default-Landscape-896h@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB38623A335DB002BAACA /* Default-Landscape-896h@3x.png */; };
+		E86DB3A323A335DD002BAACA /* Default-Landscape7@2x~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB38723A335DB002BAACA /* Default-Landscape7@2x~ipad.png */; };
+		E86DB3A423A335DD002BAACA /* Default-Landscape7~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB38823A335DB002BAACA /* Default-Landscape7~ipad.png */; };
+		E86DB3A523A335DD002BAACA /* Default-Landscape@2x~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB38923A335DB002BAACA /* Default-Landscape@2x~ipad.png */; };
+		E86DB3A623A335DD002BAACA /* Default-Landscape~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB38A23A335DB002BAACA /* Default-Landscape~ipad.png */; };
+		E86DB3A723A335DD002BAACA /* Default-Portrait7-1112h@2x~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB38B23A335DB002BAACA /* Default-Portrait7-1112h@2x~ipad.png */; };
+		E86DB3A823A335DD002BAACA /* Default-Portrait7-1194h@2x~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB38C23A335DB002BAACA /* Default-Portrait7-1194h@2x~ipad.png */; };
+		E86DB3A923A335DD002BAACA /* Default-Portrait7-1366h@2x~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB38D23A335DB002BAACA /* Default-Portrait7-1366h@2x~ipad.png */; };
+		E86DB3AA23A335DD002BAACA /* Default-Portrait7@2x~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB38E23A335DB002BAACA /* Default-Portrait7@2x~ipad.png */; };
+		E86DB3AB23A335DD002BAACA /* Default-Portrait7~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB38F23A335DB002BAACA /* Default-Portrait7~ipad.png */; };
+		E86DB3AC23A335DD002BAACA /* Default-Portrait@2x~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB39023A335DB002BAACA /* Default-Portrait@2x~ipad.png */; };
+		E86DB3AD23A335DD002BAACA /* Default-Portrait~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB39123A335DB002BAACA /* Default-Portrait~ipad.png */; };
+		E86DB3AE23A335DD002BAACA /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB39223A335DB002BAACA /* Default.png */; };
+		E86DB3AF23A335DD002BAACA /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = E86DB39323A335DB002BAACA /* Default@2x.png */; };
+		E8AE747A266F479400D4E78A /* BleDeviceData.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8AE7479266F479400D4E78A /* BleDeviceData.swift */; };
+		E8AE747E266F614E00D4E78A /* BleDetailItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8AE747D266F614E00D4E78A /* BleDetailItem.swift */; };
+		E8AE74822670E69B00D4E78A /* EditController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8AE74812670E69B00D4E78A /* EditController.swift */; };
+		E8B6DB4F23AAFF92001980BF /* AEAlertAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8B6DB4A23AAFF92001980BF /* AEAlertAction.swift */; };
+		E8B6DB5023AAFF92001980BF /* AEAlertView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8B6DB4B23AAFF92001980BF /* AEAlertView.swift */; };
+		E8B6DB5123AAFF92001980BF /* AEBaseAlertView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8B6DB4C23AAFF92001980BF /* AEBaseAlertView.swift */; };
+		E8B6DB5223AAFF92001980BF /* AEPathAnimation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8B6DB4D23AAFF92001980BF /* AEPathAnimation.swift */; };
+		E8B6DB5323AAFF92001980BF /* AEUIAlertView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8B6DB4E23AAFF92001980BF /* AEUIAlertView.swift */; };
+		E8C859D424BD4849006EE3F7 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = E8C859D224BD4849006EE3F7 /* Localizable.strings */; };
+		E8CBBC3B242EED1A00CE91B7 /* flash.bin in Resources */ = {isa = PBXBuildFile; fileRef = E8CBBC3A242EED1800CE91B7 /* flash.bin */; };
+		E8D2A3A523ACCC9B00B42242 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8D2A3A423ACCC9B00B42242 /* Utils.swift */; };
+		E8D7C75B23B5A55800E67C7A /* MyProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8D7C75A23B5A55800E67C7A /* MyProgress.swift */; };
+		E8D7C75F23B5E64D00E67C7A /* FileTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8D7C75D23B5E64D00E67C7A /* FileTool.swift */; };
+		E8D7C76423BDF32200E67C7A /* scan.png in Resources */ = {isa = PBXBuildFile; fileRef = E8D7C76323BDF32200E67C7A /* scan.png */; };
+		E8F147A6244E936D003601B9 /* ic_disconnect.png in Resources */ = {isa = PBXBuildFile; fileRef = E8F147A5244E936D003601B9 /* ic_disconnect.png */; };
+		EA596D4826C11687000F0D95 /* ic_category.png in Resources */ = {isa = PBXBuildFile; fileRef = EA596D4726C11687000F0D95 /* ic_category.png */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		02B4EEE196C344E9BF6EA077 /* Pods-TFT_Elock.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TFT_Elock.release.xcconfig"; path = "Target Support Files/Pods-TFT_Elock/Pods-TFT_Elock.release.xcconfig"; sourceTree = "<group>"; };
+		194367EEEB1EE6362FFB87C6 /* Pods-TFT_Elock.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TFT_Elock.debug.xcconfig"; path = "Target Support Files/Pods-TFT_Elock/Pods-TFT_Elock.debug.xcconfig"; sourceTree = "<group>"; };
+		358FA72EBDD9D1A9E9474DEE /* Pods-TFT Elock.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TFT Elock.release.xcconfig"; path = "Target Support Files/Pods-TFT Elock/Pods-TFT Elock.release.xcconfig"; sourceTree = "<group>"; };
+		535091048AEDBF7507B93187 /* Pods_TFT_Elock.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TFT_Elock.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		91DFBD0B27F586B2007F24E8 /* ic_lock.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_lock.png; sourceTree = "<group>"; };
+		91DFBD0C27F586B2007F24E8 /* ic_unlock.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_unlock.png; sourceTree = "<group>"; };
+		91DFBD0D27F586B2007F24E8 /* ic_suocut.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_suocut.png; sourceTree = "<group>"; };
+		91DFBD0E27F586B2007F24E8 /* ic_unlock_error.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_unlock_error.png; sourceTree = "<group>"; };
+		91DFBD0F27F586B2007F24E8 /* ic_lock_error.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_lock_error.png; sourceTree = "<group>"; };
+		E805099C244568D800ED7C75 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
+		E81CC887269FE04A00340C50 /* SwiftPriorityQueue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftPriorityQueue.swift; sourceTree = "<group>"; };
+		E81CC88A26A000F400340C50 /* MsgQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MsgQueue.swift; sourceTree = "<group>"; };
+		E82EFE6E248F195300F89E68 /* ic_btn_bg.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_btn_bg.png; sourceTree = "<group>"; };
+		E84A30B7267B2AB900365EB1 /* ic_network_dark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_network_dark.png; sourceTree = "<group>"; };
+		E84A30B8267B2ABA00365EB1 /* ic_sensor_blue.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_sensor_blue.png; sourceTree = "<group>"; };
+		E84A30B9267B2ABA00365EB1 /* ic_status_blue.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_status_blue.png; sourceTree = "<group>"; };
+		E84A30BB267B2ABA00365EB1 /* ic_network_blue.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_network_blue.png; sourceTree = "<group>"; };
+		E84A30BD267B2ABA00365EB1 /* ic_status_dark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_status_dark.png; sourceTree = "<group>"; };
+		E84A30BE267B2ABA00365EB1 /* ic_sensor_dark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_sensor_dark.png; sourceTree = "<group>"; };
+		E8684E8C243C0B3000D83C6D /* ic_edit.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_edit.png; sourceTree = "<group>"; };
+		E86DB35623A0EC7B002BAACA /* TFT Elock.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "TFT Elock.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		E86DB35923A0EC7B002BAACA /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		E86DB35B23A0EC7B002BAACA /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		E86DB35D23A0EC7B002BAACA /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		E86DB36223A0EC8C002BAACA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		E86DB36523A0EC8C002BAACA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		E86DB36723A0EC8C002BAACA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		E86DB36F23A1CC15002BAACA /* UIColor+Nordic.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIColor+Nordic.swift"; sourceTree = "<group>"; };
+		E86DB37823A335DB002BAACA /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
+		E86DB37923A335DB002BAACA /* Default-667h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-667h@2x.png"; sourceTree = "<group>"; };
+		E86DB37A23A335DB002BAACA /* Default-736h@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-736h@3x.png"; sourceTree = "<group>"; };
+		E86DB37B23A335DB002BAACA /* Default-812h@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-812h@3x.png"; sourceTree = "<group>"; };
+		E86DB37C23A335DB002BAACA /* Default-896h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-896h@2x.png"; sourceTree = "<group>"; };
+		E86DB37D23A335DB002BAACA /* Default-896h@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-896h@3x.png"; sourceTree = "<group>"; };
+		E86DB37E23A335DB002BAACA /* Default-Landscape-1112h@2x~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-Landscape-1112h@2x~ipad.png"; sourceTree = "<group>"; };
+		E86DB37F23A335DB002BAACA /* Default-Landscape-1194h@2x~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-Landscape-1194h@2x~ipad.png"; sourceTree = "<group>"; };
+		E86DB38023A335DB002BAACA /* Default-Landscape-1366h@2x~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-Landscape-1366h@2x~ipad.png"; sourceTree = "<group>"; };
+		E86DB38123A335DB002BAACA /* Default-Landscape-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-Landscape-568h@2x.png"; sourceTree = "<group>"; };
+		E86DB38223A335DB002BAACA /* Default-Landscape-667h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-Landscape-667h@2x.png"; sourceTree = "<group>"; };
+		E86DB38323A335DB002BAACA /* Default-Landscape-736h@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-Landscape-736h@3x.png"; sourceTree = "<group>"; };
+		E86DB38423A335DB002BAACA /* Default-Landscape-812h@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-Landscape-812h@3x.png"; sourceTree = "<group>"; };
+		E86DB38523A335DB002BAACA /* Default-Landscape-896h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-Landscape-896h@2x.png"; sourceTree = "<group>"; };
+		E86DB38623A335DB002BAACA /* Default-Landscape-896h@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-Landscape-896h@3x.png"; sourceTree = "<group>"; };
+		E86DB38723A335DB002BAACA /* Default-Landscape7@2x~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-Landscape7@2x~ipad.png"; sourceTree = "<group>"; };
+		E86DB38823A335DB002BAACA /* Default-Landscape7~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-Landscape7~ipad.png"; sourceTree = "<group>"; };
+		E86DB38923A335DB002BAACA /* Default-Landscape@2x~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-Landscape@2x~ipad.png"; sourceTree = "<group>"; };
+		E86DB38A23A335DB002BAACA /* Default-Landscape~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-Landscape~ipad.png"; sourceTree = "<group>"; };
+		E86DB38B23A335DB002BAACA /* Default-Portrait7-1112h@2x~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-Portrait7-1112h@2x~ipad.png"; sourceTree = "<group>"; };
+		E86DB38C23A335DB002BAACA /* Default-Portrait7-1194h@2x~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-Portrait7-1194h@2x~ipad.png"; sourceTree = "<group>"; };
+		E86DB38D23A335DB002BAACA /* Default-Portrait7-1366h@2x~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-Portrait7-1366h@2x~ipad.png"; sourceTree = "<group>"; };
+		E86DB38E23A335DB002BAACA /* Default-Portrait7@2x~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-Portrait7@2x~ipad.png"; sourceTree = "<group>"; };
+		E86DB38F23A335DB002BAACA /* Default-Portrait7~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-Portrait7~ipad.png"; sourceTree = "<group>"; };
+		E86DB39023A335DB002BAACA /* Default-Portrait@2x~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-Portrait@2x~ipad.png"; sourceTree = "<group>"; };
+		E86DB39123A335DB002BAACA /* Default-Portrait~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-Portrait~ipad.png"; sourceTree = "<group>"; };
+		E86DB39223A335DB002BAACA /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Default.png; sourceTree = "<group>"; };
+		E86DB39323A335DB002BAACA /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default@2x.png"; sourceTree = "<group>"; };
+		E8AE7479266F479400D4E78A /* BleDeviceData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BleDeviceData.swift; sourceTree = "<group>"; };
+		E8AE747D266F614E00D4E78A /* BleDetailItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BleDetailItem.swift; sourceTree = "<group>"; };
+		E8AE74812670E69B00D4E78A /* EditController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditController.swift; sourceTree = "<group>"; };
+		E8B6DB4A23AAFF92001980BF /* AEAlertAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AEAlertAction.swift; sourceTree = "<group>"; };
+		E8B6DB4B23AAFF92001980BF /* AEAlertView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AEAlertView.swift; sourceTree = "<group>"; };
+		E8B6DB4C23AAFF92001980BF /* AEBaseAlertView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AEBaseAlertView.swift; sourceTree = "<group>"; };
+		E8B6DB4D23AAFF92001980BF /* AEPathAnimation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AEPathAnimation.swift; sourceTree = "<group>"; };
+		E8B6DB4E23AAFF92001980BF /* AEUIAlertView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AEUIAlertView.swift; sourceTree = "<group>"; };
+		E8C859D524BD48D2006EE3F7 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		E8C859D824BDB83E006EE3F7 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		E8CBBC3A242EED1800CE91B7 /* flash.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = flash.bin; sourceTree = "<group>"; };
+		E8D2A3A423ACCC9B00B42242 /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
+		E8D7C75A23B5A55800E67C7A /* MyProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyProgress.swift; sourceTree = "<group>"; };
+		E8D7C75D23B5E64D00E67C7A /* FileTool.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileTool.swift; sourceTree = "<group>"; };
+		E8D7C76323BDF32200E67C7A /* scan.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = scan.png; sourceTree = "<group>"; };
+		E8F147A5244E936D003601B9 /* ic_disconnect.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_disconnect.png; sourceTree = "<group>"; };
+		EA596D4726C11687000F0D95 /* ic_category.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_category.png; sourceTree = "<group>"; };
+		FC950556A4683F0586E222AF /* Pods-TFT Elock.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TFT Elock.debug.xcconfig"; path = "Target Support Files/Pods-TFT Elock/Pods-TFT Elock.debug.xcconfig"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E86DB35323A0EC7B002BAACA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E805099D244568D800ED7C75 /* MessageUI.framework in Frameworks */,
+				A2A2CB3EF654F472A8E464E8 /* Pods_TFT_Elock.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		504596D1CAF8F7DB2F785172 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				E805099C244568D800ED7C75 /* MessageUI.framework */,
+				535091048AEDBF7507B93187 /* Pods_TFT_Elock.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		58F24C6C70B18BBD61BB5664 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				194367EEEB1EE6362FFB87C6 /* Pods-TFT_Elock.debug.xcconfig */,
+				02B4EEE196C344E9BF6EA077 /* Pods-TFT_Elock.release.xcconfig */,
+				FC950556A4683F0586E222AF /* Pods-TFT Elock.debug.xcconfig */,
+				358FA72EBDD9D1A9E9474DEE /* Pods-TFT Elock.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		E86DB34D23A0EC7B002BAACA = {
+			isa = PBXGroup;
+			children = (
+				E86DB35823A0EC7B002BAACA /* TFT Elock */,
+				E86DB35723A0EC7B002BAACA /* Products */,
+				58F24C6C70B18BBD61BB5664 /* Pods */,
+				504596D1CAF8F7DB2F785172 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		E86DB35723A0EC7B002BAACA /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E86DB35623A0EC7B002BAACA /* TFT Elock.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		E86DB35823A0EC7B002BAACA /* TFT Elock */ = {
+			isa = PBXGroup;
+			children = (
+				E8AE747C266F60EA00D4E78A /* itemView */,
+				E8AE7467266E4EFF00D4E78A /* data */,
+				E8D7C76223BDDEC600E67C7A /* Resources */,
+				E8B6DB4823AAFF92001980BF /* AEAlertView */,
+				E86DB37723A335DB002BAACA /* splash */,
+				E86DB36F23A1CC15002BAACA /* UIColor+Nordic.swift */,
+				E86DB35923A0EC7B002BAACA /* AppDelegate.swift */,
+				E86DB35B23A0EC7B002BAACA /* SceneDelegate.swift */,
+				E86DB35D23A0EC7B002BAACA /* ViewController.swift */,
+				E86DB36223A0EC8C002BAACA /* Assets.xcassets */,
+				E86DB36423A0EC8C002BAACA /* LaunchScreen.storyboard */,
+				E86DB36723A0EC8C002BAACA /* Info.plist */,
+				E8D2A3A423ACCC9B00B42242 /* Utils.swift */,
+				E8D7C75A23B5A55800E67C7A /* MyProgress.swift */,
+				E8C859D224BD4849006EE3F7 /* Localizable.strings */,
+				E8AE74812670E69B00D4E78A /* EditController.swift */,
+			);
+			path = "TFT Elock";
+			sourceTree = "<group>";
+		};
+		E86DB37723A335DB002BAACA /* splash */ = {
+			isa = PBXGroup;
+			children = (
+				E86DB37823A335DB002BAACA /* Default-568h@2x.png */,
+				E86DB37923A335DB002BAACA /* Default-667h@2x.png */,
+				E86DB37A23A335DB002BAACA /* Default-736h@3x.png */,
+				E86DB37B23A335DB002BAACA /* Default-812h@3x.png */,
+				E86DB37C23A335DB002BAACA /* Default-896h@2x.png */,
+				E86DB37D23A335DB002BAACA /* Default-896h@3x.png */,
+				E86DB37E23A335DB002BAACA /* Default-Landscape-1112h@2x~ipad.png */,
+				E86DB37F23A335DB002BAACA /* Default-Landscape-1194h@2x~ipad.png */,
+				E86DB38023A335DB002BAACA /* Default-Landscape-1366h@2x~ipad.png */,
+				E86DB38123A335DB002BAACA /* Default-Landscape-568h@2x.png */,
+				E86DB38223A335DB002BAACA /* Default-Landscape-667h@2x.png */,
+				E86DB38323A335DB002BAACA /* Default-Landscape-736h@3x.png */,
+				E86DB38423A335DB002BAACA /* Default-Landscape-812h@3x.png */,
+				E86DB38523A335DB002BAACA /* Default-Landscape-896h@2x.png */,
+				E86DB38623A335DB002BAACA /* Default-Landscape-896h@3x.png */,
+				E86DB38723A335DB002BAACA /* Default-Landscape7@2x~ipad.png */,
+				E86DB38823A335DB002BAACA /* Default-Landscape7~ipad.png */,
+				E86DB38923A335DB002BAACA /* Default-Landscape@2x~ipad.png */,
+				E86DB38A23A335DB002BAACA /* Default-Landscape~ipad.png */,
+				E86DB38B23A335DB002BAACA /* Default-Portrait7-1112h@2x~ipad.png */,
+				E86DB38C23A335DB002BAACA /* Default-Portrait7-1194h@2x~ipad.png */,
+				E86DB38D23A335DB002BAACA /* Default-Portrait7-1366h@2x~ipad.png */,
+				E86DB38E23A335DB002BAACA /* Default-Portrait7@2x~ipad.png */,
+				E86DB38F23A335DB002BAACA /* Default-Portrait7~ipad.png */,
+				E86DB39023A335DB002BAACA /* Default-Portrait@2x~ipad.png */,
+				E86DB39123A335DB002BAACA /* Default-Portrait~ipad.png */,
+				E86DB39223A335DB002BAACA /* Default.png */,
+				E86DB39323A335DB002BAACA /* Default@2x.png */,
+			);
+			path = splash;
+			sourceTree = "<group>";
+		};
+		E8AE7467266E4EFF00D4E78A /* data */ = {
+			isa = PBXGroup;
+			children = (
+				E81CC887269FE04A00340C50 /* SwiftPriorityQueue.swift */,
+				E8AE7479266F479400D4E78A /* BleDeviceData.swift */,
+				E81CC88A26A000F400340C50 /* MsgQueue.swift */,
+			);
+			path = data;
+			sourceTree = "<group>";
+		};
+		E8AE747C266F60EA00D4E78A /* itemView */ = {
+			isa = PBXGroup;
+			children = (
+				E8AE747D266F614E00D4E78A /* BleDetailItem.swift */,
+			);
+			path = itemView;
+			sourceTree = "<group>";
+		};
+		E8B6DB4823AAFF92001980BF /* AEAlertView */ = {
+			isa = PBXGroup;
+			children = (
+				E8D7C75D23B5E64D00E67C7A /* FileTool.swift */,
+				E8B6DB4923AAFF92001980BF /* Classes */,
+			);
+			path = AEAlertView;
+			sourceTree = "<group>";
+		};
+		E8B6DB4923AAFF92001980BF /* Classes */ = {
+			isa = PBXGroup;
+			children = (
+				E8B6DB4A23AAFF92001980BF /* AEAlertAction.swift */,
+				E8B6DB4B23AAFF92001980BF /* AEAlertView.swift */,
+				E8B6DB4C23AAFF92001980BF /* AEBaseAlertView.swift */,
+				E8B6DB4D23AAFF92001980BF /* AEPathAnimation.swift */,
+				E8B6DB4E23AAFF92001980BF /* AEUIAlertView.swift */,
+			);
+			path = Classes;
+			sourceTree = "<group>";
+		};
+		E8D7C76223BDDEC600E67C7A /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				91DFBD0F27F586B2007F24E8 /* ic_lock_error.png */,
+				91DFBD0B27F586B2007F24E8 /* ic_lock.png */,
+				91DFBD0D27F586B2007F24E8 /* ic_suocut.png */,
+				91DFBD0E27F586B2007F24E8 /* ic_unlock_error.png */,
+				91DFBD0C27F586B2007F24E8 /* ic_unlock.png */,
+				EA596D4726C11687000F0D95 /* ic_category.png */,
+				E84A30BB267B2ABA00365EB1 /* ic_network_blue.png */,
+				E84A30B7267B2AB900365EB1 /* ic_network_dark.png */,
+				E84A30B8267B2ABA00365EB1 /* ic_sensor_blue.png */,
+				E84A30BE267B2ABA00365EB1 /* ic_sensor_dark.png */,
+				E84A30B9267B2ABA00365EB1 /* ic_status_blue.png */,
+				E84A30BD267B2ABA00365EB1 /* ic_status_dark.png */,
+				E82EFE6E248F195300F89E68 /* ic_btn_bg.png */,
+				E8F147A5244E936D003601B9 /* ic_disconnect.png */,
+				E8684E8C243C0B3000D83C6D /* ic_edit.png */,
+				E8CBBC3A242EED1800CE91B7 /* flash.bin */,
+				E8D7C76323BDF32200E67C7A /* scan.png */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		E86DB35523A0EC7B002BAACA /* TFT Elock */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E86DB36A23A0EC8C002BAACA /* Build configuration list for PBXNativeTarget "TFT Elock" */;
+			buildPhases = (
+				71C9D014112D333E486B574A /* [CP] Check Pods Manifest.lock */,
+				E86DB35223A0EC7B002BAACA /* Sources */,
+				E86DB35323A0EC7B002BAACA /* Frameworks */,
+				E86DB35423A0EC7B002BAACA /* Resources */,
+				FC187F108E5E7AD859FFF509 /* [CP] Embed Pods Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "TFT Elock";
+			productName = TFT_Elock;
+			productReference = E86DB35623A0EC7B002BAACA /* TFT Elock.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E86DB34E23A0EC7B002BAACA /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 1120;
+				LastUpgradeCheck = 1120;
+				ORGANIZATIONNAME = com.tftiot;
+				TargetAttributes = {
+					E86DB35523A0EC7B002BAACA = {
+						CreatedOnToolsVersion = 11.2.1;
+					};
+				};
+			};
+			buildConfigurationList = E86DB35123A0EC7B002BAACA /* Build configuration list for PBXProject "TFT Elock" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+				"zh-Hans",
+			);
+			mainGroup = E86DB34D23A0EC7B002BAACA;
+			productRefGroup = E86DB35723A0EC7B002BAACA /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E86DB35523A0EC7B002BAACA /* TFT Elock */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		E86DB35423A0EC7B002BAACA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E8D7C76423BDF32200E67C7A /* scan.png in Resources */,
+				91DFBD1127F586B2007F24E8 /* ic_unlock.png in Resources */,
+				E84A30C4267B2ABA00365EB1 /* ic_sensor_blue.png in Resources */,
+				E86DB39C23A335DD002BAACA /* Default-Landscape-1366h@2x~ipad.png in Resources */,
+				E86DB3A123A335DD002BAACA /* Default-Landscape-896h@2x.png in Resources */,
+				E8CBBC3B242EED1A00CE91B7 /* flash.bin in Resources */,
+				E86DB39E23A335DD002BAACA /* Default-Landscape-667h@2x.png in Resources */,
+				E86DB3A423A335DD002BAACA /* Default-Landscape7~ipad.png in Resources */,
+				E86DB3AE23A335DD002BAACA /* Default.png in Resources */,
+				E86DB36623A0EC8C002BAACA /* LaunchScreen.storyboard in Resources */,
+				E86DB39B23A335DD002BAACA /* Default-Landscape-1194h@2x~ipad.png in Resources */,
+				E86DB39823A335DD002BAACA /* Default-896h@2x.png in Resources */,
+				E86DB3A623A335DD002BAACA /* Default-Landscape~ipad.png in Resources */,
+				91DFBD1227F586B2007F24E8 /* ic_suocut.png in Resources */,
+				E86DB39523A335DD002BAACA /* Default-667h@2x.png in Resources */,
+				E8C859D424BD4849006EE3F7 /* Localizable.strings in Resources */,
+				E86DB36323A0EC8C002BAACA /* Assets.xcassets in Resources */,
+				E86DB3A923A335DD002BAACA /* Default-Portrait7-1366h@2x~ipad.png in Resources */,
+				91DFBD1427F586B2007F24E8 /* ic_lock_error.png in Resources */,
+				E84A30C7267B2ABA00365EB1 /* ic_network_blue.png in Resources */,
+				E84A30C5267B2ABA00365EB1 /* ic_status_blue.png in Resources */,
+				E8684E8D243C0B3100D83C6D /* ic_edit.png in Resources */,
+				E82EFE6F248F195400F89E68 /* ic_btn_bg.png in Resources */,
+				E86DB39423A335DD002BAACA /* Default-568h@2x.png in Resources */,
+				E86DB3AA23A335DD002BAACA /* Default-Portrait7@2x~ipad.png in Resources */,
+				E86DB3A723A335DD002BAACA /* Default-Portrait7-1112h@2x~ipad.png in Resources */,
+				E86DB3AF23A335DD002BAACA /* Default@2x.png in Resources */,
+				E86DB39D23A335DD002BAACA /* Default-Landscape-568h@2x.png in Resources */,
+				E84A30C3267B2ABA00365EB1 /* ic_network_dark.png in Resources */,
+				E86DB3AD23A335DD002BAACA /* Default-Portrait~ipad.png in Resources */,
+				91DFBD1327F586B2007F24E8 /* ic_unlock_error.png in Resources */,
+				E86DB3A823A335DD002BAACA /* Default-Portrait7-1194h@2x~ipad.png in Resources */,
+				E86DB3A523A335DD002BAACA /* Default-Landscape@2x~ipad.png in Resources */,
+				EA596D4826C11687000F0D95 /* ic_category.png in Resources */,
+				E86DB39A23A335DD002BAACA /* Default-Landscape-1112h@2x~ipad.png in Resources */,
+				E86DB3A223A335DD002BAACA /* Default-Landscape-896h@3x.png in Resources */,
+				E86DB3AC23A335DD002BAACA /* Default-Portrait@2x~ipad.png in Resources */,
+				E86DB39723A335DD002BAACA /* Default-812h@3x.png in Resources */,
+				E84A30CA267B2ABA00365EB1 /* ic_sensor_dark.png in Resources */,
+				91DFBD1027F586B2007F24E8 /* ic_lock.png in Resources */,
+				E86DB3A023A335DD002BAACA /* Default-Landscape-812h@3x.png in Resources */,
+				E84A30C9267B2ABA00365EB1 /* ic_status_dark.png in Resources */,
+				E86DB39F23A335DD002BAACA /* Default-Landscape-736h@3x.png in Resources */,
+				E86DB39923A335DD002BAACA /* Default-896h@3x.png in Resources */,
+				E8F147A6244E936D003601B9 /* ic_disconnect.png in Resources */,
+				E86DB39623A335DD002BAACA /* Default-736h@3x.png in Resources */,
+				E86DB3A323A335DD002BAACA /* Default-Landscape7@2x~ipad.png in Resources */,
+				E86DB3AB23A335DD002BAACA /* Default-Portrait7~ipad.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		71C9D014112D333E486B574A /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-TFT Elock-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		FC187F108E5E7AD859FFF509 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-TFT Elock/Pods-TFT Elock-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-TFT Elock/Pods-TFT Elock-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TFT Elock/Pods-TFT Elock-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E86DB35223A0EC7B002BAACA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E8D7C75F23B5E64D00E67C7A /* FileTool.swift in Sources */,
+				E8AE747E266F614E00D4E78A /* BleDetailItem.swift in Sources */,
+				E8AE74822670E69B00D4E78A /* EditController.swift in Sources */,
+				E81CC888269FE04B00340C50 /* SwiftPriorityQueue.swift in Sources */,
+				E8B6DB5223AAFF92001980BF /* AEPathAnimation.swift in Sources */,
+				E81CC88B26A000F400340C50 /* MsgQueue.swift in Sources */,
+				E8B6DB4F23AAFF92001980BF /* AEAlertAction.swift in Sources */,
+				E86DB35E23A0EC7B002BAACA /* ViewController.swift in Sources */,
+				E8D7C75B23B5A55800E67C7A /* MyProgress.swift in Sources */,
+				E86DB35A23A0EC7B002BAACA /* AppDelegate.swift in Sources */,
+				E8B6DB5123AAFF92001980BF /* AEBaseAlertView.swift in Sources */,
+				E8B6DB5023AAFF92001980BF /* AEAlertView.swift in Sources */,
+				E86DB37023A1CC15002BAACA /* UIColor+Nordic.swift in Sources */,
+				E8AE747A266F479400D4E78A /* BleDeviceData.swift in Sources */,
+				E8B6DB5323AAFF92001980BF /* AEUIAlertView.swift in Sources */,
+				E86DB35C23A0EC7B002BAACA /* SceneDelegate.swift in Sources */,
+				E8D2A3A523ACCC9B00B42242 /* Utils.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		E86DB36423A0EC8C002BAACA /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				E86DB36523A0EC8C002BAACA /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		E8C859D224BD4849006EE3F7 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				E8C859D524BD48D2006EE3F7 /* en */,
+				E8C859D824BDB83E006EE3F7 /* zh-Hans */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		E86DB36823A0EC8C002BAACA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.2;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 4.2;
+			};
+			name = Debug;
+		};
+		E86DB36923A0EC8C002BAACA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.2;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 4.2;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		E86DB36B23A0EC8C002BAACA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = FC950556A4683F0586E222AF /* Pods-TFT Elock.debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1.0.2;
+				DEVELOPMENT_TEAM = 6W672XHN78;
+				INFOPLIST_FILE = "$(SRCROOT)/TFT Elock/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.topflytech.lockActive;
+				PRODUCT_NAME = "TFT Elock";
+				SWIFT_ENABLE_BATCH_MODE = NO;
+				SWIFT_OBJC_BRIDGING_HEADER = "";
+				SWIFT_VERSION = 4.2;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/**";
+			};
+			name = Debug;
+		};
+		E86DB36C23A0EC8C002BAACA /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 358FA72EBDD9D1A9E9474DEE /* Pods-TFT Elock.release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1.0.2;
+				DEVELOPMENT_TEAM = 6W672XHN78;
+				INFOPLIST_FILE = "$(SRCROOT)/TFT Elock/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.topflytech.lockActive;
+				PRODUCT_NAME = "TFT Elock";
+				SWIFT_ENABLE_BATCH_MODE = NO;
+				SWIFT_OBJC_BRIDGING_HEADER = "";
+				SWIFT_VERSION = 4.2;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/**";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		E86DB35123A0EC7B002BAACA /* Build configuration list for PBXProject "TFT Elock" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E86DB36823A0EC8C002BAACA /* Debug */,
+				E86DB36923A0EC8C002BAACA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E86DB36A23A0EC8C002BAACA /* Build configuration list for PBXNativeTarget "TFT Elock" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E86DB36B23A0EC8C002BAACA /* Debug */,
+				E86DB36C23A0EC8C002BAACA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = E86DB34E23A0EC7B002BAACA /* Project object */;
+}

@@ -21,7 +21,7 @@
     <string name="send">发送</string>
     <string name="disconnect_please_connect_manually">已断开，请手动重新连接！</string>
     <string name="edit">编辑</string>
-    <string name="model">型号</string>
+    <string name="model">型号：</string>
     <string name="software">软件：</string>
     <string name="hardware">硬件：</string>
     <string name="all">全部</string>
@@ -32,7 +32,7 @@
     <string name="mv">mv</string>
     <string name="lock">锁</string>
     <string name="unlock">解锁</string>
-    <string name="activeNetworkCmcSend">激活网络命令发送成功！</string>
+    <string name="activeNetworkCmdSend">激活网络命令发送成功！</string>
     <string name="lock_status_00">锁定</string>
     <string name="lock_status_01">剪线状态</string>
     <string name="lock_status_03">锁定失败，失败状态。</string>

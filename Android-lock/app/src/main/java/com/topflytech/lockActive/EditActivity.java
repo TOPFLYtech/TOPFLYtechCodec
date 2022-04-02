@@ -418,7 +418,7 @@ public class EditActivity extends AppCompatActivity {
 
     private void parseResp(byte[] respContent){
         int i = 0;
-        while (i + 3 < respContent.length){
+        while (i + 3 <= respContent.length){
             byte[] head = new byte[]{respContent[i],respContent[i+1],respContent[i+2]};
             if (Arrays.equals(head,deviceReadyHead)){
                 if ( i + 6 <= respContent.length){
@@ -485,7 +485,7 @@ public class EditActivity extends AppCompatActivity {
                             waitingCancelDlg.hide();
                         }
                     });
-                    showDetailMsg(getString(R.string.activeNetworkCmcSend));
+                    showDetailMsg(getString(R.string.activeNetworkCmdSend));
                 }
                 i+=5;
             }else if (Arrays.equals(head,uploadStatusHead)){

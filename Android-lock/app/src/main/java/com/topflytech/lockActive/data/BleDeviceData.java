@@ -19,6 +19,17 @@ public class BleDeviceData {
     private String model;
     private String software;
     private String hardware;
+    private float voltage;
+
+
+    public float getVoltage() {
+        return voltage;
+    }
+
+    public void setVoltage(float voltage) {
+        this.voltage = voltage;
+    }
+
 
     public String getModel() {
         return model;
