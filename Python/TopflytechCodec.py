@@ -105,6 +105,26 @@ class LockMessage(Message):
     date = datetime.datetime
     lockType = 0
     lockId = ""
+    gpsWorking = False
+    isHistoryData = False
+    satelliteNumber = 0
+    is_4g_lbs = False
+    mcc_4g = 0
+    mnc_4g = 0
+    ci_4g = 0
+    earfcn_4g_1 = 0
+    pcid_4g_1 = 0
+    earfcn_4g_2 = 0
+    pcid_4g_2 = 0
+    is_2g_lbs = False
+    mcc_2g = 0
+    mnc_2g = 0
+    lac_2g_1 = 0
+    ci_2g_1 = 0
+    lac_2g_2 = 0
+    ci_2g_2 = 0
+    lac_2g_3 = 0
+    ci_2g_3 = 0
 
 class Rs232FuelMessage(Rs232DeviceMessage):
     fuelPercent = 0.0
@@ -5266,7 +5286,28 @@ class PersonalAssetMsgDecoder:
         imei = decodeImei(byteArray,7)
         dateStr = "20" + byte2HexString(byteArray[15:21],0)
         gtm0 = GTM0(dateStr)
-        latlngValid = byteArray[21] == 0x01
+        isGpsWorking = (byteArray[21] & 0x20) == 0x00
+        isHistoryData = (byteArray[21] & 0x80) != 0x00
+        latlngValid = (byteArray[21] & 0x40) == 0x40
+        satelliteNumber = byteArray[21] & 0x1F
+        is_4g_lbs = False
+
+        mcc_4g = 0
+        mnc_4g = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
+        pcid_4g_1 = 0
+        earfcn_4g_2 = 0
+        pcid_4g_2 = 0
+        is_2g_lbs = False
+        mcc_2g = 0
+        mnc_2g = 0
+        lac_2g_1 = 0
+        ci_2g_1 = 0
+        lac_2g_2 = 0
+        ci_2g_2 = 0
+        lac_2g_3 = 0
+        ci_2g_3 = 0
         altitude = 0
         latitude = 0
         longitude = 0
@@ -5279,6 +5320,28 @@ class PersonalAssetMsgDecoder:
             azimuth = bytes2Short(byteArray,36)
             speedStr = byte2HexString(byteArray[34:36],0)
             speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+        else:
+            if (byteArray[22] & 0x8) == 0x8:
+                is_2g_lbs = True
+            else:
+                is_4g_lbs = True
+        if is_2g_lbs:
+            mcc_2g = bytes2Short(byteArray, 22)
+            mnc_2g = bytes2Short(byteArray, 24)
+            lac_2g_1 = bytes2Short(byteArray, 26)
+            ci_2g_1 = bytes2Short(byteArray, 28)
+            lac_2g_2 = bytes2Short(byteArray, 30)
+            ci_2g_2 = bytes2Short(byteArray, 32)
+            lac_2g_3 = bytes2Short(byteArray, 34)
+            ci_2g_3 = bytes2Short(byteArray, 36)
+        if is_4g_lbs:
+            mcc_4g = bytes2Short(byteArray, 22)
+            mnc_4g = bytes2Short(byteArray, 24)
+            ci_4g = bytes2Integer(byteArray, 26)
+            earfcn_4g_1 = bytes2Short(byteArray, 30)
+            pcid_4g_1 = bytes2Short(byteArray, 32)
+            earfcn_4g_2 = bytes2Short(byteArray, 34)
+            pcid_4g_2 = bytes2Short(byteArray, 36)
         lockType = byteArray[38] & 0xff
         idLen = (byteArray[39] & 0xff) * 2
         idStr = byte2HexString(byteArray[40:],0)
@@ -5298,6 +5361,26 @@ class PersonalAssetMsgDecoder:
         lockMessage.azimuth = azimuth
         lockMessage.lockType = lockType
         lockMessage.lockId = id
+        lockMessage.isHistoryData = isHistoryData
+        lockMessage.satelliteNumber = satelliteNumber
+        lockMessage.gpsWorking = isGpsWorking
+        lockMessage.is_4g_lbs = is_4g_lbs
+        lockMessage.is_2g_lbs = is_2g_lbs
+        lockMessage.mcc_4g = mcc_4g
+        lockMessage.mnc_4g = mnc_4g
+        lockMessage.ci_4g = ci_4g
+        lockMessage.earfcn_4g_1 = earfcn_4g_1
+        lockMessage.pcid_4g_1 = pcid_4g_1
+        lockMessage.earfcn_4g_2 = earfcn_4g_2
+        lockMessage.pcid_4g_2 = pcid_4g_2
+        lockMessage.mcc_2g = mcc_2g
+        lockMessage.mnc_2g = mnc_2g
+        lockMessage.lac_2g_1 = lac_2g_1
+        lockMessage.ci_2g_1 = ci_2g_1
+        lockMessage.lac_2g_2 = lac_2g_2
+        lockMessage.ci_2g_2 = ci_2g_2
+        lockMessage.lac_2g_3 = lac_2g_3
+        lockMessage.ci_2g_3 = ci_2g_3
         return lockMessage
 		
         

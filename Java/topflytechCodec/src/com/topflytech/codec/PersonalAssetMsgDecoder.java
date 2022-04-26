@@ -27,9 +27,9 @@ public class PersonalAssetMsgDecoder {
     private static final byte[] NETWORK_INFO_DATA = {0x27, 0x27, 0x05};
     private static final byte[] BLUETOOTH_DATA =       {0x27, 0x27, (byte)0x10};
     private static final byte[] WIFI_DATA =  {0x27, 0x27, (byte)0x15};
-    private static final byte[] TEMP_LOCK_DATA =  {0x27, 0x27, (byte)0x14};
     private static final byte[] LOCK_DATA =  {0x27, 0x27, (byte)0x17};
-
+    private static final byte[] latlngInvalidData = {(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,
+            (byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF};
     private int encryptType = 0;
     private String aesKey;
     public PersonalAssetMsgDecoder(int messageEncryptType,String aesKey){
@@ -47,7 +47,6 @@ public class PersonalAssetMsgDecoder {
                 || Arrays.equals(CONFIG,bytes)
                 || Arrays.equals(BLUETOOTH_DATA,bytes)
                 || Arrays.equals(WIFI_DATA,bytes)
-                || Arrays.equals(TEMP_LOCK_DATA,bytes)
                 || Arrays.equals(LOCK_DATA,bytes)
                 || Arrays.equals(NETWORK_INFO_DATA,bytes);
     }
@@ -179,9 +178,6 @@ public class PersonalAssetMsgDecoder {
                 case 0x10:
                     BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = parseBluetoothDataMessage(bytes);
                     return bluetoothPeripheralDataMessage;
-                case 0x14:
-                    LockMessage oldLockMessage = parseOldLockMessage(bytes);
-                    return oldLockMessage;
                 case 0x17:
                     LockMessage lockMessage = parseLockMessage(bytes);
                     return lockMessage;
@@ -991,9 +987,6 @@ public class PersonalAssetMsgDecoder {
                 case 0x17:
                     LockMessage lockMessage = parseLockMessage(bytes);
                     callback.receiveLockMessage(lockMessage);
-                case 0x14:
-                    LockMessage oldLockMessage = parseOldLockMessage(bytes);
-                    callback.receiveLockMessage(oldLockMessage);
                 case 0x15:
                     WifiMessage wifiMessage = parseWifiMessage(bytes);
                     callback.receiveWifiMessage(wifiMessage);
@@ -1012,60 +1005,20 @@ public class PersonalAssetMsgDecoder {
         }
 
     }
-    private LockMessage parseOldLockMessage(byte[] bytes){
-        LockMessage lockMessage = new LockMessage();
-        int serialNo = BytesUtils.bytes2Short(bytes, 5);
-        String imei = BytesUtils.IMEI.decode(bytes, 7);
-        Date date = TimeUtils.getGTM0Date(bytes, 15);
-        boolean latlngValid = bytes[21] == 0x01;
-        double altitude = latlngValid ? BytesUtils.bytes2Float(bytes, 22) : 0;
-        double longitude = latlngValid ? BytesUtils.bytes2Float(bytes,26) : 0;
-        double latitude = latlngValid ? BytesUtils.bytes2Float(bytes,30) : 0;
-        Float speedf = 0.0f;
-        if (latlngValid){
-            try{
-                if (latlngValid) {
-                    byte[] bytesSpeed = Arrays.copyOfRange(bytes, 34, 36);
-                    String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
-                    if(!strSp.toLowerCase().equals("ffff")){
-                        speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
-                    }
-                }
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-        }
-        int azimuth = latlngValid ? BytesUtils.bytes2Short(bytes, 36) : 0;
-        int lockType = bytes[38] & 0xff;
-        int idLen = (bytes[40] & 0xff) * 2;
-        String idStr = BytesUtils.bytes2HexString(bytes,41);
-        String id = idStr;
-        if (idStr.length() > idLen){
-            id = idStr.substring(0,idLen);
-        }
-        id = id.toUpperCase();
-        lockMessage.setProtocolHeadType(bytes[2]);
-        lockMessage.setSerialNo(serialNo);
-        lockMessage.setImei(imei);
-        lockMessage.setDate(date);
-        lockMessage.setOrignBytes(bytes);
-        lockMessage.setLatlngValid(latlngValid);
-        lockMessage.setAltitude(altitude);
-        lockMessage.setLongitude(longitude);
-        lockMessage.setLatitude(latitude);
-        lockMessage.setLatlngValid(latlngValid);
-        lockMessage.setSpeed(speedf);
-        lockMessage.setAzimuth(azimuth);
-        lockMessage.setLockType(lockType);
-        lockMessage.setLockId(id);
-        return lockMessage;
-    }
+     
     private LockMessage parseLockMessage(byte[] bytes) {
         LockMessage lockMessage = new LockMessage();
         int serialNo = BytesUtils.bytes2Short(bytes, 5);
         String imei = BytesUtils.IMEI.decode(bytes, 7);
         Date date = TimeUtils.getGTM0Date(bytes, 15);
-        boolean latlngValid = bytes[21] == 0x01;
+        boolean latlngValid = (bytes[21] & 0x40) != 0x00;
+        boolean isGpsWorking = (bytes[21] & 0x20) == 0x00;
+        boolean isHistoryData = (bytes[21] & 0x80) != 0x00;
+        int satelliteNumber = bytes[21] & 0x1F;
+        byte[] latlngData = Arrays.copyOfRange(bytes,22,38);
+        if (Arrays.equals(latlngData,latlngInvalidData)){
+            latlngValid = false;
+        }
         double altitude = latlngValid ? BytesUtils.bytes2Float(bytes, 22) : 0;
         double longitude = latlngValid ? BytesUtils.bytes2Float(bytes,26) : 0;
         double latitude = latlngValid ? BytesUtils.bytes2Float(bytes,30) : 0;
@@ -1084,6 +1037,50 @@ public class PersonalAssetMsgDecoder {
             }
         }
         int azimuth = latlngValid ? BytesUtils.bytes2Short(bytes, 36) : 0;
+        Boolean is_4g_lbs = false;
+        Integer mcc_4g = null;
+        Integer mnc_4g = null;
+        Long ci_4g = null;
+        Integer earfcn_4g_1 = null;
+        Integer pcid_4g_1 = null;
+        Integer earfcn_4g_2 = null;
+        Integer pcid_4g_2 = null;
+        Boolean is_2g_lbs = false;
+        Integer mcc_2g = null;
+        Integer mnc_2g = null;
+        Integer lac_2g_1 = null;
+        Integer ci_2g_1 = null;
+        Integer lac_2g_2 = null;
+        Integer ci_2g_2 = null;
+        Integer lac_2g_3 = null;
+        Integer ci_2g_3 = null;
+        if (!latlngValid){
+            byte lbsByte = bytes[22];
+            if ((lbsByte & 0x8) == 0x8){
+                is_2g_lbs = true;
+            }else{
+                is_4g_lbs = true;
+            }
+        }
+        if (is_2g_lbs){
+            mcc_2g = BytesUtils.bytes2Short(bytes,22);
+            mnc_2g = BytesUtils.bytes2Short(bytes,24);
+            lac_2g_1 = BytesUtils.bytes2Short(bytes,26);
+            ci_2g_1 = BytesUtils.bytes2Short(bytes,28);
+            lac_2g_2 = BytesUtils.bytes2Short(bytes,30);
+            ci_2g_2 = BytesUtils.bytes2Short(bytes,32);
+            lac_2g_3 = BytesUtils.bytes2Short(bytes,34);
+            ci_2g_3 = BytesUtils.bytes2Short(bytes,36);
+        }
+        if (is_4g_lbs){
+            mcc_4g = BytesUtils.bytes2Short(bytes,22);
+            mnc_4g = BytesUtils.bytes2Short(bytes,24);
+            ci_4g = BytesUtils.unsigned4BytesToInt(bytes, 26);
+            earfcn_4g_1 = BytesUtils.bytes2Short(bytes, 30);
+            pcid_4g_1 = BytesUtils.bytes2Short(bytes, 32);
+            earfcn_4g_2 = BytesUtils.bytes2Short(bytes, 34);
+            pcid_4g_2 = BytesUtils.bytes2Short(bytes,36);
+        }
         int lockType = bytes[38] & 0xff;
         int idLen = (bytes[39] & 0xff) * 2;
         String idStr = BytesUtils.bytes2HexString(bytes,40);
@@ -1106,6 +1103,28 @@ public class PersonalAssetMsgDecoder {
         lockMessage.setAzimuth(azimuth);
         lockMessage.setLockType(lockType);
         lockMessage.setLockId(id);
+
+        lockMessage.setHistoryData(isHistoryData);
+        lockMessage.setSatelliteNumber(satelliteNumber);
+        lockMessage.setGpsWorking(isGpsWorking);
+        lockMessage.setIs_4g_lbs(is_4g_lbs);
+        lockMessage.setIs_2g_lbs(is_2g_lbs);
+        lockMessage.setMcc_2g(mcc_2g);
+        lockMessage.setMnc_2g(mnc_2g);
+        lockMessage.setLac_2g_1(lac_2g_1);
+        lockMessage.setCi_2g_1(ci_2g_1);
+        lockMessage.setLac_2g_2(lac_2g_2);
+        lockMessage.setCi_2g_2(ci_2g_2);
+        lockMessage.setLac_2g_3(lac_2g_3);
+        lockMessage.setCi_2g_3(ci_2g_3);
+        lockMessage.setMcc_4g(mcc_4g);
+        lockMessage.setMnc_4g(mnc_4g);
+        lockMessage.setCi_4g(ci_4g);
+        lockMessage.setEarfcn_4g_1(earfcn_4g_1);
+        lockMessage.setPcid_4g_1(pcid_4g_1);
+        lockMessage.setEarfcn_4g_2(earfcn_4g_2);
+        lockMessage.setPcid_4g_2(pcid_4g_2);
+
         return lockMessage;
     }
 

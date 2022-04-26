@@ -1029,24 +1029,24 @@ public class LocationMessage extends Message{
 
     private Integer smsLanguageType = 0;
     private Integer antitheftedStatus = 0;
-    private Date date;                  //这个点的时间
-    private Long IOP = 0L;              //报警信息
+    private Date date;
+    private Long IOP = 0L;
     private Boolean iopIgnition = null;
     private Boolean iopPowerCutOff = null;
     private Boolean iopACOn = null;
 
-    private Float speed = 0.0f;         //速度
-    private Long mileage = 0L;          //里程
-    private Integer azimuth = 0;        //方位角
+    private Float speed = 0.0f;
+    private Long mileage = 0L;
+    private Integer azimuth = 0;
 
 
-    private String address = "";        //地址
+    private String address = "";
 
-    private Float analogInput1 = 0f;    //模拟1
-    private Float analogInput2 = 0f;    //模拟2
+    private Float analogInput1 = 0f;
+    private Float analogInput2 = 0f;
 
-    private Integer batteryCharge = 0; //880x的 要存入mysql，所以需要加到这
-    private  Integer dragThreshold = 0; //880x
+    private Integer batteryCharge = 0;
+    private  Integer dragThreshold = 0;
 
     private Float externalPowerVoltage = 0f;
     private Integer originalAlarmCode;
@@ -1063,8 +1063,8 @@ public class LocationMessage extends Message{
     private Boolean isHistoryData = false;
     private Integer satelliteNumber;
     private Integer overSpeedLimit = 0;
-    private Integer samplingIntervalAccOn = 0;//ACC_ON上传数据间隔？
-    private Integer samplingIntervalAccOff = 0;//ACC_OFF上传数据间隔？
+    private Integer samplingIntervalAccOn = 0;
+    private Integer samplingIntervalAccOff = 0;
     private Integer angleCompensation = 0;
     private Integer distanceCompensation = 0;
 

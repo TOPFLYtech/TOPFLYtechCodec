@@ -27,6 +27,9 @@ namespace TopflytechCodec
 
         private static byte[] LOCK_DATA =  {0x27, 0x27, (byte)0x17};
 
+        private static byte[] latlngInvalidData = {(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,
+                                                     (byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF};
+
         private int encryptType = 0;
         private String aesKey;
         public PersonalAssetMsgDecoder(int messageEncryptType, String aesKey)
@@ -140,7 +143,15 @@ namespace TopflytechCodec
             int serialNo = BytesUtils.Bytes2Short(bytes, 5);
             String imei = BytesUtils.IMEI.Decode(bytes, 7);
             DateTime date = Utils.getGTM0Date(bytes, 15);
-            bool latlngValid = bytes[21] == 0x01;
+            Boolean latlngValid = (bytes[21] & 0x40) != 0x00;
+            Boolean isGpsWorking = (bytes[21] & 0x20) == 0x00;
+            Boolean isHistoryData = (bytes[21] & 0x80) != 0x00;
+            int satelliteNumber = bytes[21] & 0x1F;
+            byte[] latlngData = Utils.ArrayCopyOfRange(bytes, 22, 38);
+            if (Utils.ArrayEquals(latlngData, latlngInvalidData))
+            {
+                latlngValid = false;
+            }
             double altitude = latlngValid ? BytesUtils.Bytes2Float(bytes, 22) : 0;
             double longitude = latlngValid ? BytesUtils.Bytes2Float(bytes,26) : 0;
             double latitude = latlngValid ? BytesUtils.Bytes2Float(bytes,30) : 0;
@@ -160,6 +171,58 @@ namespace TopflytechCodec
             {
             } 
             int azimuth = latlngValid ? BytesUtils.Bytes2Short(bytes, 36) : 0;
+
+            Boolean is_4g_lbs = false;
+            Int32 mcc_4g = -1;
+            Int32 mnc_4g = -1;
+            Int64 ci_4g = -1;
+            Int32 earfcn_4g_1 = -1;
+            Int32 pcid_4g_1 = -1;
+            Int32 earfcn_4g_2 = -1;
+            Int32 pcid_4g_2 = -1;
+            Boolean is_2g_lbs = false;
+            Int32 mcc_2g = -1;
+            Int32 mnc_2g = -1;
+            Int32 lac_2g_1 = -1;
+            Int32 ci_2g_1 = -1;
+            Int32 lac_2g_2 = -1;
+            Int32 ci_2g_2 = -1;
+            Int32 lac_2g_3 = -1;
+            Int32 ci_2g_3 = -1;
+            if (!latlngValid)
+            {
+                byte lbsByte = bytes[22];
+                if ((lbsByte & 0x8) == 0x8)
+                {
+                    is_2g_lbs = true;
+                }
+                else
+                {
+                    is_4g_lbs = true;
+                }
+            }
+            if (is_2g_lbs)
+            {
+                mcc_2g = BytesUtils.Bytes2Short(bytes, 22);
+                mnc_2g = BytesUtils.Bytes2Short(bytes, 24);
+                lac_2g_1 = BytesUtils.Bytes2Short(bytes, 26);
+                ci_2g_1 = BytesUtils.Bytes2Short(bytes, 28);
+                lac_2g_2 = BytesUtils.Bytes2Short(bytes, 30);
+                ci_2g_2 = BytesUtils.Bytes2Short(bytes, 32);
+                lac_2g_3 = BytesUtils.Bytes2Short(bytes, 34);
+                ci_2g_3 = BytesUtils.Bytes2Short(bytes, 36);
+            }
+            if (is_4g_lbs)
+            {
+                mcc_4g = BytesUtils.Bytes2Short(bytes, 22);
+                mnc_4g = BytesUtils.Bytes2Short(bytes, 24);
+                ci_4g = BytesUtils.Byte2Int(bytes, 26);
+                earfcn_4g_1 = BytesUtils.Bytes2Short(bytes, 30);
+                pcid_4g_1 = BytesUtils.Bytes2Short(bytes, 32);
+                earfcn_4g_2 = BytesUtils.Bytes2Short(bytes, 34);
+                pcid_4g_2 = BytesUtils.Bytes2Short(bytes, 36);
+            }
+
             int lockType = bytes[38] & 0xff; 
             int idLen = (bytes[39] & 0xff) * 2;
             String idStr = BytesUtils.Bytes2HexString(bytes,40);
@@ -173,6 +236,9 @@ namespace TopflytechCodec
             lockMessage.Date = date;
             lockMessage.OrignBytes = bytes;
             lockMessage.LatlngValid = latlngValid;
+            lockMessage.GpsWorking = isGpsWorking;
+            lockMessage.IsHistoryData = isHistoryData;
+            lockMessage.SatelliteNumber = satelliteNumber;
             lockMessage.Altitude = altitude;
             lockMessage.Longitude = longitude;
             lockMessage.Latitude = latitude;
@@ -181,6 +247,23 @@ namespace TopflytechCodec
             lockMessage.Azimuth = azimuth;
             lockMessage.LockType = lockType; 
             lockMessage.LockId = id;
+            lockMessage.Is_2g_lbs = is_2g_lbs;
+            lockMessage.Is_4g_lbs = is_4g_lbs;
+            lockMessage.Mcc_4g = mcc_4g;
+            lockMessage.Mnc_4g = mnc_4g;
+            lockMessage.Ci_4g = ci_4g;
+            lockMessage.Earfcn_4g_1 = earfcn_4g_1;
+            lockMessage.Pcid_4g_1 = pcid_4g_1;
+            lockMessage.Earfcn_4g_2 = earfcn_4g_2;
+            lockMessage.Pcid_4g_2 = pcid_4g_2;
+            lockMessage.Mcc_2g = mcc_2g;
+            lockMessage.Mnc_2g = mnc_2g;
+            lockMessage.Lac_2g_1 = lac_2g_1;
+            lockMessage.Ci_2g_1 = ci_2g_1;
+            lockMessage.Lac_2g_2 = lac_2g_2;
+            lockMessage.Ci_2g_2 = ci_2g_2;
+            lockMessage.Lac_2g_3 = lac_2g_3;
+            lockMessage.Ci_2g_3 = ci_2g_3;
             return lockMessage;
         }
 
