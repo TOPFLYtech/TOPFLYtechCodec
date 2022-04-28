@@ -77,6 +77,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
     private var bleDeviceInfoArray = [BleDeviceData]()
     private var allBleDeviceInfoArray = [BleDeviceData]()
     private var dataTable:UITableView!
+    private var uniqueID = ""
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         let view = AEAlertView(style: .defaulted)
         let title = "Warning"
@@ -422,7 +423,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         self.bleDeviceInfoArray.removeAll()
         self.allBleDeviceInfoArray.removeAll()
         self.dataTable.reloadData()
-        self.showWaitingWin(title:"Loading")
+        self.showWaitingWin(title:NSLocalizedString("scanning", comment: "Scanning"))
         centralManager.stopScan()
         centralManager.scanForPeripherals(withServices: nil,options: [CBCentralManagerScanOptionAllowDuplicatesKey : true])
         DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(5)) {
@@ -578,6 +579,8 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
     
     override func viewDidLoad() {
         print("viewDidLoad")
+        self.uniqueID = UniqueIDTool.getMediaDrmID()
+        print("uid:\(self.uniqueID)")
         super.viewDidLoad()
         self.navigationController!.navigationBar.isTranslucent = false
         self.extendedLayoutIncludesOpaqueBars = true

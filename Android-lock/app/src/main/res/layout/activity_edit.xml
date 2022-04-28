@@ -21,6 +21,21 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
+                android:text="@string/unique_id"></TextView>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:id="@+id/tv_unique_id"
+                ></TextView>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
+            android:orientation="horizontal"
+            android:gravity="center">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
                 android:text="@string/date"></TextView>
             <TextView
                 android:layout_width="wrap_content"
@@ -117,6 +132,7 @@
         <TextView android:layout_width="200dp"
             android:layout_height="match_parent"
             android:scrollbars="vertical"
+            android:paddingLeft="20dp"
             android:singleLine="false"
             android:id="@+id/tx_log">
         </TextView>

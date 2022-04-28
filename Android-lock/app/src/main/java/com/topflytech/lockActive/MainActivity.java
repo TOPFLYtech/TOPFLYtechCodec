@@ -38,6 +38,7 @@ import androidx.core.content.ContextCompat;
 import com.tencent.bugly.crashreport.CrashReport;
 import com.topflytech.lockActive.data.BleDeviceData;
 import com.topflytech.lockActive.data.MyByteUtils;
+import com.topflytech.lockActive.data.UniqueIDTool;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -79,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
     public static ArrayList<BleDeviceData> showBleDeviceDataList = new ArrayList<BleDeviceData>();
     private ConcurrentHashMap<String, Integer> allMacIndex = new ConcurrentHashMap<String, Integer>(32);
     private ConcurrentHashMap<String, Integer> showMacIndex = new ConcurrentHashMap<String, Integer>(32);
-
+    private String uniqueID = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -231,7 +232,8 @@ public class MainActivity extends AppCompatActivity {
 
             service.scheduleWithFixedDelay(checkBleSearchStatus, 1, 1, TimeUnit.SECONDS);
         }
-
+        uniqueID = UniqueIDTool.getUniqueID();
+        Log.e("BluetoothUtils","my UUID:" + uniqueID);
     }
 
     private void showWaitingCancelDlg(String warning){

@@ -77,3 +77,5 @@
 "refresh_status"="刷新状态";
 "pwd_error"="开锁密码错误";
 "ble_unlock_pwd"="BLE解锁密码";
+"scanning"="扫描中";
+"unique_id"="唯一ID：";

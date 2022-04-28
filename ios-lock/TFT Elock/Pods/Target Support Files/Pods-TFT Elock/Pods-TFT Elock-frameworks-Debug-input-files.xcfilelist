@@ -4,5 +4,6 @@ ${BUILT_PRODUCTS_DIR}/CLXToast/CLXToast.framework
 ${BUILT_PRODUCTS_DIR}/Charts/Charts.framework
 ${BUILT_PRODUCTS_DIR}/DateTimePicker/DateTimePicker.framework
 ${BUILT_PRODUCTS_DIR}/JXMarqueeView/JXMarqueeView.framework
+${BUILT_PRODUCTS_DIR}/SAMKeychain/SAMKeychain.framework
 ${BUILT_PRODUCTS_DIR}/SwiftPopMenu/SwiftPopMenu.framework
 ${BUILT_PRODUCTS_DIR}/swiftScan/swiftScan.framework

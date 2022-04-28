@@ -10,8 +10,8 @@ android {
         applicationId "com.topflytech.lockActive"
         minSdkVersion 23
         targetSdkVersion 30
-        versionCode 3
-        versionName "1.0.2"
+        versionCode 7
+        versionName "1.0.5"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         ndk {

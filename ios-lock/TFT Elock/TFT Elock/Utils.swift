@@ -145,6 +145,14 @@ class Utils{
         {
             intFromCharacter = Int(scalar.value)
         }
+        if intFromCharacter >= 97 {
+            intFromCharacter -= 87
+        }
+        else if intFromCharacter >= 65 {
+            intFromCharacter -= 55
+        }else{
+            intFromCharacter -= 48
+        }
         return intFromCharacter
     }
     

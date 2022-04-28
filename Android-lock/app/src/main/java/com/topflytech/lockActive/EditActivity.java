@@ -26,8 +26,10 @@ import com.inuker.bluetooth.library.connect.response.BleConnectResponse;
 import com.inuker.bluetooth.library.connect.response.BleNotifyResponse;
 import com.inuker.bluetooth.library.connect.response.BleWriteResponse;
 import com.inuker.bluetooth.library.model.BleGattProfile;
+import com.inuker.bluetooth.library.utils.ByteUtils;
 import com.topflytech.lockActive.data.BleDeviceData;
 import com.topflytech.lockActive.data.MyByteUtils;
+import com.topflytech.lockActive.data.UniqueIDTool;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -41,7 +43,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import cn.pedant.SweetAlert.SweetAlertDialog;
 
 public class EditActivity extends AppCompatActivity {
-    public static boolean isDebug = false;
+    public static boolean isDebug = true;
     public static boolean isOnlyActiveNetwork = false;
 
     private ActionBar actionBar;
@@ -68,13 +70,14 @@ public class EditActivity extends AppCompatActivity {
     private Button btnActiveNetwork;
     private TextView tvLog;
     private TextView tvLockRefreshTime;
+    private TextView tvUniqueIdTv;
 
     private LinearLayout lnShowLog;
     private LinearLayout lnLock;
     private LinearLayout lnUnlock;
     private Button btnClearLog;
     private Button btnRefreshStatus;
-
+    private String uniqueID;
 
     private byte[] deviceReadyHead = new byte[]{0x20,0x00,0x01};
     private byte[] getLockStatusHead = new byte[]{0x20,0x00,0x1D};
@@ -97,6 +100,9 @@ public class EditActivity extends AppCompatActivity {
         tvLog = (TextView)findViewById(R.id.tx_log);
         tvLog.setMovementMethod(ScrollingMovementMethod.getInstance());
         tvLockRefreshTime = (TextView)findViewById(R.id.tv_lock_refresh_time);
+        tvUniqueIdTv = (TextView)findViewById(R.id.tv_unique_id);
+        uniqueID = UniqueIDTool.getUniqueID();
+        tvUniqueIdTv.setText(uniqueID);
         btnOpenLock = (Button)findViewById(R.id.btn_unlock);
         lnShowLog = (LinearLayout)findViewById(R.id.ln_log);
         if (isDebug){
@@ -110,7 +116,11 @@ public class EditActivity extends AppCompatActivity {
             lnLock.setVisibility(View.GONE);
             lnUnlock.setVisibility(View.GONE);
         }else{
-            lnLock.setVisibility(View.VISIBLE);
+            if(isDebug){
+                lnLock.setVisibility(View.VISIBLE);
+            }else{
+                lnLock.setVisibility(View.GONE);
+            }
             lnUnlock.setVisibility(View.VISIBLE);
         }
         btnOpenLock.setOnClickListener(new View.OnClickListener() {
@@ -124,7 +134,7 @@ public class EditActivity extends AppCompatActivity {
         btnLock.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                byte[] needSendBytes = getCmdContent(lockHead,new byte[]{0x00});
+                byte[] needSendBytes = getCmdContent(lockHead,new byte[]{0x00},true);
                 writeContent(needSendBytes);
             }
         });
@@ -132,7 +142,7 @@ public class EditActivity extends AppCompatActivity {
         btnActiveNetwork.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                byte[] needSendBytes = getCmdContent(activeNetworkHead,new byte[]{0x00});
+                byte[] needSendBytes = getCmdContent(activeNetworkHead,new byte[]{0x00},true);
                 writeContent(needSendBytes);
             }
         });
@@ -198,7 +208,7 @@ public class EditActivity extends AppCompatActivity {
                 String pwd = sweetPwdDlg.getInputText();
                 if (pwd.length() == 6){
                     sweetPwdDlg.hide();
-                    byte[] needSendBytes = getCmdContent(unlockHead,pwd.getBytes());
+                    byte[] needSendBytes = getCmdContent(unlockHead,pwd.getBytes(),true);
                     writeContent(needSendBytes);
                 }else{
                     Toast.makeText(EditActivity.this,R.string.pwd_format_error,Toast.LENGTH_SHORT).show();
@@ -216,16 +226,22 @@ public class EditActivity extends AppCompatActivity {
         sweetPwdDlg.show();
     }
 
-    private byte[] getCmdContent(byte[] head,byte[] content){
+    private byte[] getCmdContent(byte[] head,byte[] content,boolean isNeedUniqueID){
         if (content == null){
             content = new byte[]{};
         }
         int len  = content.length;
+        if(isNeedUniqueID){
+            len += 6;
+        }
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try {
             outputStream.write(head);
             outputStream.write(len);
             outputStream.write(content);
+            if(isNeedUniqueID){
+                outputStream.write(MyByteUtils.hexString2Bytes(uniqueID));
+            }
             return outputStream.toByteArray();
         } catch (IOException e) {
             e.printStackTrace();
@@ -238,7 +254,7 @@ public class EditActivity extends AppCompatActivity {
         writeContent(needSendBytes);
     }
     private Date lastCheckStatusDate;
-    private long getStatusTimeout = 2000;
+    private long getStatusTimeout = 4000;
     private LinkedBlockingDeque<byte[]> sendMsgQueue = new LinkedBlockingDeque<>();
     private LinkedBlockingDeque<byte[]> sendMsgMultiQueue = new LinkedBlockingDeque<>();
     private Runnable sendMsgThread = new Runnable() {
@@ -271,7 +287,7 @@ public class EditActivity extends AppCompatActivity {
                                     getLockStatus();
                                 }
                             }
-                            Thread.sleep(100);
+                            Thread.sleep(500);
                         }
                         continue;
                     }

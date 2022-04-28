@@ -9,6 +9,7 @@ PODS:
   - CLXToast/Objc-Toast (0.4.2)
   - DateTimePicker (2.4.1)
   - JXMarqueeView (0.0.8)
+  - SAMKeychain (1.5.3)
   - SwiftPopMenu (2.0.2)
   - swiftScan (1.2.0)
 
@@ -19,6 +20,7 @@ DEPENDENCIES:
   - CLXToast
   - DateTimePicker (from `https://github.com/itsmeichigo/DateTimePicker.git`)
   - JXMarqueeView
+  - SAMKeychain
   - SwiftPopMenu (from `https://github.com/TangledHusky/SwiftPopMenu.git`)
   - swiftScan (from `https://github.com/MxABC/swiftScan.git`)
 
@@ -27,6 +29,7 @@ SPEC REPOS:
     - Bugly
     - CLXToast
     - JXMarqueeView
+    - SAMKeychain
 
 EXTERNAL SOURCES:
   ActionSheetPicker-3.0:
@@ -64,9 +67,10 @@ SPEC CHECKSUMS:
   CLXToast: 01c075036feabfebe256856018996f10bd73f24f
   DateTimePicker: 997176ea28954f3c18817b9565a53b28ee4400b8
   JXMarqueeView: dfb4eadb1bf7245c9b41706e907c889fbf53c2dc
+  SAMKeychain: 483e1c9f32984d50ca961e26818a534283b4cd5c
   SwiftPopMenu: e8ad0724497781abec06c16e158d08d741c794cd
   swiftScan: d7f91607b1a47cc04e6eb654c2c01e2e940e337d
 
-PODFILE CHECKSUM: b371a7a0ceb8f90d87ad5af0d7f30af82afa6f31
+PODFILE CHECKSUM: 82aba3ae1d51d7141fc57bea787738a47b96b980
 
 COCOAPODS: 1.11.2

@@ -291,7 +291,7 @@ class EditController:UIViewController,CBCentralManagerDelegate,CBPeripheralDeleg
     private var foundDevice = false
     private var connectControl = ""
     var lastCheckStatusDate:Date = Date()
-    let getStatusTimeout = 3
+    let getStatusTimeout = 4
     var sendMsgQueue:MsgQueue = MsgQueue()
     var sendMsgMultiQueue:MsgQueue = MsgQueue()
     var lockStatusImg:UIImageView!
@@ -302,6 +302,7 @@ class EditController:UIViewController,CBCentralManagerDelegate,CBPeripheralDeleg
     private var lockHead:[UInt8] = [0x60,0x07,0xDB]
     private var activeNetworkHead:[UInt8] = [0x60,0x07,0xDC]
     private var uploadStatusHead:[UInt8] = [0x30,0xA0,0x29]
+    private var uniqueID = ""
     override func viewDidDisappear(_ animated: Bool) {
         self.centralManager.stopScan()
         self.centralManager.cancelPeripheralConnection(self.cbPeripheral)
@@ -310,6 +311,8 @@ class EditController:UIViewController,CBCentralManagerDelegate,CBPeripheralDeleg
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        uniqueID = UniqueIDTool.getMediaDrmID()
+        print("uid:\(uniqueID)")
         self.navigationController!.navigationBar.isTranslucent = false
         self.extendedLayoutIncludesOpaqueBars = true
         self.initUI()
@@ -379,7 +382,7 @@ class EditController:UIViewController,CBCentralManagerDelegate,CBPeripheralDeleg
             if pwd.count == 6{
                 self.pwdAlert.dismiss()
                 let pwdArray = [UInt8](pwd.utf8)
-                var needSend = self.getCmdContent(head: self.unlockHead, content: pwdArray)
+                var needSend = self.getCmdContent(head: self.unlockHead, content: pwdArray,isNeedUniqueID: true)
                 self.writeContent(content: needSend)
             }else{
                 Toast.hudBuilder.title(NSLocalizedString("pwd_format_error", comment: "Value is incorrect!The length has to be 6 digits")).show()
@@ -487,12 +490,33 @@ class EditController:UIViewController,CBCentralManagerDelegate,CBPeripheralDeleg
         label.font = UIFont.systemFont(ofSize: 14)
         return label
     }()
+    var uniqueIDLabel:UILabel = {
+         let label = UILabel()
+         label.textColor = UIColor.black
+         label.font = UIFont.systemFont(ofSize: 14)
+         label.text = NSLocalizedString("unique_id", comment: "Unique ID:")
+         return label
+     }()
+     var uniqueIDDescLabel:UILabel = {
+         let label = UILabel()
+         label.textColor = UIColor.black
+         label.font = UIFont.systemFont(ofSize: 14)
+         return label
+     }()
 
     func initUI(){
         self.view.backgroundColor = UIColor.white
         var contentY = 80
         let dateLabelWidth = 60
         let dateLabelX:Int = (Int)(self.view.bounds.size.width / 2 - 100)
+        self.uniqueIDLabel.frame = CGRect(x: dateLabelX, y: contentY, width: 80, height: 30)
+        self.uniqueIDLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
+        self.uniqueIDDescLabel.frame = CGRect(x: dateLabelX+80, y: contentY, width: 200, height: 30)
+        self.uniqueIDDescLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
+        self.uniqueIDDescLabel.text = uniqueID
+        self.view.addSubview(self.uniqueIDLabel)
+        self.view.addSubview(self.uniqueIDDescLabel)
+        contentY = contentY + 40
         self.dateLabel.frame = CGRect(x: dateLabelX, y: contentY, width: 60, height: 30)
         self.dateLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
         self.dateDescLabel.frame = CGRect(x: dateLabelX+60, y: contentY, width: 200, height: 30)
@@ -506,23 +530,23 @@ class EditController:UIViewController,CBCentralManagerDelegate,CBPeripheralDeleg
         lockStatusImg.backgroundColor = UIColor.clear
         contentY = contentY + 200
         self.view.addSubview(lockStatusImg)
-        self.lockStatusLabel = UILabel.init(frame: CGRect(x: 30, y: contentY, width: Int(self.view.bounds.size.width)-30, height: 60))
+        self.lockStatusLabel = UILabel.init(frame: CGRect(x: 30, y: contentY, width: Int(self.view.bounds.size.width)-60, height: 60))
         self.lockStatusLabel.textAlignment = .center
         self.lockStatusLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
         self.lockStatusLabel.lineBreakMode = NSLineBreakMode.byWordWrapping
         self.lockStatusLabel.numberOfLines = 0
         self.view.addSubview(self.lockStatusLabel)
         contentY = contentY + 60
-        let lockBtn = UIButton.init(frame:CGRect(x: (Int)(self.view.bounds.size.width / 3 / 2 - 40), y: contentY, width: 80, height: 30))
-        lockBtn.setTitle( NSLocalizedString("lock", comment: "Lock"), for: .normal)
-        lockBtn.setTitleColor(UIColor.nordicBlue, for: .normal)
-        lockBtn.layer.cornerRadius = 15;
-        lockBtn.layer.borderWidth = 1.0;
-        lockBtn.layer.borderColor = UIColor.nordicBlue.cgColor
-        lockBtn.titleLabel!.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
-        lockBtn.addTarget(self, action: #selector(lockClick), for:.touchUpInside)
-        self.view.addSubview(lockBtn)
-        let unlock = UIButton.init(frame:CGRect(x: (Int)(self.view.bounds.size.width / 2  - 40), y: contentY, width: 80, height: 30))
+//        let lockBtn = UIButton.init(frame:CGRect(x: (Int)(self.view.bounds.size.width / 3 / 2 - 40), y: contentY, width: 80, height: 30))
+//        lockBtn.setTitle( NSLocalizedString("lock", comment: "Lock"), for: .normal)
+//        lockBtn.setTitleColor(UIColor.nordicBlue, for: .normal)
+//        lockBtn.layer.cornerRadius = 15;
+//        lockBtn.layer.borderWidth = 1.0;
+//        lockBtn.layer.borderColor = UIColor.nordicBlue.cgColor
+//        lockBtn.titleLabel!.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
+//        lockBtn.addTarget(self, action: #selector(lockClick), for:.touchUpInside)
+//        self.view.addSubview(lockBtn)
+        let unlock = UIButton.init(frame:CGRect(x: (Int)(self.view.bounds.size.width / 2 / 2  - 40), y: contentY, width: 80, height: 30))
         unlock.setTitle( NSLocalizedString("unlock", comment: "Unlock"), for: .normal)
         unlock.setTitleColor(UIColor.nordicBlue, for: .normal)
         unlock.layer.cornerRadius = 15;
@@ -531,7 +555,8 @@ class EditController:UIViewController,CBCentralManagerDelegate,CBPeripheralDeleg
         unlock.titleLabel!.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
         unlock.addTarget(self, action: #selector(unlockClick), for:.touchUpInside)
         self.view.addSubview(unlock)
-        let activeNetwork = UIButton.init(frame:CGRect(x: (Int)(self.view.bounds.size.width -  self.view.bounds.size.width / 3 / 2 - 40), y: contentY, width: 80, height: 30))
+//        let activeNetwork = UIButton.init(frame:CGRect(x: (Int)(self.view.bounds.size.width -  self.view.bounds.size.width / 3 / 2 - 40), y: contentY, width: 80, height: 30))
+        let activeNetwork = UIButton.init(frame:CGRect(x: (Int)(self.view.bounds.size.width - self.view.bounds.size.width / 2 / 2  - 40), y: contentY, width: 80, height: 30))
         activeNetwork.setTitle( NSLocalizedString("active_network", comment: "Active Network"), for: .normal)
         activeNetwork.setTitleColor(UIColor.nordicBlue, for: .normal)
         activeNetwork.layer.cornerRadius = 15;
@@ -543,18 +568,24 @@ class EditController:UIViewController,CBCentralManagerDelegate,CBPeripheralDeleg
         contentY = contentY + 40
     }
     
-    func getCmdContent(head:[UInt8],content:[UInt8])->[UInt8]{
+    func getCmdContent(head:[UInt8],content:[UInt8],isNeedUniqueID:Bool)->[UInt8]{
         var result = [UInt8]()
         var len = content.count
+        if isNeedUniqueID{
+            len += 6
+        }
         result.append(contentsOf: head)
         result.append((UInt8)(len))
         result.append(contentsOf: content)
+        if isNeedUniqueID{
+            result.append(contentsOf: Utils.hexString2Bytes(hexStr: self.uniqueID))
+        }
         return result
     }
     
     
     @objc private func lockClick() {
-        var needSend = self.getCmdContent(head: lockHead, content: [0x00])
+        var needSend = self.getCmdContent(head: lockHead, content: [0x00],isNeedUniqueID: true)
         self.writeContent(content: needSend)
     }
     @objc private func unlockClick() {
@@ -562,7 +593,7 @@ class EditController:UIViewController,CBCentralManagerDelegate,CBPeripheralDeleg
     }
     
     @objc private func activeNetworkClick() {
-        var needSend = self.getCmdContent(head: activeNetworkHead, content: [0x00])
+        var needSend = self.getCmdContent(head: activeNetworkHead, content: [0x00],isNeedUniqueID: true)
         self.writeContent(content: needSend)
     }
     
@@ -631,6 +662,9 @@ class EditController:UIViewController,CBCentralManagerDelegate,CBPeripheralDeleg
     }
     
     func setImgLockStatus(code:UInt8){
+        if (code == 0xff){
+           return;
+        }
         let isLock = self.isDeviceLock(code: code)
         let isTrimming = self.isDeviceLockThreadTrimming(code: code)
         let isLockError = self.isDeviceLockErrorState(code: code)

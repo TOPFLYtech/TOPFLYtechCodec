@@ -72,9 +72,10 @@
     <string name="lock_status_56">Rope cut, USB unlock error, rope cut and USB unlock error.</string>
     <string name="input_ble_open_lock_pwd">Enter Bluetooth unlock password</string>
     <string name="pwd_format_error">Password format error</string>
-    <string name="active_network">Active Network</string>
+    <string name="active_network">Activation</string>
     <string name="waitingDeviceReady">Wait for the device to be ready</string>
     <string name="clear_log">Clear log</string>
     <string name="refresh_status">Refresh status</string>
     <string name="pwd_error">Unlock password incorrect!</string>
+    <string name="unique_id">Unique ID:</string>
 </resources>

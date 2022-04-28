@@ -77,3 +77,5 @@
 "refresh_status"="Refresh status";
 "pwd_error"="Unlock password incorrect!"; 
 "ble_unlock_pwd"="BLE unlock password";
+"scanning"="Scanning";
+"unique_id"="Unique ID:";
