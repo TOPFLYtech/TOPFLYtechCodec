@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+    <ImageView
+        android:id="@+id/main_left_refresh"
+        android:layout_width="@dimen/tab_action_bar_img_size"
+        android:layout_height="@dimen/tab_action_bar_img_size"
+        android:src="@mipmap/ic_refresh"
+        android:padding="5dp"
+        android:layout_centerVertical="true"
+        android:scaleType="centerCrop"
+        android:clickable="true"
+        />
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:layout_toRightOf="@+id/command_list_bar_back_id"
+
+        >
+        <TextView
+            android:id="@+id/edit_command_title"
+            android:layout_height="44dp"
+            android:layout_width="match_parent"
+            android:gravity="center"
+            android:text="@string/main_bar_text"
+            android:maxLines="1"
+            android:textColor="@color/actionbar_text"
+            android:textSize="@dimen/text_size" />
+
+    </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/main_right_fuzzy_search"
+        android:layout_alignParentRight="true"
+        android:layout_height="@dimen/tab_action_bar_right_imgbtn_size"
+        android:layout_width="@dimen/tab_action_bar_right_imgbtn_size"
+        android:layout_centerVertical="true"
+        android:src="@mipmap/ic_search"
+        android:padding="5dp"
+        android:gravity="center"
+        />
+</RelativeLayout>

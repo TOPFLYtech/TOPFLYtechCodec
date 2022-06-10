@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="list_tx">16dp</dimen>
+    <dimen name="list_item_high">30dp</dimen>
+    <dimen name="report_item_high">15dp</dimen>
+    <dimen name="list_item_margin_left">15dp</dimen>
+    <dimen name="tab_action_bar_right_imgbtn_size">30dp</dimen>
+    <dimen name="tab_action_bar_img_size">30dp</dimen>
+    <dimen name="text_size">16dp</dimen>
+    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="edit_item_high">60dp</dimen>
+    <dimen name="switch_btn_width">45dp</dimen>
+    <dimen name="switch_btn_height">28dp</dimen>
+    <dimen name="btn_size">14dp</dimen>
+    <dimen name="dp_15">15dp</dimen>
+    <dimen name="dp_1">1dp</dimen>
+    <dimen name="dp_2">2dp</dimen>
+    <dimen name="sp_11">11sp</dimen>
+    <color name="background_grey">#E6E6E6</color>
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+    <color name="box_color">#ffd5d5d5</color>
+    <color name="box_border_color">#ff6464ff</color>
+    <dimen name="drop_pop_menu_text_size">16sp</dimen>
+    <dimen name="drop_pop_menu_item_height">35dp</dimen>
+    <dimen name="drop_pop_menu_item_horizontal_margin">10dp</dimen>
+    <dimen name="drop_pop_menu_icon_text_margin">10dp</dimen>
+    <dimen name="drop_pop_menu_icon_width">22dp</dimen>
+</resources>

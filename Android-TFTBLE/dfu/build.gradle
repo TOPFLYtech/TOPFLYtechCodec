@@ -1,0 +1,30 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 29
+
+    defaultConfig {
+        minSdkVersion 18
+        targetSdkVersion 29
+        versionCode 24
+        versionName VERSION_NAME
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            consumerProguardFiles 'dfu-proguard-rules.pro'
+        }
+    }
+}
+
+
+
+dependencies {
+    implementation 'androidx.core:core:1.0.0'
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
+    implementation 'androidx.annotation:annotation:1.1.0'
+    implementation 'com.google.code.gson:gson:2.8.6'
+}
+
+//apply from: rootProject.file('dfu/gradle/gradle-bintray-push.gradle')

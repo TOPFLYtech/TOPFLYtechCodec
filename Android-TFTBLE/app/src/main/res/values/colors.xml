@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#18c2d6</color>
+    <color name="colorPrimaryDark">#1aa5b5</color>
+    <color name="colorAccent">#D81B60</color>
+    <color name="frame_lightgrey">#B4B1B1</color>
+    <color name="frame_darkgrey">#4b4949</color>
+    <color name="tx_black">#ff000000</color>
+    <color name="bg_color_white">#ffffff</color>
+    <color name="main_bkg_color">#f2f2f2</color>
+    <color name="actionbar_text">#ff000000</color>
+    <color name="maincolor">#18c2d6</color>
+    <color name="arc1">#099bfb</color>
+    <color name="content_bg">#eeeeee</color>
+    <color name="line_color1">#c23531</color>
+    <color name="line_color2">#FF9933</color>
+    <color name="line_color3">#0099FF</color>
+    <color name="line_color4">#61a0a8</color>
+    <color name="line_color5">#91c7ae</color>
+    <color name="line_color6">#749f83</color>
+    <color name="line_color7">#ca8622</color>
+    <color name="line_color8">#bda29a</color>
+    <color name="line_color9">#6e7074</color>
+    <color name="line_color10">#546570</color>
+    <color name="line_color11">#c4ccd3</color>
+    <color name="drop_pop_menu_bg_color">#a0000000</color>
+</resources>
