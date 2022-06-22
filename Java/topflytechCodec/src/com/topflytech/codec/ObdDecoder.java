@@ -113,6 +113,10 @@ public class ObdDecoder {
                     packageLength = Crypto.getAesLength(packageLength);
                 }
                 decoderBuf.resetReaderIndex();
+                if(packageLength <= 0){
+                    callback.receiveErrorMessage("Error Message");
+                    return;
+                }
                 if (packageLength > decoderBuf.getReadableBytes()){
                     callback.receiveErrorMessage("Error Message");
                     return;
@@ -166,6 +170,10 @@ public class ObdDecoder {
                     packageLength = Crypto.getAesLength(packageLength);
                 }
                 decoderBuf.resetReaderIndex();
+                if(packageLength <= 0){
+                    decoderBuf.skipBytes(5);
+                    break;
+                }
                 if (packageLength > decoderBuf.getReadableBytes()){
                     break;
                 }

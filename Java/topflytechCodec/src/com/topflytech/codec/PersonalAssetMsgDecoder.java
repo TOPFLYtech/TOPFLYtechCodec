@@ -81,6 +81,10 @@ public class PersonalAssetMsgDecoder {
                     packageLength = Crypto.getAesLength(packageLength);
                 }
                 decoderBuf.resetReaderIndex();
+                if(packageLength <= 0){
+                    callback.receiveErrorMessage("Error Message");
+                    return;
+                }
                 if (packageLength > decoderBuf.getReadableBytes()){
                     callback.receiveErrorMessage("Error Message");
                     return;
@@ -135,6 +139,10 @@ public class PersonalAssetMsgDecoder {
                     packageLength = Crypto.getAesLength(packageLength);
                 }
                 decoderBuf.resetReaderIndex();
+                if(packageLength <= 0){
+                    decoderBuf.skipBytes(5);
+                    break;
+                }
                 if (packageLength > decoderBuf.getReadableBytes()){
                     break;
                 }
@@ -1005,7 +1013,7 @@ public class PersonalAssetMsgDecoder {
         }
 
     }
-     
+
     private LockMessage parseLockMessage(byte[] bytes) {
         LockMessage lockMessage = new LockMessage();
         int serialNo = BytesUtils.bytes2Short(bytes, 5);
@@ -1082,6 +1090,9 @@ public class PersonalAssetMsgDecoder {
             pcid_4g_2 = BytesUtils.bytes2Short(bytes,36);
         }
         int lockType = bytes[38] & 0xff;
+        if(lockType < 0){
+            lockType += 256;
+        }
         int idLen = (bytes[39] & 0xff) * 2;
         String idStr = BytesUtils.bytes2HexString(bytes,40);
         String id = idStr;

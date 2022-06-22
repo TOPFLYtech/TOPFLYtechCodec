@@ -144,6 +144,11 @@ namespace TopflytechCodec
                         packageLength = Crypto.GetAesLength(packageLength);
                     }
                     decoderBuf.ResetReaderIndex();
+                    if (packageLength <= 0)
+                    {
+                        decoderBuf.SkipBytes(5);
+                        break;
+                    }
                     if (packageLength > decoderBuf.GetReadableBytes())
                     {
                         break;

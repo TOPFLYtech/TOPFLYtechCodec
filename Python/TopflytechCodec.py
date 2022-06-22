@@ -827,6 +827,9 @@ class Decoder:
                 elif self.encryptType == MessageEncryptType.AES:
                     packageLength = self.getAesLength(packageLength)
                 self.decoderBuf.resetReaderIndex()
+                if packageLength <= 0:
+                    self.decoderBuf.skipBytes(5)
+                    break
                 if packageLength > self.decoderBuf.getReadableBytes():
                     break
                 data = self.decoderBuf.readBytes(packageLength)
@@ -3348,6 +3351,9 @@ class ObdDecoder:
                 elif self.encryptType == MessageEncryptType.AES:
                     packageLength = self.getAesLength(packageLength)
                 self.decoderBuf.resetReaderIndex()
+                if packageLength <= 0:
+                    self.decoderBuf.skipBytes(5)
+                    break
                 if packageLength > self.decoderBuf.getReadableBytes():
                     break
                 data = self.decoderBuf.readBytes(packageLength)
@@ -5246,6 +5252,9 @@ class PersonalAssetMsgDecoder:
                 elif self.encryptType == MessageEncryptType.AES:
                     packageLength = self.getAesLength(packageLength)
                 self.decoderBuf.resetReaderIndex()
+                if packageLength <= 0:
+                    self.decoderBuf.skipBytes(5)
+                    break
                 if packageLength > self.decoderBuf.getReadableBytes():
                     break
                 data = self.decoderBuf.readBytes(packageLength)
