@@ -788,5 +788,26 @@ namespace TopflytechCodec.Entities
             get { return lockType; }
             set { lockType = value; }
         }
+
+        private Int32 hasThirdPartyObd; //0,1
+        public Int32 HasThirdPartyObd
+        {
+            get { return hasThirdPartyObd; }
+            set { hasThirdPartyObd = value; }
+        }
+
+        private Int32 ignitionSource;
+        public Int32 IgnitionSource
+        {
+            get { return ignitionSource; }
+            set { ignitionSource = value; }
+        }
+
+        private Int32 exPowerConsumpStatus;//0:unknown,1:normal,2abnormal
+        public Int32 ExPowerConsumpStatus
+        {
+            get { return exPowerConsumpStatus; }
+            set { exPowerConsumpStatus = value; }
+        }
     }
 }

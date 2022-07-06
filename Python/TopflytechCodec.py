@@ -455,6 +455,9 @@ class LocationMessage(Message):
     gyroscopeAxisY = 0
     gyroscopeAxisZ = 0
     lockType = 0xff
+    ignitionSource = 0
+    exPowerConsumpStatus = 0 #0:unknown,1:normal,2abnormal
+    hasThirdPartyObd = 0 # 0, 1
 
 
 class LocationInfoMessage(LocationMessage):
@@ -602,16 +605,16 @@ class Crypto:
         return hexString2Bytes(result)
     @staticmethod
     def aesEncrypt(bytes,key):
-        bkey = aesKeyMD5(key)
+        bkey = Crypto.aesKeyMD5(key)
         raw = pad(bytearray(bytes))
-        cipher = AES.new(str(bytearray(bkey)), AES.MODE_CBC, iv )
+        cipher = AES.new(str(bytearray(bkey)), AES.MODE_CBC, Crypto.iv )
         ciphertext= cipher.encrypt(str(raw))
         destBytes = bytearray(ciphertext)
         return destBytes
     @staticmethod
     def aesDecrypt(bytes,key):
-        bkey = aesKeyMD5(key)
-        cipher = AES.new(str(bytearray(bkey)), AES.MODE_CBC, iv )
+        bkey = Crypto.aesKeyMD5(key)
+        cipher = AES.new(str(bytearray(bkey)), AES.MODE_CBC, Crypto.iv )
         orignBytes = bytearray(cipher.decrypt(str(bytes)).strip())
         return orignBytes
     @staticmethod
@@ -3546,6 +3549,7 @@ class ObdDecoder:
         heartbeatInterval = data[12] & 0x00FF
         relayStatus = data[13] & 0x3F
         rlyMode =  data[13] & 0xCF
+        ignitionSource = data[13] & 0xf
         smsLanguageType = data[13] & 0xF
         isRelayWaiting = ((data[13] & 0xC0) != 0x00) and ((data[13] & 0x80) == 0x00)
         dragThreshold = bytes2Short(data, 14)
@@ -3553,6 +3557,17 @@ class ObdDecoder:
         iopIgnition = (iop & self.MASK_IGNITION) == self.MASK_IGNITION
         iopPowerCutOff = (iop & self.MASK_POWER_CUT) == self.MASK_POWER_CUT
         iopACOn = (iop & self.MASK_AC) == self.MASK_AC
+        hasThirdPartyObd = 0
+        if (iop & 0x10) == 0x10:
+            hasThirdPartyObd = 1
+        exPowerConsumpStatus = 0
+        if (iop & 0x03) == 0x01:
+            exPowerConsumpStatus = 2
+        elif (iop & 0x03) == 0x02:
+            exPowerConsumpStatus = 1
+        else:
+            exPowerConsumpStatus = 0
+
         output1 = (iop & 0x0400) == 0x0400
         input1 = iopIgnition
         input2 = iopACOn
@@ -3779,6 +3794,9 @@ class ObdDecoder:
         locationMessage.isSendSmsAlarmWhenDigitalInput2Change = isSendSmsAlarmWhenDigitalInput2Change
         locationMessage.isSendSmsAlarmToManagerPhone = isSendSmsAlarmToManagerPhone
         locationMessage.jammerDetectionStatus = jammerDetectionStatus
+        locationMessage.ignitionSource = ignitionSource
+        locationMessage.exPowerConsumpStatus = exPowerConsumpStatus
+        locationMessage.hasThirdPartyObd = hasThirdPartyObd
         return locationMessage
 
     def parseGpsDriverBehaviorMessage(self,byteArray):

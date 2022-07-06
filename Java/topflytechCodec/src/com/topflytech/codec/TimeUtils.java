@@ -34,6 +34,7 @@ public class TimeUtils {
             String datetime = BytesUtils.bytes2HexString(dateData, 0);
             int year = Integer.parseInt(datetime.substring(0, 4));
             Calendar calendar = Calendar.getInstance();
+            calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
             int curYear = calendar.get(Calendar.YEAR);
             if (year > curYear){
                 year = year - 100;

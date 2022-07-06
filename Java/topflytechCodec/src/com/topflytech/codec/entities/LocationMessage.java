@@ -1162,6 +1162,37 @@ public class LocationMessage extends Message{
     private float gyroscopeAxisZ;
 
     private Integer lockType;
+
+    private int ignitionSource;
+    private int hasThirdPartyObd;
+    private int exPowerConsumpStatus; //0:unknown,1:normal,2abnormal
+
+    public int getIgnitionSource() {
+        return ignitionSource;
+    }
+
+    public void setIgnitionSource(int ignitionSource) {
+        this.ignitionSource = ignitionSource;
+    }
+
+    public int getHasThirdPartyObd() {
+        return hasThirdPartyObd;
+    }
+
+    public void setHasThirdPartyObd(int hasThirdPartyObd) {
+        this.hasThirdPartyObd = hasThirdPartyObd;
+    }
+
+    public int getExPowerConsumpStatus() {
+        return exPowerConsumpStatus;
+    }
+
+    public void setExPowerConsumpStatus(int exPowerConsumpStatus) {
+        this.exPowerConsumpStatus = exPowerConsumpStatus;
+    }
+
+
+
     public Integer getLockType() {
         return lockType;
     }

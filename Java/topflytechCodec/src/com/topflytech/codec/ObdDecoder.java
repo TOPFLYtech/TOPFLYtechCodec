@@ -381,8 +381,8 @@ public class ObdDecoder {
         bluetoothPeripheralDataMessage.setSerialNo(serialNo);
 //        bluetoothPeripheralDataMessage.setIsNeedResp(isNeedResp);
         bluetoothPeripheralDataMessage.setImei(imei);
-        boolean latlngValid = (bytes[22] & 0xBF) != 0xBF;
-        boolean isHisData = (bytes[22] & 0x7F) != 0x7F;
+        boolean latlngValid = (bytes[22] & 0x40) == 0x40;
+        boolean isHisData = (bytes[22] & 0x80) == 0x80;
         bluetoothPeripheralDataMessage.setLatlngValid(latlngValid);
         bluetoothPeripheralDataMessage.setIsHistoryData(isHisData);
         double altitude = latlngValid? BytesUtils.bytes2Float(bytes, 23) : 0.0;
@@ -390,19 +390,17 @@ public class ObdDecoder {
         double longitude = latlngValid ? BytesUtils.bytes2Float(bytes, 31) : 0.0;
         int azimuth = latlngValid ? BytesUtils.bytes2Short(bytes, 37) : 0;
         Float speedf = 0.0f;
-        if (latlngValid){
-            try{
-                byte[] bytesSpeed = Arrays.copyOfRange(bytes, 35, 37);
-                String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
-                if(strSp.contains("f")){
-                    speedf = -1f;
-                }else {
-                    speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
-                }
-            }catch (Exception e){
-                System.out.println("Imei : " + imei);
-                e.printStackTrace();
+        try{
+            byte[] bytesSpeed = Arrays.copyOfRange(bytes, 35, 37);
+            String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
+            if(strSp.contains("f")){
+                speedf = -1f;
+            }else {
+                speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
             }
+        }catch (Exception e){
+            System.out.println("Imei : " + imei);
+            e.printStackTrace();
         }
         Boolean is_4g_lbs = false;
         Integer mcc_4g = null;
@@ -1270,7 +1268,7 @@ public class ObdDecoder {
         }else if (bleData[0] == 0x00 && bleData[1] == 0x07) {
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_FUEL);
             DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            for (int i = 2; i < bleData.length; i += 15) {
+            for (int i = 2;i+15 <= bleData.length;i+=15){
                 BleFuelData bleFuelData = new BleFuelData();
                 byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
                 String mac = BytesUtils.bytes2HexString(macArray, 0);
@@ -1296,13 +1294,13 @@ public class ObdDecoder {
                 } else {
                     temperature = (temperatureTemp & 0x7fff) * 0.01f * tempPositive;
                 }
-                int status = (int) bleData[i + 10] < 0 ? (int) bleData[i + 10] + 256 : (int) bleData[i + 10];
+                int status =(int) bleData[i+13] < 0 ? (int) bleData[i+13] + 256 : (int) bleData[i+13];
                 int online = 1;
-                if (status == 255) {
+                if(status == 255){
                     status = 0;
                     online = 0;
                 }
-                int rssiTemp = (int) bleData[i + 11] < 0 ? (int) bleData[i + 11] + 256 : (int) bleData[i + 11];
+                int rssiTemp = (int) bleData[i + 14] < 0 ? (int) bleData[i + 14] + 256 : (int) bleData[i + 14];
                 int rssi;
                 if (rssiTemp == 255) {
                     rssi = -999;
@@ -1967,6 +1965,8 @@ public class ObdDecoder {
         int relayStatus = data[13] & 0x3F;
         int rlyMode =  data[13] & 0xCF;
         int smsLanguageType = data[13] & 0xF;
+        int ignitionSource = data[13] & 0xf;
+
         boolean isRelayWaiting = ((data[13] & 0xC0) != 0x00) && ((data[13] & 0x80) == 0x00);
         int dragThreshold = BytesUtils.bytes2Short(data, 14);
         long iop = (long) BytesUtils.bytes2Short(data, 16);
@@ -1979,6 +1979,15 @@ public class ObdDecoder {
         int output1 = (iop & 0x0400) == 0x0400 ? 1 : 0;
         int speakerStatus = (iop & 0x40) ==  0x40  ? 1 : 0;
         int rs232PowerOf5V = (iop & 0x20) ==  0x20  ? 1 : 0;
+        int hasThirdPartyObd = (iop & 0x10) ==  0x10  ? 1 : 0;
+        int exPowerConsumpStatus = 0;
+        if ((iop & 0x03) == 0x01){
+            exPowerConsumpStatus = 2;
+        }else if ((iop & 0x03) == 0x02){
+            exPowerConsumpStatus = 1;
+        }else{
+            exPowerConsumpStatus = 0;
+        }
         byte alarmByte = data[18];
         int originalAlarmCode = (int) alarmByte;
         int externalPowerReduceValue = (data[19] & 0x11);
@@ -2231,6 +2240,9 @@ public class ObdDecoder {
         message.setIsSendSmsAlarmWhenDigtalInput2Change(isSendSmsAlarmWhenDigitalInput2Change);
         message.setIsSendSmsAlarmToManagerPhone(isSendSmsAlarmToManagerPhone);
         message.setJammerDetectionStatus(jammerDetectionStatus);
+        message.setIgnitionSource(ignitionSource);
+        message.setExPowerConsumpStatus(exPowerConsumpStatus);
+        message.setHasThirdPartyObd(hasThirdPartyObd);
         return message;
     }
 

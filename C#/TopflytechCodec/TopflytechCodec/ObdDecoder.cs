@@ -1901,6 +1901,7 @@ namespace TopflytechCodec
             int heartbeatInterval = data[12] & 0x00FF;
             int relayStatus = data[13] & 0x3F;
             int rlyMode =  data[13] & 0xCF;
+            int ignitionSource = data[13] & 0xf; 
             int smsLanguageType = data[13] & 0xF;
             bool isRelayWaiting = ((data[13] & 0xC0) != 0x00) && ((data[13] & 0x80) == 0x00);
             int dragThreshold = BytesUtils.Bytes2Short(data, 14);
@@ -1913,6 +1914,20 @@ namespace TopflytechCodec
             int output1 = (iop & 0x0400) == 0x0400 ? 1 : 0;
             int speakerStatus = (iop & 0x40) ==  0x40  ? 1 : 0;
             int rs232PowerOf5V = (iop & 0x20) ==  0x20  ? 1 : 0;
+            int hasThirdPartyObd = (iop & 0x10) == 0x10 ? 1 : 0;
+            int exPowerConsumpStatus = 0;
+            if ((iop & 0x03) == 0x01)
+            {
+                exPowerConsumpStatus = 2;
+            }
+            else if ((iop & 0x03) == 0x02)
+            {
+                exPowerConsumpStatus = 1;
+            }
+            else
+            {
+                exPowerConsumpStatus = 0;
+            }
             byte alarmByte = data[18];
             int originalAlarmCode = (int)alarmByte;
             bool isSendSmsAlarmToManagerPhone = (data[19] & 0x20) == 0x20;
@@ -2184,6 +2199,9 @@ namespace TopflytechCodec
             message.IsSendSmsAlarmWhenDigitalInput2Change = isSendSmsAlarmWhenDigitalInput2Change;
             message.IsSendSmsAlarmToManagerPhone = isSendSmsAlarmToManagerPhone;
             message.JammerDetectionStatus = jammerDetectionStatus;
+            message.IgnitionSource = ignitionSource;
+            message.HasThirdPartyObd = hasThirdPartyObd;
+            message.ExPowerConsumpStatus = exPowerConsumpStatus;
             return message;
         }
     }
