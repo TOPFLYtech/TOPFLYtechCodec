@@ -816,7 +816,7 @@ public class PersonalAssetMsgDecoder {
             try{
                 lightSensor = Integer.parseInt(lightSensorStr) / 10.0f;
             }catch (Exception e){
-                e.printStackTrace();
+//                e.printStackTrace();
             }
 
         }
@@ -830,7 +830,7 @@ public class PersonalAssetMsgDecoder {
             try{
                 batteryVoltage = Integer.parseInt(batteryVoltageStr) / 10.0f;
             }catch (Exception e){
-                e.printStackTrace();
+//                e.printStackTrace();
             }
         }
         byte[] solarVoltageBytes = new byte[]{data[48]};
@@ -842,7 +842,7 @@ public class PersonalAssetMsgDecoder {
             try{
                 solarVoltage = Integer.parseInt(solarVoltageStr) / 10.0f;
             }catch (Exception e){
-                e.printStackTrace();
+//                e.printStackTrace();
             }
         }
 
@@ -862,6 +862,9 @@ public class PersonalAssetMsgDecoder {
         boolean iopIgnition = (status & 0x4) == 0x4;
         byte alarmByte = data[16];
         int originalAlarmCode = (int) alarmByte;
+        if(originalAlarmCode < 0){
+            originalAlarmCode += 256;
+        }
         byte[] command = Arrays.copyOf(data, HEADER_LENGTH);
         boolean isAlarmData = command[2] == 0x04;
         byte status1 = data[54];

@@ -1167,6 +1167,26 @@ public class LocationMessage extends Message{
     private int hasThirdPartyObd;
     private int exPowerConsumpStatus; //0:unknown,1:normal,2abnormal
 
+    private int remainFuelUnit = 0;//0:% ,1:L
+    private int mileageSource = 0;//0:GPS 1:ECU
+
+    public int getMileageSource() {
+        return mileageSource;
+    }
+
+    public void setMileageSource(int mileageSource) {
+        this.mileageSource = mileageSource;
+    }
+
+
+    public int getRemainFuelUnit() {
+        return remainFuelUnit;
+    }
+
+    public void setRemainFuelUnit(int remainFuelUnit) {
+        this.remainFuelUnit = remainFuelUnit;
+    }
+
     public int getIgnitionSource() {
         return ignitionSource;
     }

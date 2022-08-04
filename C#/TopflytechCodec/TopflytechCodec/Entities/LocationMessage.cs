@@ -809,5 +809,20 @@ namespace TopflytechCodec.Entities
             get { return exPowerConsumpStatus; }
             set { exPowerConsumpStatus = value; }
         }
+ 
+
+        private int remainFuelUnit = 0; // 0:% 1:L
+        public Int32 RemainFuelUnit
+        {
+            get { return remainFuelUnit; }
+            set { remainFuelUnit = value; }
+        }
+
+        private int mileageSource = 0;//0:GPS; 1:ECU
+        public Int32 MileageSource
+        {
+            get { return mileageSource; }
+            set { mileageSource = value; }
+        }
     }
 }

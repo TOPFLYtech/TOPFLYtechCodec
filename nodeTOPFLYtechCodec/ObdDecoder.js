@@ -1592,6 +1592,7 @@ var ObdDecoder = {
         var isSendSmsAlarmToManagerPhone = (data[19] & 0x20) == 0x20;
         var isSendSmsAlarmWhenDigitalInput2Change = (data[19] & 0x10) == 0x10;
         var jammerDetectionStatus = (data[19] & 0xC);
+        var mileageSource  = (data[19] & 0x01) == 0x01 ? "GPS" : "ECU";
         var isAlarmData = bytes[2] == 0x04  || bytes[2] == 0x18;
         var mileage = ByteUtils.byteToLong(data, 20);
         var batteryBytes = [data[24]]
@@ -1708,7 +1709,7 @@ var ObdDecoder = {
         if(remainFuelRate == 255){
             remainFuelRate = -999;
         }
-
+        var remainFuelUnit = (data[67] & 0x80) == 0x80 ? "L" : "%";
         var protocolHead = bytes[2];
         message.protocolHeadType = protocolHead
         if ((protocolHead == 0x16 || protocolHead == 0x18) && data.length >= 80){
@@ -1821,6 +1822,8 @@ var ObdDecoder = {
         message.ignitionSource = ignitionSource
         message.exPowerConsumpStatus = exPowerConsumpStatus
         message.hasThirdPartyObd = hasThirdPartyObd
+        message.remainFuelUnit = remainFuelUnit
+        message.mileageSource = mileageSource
         return message;
     },
     parseObdMessage:function(bytes){

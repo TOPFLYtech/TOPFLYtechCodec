@@ -458,6 +458,8 @@ class LocationMessage(Message):
     ignitionSource = 0
     exPowerConsumpStatus = 0 #0:unknown,1:normal,2abnormal
     hasThirdPartyObd = 0 # 0, 1
+    remainFuelUnit = 0
+    mileageSource = 0
 
 
 class LocationInfoMessage(LocationMessage):
@@ -551,18 +553,22 @@ class ObdMessage(Message):
 def byte2HexString(byteArray,index):
     return ''.join('{:02x}'.format(x) for x in byteArray[index:])
 
+
 def hexString2Bytes(hexStr):
-     hexData = hexStr.decode("hex")
-     # return bytes.fromhex(hexStr)
-     return map(ord,hexData)
+    hexData = hexStr.decode("hex")#python2.7
+    return map(ord,hexData)#python2.7
+    #return bytes.fromhex(hexStr)  # python 3.x
+
 
 def formatNumb(numb):
     return Decimal(numb).quantize(Decimal('0.00'))
 
+
 def short2Bytes(number):
     str = '{:04x}'.format(number)
-    # return bytes.fromhex(str)
-    return map(ord,'{:04x}'.format(number).decode("hex"))
+    #return bytes.fromhex(str)  # python 3.X
+    return map(ord,'{:04x}'.format(number).decode("hex"))#python 2.7
+
 
 def bytes2Short(byteArray,offset):
     return (byteArray[offset]  << 8 & 0xFF00) + (byteArray[offset+1] & 0xFF)
@@ -3582,6 +3588,9 @@ class ObdDecoder:
         isSendSmsAlarmToManagerPhone = (data[19] & 0x20) == 0x20
         isSendSmsAlarmWhenDigitalInput2Change = (data[19] & 0x10) == 0x10
         jammerDetectionStatus = (data[19] & 0xC)
+        mileageSource = 1
+        if (data[19] & 0x01) == 0x01:
+            mileageSource = 0
         mileage = bytes2Integer(data, 20)
         batteryBytes = [data[24]]
         batteryStr = byte2HexString(batteryBytes, 0)
@@ -3692,6 +3701,9 @@ class ObdDecoder:
             remainFuelRate += 256
         if remainFuelRate == 255:
             remainFuelRate = -999
+        remainFuelUnit = 0
+        if (data[67] & 0x80) == 0x80:
+            remainFuelUnit = 1
         locationMessage = LocationInfoMessage()
         if isAlarmData:
             locationMessage = LocationAlarmMessage()
@@ -3797,6 +3809,8 @@ class ObdDecoder:
         locationMessage.ignitionSource = ignitionSource
         locationMessage.exPowerConsumpStatus = exPowerConsumpStatus
         locationMessage.hasThirdPartyObd = hasThirdPartyObd
+        locationMessage.mileageSource = mileageSource
+        locationMessage.remainFuelUnit = remainFuelUnit
         return locationMessage
 
     def parseGpsDriverBehaviorMessage(self,byteArray):

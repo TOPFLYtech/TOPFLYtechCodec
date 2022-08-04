@@ -1933,6 +1933,7 @@ namespace TopflytechCodec
             bool isSendSmsAlarmToManagerPhone = (data[19] & 0x20) == 0x20;
             bool isSendSmsAlarmWhenDigitalInput2Change = (data[19] & 0x10) == 0x10;
             int jammerDetectionStatus = (data[19] & 0xC);
+            int mileageSource = (data[19] & 0x01) == 0x01 ? 0 : 1;
             bool isAlarmData = command[2] == 0x04 || command[2] == 0x18;
             long mileage = BytesUtils.Byte2Int(data, 20);
             byte[] batteryBytes = new byte[] { data[24] };
@@ -2072,6 +2073,7 @@ namespace TopflytechCodec
             {
                 remainFuelRate = -999;
             }
+            int remainFuelUnit = (data[67] & 0x80) == 0x80 ? 1 : 0;
             LocationMessage message;
             if (isAlarmData)
             {
@@ -2202,6 +2204,8 @@ namespace TopflytechCodec
             message.IgnitionSource = ignitionSource;
             message.HasThirdPartyObd = hasThirdPartyObd;
             message.ExPowerConsumpStatus = exPowerConsumpStatus;
+            message.RemainFuelUnit = remainFuelUnit;
+            message.MileageSource = mileageSource;
             return message;
         }
     }

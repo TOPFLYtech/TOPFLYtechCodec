@@ -1990,7 +1990,11 @@ public class ObdDecoder {
         }
         byte alarmByte = data[18];
         int originalAlarmCode = (int) alarmByte;
+        if(originalAlarmCode < 0){
+            originalAlarmCode += 256;
+        }
         int externalPowerReduceValue = (data[19] & 0x11);
+        int mileageSource  = (data[19] & 0x01) == 0x01 ? 0 : 1;
         boolean isSendSmsAlarmToManagerPhone = (data[19] & 0x20) == 0x20;
         boolean isSendSmsAlarmWhenDigitalInput2Change = (data[19] & 0x10) == 0x10;
         int jammerDetectionStatus = (data[19] & 0xC);
@@ -2114,10 +2118,9 @@ public class ObdDecoder {
         if(throttlePosition == 255){
             throttlePosition = -999;
         }
-        int remainFuelRate = (int)data[67] < 0 ? (int)data[67] + 256 : (int)data[67];
-        if(remainFuelRate == 255){
-            remainFuelRate = -999;
-        }
+        int remainFuelRate = data[67] & 0x7f;
+        int remainFuelUnit = (data[67] & 0x80) == 0x80 ? 1 : 0;
+
         LocationMessage message;
         if (isAlarmData){
             message = new LocationAlarmMessage();
@@ -2220,6 +2223,7 @@ public class ObdDecoder {
         message.setEngineLoad(engineLoad);
         message.setThrottlePosition(throttlePosition);
         message.setRemainFuelRate(remainFuelRate);
+        message.setRemainFuelUnit(remainFuelUnit);
         message.setIs_4g_lbs(is_4g_lbs);
         message.setIs_2g_lbs(is_2g_lbs);
         message.setMcc_2g(mcc_2g);
@@ -2243,6 +2247,7 @@ public class ObdDecoder {
         message.setIgnitionSource(ignitionSource);
         message.setExPowerConsumpStatus(exPowerConsumpStatus);
         message.setHasThirdPartyObd(hasThirdPartyObd);
+        message.setMileageSource(mileageSource);
         return message;
     }
 

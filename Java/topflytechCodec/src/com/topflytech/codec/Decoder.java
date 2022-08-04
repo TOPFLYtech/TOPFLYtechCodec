@@ -2143,6 +2143,9 @@ public class Decoder {
 
         byte alarmByte = data[22];
         int originalAlarmCode = (int) alarmByte;
+        if(originalAlarmCode < 0){
+            originalAlarmCode += 256;
+        }
         int externalPowerReduceValue = (data[23] & 0x11);
         boolean isSendSmsAlarmToManagerPhone = (data[23] & 0x20) == 0x20;
         boolean isSendSmsAlarmWhenDigitalInput2Change = (data[23] & 0x10) == 0x10;
@@ -2475,6 +2478,9 @@ public class Decoder {
 
         byte alarmByte = data[30];
         int originalAlarmCode = (int) alarmByte;
+        if(originalAlarmCode < 0){
+            originalAlarmCode += 256;
+        }
         int externalPowerReduceValue = (data[31] & 0x11);
         boolean isSendSmsAlarmToManagerPhone = (data[31] & 0x20) == 0x20;
         boolean isSendSmsAlarmWhenDigitalInput2Change = (data[31] & 0x10) == 0x10;
