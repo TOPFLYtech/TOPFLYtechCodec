@@ -2068,11 +2068,7 @@ namespace TopflytechCodec
             {
                 throttlePosition = -999;
             }
-            int remainFuelRate = (int)data[67] < 0 ? (int)data[67] + 256 : (int)data[67];
-            if (remainFuelRate == 255)
-            {
-                remainFuelRate = -999;
-            }
+            int remainFuelRate = data[67] & 0x7f;
             int remainFuelUnit = (data[67] & 0x80) == 0x80 ? 1 : 0;
             LocationMessage message;
             if (isAlarmData)

@@ -1705,10 +1705,7 @@ var ObdDecoder = {
         if(throttlePosition == 255){
             throttlePosition = -999;
         }
-        var remainFuelRate = data[67] < 0 ? data[67] + 256 : data[67];
-        if(remainFuelRate == 255){
-            remainFuelRate = -999;
-        }
+        var remainFuelRate = data[67] & 0x7f; 
         var remainFuelUnit = (data[67] & 0x80) == 0x80 ? "L" : "%";
         var protocolHead = bytes[2];
         message.protocolHeadType = protocolHead
