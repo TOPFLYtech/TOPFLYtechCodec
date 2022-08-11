@@ -850,6 +850,35 @@ public class Decoder {
                 bleFuelData.setTemp(Float.valueOf(decimalFormat.format(temperature)));
                 bleDataList.add(bleFuelData);
             }
+        }else if (bleData[0] == 0x00 && bleData[1] == 0x0d){
+            bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_Customer2397);
+            int i = 2;
+            while (i + 8 < bleData.length){
+                BleCustomer2397SensorData bleCustomer2397SensorData = new BleCustomer2397SensorData();
+                byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
+                String mac = BytesUtils.bytes2HexString(macArray, 0);
+                i+=6;
+                i+=1;
+                int rawDataLen = bleData[i] < 0 ? bleData[i] + 256 : bleData[i];
+                if(i + rawDataLen >= bleData.length || rawDataLen < 1){
+                    break;
+                }
+                i += 1;
+                byte[] rawData = Arrays.copyOfRange(bleData,i,i+rawDataLen-1);
+                i += rawDataLen - 1;
+                int rssiTemp = (int) bleData[i] < 0 ? (int) bleData[i] + 256 : (int) bleData[i];
+                int rssi;
+                if(rssiTemp == 255){
+                    rssi = -999;
+                }else{
+                    rssi = rssiTemp - 128;
+                }
+                i += 1;
+                bleCustomer2397SensorData.setRawData(rawData);
+                bleCustomer2397SensorData.setMac(mac);
+                bleCustomer2397SensorData.setRssi(rssi);
+                bleDataList.add(bleCustomer2397SensorData);
+            }
         }
         bluetoothPeripheralDataMessage.setBleDataList(bleDataList);
         return bluetoothPeripheralDataMessage;
