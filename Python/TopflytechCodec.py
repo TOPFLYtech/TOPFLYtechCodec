@@ -157,6 +157,7 @@ class BluetoothPeripheralDataMessage(Message):
     MESSAGE_TYPE_DOOR = 4
     MESSAGE_TYPE_CTRL = 5
     MESSAGE_TYPE_FUEL = 6
+    MESSAGE_TYPE_Customer2397 = 7
     is_4g_lbs = False
     mcc_4g = 0
     mnc_4g = 0
@@ -284,6 +285,10 @@ class BleFuelData(BleData):
     temp = 0
     alarm = 0
     online = 0
+    rssi = 0
+
+class BleCustomer2397SensorData(BleData):
+    rawData = []
     rssi = 0
 
 class AccelerationData:
@@ -2075,6 +2080,38 @@ class Decoder:
                 bleFuelData.temp = formatNumb(temperature)
                 bleDataList.append(bleFuelData)
                 i+=15
+        elif bleData[0] == 0x00 and bleData[1] == 0x0d:
+            bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_Customer2397
+            i = 2
+            while i < len(bleData):
+                bleCustomer2397SensorData = BleCustomer2397SensorData()
+                macArray = bleData[i + 0:i + 6]
+                mac = byte2HexString(macArray, 0)
+                i+=6
+                i+=1
+                rawDataLen = (int)(bleData[i])
+                if rawDataLen < 0:
+                    rawDataLen += 256
+                if i + rawDataLen >= len(bleData) or rawDataLen < 1:
+                    break
+                i+=1
+                rawData = bleData[i:i+rawDataLen-1]
+                i += rawDataLen -1
+                rssiTemp = 0
+                if (int)(bleData[i]) < 0:
+                    rssiTemp = (int)(bleData[i]) + 256
+                else:
+                    rssiTemp = (int)(bleData[i])
+                rssi = 0
+                if rssiTemp == 255:
+                    rssi = -999
+                else:
+                    rssi = rssiTemp - 256
+                i+=1
+                bleCustomer2397SensorData.rssi = rssi
+                bleCustomer2397SensorData.mac = mac
+                bleCustomer2397SensorData.rawData = rawData
+                bleDataList.append(bleCustomer2397SensorData)
         bluetoothPeripheralDataMessage.bleDataList =bleDataList
         return bluetoothPeripheralDataMessage;
 
@@ -5917,6 +5954,38 @@ class PersonalAssetMsgDecoder:
                 bleCtrlData.temp = formatNumb(temperature)
                 bleDataList.append(bleCtrlData)
                 i+=12
+        elif bleData[0] == 0x00 and bleData[1] == 0x0d:
+            bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_Customer2397
+            i = 2
+            while i < len(bleData):
+                bleCustomer2397SensorData = BleCustomer2397SensorData()
+                macArray = bleData[i + 0:i + 6]
+                mac = byte2HexString(macArray, 0)
+                i+=6
+                i+=1
+                rawDataLen = (int)(bleData[i])
+                if rawDataLen < 0:
+                    rawDataLen += 256
+                if i + rawDataLen >= len(bleData) or rawDataLen < 1:
+                    break
+                i+=1
+                rawData = bleData[i:i+rawDataLen-1]
+                i += rawDataLen -1
+                rssiTemp = 0
+                if (int)(bleData[i]) < 0:
+                    rssiTemp = (int)(bleData[i]) + 256
+                else:
+                    rssiTemp = (int)(bleData[i])
+                rssi = 0
+                if rssiTemp == 255:
+                    rssi = -999
+                else:
+                    rssi = rssiTemp - 256
+                i+=1
+                bleCustomer2397SensorData.rssi = rssi
+                bleCustomer2397SensorData.mac = mac
+                bleCustomer2397SensorData.rawData = rawData
+                bleDataList.append(bleCustomer2397SensorData)
         bluetoothPeripheralDataMessage.bleDataList =bleDataList
         return bluetoothPeripheralDataMessage;
 

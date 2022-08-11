@@ -1516,6 +1516,35 @@ var Decoder = {
                 bleFuelData.temp = temperature
                 bleDataList.push(bleFuelData);
             }
+        }else if (bleData[0] == 0x00 && bleData[1] == 0x0d){
+            bluetoothPeripheralDataMessage.bleMessageType = "customer2397Sensor"
+            var i = 2;
+            while (i + 8 < bleData.length){
+                var bleCustomer2397SensorData = {}
+                var macArray = ByteUtils.arrayOfRange(bleData, i + 0, i + 6);
+                var mac = ByteUtils.bytes2HexString(macArray, 0);
+                i+=6;
+                i+=1;
+                var rawDataLen = bleData[i] < 0 ? bleData[i] + 256 : bleData[i];
+                if(i + rawDataLen >= bleData.length || rawDataLen < 1){
+                    break;
+                }
+                i += 1;
+                var rawData = ByteUtils.arrayOfRange(bleData,i,i+rawDataLen-1);
+                i += rawDataLen - 1;
+                var rssiTemp = bleData[i] < 0 ? bleData[i] + 256 : bleData[i];
+                var rssi;
+                if(rssiTemp == 255){
+                    rssi = -999;
+                }else{
+                    rssi = rssiTemp - 128;
+                }
+                i += 1;
+                bleCustomer2397SensorData.rawData = rawData
+                bleCustomer2397SensorData.mac = mac
+                bleCustomer2397SensorData.rssi = rssi
+                bleDataList.push(bleCustomer2397SensorData);
+            }
         }
         bluetoothPeripheralDataMessage.bleDataList = bleDataList
         return bluetoothPeripheralDataMessage;

@@ -894,6 +894,44 @@ namespace TopflytechCodec
                     bleDataList.Add(bleFuelData);
                 }
             }
+            else if (bleData[0] == 0x00 && bleData[1] == 0x0d)
+            {
+                bluetoothPeripheralDataMessage.MessageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_Customer2397;
+                int i = 2;
+                while (i + 8 < bleData.Length)
+                {
+                    BleCustomer2397SensorData bleCustomer2397SensorData = new BleCustomer2397SensorData();
+                    byte[] macArray = new byte[6];
+                    Array.Copy(bleData, i + 0, macArray, 0, 6);
+                    String mac = BytesUtils.Bytes2HexString(macArray, 0);
+                    i += 6;
+                    i += 1;
+                    int rawDataLen = bleData[i] < 0 ? bleData[i] + 256 : bleData[i];
+                    if (i + rawDataLen >= bleData.Length || rawDataLen < 1)
+                    {
+                        break;
+                    }
+                    i += 1;
+                    byte[] rawData = new byte[rawDataLen - 1];
+                    Array.Copy(bleData, i, rawData, 0, rawDataLen - 1); 
+                    i += rawDataLen - 1;
+                    int rssiTemp = (int)bleData[i] < 0 ? (int)bleData[i] + 256 : (int)bleData[i];
+                    int rssi;
+                    if (rssiTemp == 255)
+                    {
+                        rssi = -999;
+                    }
+                    else
+                    {
+                        rssi = rssiTemp - 128;
+                    }
+                    i += 1;
+                    bleCustomer2397SensorData.RawData=rawData;
+                    bleCustomer2397SensorData.Mac=mac;
+                    bleCustomer2397SensorData.Rssi=rssi;
+                    bleDataList.Add(bleCustomer2397SensorData);
+                }
+            }
             bluetoothPeripheralDataMessage.BleDataList = bleDataList;
             return bluetoothPeripheralDataMessage;
         }

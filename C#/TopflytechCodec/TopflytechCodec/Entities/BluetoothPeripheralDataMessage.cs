@@ -96,6 +96,7 @@ namespace TopflytechCodec.Entities
         public static int MESSAGE_TYPE_DOOR = 4;
         public static int MESSAGE_TYPE_CTRL = 5;
         public static int MESSAGE_TYPE_FUEL = 6;
+        public static int MESSAGE_TYPE_Customer2397 = 7;
 
         private Boolean is_4g_lbs = false;
         public Boolean Is_4g_lbs
