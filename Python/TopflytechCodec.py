@@ -3734,6 +3734,8 @@ class ObdDecoder:
         if throttlePosition == 255:
             throttlePosition = -999
         remainFuelRate = data[67] & 0x7f
+        if data[67] == 255:
+            remainFuelRate = -999
         remainFuelUnit = 0
         if (data[67] & 0x80) == 0x80:
             remainFuelUnit = 1
