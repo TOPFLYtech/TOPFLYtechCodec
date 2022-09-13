@@ -422,9 +422,9 @@ public class ObdDecoder {
         if (!latlngValid){
             byte lbsByte = bytes[23];
             if ((lbsByte & 0x8) == 0x8){
-                is_2g_lbs = true;
-            }else{
                 is_4g_lbs = true;
+            }else{
+                is_2g_lbs = true;
             }
         }
         if (is_2g_lbs){
@@ -939,9 +939,9 @@ public class ObdDecoder {
             if (!latlngValid){
                 byte lbsByte = bleData[11];
                 if ((lbsByte & 0x8) == 0x8){
-                    is_2g_lbs = true;
-                }else{
                     is_4g_lbs = true;
+                }else{
+                    is_2g_lbs = true;
                 }
             }
             if (is_2g_lbs){
@@ -1046,9 +1046,9 @@ public class ObdDecoder {
             if (!latlngValid){
                 byte lbsByte = bleData[11];
                 if ((lbsByte & 0x8) == 0x8){
-                    is_2g_lbs = true;
-                }else{
                     is_4g_lbs = true;
+                }else{
+                    is_2g_lbs = true;
                 }
             }
             if (is_2g_lbs){
@@ -1764,9 +1764,9 @@ public class ObdDecoder {
         if (!latlngValid){
             byte lbsByte = bytes[curParseIndex + 12];
             if ((lbsByte & 0x8) == 0x8){
-                is_2g_lbs = true;
-            }else{
                 is_4g_lbs = true;
+            }else{
+                is_2g_lbs = true;
             }
         }
         if (is_2g_lbs){
@@ -1888,9 +1888,9 @@ public class ObdDecoder {
         if (!latlngValid){
             byte lbsByte = bytes[curParseIndex + 12];
             if ((lbsByte & 0x8) == 0x8){
-                is_2g_lbs = true;
-            }else{
                 is_4g_lbs = true;
+            }else{
+                is_2g_lbs = true;
             }
         }
         if (is_2g_lbs){
@@ -2032,9 +2032,9 @@ public class ObdDecoder {
         if (!latlngValid){
             byte lbsByte = data[31];
             if ((lbsByte & 0x8) == 0x8){
-                is_2g_lbs = true;
-            }else{
                 is_4g_lbs = true;
+            }else{
+                is_2g_lbs = true;
             }
         }
         if (is_2g_lbs){
@@ -2119,7 +2119,7 @@ public class ObdDecoder {
             throttlePosition = -999;
         }
         int remainFuelRate = data[67] & 0x7f;
-        if(data[67] == 0xff){
+        if(data[67] == -1){ // == 0xff
             remainFuelRate = -999;
         }
         int remainFuelUnit = (data[67] & 0x80) == 0x80 ? 1 : 0;

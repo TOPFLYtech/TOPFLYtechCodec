@@ -471,9 +471,9 @@ public class Decoder {
             if (!latlngValid){
                 byte lbsByte = bleData[11];
                 if ((lbsByte & 0x8) == 0x8){
-                    is_2g_lbs = true;
-                }else{
                     is_4g_lbs = true;
+                }else{
+                    is_2g_lbs = true;
                 }
             }
             if (is_2g_lbs){
@@ -580,9 +580,9 @@ public class Decoder {
             if (!latlngValid){
                 byte lbsByte = bleData[11];
                 if ((lbsByte & 0x8) == 0x8){
-                    is_2g_lbs = true;
-                }else{
                     is_4g_lbs = true;
+                }else{
+                    is_2g_lbs = true;
                 }
             }
             if (is_2g_lbs){
@@ -943,9 +943,9 @@ public class Decoder {
         if (!latlngValid){
             byte lbsByte = bytes[23];
             if ((lbsByte & 0x8) == 0x8){
-                is_2g_lbs = true;
-            }else{
                 is_4g_lbs = true;
+            }else{
+                is_2g_lbs = true;
             }
         }
         if (is_2g_lbs){
@@ -1862,9 +1862,9 @@ public class Decoder {
         if (!latlngValid){
             byte lbsByte = bytes[curParseIndex + 12];
             if ((lbsByte & 0x8) == 0x8){
-                is_2g_lbs = true;
-            }else{
                 is_4g_lbs = true;
+            }else{
+                is_2g_lbs = true;
             }
         }
         if (is_2g_lbs){
@@ -1990,9 +1990,9 @@ public class Decoder {
         if (!latlngValid){
             byte lbsByte = bytes[curParseIndex + 12];
             if ((lbsByte & 0x8) == 0x8){
-                is_2g_lbs = true;
-            }else{
                 is_4g_lbs = true;
+            }else{
+                is_2g_lbs = true;
             }
         }
         if (is_2g_lbs){
@@ -2232,9 +2232,9 @@ public class Decoder {
         if (!latlngValid){
             byte lbsByte = data[35];
             if ((lbsByte & 0x8) == 0x8){
-               is_2g_lbs = true;
-            }else{
                 is_4g_lbs = true;
+            }else{
+                is_2g_lbs = true;
             }
         }
         if (is_2g_lbs){
@@ -2567,9 +2567,9 @@ public class Decoder {
         if (!latlngValid){
             byte lbsByte = data[43];
             if ((lbsByte & 0x8) == 0x8){
-                is_2g_lbs = true;
-            }else{
                 is_4g_lbs = true;
+            }else{
+                is_2g_lbs = true;
             }
         }
         if (is_2g_lbs){

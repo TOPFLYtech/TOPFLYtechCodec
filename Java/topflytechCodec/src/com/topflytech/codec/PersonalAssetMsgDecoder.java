@@ -323,9 +323,9 @@ public class PersonalAssetMsgDecoder {
             if (!latlngValid){
                 byte lbsByte = bleData[11];
                 if ((lbsByte & 0x8) == 0x8){
-                    is_2g_lbs = true;
-                }else{
                     is_4g_lbs = true;
+                }else{
+                    is_2g_lbs = true;
                 }
             }
             if (is_2g_lbs){
@@ -432,9 +432,9 @@ public class PersonalAssetMsgDecoder {
             if (!latlngValid){
                 byte lbsByte = bleData[11];
                 if ((lbsByte & 0x8) == 0x8){
-                    is_2g_lbs = true;
-                }else{
                     is_4g_lbs = true;
+                }else{
+                    is_2g_lbs = true;
                 }
             }
             if (is_2g_lbs){
@@ -783,9 +783,9 @@ public class PersonalAssetMsgDecoder {
         if (!latlngValid){
             byte lbsByte = data[35];
             if ((lbsByte & 0x8) == 0x8){
-                is_2g_lbs = true;
-            }else{
                 is_4g_lbs = true;
+            }else{
+                is_2g_lbs = true;
             }
         }
         if (is_2g_lbs){
@@ -1097,9 +1097,9 @@ public class PersonalAssetMsgDecoder {
         if (!latlngValid){
             byte lbsByte = bytes[22];
             if ((lbsByte & 0x8) == 0x8){
-                is_2g_lbs = true;
-            }else{
                 is_4g_lbs = true;
+            }else{
+                is_2g_lbs = true;
             }
         }
         if (is_2g_lbs){

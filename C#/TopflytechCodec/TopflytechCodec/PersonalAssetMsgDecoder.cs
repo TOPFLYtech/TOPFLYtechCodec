@@ -198,12 +198,12 @@ namespace TopflytechCodec
             {
                 byte lbsByte = bytes[22];
                 if ((lbsByte & 0x8) == 0x8)
-                {
-                    is_2g_lbs = true;
+                { 
+                    is_4g_lbs = true;
                 }
                 else
                 {
-                    is_4g_lbs = true;
+                    is_2g_lbs = true;
                 }
             }
             if (is_2g_lbs)
@@ -415,12 +415,12 @@ namespace TopflytechCodec
                 {
                     byte lbsByte = bleData[11];
                     if ((lbsByte & 0x8) == 0x8)
-                    {
-                        is_2g_lbs = true;
+                    { 
+                        is_4g_lbs = true;
                     }
                     else
                     {
-                        is_4g_lbs = true;
+                        is_2g_lbs = true;
                     }
                 }
                 if (is_2g_lbs)
@@ -538,12 +538,12 @@ namespace TopflytechCodec
                 {
                     byte lbsByte = bleData[11];
                     if ((lbsByte & 0x8) == 0x8)
-                    {
-                        is_2g_lbs = true;
+                    { 
+                        is_4g_lbs = true;
                     }
                     else
                     {
-                        is_4g_lbs = true;
+                        is_2g_lbs = true;
                     }
                 }
                 if (is_2g_lbs)
@@ -977,12 +977,12 @@ namespace TopflytechCodec
         {
             byte lbsByte = data[23];
             if ((lbsByte & 0x8) == 0x8)
-            {
-                is_2g_lbs = true;
+            { 
+                is_4g_lbs = true;
             }
             else
             {
-                is_4g_lbs = true;
+                is_2g_lbs = true;
             }
         }
         if (is_2g_lbs)

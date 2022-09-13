@@ -1155,9 +1155,9 @@ class Decoder:
             azimuth = bytes2Short(byteArray, 37)
         else:
             if (byteArray[23] & 0x8) == 0x8:
-                is_2g_lbs = True
-            else:
                 is_4g_lbs = True
+            else:
+                is_2g_lbs = True
         if is_2g_lbs:
             mcc_2g = bytes2Short(byteArray,23)
             mnc_2g = bytes2Short(byteArray,25)
@@ -1695,9 +1695,9 @@ class Decoder:
                 azimuth = bytes2Short(bleData, 25)
             else:
                 if (bleData[11] & 0x8) == 0x8:
-                    is_2g_lbs = True
-                else:
                     is_4g_lbs = True
+                else:
+                    is_2g_lbs = True
             if is_2g_lbs:
                 mcc_2g = bytes2Short(bleData,11)
                 mnc_2g = bytes2Short(bleData,13)
@@ -1798,9 +1798,9 @@ class Decoder:
                 azimuth = bytes2Short(bleData, 25)
             else:
                 if (bleData[11] & 0x8) == 0x8:
-                    is_2g_lbs = True
-                else:
                     is_4g_lbs = True
+                else:
+                    is_2g_lbs = True
             if is_2g_lbs:
                 mcc_2g = bytes2Short(bleData,11)
                 mnc_2g = bytes2Short(bleData,13)
@@ -2273,9 +2273,9 @@ class Decoder:
             acceleration.speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
         else:
             if (byteArray[curParseIndex + 12] & 0x8) == 0x8:
-                is_2g_lbs = True
-            else:
                 is_4g_lbs = True
+            else:
+                is_2g_lbs = True
         if is_2g_lbs:
             mcc_2g = bytes2Short(byteArray,curParseIndex + 12)
             mnc_2g = bytes2Short(byteArray,curParseIndex + 14)
@@ -2375,9 +2375,9 @@ class Decoder:
             acceleration.azimuth = bytes2Short(byteArray,curParseIndex + 26)
         else:
             if (byteArray[curParseIndex + 12] & 0x8) == 0x8:
-                is_2g_lbs = True
-            else:
                 is_4g_lbs = True
+            else:
+                is_2g_lbs = True
         if is_2g_lbs:
             mcc_2g = bytes2Short(byteArray,curParseIndex + 12)
             mnc_2g = bytes2Short(byteArray,curParseIndex + 14)
@@ -2576,9 +2576,9 @@ class Decoder:
             speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
         else:
             if (data[43] & 0x8) == 0x8:
-                is_2g_lbs = True
-            else:
                 is_4g_lbs = True
+            else:
+                is_2g_lbs = True
         if is_2g_lbs:
             mcc_2g = bytes2Short(data,43)
             mnc_2g = bytes2Short(data,45)
@@ -2822,9 +2822,9 @@ class Decoder:
                 speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
         else:
             if (data[35] & 0x8) == 0x8:
-                is_2g_lbs = True
-            else:
                 is_4g_lbs = True
+            else:
+                is_2g_lbs = True
         if is_2g_lbs:
             mcc_2g = bytes2Short(data,35)
             mnc_2g = bytes2Short(data,37)
@@ -3668,9 +3668,9 @@ class ObdDecoder:
             speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
         else:
             if (data[31] & 0x8) == 0x8:
-                is_2g_lbs = True
-            else:
                 is_4g_lbs = True
+            else:
+                is_2g_lbs = True
         if is_2g_lbs:
             mcc_2g = bytes2Short(data,31)
             mnc_2g = bytes2Short(data,33)
@@ -3933,9 +3933,9 @@ class ObdDecoder:
             acceleration.azimuth = bytes2Short(byteArray,curParseIndex + 26)
         else:
             if (byteArray[curParseIndex + 12] & 0x8) == 0x8:
-                is_2g_lbs = True
-            else:
                 is_4g_lbs = True
+            else:
+                is_2g_lbs = True
         if is_2g_lbs:
             mcc_2g = bytes2Short(byteArray,curParseIndex + 12)
             mnc_2g = bytes2Short(byteArray,curParseIndex + 14)
@@ -4085,9 +4085,9 @@ class ObdDecoder:
             azimuth = bytes2Short(byteArray, 37)
         else:
             if (byteArray[23] & 0x8) == 0x8:
-                is_2g_lbs = True
-            else:
                 is_4g_lbs = True
+            else:
+                is_2g_lbs = True
         if is_2g_lbs:
             mcc_2g = bytes2Short(byteArray,23)
             mnc_2g = bytes2Short(byteArray,25)
@@ -4629,9 +4629,9 @@ class ObdDecoder:
                     speed = (float)("{0}.{1}".format(strSp[0:3],strSp[3:]))
             else:
                 if (bleData[11] & 0x8) == 0x8:
-                    is_2g_lbs = True
-                else:
                     is_4g_lbs = True
+                else:
+                    is_2g_lbs = True
             if is_2g_lbs:
                 mcc_2g = bytes2Short(bleData,11)
                 mnc_2g = bytes2Short(bleData,13)
@@ -4733,9 +4733,9 @@ class ObdDecoder:
                     speed = (float)("{0}.{1}".format(strSp[0:3],strSp[3:]))
             else:
                 if (bleData[11] & 0x8) == 0x8:
-                    is_2g_lbs = True
-                else:
                     is_4g_lbs = True
+                else:
+                    is_2g_lbs = True
             if is_2g_lbs:
                 mcc_2g = bytes2Short(bleData,11)
                 mnc_2g = bytes2Short(bleData,13)
@@ -5398,9 +5398,9 @@ class PersonalAssetMsgDecoder:
             speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
         else:
             if (byteArray[22] & 0x8) == 0x8:
-                is_2g_lbs = True
-            else:
                 is_4g_lbs = True
+            else:
+                is_2g_lbs = True
         if is_2g_lbs:
             mcc_2g = bytes2Short(byteArray, 22)
             mnc_2g = bytes2Short(byteArray, 24)
@@ -5629,9 +5629,9 @@ class PersonalAssetMsgDecoder:
                     speed = (float)("{0}.{1}".format(strSp[0:3],strSp[3:]))
             else:
                 if (bleData[11] & 0x8) == 0x8:
-                    is_2g_lbs = True
-                else:
                     is_4g_lbs = True
+                else:
+                    is_2g_lbs = True
             if is_2g_lbs:
                 mcc_2g = bytes2Short(bleData,11)
                 mnc_2g = bytes2Short(bleData,13)
@@ -5732,9 +5732,9 @@ class PersonalAssetMsgDecoder:
                     speed = (float)("{0}.{1}".format(strSp[0:3],strSp[3:]))
             else:
                 if (bleData[11] & 0x8) == 0x8:
-                    is_2g_lbs = True
-                else:
                     is_4g_lbs = True
+                else:
+                    is_2g_lbs = True
             if is_2g_lbs:
                 mcc_2g = bytes2Short(bleData,11)
                 mnc_2g = bytes2Short(bleData,13)
@@ -6176,9 +6176,9 @@ class PersonalAssetMsgDecoder:
             speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
         else:
             if (byteArray[23] & 0x8) == 0x8:
-                is_2g_lbs = True
-            else:
                 is_4g_lbs = True
+            else:
+                is_2g_lbs = True
         if is_2g_lbs:
             mcc_2g = bytes2Short(byteArray,23)
             mnc_2g = bytes2Short(byteArray,25)
