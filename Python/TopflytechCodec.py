@@ -1154,7 +1154,7 @@ class Decoder:
             longitude = bytes2Float(byteArray, 31)
             azimuth = bytes2Short(byteArray, 37)
         else:
-            if (byteArray[23] & 0x8) == 0x8:
+            if (byteArray[23] & 0x80) == 0x80:
                 is_4g_lbs = True
             else:
                 is_2g_lbs = True
@@ -1694,7 +1694,7 @@ class Decoder:
                 longitude = bytes2Float(bleData, 15)
                 azimuth = bytes2Short(bleData, 25)
             else:
-                if (bleData[11] & 0x8) == 0x8:
+                if (bleData[11] & 0x80) == 0x80:
                     is_4g_lbs = True
                 else:
                     is_2g_lbs = True
@@ -1797,7 +1797,7 @@ class Decoder:
                 longitude = bytes2Float(bleData, 15)
                 azimuth = bytes2Short(bleData, 25)
             else:
-                if (bleData[11] & 0x8) == 0x8:
+                if (bleData[11] & 0x80) == 0x80:
                     is_4g_lbs = True
                 else:
                     is_2g_lbs = True
@@ -2272,7 +2272,7 @@ class Decoder:
             speedStr = byte2HexString(byteArray[curParseIndex + 24:curParseIndex + 26],0)
             acceleration.speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
         else:
-            if (byteArray[curParseIndex + 12] & 0x8) == 0x8:
+            if (byteArray[curParseIndex + 12] & 0x80) == 0x80:
                 is_4g_lbs = True
             else:
                 is_2g_lbs = True
@@ -2374,7 +2374,7 @@ class Decoder:
             acceleration.speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
             acceleration.azimuth = bytes2Short(byteArray,curParseIndex + 26)
         else:
-            if (byteArray[curParseIndex + 12] & 0x8) == 0x8:
+            if (byteArray[curParseIndex + 12] & 0x80) == 0x80:
                 is_4g_lbs = True
             else:
                 is_2g_lbs = True
@@ -2575,7 +2575,7 @@ class Decoder:
             speedStr = byte2HexString(data[55:57],0)
             speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
         else:
-            if (data[43] & 0x8) == 0x8:
+            if (data[43] & 0x80) == 0x80:
                 is_4g_lbs = True
             else:
                 is_2g_lbs = True
@@ -2821,7 +2821,7 @@ class Decoder:
             if speedStr != "ffff":
                 speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
         else:
-            if (data[35] & 0x8) == 0x8:
+            if (data[35] & 0x80) == 0x80:
                 is_4g_lbs = True
             else:
                 is_2g_lbs = True
@@ -3667,7 +3667,7 @@ class ObdDecoder:
             speedStr = byte2HexString(data[49:51],0)
             speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
         else:
-            if (data[31] & 0x8) == 0x8:
+            if (data[31] & 0x80) == 0x80:
                 is_4g_lbs = True
             else:
                 is_2g_lbs = True
@@ -3932,7 +3932,7 @@ class ObdDecoder:
             acceleration.speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
             acceleration.azimuth = bytes2Short(byteArray,curParseIndex + 26)
         else:
-            if (byteArray[curParseIndex + 12] & 0x8) == 0x8:
+            if (byteArray[curParseIndex + 12] & 0x80) == 0x80:
                 is_4g_lbs = True
             else:
                 is_2g_lbs = True
@@ -4084,7 +4084,7 @@ class ObdDecoder:
             longitude = bytes2Float(byteArray, 31)
             azimuth = bytes2Short(byteArray, 37)
         else:
-            if (byteArray[23] & 0x8) == 0x8:
+            if (byteArray[23] & 0x80) == 0x80:
                 is_4g_lbs = True
             else:
                 is_2g_lbs = True
@@ -4628,7 +4628,7 @@ class ObdDecoder:
                 else:
                     speed = (float)("{0}.{1}".format(strSp[0:3],strSp[3:]))
             else:
-                if (bleData[11] & 0x8) == 0x8:
+                if (bleData[11] & 0x80) == 0x80:
                     is_4g_lbs = True
                 else:
                     is_2g_lbs = True
@@ -4732,7 +4732,7 @@ class ObdDecoder:
                 else:
                     speed = (float)("{0}.{1}".format(strSp[0:3],strSp[3:]))
             else:
-                if (bleData[11] & 0x8) == 0x8:
+                if (bleData[11] & 0x80) == 0x80:
                     is_4g_lbs = True
                 else:
                     is_2g_lbs = True
@@ -5397,7 +5397,7 @@ class PersonalAssetMsgDecoder:
             speedStr = byte2HexString(byteArray[34:36],0)
             speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
         else:
-            if (byteArray[22] & 0x8) == 0x8:
+            if (byteArray[22] & 0x80) == 0x80:
                 is_4g_lbs = True
             else:
                 is_2g_lbs = True
@@ -5628,7 +5628,7 @@ class PersonalAssetMsgDecoder:
                 else:
                     speed = (float)("{0}.{1}".format(strSp[0:3],strSp[3:]))
             else:
-                if (bleData[11] & 0x8) == 0x8:
+                if (bleData[11] & 0x80) == 0x80:
                     is_4g_lbs = True
                 else:
                     is_2g_lbs = True
@@ -5731,7 +5731,7 @@ class PersonalAssetMsgDecoder:
                 else:
                     speed = (float)("{0}.{1}".format(strSp[0:3],strSp[3:]))
             else:
-                if (bleData[11] & 0x8) == 0x8:
+                if (bleData[11] & 0x80) == 0x80:
                     is_4g_lbs = True
                 else:
                     is_2g_lbs = True
@@ -6175,7 +6175,7 @@ class PersonalAssetMsgDecoder:
             speedStr = byte2HexString(byteArray[35:37],0)
             speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
         else:
-            if (byteArray[23] & 0x8) == 0x8:
+            if (byteArray[23] & 0x80) == 0x80:
                 is_4g_lbs = True
             else:
                 is_2g_lbs = True

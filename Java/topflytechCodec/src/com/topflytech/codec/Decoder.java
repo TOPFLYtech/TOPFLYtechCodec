@@ -470,7 +470,7 @@ public class Decoder {
             Integer ci_2g_3 = null;
             if (!latlngValid){
                 byte lbsByte = bleData[11];
-                if ((lbsByte & 0x8) == 0x8){
+                if ((lbsByte & 0x80) == 0x80){
                     is_4g_lbs = true;
                 }else{
                     is_2g_lbs = true;
@@ -579,7 +579,7 @@ public class Decoder {
             Integer ci_2g_3 = null;
             if (!latlngValid){
                 byte lbsByte = bleData[11];
-                if ((lbsByte & 0x8) == 0x8){
+                if ((lbsByte & 0x80) == 0x80){
                     is_4g_lbs = true;
                 }else{
                     is_2g_lbs = true;
@@ -942,7 +942,7 @@ public class Decoder {
         Integer ci_2g_3 = null;
         if (!latlngValid){
             byte lbsByte = bytes[23];
-            if ((lbsByte & 0x8) == 0x8){
+            if ((lbsByte & 0x80) == 0x80){
                 is_4g_lbs = true;
             }else{
                 is_2g_lbs = true;
@@ -1861,7 +1861,7 @@ public class Decoder {
         Integer ci_2g_3 = null;
         if (!latlngValid){
             byte lbsByte = bytes[curParseIndex + 12];
-            if ((lbsByte & 0x8) == 0x8){
+            if ((lbsByte & 0x80) == 0x80){
                 is_4g_lbs = true;
             }else{
                 is_2g_lbs = true;
@@ -1989,7 +1989,7 @@ public class Decoder {
         Integer ci_2g_3 = null;
         if (!latlngValid){
             byte lbsByte = bytes[curParseIndex + 12];
-            if ((lbsByte & 0x8) == 0x8){
+            if ((lbsByte & 0x80) == 0x80){
                 is_4g_lbs = true;
             }else{
                 is_2g_lbs = true;
@@ -2231,7 +2231,7 @@ public class Decoder {
         Integer ci_2g_3 = null;
         if (!latlngValid){
             byte lbsByte = data[35];
-            if ((lbsByte & 0x8) == 0x8){
+            if ((lbsByte & 0x80) == 0x80){
                 is_4g_lbs = true;
             }else{
                 is_2g_lbs = true;
@@ -2566,7 +2566,7 @@ public class Decoder {
         Integer ci_2g_3 = null;
         if (!latlngValid){
             byte lbsByte = data[43];
-            if ((lbsByte & 0x8) == 0x8){
+            if ((lbsByte & 0x80) == 0x80){
                 is_4g_lbs = true;
             }else{
                 is_2g_lbs = true;

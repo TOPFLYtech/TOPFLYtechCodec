@@ -282,7 +282,7 @@ var PersonalAssetDecoder = {
             var ci_2g_3 = null;
             if (!latlngValid){
                 var lbsByte = bleData[11];
-                if ((lbsByte & 0x8) == 0x8){
+                if ((lbsByte & 0x80) == 0x80){
                     is_4g_lbs = true; 
                 }else{
                     is_2g_lbs = true;
@@ -379,7 +379,7 @@ var PersonalAssetDecoder = {
             var ci_2g_3 = null;
             if (!latlngValid){
                 var lbsByte = bleData[11];
-                if ((lbsByte & 0x8) == 0x8){
+                if ((lbsByte & 0x80) == 0x80){
                     is_4g_lbs = true; 
                 }else{
                     is_2g_lbs = true;
@@ -747,7 +747,7 @@ var PersonalAssetDecoder = {
         var ci_2g_3 = null;
         if (!latlngValid){
             var lbsByte = bytes[22];
-            if ((lbsByte & 0x8) == 0x8){
+            if ((lbsByte & 0x80) == 0x80){
                 is_4g_lbs = true; 
             }else{
                 is_2g_lbs = true;
@@ -890,8 +890,8 @@ var PersonalAssetDecoder = {
         var lac_2g_3 = null;
         var ci_2g_3 = null;
         if (!latlngValid){
-            var lbsByte = data[35];
-            if ((lbsByte & 0x8) == 0x8){
+            var lbsByte = data[23];
+            if ((lbsByte & 0x80) == 0x80){
                 is_4g_lbs = true; 
             }else{
                 is_2g_lbs = true;

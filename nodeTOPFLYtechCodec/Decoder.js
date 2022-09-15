@@ -353,7 +353,7 @@ var Decoder = {
         var ci_2g_3 = null;
         if (!latlngValid){
             var lbsByte = data[35];
-            if ((lbsByte & 0x8) == 0x8){
+            if ((lbsByte & 0x80) == 0x80){
                 is_4g_lbs = true; 
             }else{
                 is_2g_lbs = true;
@@ -637,7 +637,7 @@ var Decoder = {
         var ci_2g_3 = null;
         if (!latlngValid){
             var lbsByte = bytes[curParseIndex + 12];
-            if ((lbsByte & 0x8) == 0x8){
+            if ((lbsByte & 0x80) == 0x80){
                 is_4g_lbs = true; 
             }else{
                 is_2g_lbs = true;
@@ -778,7 +778,7 @@ var Decoder = {
         var ci_2g_3 = null;
         if (!latlngValid){
             var lbsByte = bytes[curParseIndex + 12];
-            if ((lbsByte & 0x8) == 0x8){
+            if ((lbsByte & 0x80) == 0x80){
                 is_4g_lbs = true; 
             }else{
                 is_2g_lbs = true;
@@ -1150,7 +1150,7 @@ var Decoder = {
             var ci_2g_3 = null;
             if (!latlngValid){
                 var lbsByte = bleData[11];
-                if ((lbsByte & 0x8) == 0x8){
+                if ((lbsByte & 0x80) == 0x80){
                     is_4g_lbs = true; 
                 }else{
                     is_2g_lbs = true;
@@ -1249,7 +1249,7 @@ var Decoder = {
             var ci_2g_3 = null;
             if (!latlngValid){
                 var lbsByte = bleData[11];
-                if ((lbsByte & 0x8) == 0x8){
+                if ((lbsByte & 0x80) == 0x80){
                     is_4g_lbs = true; 
                 }else{
                     is_2g_lbs = true;
@@ -1641,7 +1641,7 @@ var Decoder = {
         var ci_2g_3 = null;
         if (!latlngValid){
             var lbsByte = bytes[23];
-            if ((lbsByte & 0x8) == 0x8){
+            if ((lbsByte & 0x80) == 0x80){
                 is_4g_lbs = true; 
             }else{
                 is_2g_lbs = true;
@@ -2195,7 +2195,7 @@ var Decoder = {
         var ci_2g_3 = null;
         if (!latlngValid){
             var lbsByte = data[43];
-            if ((lbsByte & 0x8) == 0x8){
+            if ((lbsByte & 0x80) == 0x80){
                 is_4g_lbs = true; 
             }else{
                 is_2g_lbs = true;

@@ -322,7 +322,7 @@ public class PersonalAssetMsgDecoder {
             Integer ci_2g_3 = null;
             if (!latlngValid){
                 byte lbsByte = bleData[11];
-                if ((lbsByte & 0x8) == 0x8){
+                if ((lbsByte & 0x80) == 0x80){
                     is_4g_lbs = true;
                 }else{
                     is_2g_lbs = true;
@@ -758,7 +758,7 @@ public class PersonalAssetMsgDecoder {
                     }
                 }
             }catch (Exception e){
-                e.printStackTrace();
+//                e.printStackTrace();
             }
         }
         int azimuth = latlngValid ? BytesUtils.bytes2Short(data, 37) : 0;
@@ -781,8 +781,8 @@ public class PersonalAssetMsgDecoder {
         Integer lac_2g_3 = null;
         Integer ci_2g_3 = null;
         if (!latlngValid){
-            byte lbsByte = data[35];
-            if ((lbsByte & 0x8) == 0x8){
+            byte lbsByte = data[23];
+            if ((lbsByte & 0x80) == 0x80){
                 is_4g_lbs = true;
             }else{
                 is_2g_lbs = true;
@@ -829,7 +829,7 @@ public class PersonalAssetMsgDecoder {
                     batteryPercent = 100;
                 }
             }catch (Exception e){
-                e.printStackTrace();
+//                e.printStackTrace();
             }
         }
         float deviceTemp = -999;
@@ -1096,7 +1096,7 @@ public class PersonalAssetMsgDecoder {
         Integer ci_2g_3 = null;
         if (!latlngValid){
             byte lbsByte = bytes[22];
-            if ((lbsByte & 0x8) == 0x8){
+            if ((lbsByte & 0x80) == 0x80){
                 is_4g_lbs = true;
             }else{
                 is_2g_lbs = true;
@@ -1239,44 +1239,49 @@ public class PersonalAssetMsgDecoder {
             System.out.println("Date Error:" + imei + " data:" + BytesUtils.bytes2HexString(bytes,0));
             return null;
         }
-        int networkOperatorLen = bytes[21];
-        int networkOperatorStartIndex = 22;
-        byte[] networkOperatorByte = Arrays.copyOfRange(bytes, networkOperatorStartIndex, networkOperatorStartIndex + networkOperatorLen);
-        String networkOperator = new String(networkOperatorByte, Charset.forName("UTF-16LE"));
-        int accessTechnologyLen = bytes[networkOperatorStartIndex + networkOperatorLen];
-        int accessTechnologyStartIndex = networkOperatorStartIndex + networkOperatorLen + 1;
-        byte[] accessTechnologyByte = Arrays.copyOfRange(bytes, accessTechnologyStartIndex,accessTechnologyStartIndex + accessTechnologyLen);
-        String accessTechnology = new String(accessTechnologyByte);
-        int bandLen = bytes[accessTechnologyStartIndex + accessTechnologyLen];
-        int bandStartIndex = accessTechnologyStartIndex + accessTechnologyLen + 1;
-        byte[] bandLenByte = Arrays.copyOfRange(bytes, bandStartIndex,bandStartIndex + bandLen);
-        String band = new String(bandLenByte);
-        int msgLen = BytesUtils.bytes2Short(bytes,3);
-        if(msgLen > bandStartIndex + bandLen ){
-            int IMSILen = bytes[bandStartIndex + bandLen];
-            int IMSIStartIndex = bandStartIndex + bandLen + 1;
-            byte[] IMSILenByte = Arrays.copyOfRange(bytes,IMSIStartIndex,IMSIStartIndex + IMSILen);
-            String IMSI = new String(IMSILenByte);
-            networkInfoMessage.setImsi(IMSI);
-            if(msgLen > IMSIStartIndex + IMSILen){
-                int iccidLen = bytes[IMSIStartIndex + IMSILen];
-                int iccidStartIndex = IMSIStartIndex + IMSILen + 1;
-                byte[] iccidLenByte = Arrays.copyOfRange(bytes,iccidStartIndex,iccidStartIndex + iccidLen);
-                String iccid = new String(iccidLenByte);
-                networkInfoMessage.setIccid(iccid);
+        try{
+            int networkOperatorLen = bytes[21];
+            int networkOperatorStartIndex = 22;
+            byte[] networkOperatorByte = Arrays.copyOfRange(bytes, networkOperatorStartIndex, networkOperatorStartIndex + networkOperatorLen);
+            String networkOperator = new String(networkOperatorByte, Charset.forName("UTF-16LE"));
+            int accessTechnologyLen = bytes[networkOperatorStartIndex + networkOperatorLen];
+            int accessTechnologyStartIndex = networkOperatorStartIndex + networkOperatorLen + 1;
+            byte[] accessTechnologyByte = Arrays.copyOfRange(bytes, accessTechnologyStartIndex,accessTechnologyStartIndex + accessTechnologyLen);
+            String accessTechnology = new String(accessTechnologyByte);
+            int bandLen = bytes[accessTechnologyStartIndex + accessTechnologyLen];
+            int bandStartIndex = accessTechnologyStartIndex + accessTechnologyLen + 1;
+            byte[] bandLenByte = Arrays.copyOfRange(bytes, bandStartIndex,bandStartIndex + bandLen);
+            String band = new String(bandLenByte);
+            int msgLen = BytesUtils.bytes2Short(bytes,3);
+            if(msgLen > bandStartIndex + bandLen ){
+                int IMSILen = bytes[bandStartIndex + bandLen];
+                int IMSIStartIndex = bandStartIndex + bandLen + 1;
+                byte[] IMSILenByte = Arrays.copyOfRange(bytes,IMSIStartIndex,IMSIStartIndex + IMSILen);
+                String IMSI = new String(IMSILenByte);
+                networkInfoMessage.setImsi(IMSI);
+                if(msgLen > IMSIStartIndex + IMSILen){
+                    int iccidLen = bytes[IMSIStartIndex + IMSILen];
+                    int iccidStartIndex = IMSIStartIndex + IMSILen + 1;
+                    byte[] iccidLenByte = Arrays.copyOfRange(bytes,iccidStartIndex,iccidStartIndex + iccidLen);
+                    String iccid = new String(iccidLenByte);
+                    networkInfoMessage.setIccid(iccid);
+                }
             }
-        }
 //        boolean isNeedResp = (serialNo & 0x8000) != 0x8000;
-        networkInfoMessage.setSerialNo(serialNo);
+            networkInfoMessage.setSerialNo(serialNo);
 //        networkInfoMessage.setIsNeedResp(isNeedResp);
-        networkInfoMessage.setImei(imei);
-        networkInfoMessage.setOrignBytes(bytes);
-        networkInfoMessage.setDate(gmt0);
-        networkInfoMessage.setAccessTechnology(accessTechnology);
-        networkInfoMessage.setNetworkOperator(networkOperator);
-        networkInfoMessage.setBand(band);
+            networkInfoMessage.setImei(imei);
+            networkInfoMessage.setOrignBytes(bytes);
+            networkInfoMessage.setDate(gmt0);
+            networkInfoMessage.setAccessTechnology(accessTechnology);
+            networkInfoMessage.setNetworkOperator(networkOperator);
+            networkInfoMessage.setBand(band);
 
-        return networkInfoMessage;
+            return networkInfoMessage;
+        }catch (Exception e){
+            System.out.println("error NetworkInfo:" + imei + ";src:" + BytesUtils.bytes2HexString(bytes,0));
+            return null;
+        }
     }
 
     private Message parseInteractMessage(byte[] bytes) throws ParseException {
