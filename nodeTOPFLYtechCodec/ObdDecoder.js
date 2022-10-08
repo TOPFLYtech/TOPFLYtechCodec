@@ -177,7 +177,7 @@ var ObdDecoder = {
         var bytesSpeed = ByteUtils.arrayOfRange(bytes, 34, 36);
         var strSp = ByteUtils.bytes2HexString(bytesSpeed, 0);
         var startSpeed = 0;
-        if (!strSp.toLowerCase() == "ffff"){
+        if (strSp.toLowerCase() !== "ffff"){
             startSpeed = parseFloat(strSp.substring(0, 3) + "." + strSp.substring(3, strSp.length()));
         }
         gpsDriverBehaviorMessage.startSpeed = startSpeed;
@@ -207,7 +207,7 @@ var ObdDecoder = {
         bytesSpeed = ByteUtils.arrayOfRange(bytes, 58, 60);
         var endSpeed = 0;
         strSp = ByteUtils.bytes2HexString(bytesSpeed, 0);
-        if (!strSp.toLowerCase() == "ffff"){
+        if (strSp.toLowerCase() !== "ffff"){
             endSpeed = parseFloat(strSp.substring(0, 3) + "." + strSp.substring(3, strSp.length));
         }
         gpsDriverBehaviorMessage.endSpeed = endSpeed

@@ -523,7 +523,7 @@ var Decoder = {
         var bytesSpeed = ByteUtils.arrayOfRange(bytes, 34, 36);
         var strSp = ByteUtils.bytes2HexString(bytesSpeed, 0);
         var startSpeed = 0;
-        if (!strSp.toLowerCase() == "ffff"){
+        if (strSp.toLowerCase() !== "ffff"){
             startSpeed = parseFloat(strSp.substring(0, 3) + "." + strSp.substring(3, strSp.length));
         }
         gpsDriverBehaviorMessage.startSpeed = startSpeed;
@@ -547,7 +547,7 @@ var Decoder = {
         bytesSpeed = ByteUtils.arrayOfRange(bytes, 56, 58);
         var endSpeed = 0;
         strSp = ByteUtils.bytes2HexString(bytesSpeed, 0);
-        if (!strSp.toLowerCase() == "ffff"){
+        if (strSp.toLowerCase() !== "ffff"){
             endSpeed = parseFloat(strSp.substring(0, 3) + "." + strSp.substring(3, strSp.length));
         }
         gpsDriverBehaviorMessage.endSpeed = endSpeed
@@ -608,7 +608,7 @@ var Decoder = {
         var bytesSpeed = ByteUtils.arrayOfRange(bytes, curParseIndex + 24, curParseIndex + 26);
         var speedf = 0;
         var strSp = ByteUtils.bytes2HexString(bytesSpeed, 0);
-        if (!strSp.toLowerCase() == "ffff"){
+        if (strSp.toLowerCase() !== "ffff"){
             speedf = parseFloat(strSp.substring(0, 3) + "." + strSp.substring(3, strSp.length))
 
         }
@@ -751,7 +751,7 @@ var Decoder = {
         var bytesSpeed = ByteUtils.arrayOfRange(bytes, curParseIndex + 24, curParseIndex + 26);
         var speedf = 0;
         var strSp = ByteUtils.bytes2HexString(bytesSpeed, 0);
-        if (!strSp.toLowerCase() == "ffff"){
+        if (strSp.toLowerCase() !== "ffff"){
             try {
                 speedf = parseFloat(strSp.substring(0, 3)  + "." +  strSp.substring(3, strSp.length))
             }catch (e){

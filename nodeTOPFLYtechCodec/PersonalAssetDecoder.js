@@ -723,7 +723,7 @@ var PersonalAssetDecoder = {
         if (latlngValid){
             var bytesSpeed = ByteUtils.arrayOfRange(bytes, 34, 36);
             var strSp = ByteUtils.bytes2HexString(bytesSpeed, 0);
-            if(!strSp.toLowerCase() =="ffff" ){
+            if(strSp.toLowerCase() !=="ffff" ){
                 speedf = parseFloat(strSp.substring(0, 3) + "." +strSp.substring(3, strSp.length));
             }
         }
@@ -866,7 +866,7 @@ var PersonalAssetDecoder = {
         if (latlngValid) {
             var bytesSpeed = ByteUtils.arrayOfRange(data, 35, 37);
             var strSp = ByteUtils.bytes2HexString(bytesSpeed, 0);
-            if(!strSp.toLowerCase() == "ffff"){
+            if(strSp.toLowerCase() !== "ffff"){
                 speedf = parseFloat(strSp.substring(0, 3) + "." +  strSp.substring(3, strSp.length));
             }
         }
