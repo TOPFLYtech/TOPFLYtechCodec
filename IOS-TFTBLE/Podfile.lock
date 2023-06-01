@@ -1,9 +1,6 @@
 PODS:
   - ActionSheetPicker-3.0 (2.4.2)
   - Bugly (2.4.7)
-  - Charts (3.4.0):
-    - Charts/Core (= 3.4.0)
-  - Charts/Core (3.4.0)
   - CLXToast (0.4.2):
     - CLXToast/Objc-Toast (= 0.4.2)
   - CLXToast/Objc-Toast (0.4.2)
@@ -14,6 +11,7 @@ PODS:
   - libxlsxwriter (0.6.9)
   - PDFGenerator (3.1.0)
   - QMUIKit (1.5.0)
+  - SwiftCharts (0.6.5)
   - SwiftPopMenu (2.0.2)
   - swiftScan (1.2.0)
   - ZIPFoundation (0.9.9)
@@ -21,7 +19,6 @@ PODS:
 DEPENDENCIES:
   - ActionSheetPicker-3.0 (from `https://github.com/skywinder/ActionSheetPicker-3.0.git`)
   - Bugly
-  - Charts (from `https://github.com/danielgindi/Charts.git`)
   - CLXToast
   - DateTimePicker (from `https://github.com/itsmeichigo/DateTimePicker.git`)
   - iOSDFULibrary
@@ -29,6 +26,7 @@ DEPENDENCIES:
   - libxlsxwriter
   - PDFGenerator (from `https://github.com/sgr-ksmt/PDFGenerator.git`)
   - QMUIKit
+  - SwiftCharts
   - SwiftPopMenu (from `https://github.com/TangledHusky/SwiftPopMenu.git`)
   - swiftScan (from `https://github.com/MxABC/swiftScan.git`)
 
@@ -40,13 +38,12 @@ SPEC REPOS:
     - JXMarqueeView
     - libxlsxwriter
     - QMUIKit
+    - SwiftCharts
     - ZIPFoundation
 
 EXTERNAL SOURCES:
   ActionSheetPicker-3.0:
     :git: https://github.com/skywinder/ActionSheetPicker-3.0.git
-  Charts:
-    :git: https://github.com/danielgindi/Charts.git
   DateTimePicker:
     :git: https://github.com/itsmeichigo/DateTimePicker.git
   PDFGenerator:
@@ -60,9 +57,6 @@ CHECKOUT OPTIONS:
   ActionSheetPicker-3.0:
     :commit: f30766dabee91a513d8ce282cfedbdae0e402cf8
     :git: https://github.com/skywinder/ActionSheetPicker-3.0.git
-  Charts:
-    :commit: 56effcf413ef25144fa89d8483613a0f10c7ab23
-    :git: https://github.com/danielgindi/Charts.git
   DateTimePicker:
     :commit: 05b2fc533866a03faeac9dfa20f137a427a66a05
     :git: https://github.com/itsmeichigo/DateTimePicker.git
@@ -79,7 +73,6 @@ CHECKOUT OPTIONS:
 SPEC CHECKSUMS:
   ActionSheetPicker-3.0: 5b62e07b00bd970509cf5ece99cb7447eae5dd0d
   Bugly: 2c256069145f550171907c5cb1c0f84ad291f6c1
-  Charts: ef59ae1e7eaa53f10a16a0009c434051292ba808
   CLXToast: 01c075036feabfebe256856018996f10bd73f24f
   DateTimePicker: 997176ea28954f3c18817b9565a53b28ee4400b8
   iOSDFULibrary: 3053cf01eaabec37dc7372fb77ae4a218b577c55
@@ -87,10 +80,11 @@ SPEC CHECKSUMS:
   libxlsxwriter: 863cff6657797176917741ab87b783fe99539869
   PDFGenerator: 17d6bc525db0a3fcd156fbf00f9d1b8d5cc75d1e
   QMUIKit: 26665f0374366b83cb840b6111d2430ddbfc7a9b
+  SwiftCharts: 2e755ea292f0b87d3e4b2c1eb5afc080a20cdc15
   SwiftPopMenu: e8ad0724497781abec06c16e158d08d741c794cd
   swiftScan: d7f91607b1a47cc04e6eb654c2c01e2e940e337d
   ZIPFoundation: 89df685c971926b0323087952320bdfee9f0b6ef
 
-PODFILE CHECKSUM: f2221b4663489870e1dbf7236c14d33c97a2fd5d
+PODFILE CHECKSUM: 8a419f9ebe24df9b1194a6ef98f0c8178d42bf25
 
 COCOAPODS: 1.11.2

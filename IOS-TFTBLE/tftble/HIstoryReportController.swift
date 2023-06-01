@@ -8,20 +8,18 @@
 
 import Foundation
 import UIKit
-import Charts
 import ActionSheetPicker_3_0
 import MessageUI
 import CLXToast
 import SwiftPopMenu
 import PDFGenerator
 import QMUIKit
-class HistoryReportController:UIViewController, IAxisValueFormatter,UITableViewDataSource,UITableViewDelegate,MFMailComposeViewControllerDelegate{
-    func stringForValue(_ value: Double, axis: AxisBase?) -> String {
-        return ""
-    }
+import Charts
+class HistoryReportController:UIViewController, UITableViewDataSource,UITableViewDelegate,MFMailComposeViewControllerDelegate{
+   
     
     
-    
+    private var fontSize:CGFloat = Utils.fontSize
     public var deviceType="S04"
     public var deviceName="TH121"
     public var mac="221322112312"
@@ -270,7 +268,7 @@ class HistoryReportController:UIViewController, IAxisValueFormatter,UITableViewD
             self.detailTableView.reloadData()
             let page5 = PDFPage.view(self.detailTableView)
             var pages = [page1, page2, page3]
-            if self.deviceType == "S02"{
+            if self.deviceType == "S02" || self.deviceType == "S10"{
                 let page4 = PDFPage.image(self.humidityChartView.getChartImage(transparent: true)!)
                 pages = [page1, page2, page3, page4]
             }
@@ -352,14 +350,14 @@ class HistoryReportController:UIViewController, IAxisValueFormatter,UITableViewD
         rowIndex+=1
         
         worksheet_write_string(sheet, lxw_row_t(rowIndex), 0, txDescReportProp.text, nil)
-        let propOpen = self.deviceType == "S02" ? NSLocalizedString("light", comment:"Light:") : NSLocalizedString("open_desc", comment: "Open:")
-        let propClose = self.deviceType == "S02" ? NSLocalizedString("dark_desc", comment: "Dark:" ): NSLocalizedString("close_desc", comment: "Close:")
+        let propOpen = self.deviceType == "S02" || self.deviceType == "S10" ? NSLocalizedString("light", comment:"Light:") : NSLocalizedString("open_desc", comment: "Open:")
+        let propClose = self.deviceType == "S02" || self.deviceType == "S10" ? NSLocalizedString("dark_desc", comment: "Dark:" ): NSLocalizedString("close_desc", comment: "Close:")
         worksheet_write_string(sheet, lxw_row_t(rowIndex), 1, String(format:"%@%@",propOpen,txOpenCount.text as! CVarArg), nil)
         worksheet_write_string(sheet, lxw_row_t(rowIndex), 2, String(format:"%@%@",propClose, txCloseCount.text as! CVarArg), nil)
         rowIndex+=1
         rowIndex+=1
         
-        if self.deviceType == "S02"{
+        if self.deviceType == "S02" || self.deviceType == "S10"{
             worksheet_write_string(sheet, lxw_row_t(rowIndex), 0, "", nil)
             worksheet_write_string(sheet, lxw_row_t(rowIndex), 1, txS02TempHead.text, nil)
             worksheet_write_string(sheet, lxw_row_t(rowIndex), 2, txS02HumidityHead.text, nil)
@@ -470,13 +468,13 @@ class HistoryReportController:UIViewController, IAxisValueFormatter,UITableViewD
         }
         
         var detailRowIndex = 55
-        if self.deviceType != "S02"{
+        if self.deviceType != "S02" || self.deviceType == "S10"{
             detailRowIndex = 38
         }
         worksheet_write_string(sheet, lxw_row_t(detailRowIndex), 0, NSLocalizedString("date1", comment: "Date"), nil)
         worksheet_write_string(sheet, lxw_row_t(detailRowIndex), 1, NSLocalizedString("battery1", comment: "Battery"), nil)
         worksheet_write_string(sheet, lxw_row_t(detailRowIndex), 2, NSLocalizedString("temp1", comment: "Temperature"), nil)
-        if deviceType == "S02"{
+        if deviceType == "S02" || self.deviceType == "S10"{
             worksheet_write_string(sheet, lxw_row_t(detailRowIndex), 3, NSLocalizedString("humidity1", comment: "Humidity"), nil)
             worksheet_write_string(sheet, lxw_row_t(detailRowIndex), 4, NSLocalizedString("light1", comment: "Light"), nil)
         }else{
@@ -492,7 +490,7 @@ class HistoryReportController:UIViewController, IAxisValueFormatter,UITableViewD
             worksheet_write_string(sheet, lxw_row_t(detailRowIndex+index), 1, String(format:"%d%%",bleHisItem.battery), nil)
             worksheet_write_number(sheet, lxw_row_t(detailRowIndex+index), 2, Double(Utils.getCurTemp(sourceTemp: bleHisItem.temp)), nil)
             
-            if deviceType == "S02"{
+            if deviceType == "S02" || self.deviceType == "S10"{
                 worksheet_write_number(sheet, lxw_row_t(detailRowIndex+index), 3, Double(bleHisItem.humidity), nil)
                 let prop = bleHisItem.prop == 1 ? NSLocalizedString("light1", comment: "Light") : NSLocalizedString("dark", comment: "Dark")
                 worksheet_write_string(sheet, lxw_row_t(detailRowIndex+index), 4, prop, nil)
@@ -513,7 +511,7 @@ class HistoryReportController:UIViewController, IAxisValueFormatter,UITableViewD
         // Insert the chart into the worksheet
         worksheet_insert_chart(sheet, 20,0, tempChart);
         
-        if self.deviceType == "S02"{
+        if self.deviceType == "S02" || self.deviceType == "S10"{
             let humidityChart = workbook_add_chart(book, UInt8(LXW_CHART_LINE.rawValue))
             let humiditySeries = chart_add_series(humidityChart, nil, "Sheet1!$A$1:$A$5");
             chart_series_set_name(humiditySeries, NSLocalizedString("humidity1", comment: "Humidity"))
@@ -538,13 +536,13 @@ class HistoryReportController:UIViewController, IAxisValueFormatter,UITableViewD
         fileManager.createFile(atPath: path, contents:nil, attributes:nil)
         let handle = FileHandle(forWritingAtPath:path)
         var StrItem = "\(NSLocalizedString("date1", comment: "Date")),\(NSLocalizedString("battery1", comment: "Battery")),\(NSLocalizedString("temp1", comment: "Temperature")),\(NSLocalizedString("humidity1", comment: "Humidity")),\(NSLocalizedString("light1", comment: "Light"))\n"
-        if self.deviceType != "S02"{
+        if self.deviceType == "S04" || self.deviceType == "S08"{
             StrItem = "\(NSLocalizedString("date1", comment: "Date")),\(NSLocalizedString("battery1", comment: "Battery")),\(NSLocalizedString("temp1", comment: "Temperature")),\(NSLocalizedString("door1", comment: "Door")),\(NSLocalizedString("alarm1", comment: "Alarm"))\n"
         }
         handle?.write(StrItem.data(using: String.Encoding.utf8)!)
         for var i in 0..<self.showBleHisData.count{
             let bleHisItem = self.showBleHisData[i]
-            if self.deviceType == "S02"{
+            if self.deviceType == "S02" || self.deviceType == "S10"{
                 StrItem = self.dateFormatter.string(from: Date(timeIntervalSince1970: Double(bleHisItem.dateStamp))) + "," + String(format:"%d%%",bleHisItem.battery)
                     + "," + String(format:"%.2f",Utils.getCurTemp(sourceTemp: bleHisItem.temp)) + ","
                     + String(format:"%d",bleHisItem.humidity) + "," + (bleHisItem.prop == 1 ? NSLocalizedString("light1", comment: "Light") : NSLocalizedString("dark", comment: "Dark"))
@@ -593,29 +591,27 @@ class HistoryReportController:UIViewController, IAxisValueFormatter,UITableViewD
     func makeTable()
     {
         var tableScrollViewY = tempChartView.frame.origin.y + tempChartView.frame.height + 5
-        if deviceType == "S02"{
+        if deviceType == "S02" || self.deviceType == "S10"{
             tableScrollViewY = humidityChartView.frame.origin.y + humidityChartView.frame.height + 5
         }
         var tableScrollView = UIScrollView()
         let tableHight = 40 * self.showItemCount + 40
         tableScrollView.frame = CGRect(x: 30, y: Int(tableScrollViewY), width: Int(KSize.width), height: tableHight+20)
         var detailTableViewWidth = HistoryS02Cell.contentViewWidth
-        if self.deviceType != "S02"{
+        if self.deviceType == "S04" || self.deviceType == "S08"{
             detailTableViewWidth = HistoryS04Cell.contentViewWidth
         }
         tableScrollView.contentSize = CGSize(width: detailTableViewWidth + 20, height: tableHight)
         self.mainView.addSubview(tableScrollView)
         
         detailTableView = UITableView.init(frame: CGRect(x: 0, y: 0, width: detailTableViewWidth, height: tableHight), style:.plain)
-        if #available(iOS 15.0, *) {
+        if #available(iOS 15.0, *){
             detailTableView.sectionHeaderTopPadding = 0
-         } else{
-            print("is not ios 15")
         }
-          detailTableView.backgroundColor = UIColor.white
+        detailTableView.backgroundColor = UIColor.white
         detailTableView.delegate = self
         detailTableView.dataSource = self
-        if deviceType == "S02"{
+        if deviceType == "S02" || self.deviceType == "S10"{
             let headView = HistoryS02Header()
             headView.frame = CGRect(x: 0, y: 0, width: KSize.width, height: 40)
             detailTableView.tableHeaderView = headView
@@ -714,7 +710,7 @@ class HistoryReportController:UIViewController, IAxisValueFormatter,UITableViewD
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let bleHisItem = self.showDetailList[indexPath.row]
         
-        if deviceType == "S02"{
+        if deviceType == "S02" || self.deviceType == "S10"{
             let cell = (tableView.dequeueReusableCell(withIdentifier: HistoryS02Cell.identifier, for: indexPath)) as! HistoryS02Cell
             cell.dateLabel.text = self.dateFormatter.string(from: Date(timeIntervalSince1970: Double(bleHisItem.dateStamp)))
             cell.batteryLabel.text = String(format:"%d%%",bleHisItem.battery)
@@ -857,7 +853,7 @@ class HistoryReportController:UIViewController, IAxisValueFormatter,UITableViewD
                     overMinTempLimitTime += endTempCalDate - startTempCalDate
                 }
             }
-            if self.deviceType == "S02"{
+            if self.deviceType == "S02" || self.deviceType == "S10"{
                 if humidityAlarmUp != 4095 && bleHisData.humidity > humidityAlarmUp{
                     if !beginHumidityUp{
                         beginHumidityUp = true
@@ -891,8 +887,12 @@ class HistoryReportController:UIViewController, IAxisValueFormatter,UITableViewD
         averageTemp = tempSum / Float(showBleHisData.count)
         if self.deviceType == "S02"{
             self.deviceModel = "TSTH1-B"
-        }else{
+        }else if self.deviceType == "S04"{
             self.deviceModel = "TSDT1-B"
+        }else if self.deviceType == "S08"{
+            self.deviceModel = "T-sense"
+        }else if self.deviceType == "S10"{
+            self.deviceModel = "T-one"
         }
     }
     
@@ -972,7 +972,7 @@ class HistoryReportController:UIViewController, IAxisValueFormatter,UITableViewD
         var reportPropDesc = NSLocalizedString("door", comment: "Door:")
         var upImageFileName = "ic_door_open.png"
         var downImageFileName = "ic_door_close.png"
-        if self.deviceType == "S02"{
+        if self.deviceType == "S02" || self.deviceType == "S10"{
             reportPropDesc = NSLocalizedString("light", comment: "Light:")
             upImageFileName = "ic_light_open.png"
             downImageFileName = "ic_light_close.png"
@@ -1008,7 +1008,7 @@ class HistoryReportController:UIViewController, IAxisValueFormatter,UITableViewD
         secondView.isUserInteractionEnabled = true
         self.mainView.addSubview(secondView)
         startLabelY = 0
-        if self.deviceType == "S02"{
+        if self.deviceType == "S02" || self.deviceType == "S10"{
             self.txS02TempHead = UILabel()
             self.initLabel(label: self.txS02TempHead, content: String(format:"%@(%@)",NSLocalizedString("temp1", comment: "Temperature"),Utils.getCurTempUnit()), x: contentX, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
             self.txS02HumidityHead = UILabel()
@@ -1209,7 +1209,7 @@ class HistoryReportController:UIViewController, IAxisValueFormatter,UITableViewD
     }
     
     func initHumidityChart(){
-        if self.deviceType != "S02"{
+        if self.deviceType != "S02" && self.deviceType != "S10"{
             return
         }
         humidityChartView = LineChartView()
@@ -1220,11 +1220,11 @@ class HistoryReportController:UIViewController, IAxisValueFormatter,UITableViewD
         humidityChartView.backgroundColor = UIColor.white
         //折线图无数据时显示的提示文字
         humidityChartView.noDataText = ""
-        
+
         //折线图描述文字和样式
         //               chartView.chartDescription?.text = "考试成绩"
-       humidityChartView.chartDescription?.textColor = UIColor.black
-        
+        humidityChartView.chartDescription.textColor = UIColor.black
+
         //设置交互样式
         //                chartView.scaleXEnabled = false
         humidityChartView.scaleYEnabled = false //取消Y轴缩放
@@ -1234,10 +1234,10 @@ class HistoryReportController:UIViewController, IAxisValueFormatter,UITableViewD
         humidityChartView.dragDecelerationFrictionCoef = 0.9 //拖拽后惯性效果摩擦系数(0~1)越小惯性越不明显
         humidityChartView.xAxis.labelPosition = .bottom
         humidityChartView.rightAxis.drawLabelsEnabled = false
-        
+
         humidityChartView.xAxis.granularity = Double(self.showBleHisData.count / (Int(self.view.bounds.width) / 90))
         humidityChartView.xAxis.granularityEnabled = true
-        
+
         //界限1
         if self.humidityAlarmUp != 4095{
             let limitLine1 = ChartLimitLine(limit: Double(self.humidityAlarmUp), label: NSLocalizedString("high_humidity_alarm", comment: "High humidity alarm"))
@@ -1249,7 +1249,7 @@ class HistoryReportController:UIViewController, IAxisValueFormatter,UITableViewD
             let limitLine2 = ChartLimitLine(limit: Double(self.humidityAlarmDown), label: NSLocalizedString("low_humidity_alarm", comment: "Low humidity alarm"))
             humidityChartView.leftAxis.addLimitLine(limitLine2)
         }
-        
+
         humidityChartView.leftAxis.drawLimitLinesBehindDataEnabled = true
         var chartDateFormatter = DateFormatter()
         chartDateFormatter.dateFormat = "MM-dd HH:mm:ss"
@@ -1263,10 +1263,10 @@ class HistoryReportController:UIViewController, IAxisValueFormatter,UITableViewD
             let entry = ChartDataEntry.init(x: Double(i), y: Double(bleHisItem.humidity))
             dataEntries.append(entry)
             xValues.append(chartDateFormatter.string(from: Date(timeIntervalSince1970: Double(bleHisItem.dateStamp))))
-            
-            
+
+
         }
-        
+
         humidityChartView.xAxis.valueFormatter = IndexAxisValueFormatter(values: xValues)
         //这50条数据作为1根折线里的所有数据
         let chartDataSet = LineChartDataSet(entries: dataEntries, label: NSLocalizedString("humidity1", comment: "Humidity"))
@@ -1290,11 +1290,11 @@ class HistoryReportController:UIViewController, IAxisValueFormatter,UITableViewD
         tempChartView.backgroundColor = UIColor.white
         //折线图无数据时显示的提示文字
         tempChartView.noDataText = ""
-        
+
         //折线图描述文字和样式
         //               chartView.chartDescription?.text = "考试成绩"
-                       tempChartView.chartDescription?.textColor = UIColor.black
-        
+        tempChartView.chartDescription.textColor = UIColor.black
+
         //设置交互样式
         //                chartView.scaleXEnabled = false
         tempChartView.scaleYEnabled = false //取消Y轴缩放
@@ -1304,10 +1304,10 @@ class HistoryReportController:UIViewController, IAxisValueFormatter,UITableViewD
         tempChartView.dragDecelerationFrictionCoef = 0.9 //拖拽后惯性效果摩擦系数(0~1)越小惯性越不明显
         tempChartView.xAxis.labelPosition = .bottom
         tempChartView.rightAxis.drawLabelsEnabled = false
-        
+
         tempChartView.xAxis.granularity = Double(self.showBleHisData.count / (Int(self.view.bounds.width) / 90))
         tempChartView.xAxis.granularityEnabled = true
-        
+
         //界限1
         if self.tempAlarmUp != 4095{
             let limitLine1 = ChartLimitLine(limit: Double(self.tempAlarmUp), label: NSLocalizedString("high_temperature_alarm", comment: "High temperature alarm"))
@@ -1319,7 +1319,7 @@ class HistoryReportController:UIViewController, IAxisValueFormatter,UITableViewD
             let limitLine2 = ChartLimitLine(limit: Double(self.tempAlarmDown), label: NSLocalizedString("low_temperature_alarm", comment: "Low temperature alarm"))
             tempChartView.leftAxis.addLimitLine(limitLine2)
         }
-        
+
         tempChartView.leftAxis.drawLimitLinesBehindDataEnabled = true
         var chartDateFormatter = DateFormatter()
         chartDateFormatter.dateFormat = "MM-dd HH:mm:ss"
@@ -1333,10 +1333,10 @@ class HistoryReportController:UIViewController, IAxisValueFormatter,UITableViewD
             let entry = ChartDataEntry.init(x: Double(i), y: Double(Utils.getCurTemp(sourceTemp: bleHisItem.temp)))
             dataEntries.append(entry)
             xValues.append(chartDateFormatter.string(from: Date(timeIntervalSince1970: Double(bleHisItem.dateStamp))))
-            
-            
+
+
         }
-        
+
         tempChartView.xAxis.valueFormatter = IndexAxisValueFormatter(values: xValues)
         //这50条数据作为1根折线里的所有数据
         let chartDataSet = LineChartDataSet(entries: dataEntries, label: NSLocalizedString("temp1", comment: "Temperature"))

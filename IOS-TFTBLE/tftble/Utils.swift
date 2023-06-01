@@ -9,7 +9,8 @@
 import Foundation
 
 class Utils{
-    static var isDebug:Bool = true
+    static var isDebug:Bool = false
+    static let fontSize:CGFloat = 12
     static func parseHardwareVersion(hardware:String) ->String{
         var hardwareF:Double = 0
         if hardware != nil{
@@ -23,6 +24,51 @@ class Utils{
             return String.init(format:"V%.1f",result)
         }
         
+    }
+    static func parseS78910SoftwaeVersion(data:[UInt8],index:Int) ->String{
+        let all = (Int(data[index]) << 8) + Int(data[index + 1])
+        let version1 = data[index] >> 5
+        let version2 = (all & 0x1FFF) >> 7
+        let version3 = all & 0x7f
+        let testByte = data[index+2]
+        var software = ""
+        if testByte != 0{
+            return String(format: "%d.%d.%02d  %02x",version1,version2,version3, testByte)
+        }else{
+            return String(format: "%d.%d.%02d",version1,version2,version3)
+        }
+    }
+    static func hexStringToUInt8Array(_ hexString: String) -> [UInt8] {
+        var hex = hexString.trimmingCharacters(in: .whitespacesAndNewlines)
+        if hex.hasPrefix("0x") || hex.hasPrefix("0X") {
+            hex = String(hex.dropFirst(2))
+        }
+        
+        guard hex.count % 2 == 0 else {
+            print("Invalid hex string. Length must be even.")
+            return []
+        }
+        
+        var byteArray = [UInt8]()
+        for i in stride(from: 0, to: hex.count, by: 2) {
+            let startIndex = hex.index(hex.startIndex, offsetBy: i)
+            let endIndex = hex.index(startIndex, offsetBy: 2)
+            let byteString = hex[startIndex..<endIndex]
+            
+            if let byteValue = UInt8(byteString, radix: 16) {
+                byteArray.append(byteValue)
+            } else {
+                print("Invalid hex string. Contains non-hexadecimal characters.")
+                return []
+            }
+        }
+        
+        return byteArray
+    }
+    
+    static func uint8ArrayToHexStr(value:[UInt8]) ->String{
+        let hexString = value.map { String(format: "%02hhx", $0) }.joined()
+        return hexString
     }
     
     static func uint8ToHexStr(value:UInt8) ->String{
@@ -86,7 +132,23 @@ class Utils{
         return (firstByte << 24 | secondByte << 16 | thirdByte << 8 | fourthByte);
     }
     
+    static func IntToBytes(intValue:Int)->[UInt8]{
+        var byteArray = [UInt8]()
+
+        byteArray.append(UInt8((intValue >> 24) & 0xff))
+        byteArray.append(UInt8((intValue >> 16) & 0xff))
+        byteArray.append(UInt8((intValue >> 8) & 0xff))
+        byteArray.append(UInt8(intValue & 0xff))
+        return byteArray;
+    }
+    
     static func bytes2Short(bytes:[UInt8],offset:Int) ->Int{
+        if bytes.count > 2 && bytes.count > offset + 1{
+            return (Int(bytes[offset]) << 8) + Int(bytes[offset + 1])
+        }
+        return 0
+    }
+    static func data2Short(bytes:Data,offset:Int) ->Int{
         if bytes.count > 2 && bytes.count > offset + 1{
             return (Int(bytes[offset]) << 8) + Int(bytes[offset + 1])
         }

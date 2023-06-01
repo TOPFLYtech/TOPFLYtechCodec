@@ -40,6 +40,9 @@ extension String {
     
     func subStr(startIndex:Int,endIndex:Int)->String{
         let temporaryString = self
+        if self.count < endIndex || self.count < startIndex{
+            return self
+        }
         let indexStart = temporaryString.index(temporaryString.startIndex, offsetBy: startIndex)
         let indexEnd = temporaryString.index(temporaryString.startIndex, offsetBy: endIndex)
         return String(temporaryString[indexStart..<indexEnd])
@@ -58,8 +61,10 @@ extension String {
 }
 
 class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDelegate,UITableViewDataSource,UITableViewDelegate,UISearchBarDelegate
-    , LBXScanViewControllerDelegate
+, LBXScanViewControllerDelegate
 {
+    
+    
     func scanFinished(scanResult: LBXScanResult, error: String?) {
         print(scanResult)
         self.searchBar.text = scanResult.strScanned as! String
@@ -178,29 +183,72 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
     }
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
-         
+        
+        if advertisementData["kCBAdvDataManufacturerData"]  != nil && advertisementData["kCBAdvDataServiceData"]  != nil{
+            //receive uid msg
+            let factData = advertisementData["kCBAdvDataManufacturerData"] as! Data
+            if factData.count > 3 && (factData[2] == 0x07 || factData[2] == 0x08 || factData[2] == 0x09 || factData[2] == 0x0a) {
+                
+            }else{
+                return
+            }
+            var i = 0
+            
+            let dict = advertisementData["kCBAdvDataServiceData"] as! NSDictionary
+            var key = CBUUID(string:"FEAA")
+            if dict[key] != nil && factData[0] == 0x00 && factData[1] == 0x10{
+                let data = dict[key] as! Data
+                var i = 0
+                
+                //                print(result)
+                let mac = peripheral.identifier.uuidString
+                //                        var data = self.hex2String(data: dict[key] as! NSData );
+                
+                let name = advertisementData["kCBAdvDataLocalName"] as! String
+                //                print(name)
+                var rssi = -9999
+                if RSSI != nil{
+                    rssi = Int(RSSI)
+                }
+                var exist = false
+                for item in self.discoveredPeripherals{
+                    if item.mac == mac{
+                        exist = true
+                        break
+                    }
+                }
+                if !exist {
+                    self.discoveredPeripherals.append((peripheral, mac))
+                }
+                //                print(advertisementData)
+                //paseEddystoneUid(factResult,result)
+                self.parseEddystoneUID(deviceName: name ?? "", bleData: factData,bleData1: data, rssi: rssi, mac: mac)
+            }
+        }
+        
         if advertisementData["kCBAdvDataManufacturerData"]  != nil {
             let data = advertisementData["kCBAdvDataManufacturerData"] as! Data
+            
             var i = 0
             var result = ""
             while i < data.count{
                 result.append(String(format: "%02x", data[i]))
                 i+=1;
             }
-           
+            
             if result.count != 34{
                 return
             }
-//            print(result)
+            //            print(result)
             let head = result.subStr(startIndex: 0, endIndex: 2)
             if head == "ac" {
                 let mac = peripheral.identifier.uuidString
-//                print(mac)
-                var name = advertisementData["kCBAdvDataLocalName"] as? String
-                if name == nil{
-                    name = ""
+                //                print(mac)
+                var name = ""
+                if advertisementData["kCBAdvDataLocalName"] != nil {
+                    name = advertisementData["kCBAdvDataLocalName"] as! String
                 }
-//                print(name)
+                //                print(name)
                 var rssi = -9999
                 if RSSI != nil{
                     rssi = Int(RSSI)
@@ -219,10 +267,10 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 self.parseBleTireData(deviceName: name ?? "", bleData: result, rssi: rssi, mac: mac)
             }
         }
-       
+        
         if advertisementData["kCBAdvDataServiceData"]  != nil {
             let dict = advertisementData["kCBAdvDataServiceData"] as! NSDictionary
-            let key = CBUUID(string:"BFFF")
+            var key = CBUUID(string:"BFFF")
             
             if dict[key] != nil{
                 let data = dict[key] as! Data
@@ -232,12 +280,15 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                     result.append(String(format: "%02x", data[i]))
                     i+=1;
                 }
-//                print(result)
+                //                print(result)
                 let mac = peripheral.identifier.uuidString
                 //                        var data = self.hex2String(data: dict[key] as! NSData );
                 
-                let name = advertisementData["kCBAdvDataLocalName"] as! String
-//                print(name)
+                var name = ""
+                if advertisementData["kCBAdvDataLocalName"] != nil {
+                    name = advertisementData["kCBAdvDataLocalName"] as! String
+                }
+                //                print(name)
                 var rssi = -9999
                 if RSSI != nil{
                     rssi = Int(RSSI)
@@ -257,7 +308,84 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 
             }
             
-            
+            key = CBUUID(string:"FEAA")
+            if dict[key] != nil{
+                let data = dict[key] as! Data
+                if data.count > 0 && (data[0] == 0x07 || data[0] == 0x08 || data[0] == 0x09 || data[0] == 0x0a) {
+                    
+                }else{
+                    return
+                }
+                var i = 0
+                var result = ""
+                while i < data.count{
+                    result.append(String(format: "%02x", data[i]))
+                    i+=1;
+                }
+                //                print(result)
+                let mac = peripheral.identifier.uuidString
+                //                        var data = self.hex2String(data: dict[key] as! NSData );
+                var name = ""
+                if advertisementData["kCBAdvDataLocalName"] != nil {
+                    name = advertisementData["kCBAdvDataLocalName"] as! String
+                }
+                //                print(name)
+                var rssi = -9999
+                if RSSI != nil{
+                    rssi = Int(RSSI)
+                }
+                var exist = false
+                for item in self.discoveredPeripherals{
+                    if item.mac == mac{
+                        exist = true
+                        break
+                    }
+                }
+                if !exist {
+                    self.discoveredPeripherals.append((peripheral, mac))
+                }
+                //parseEddystone(result)
+                self.parseEddystone(deviceName: name, bleData: data, rssi: rssi, mac: mac)
+            }
+            key = CBUUID(string:"6135")
+            if dict[key] != nil{
+                let data = dict[key] as! Data
+                if data.count > 0 && (data[0] == 0x07 || data[0] == 0x08 || data[0] == 0x09 || data[0] == 0x0a) {
+                    
+                }else{
+                    return
+                }
+                var i = 0
+                var result = ""
+                while i < data.count{
+                    result.append(String(format: "%02x", data[i]))
+                    i+=1;
+                }
+                //                print(result)
+                let mac = peripheral.identifier.uuidString
+                //                        var data = self.hex2String(data: dict[key] as! NSData );
+                var name = ""
+                if advertisementData["kCBAdvDataLocalName"] != nil {
+                    name = advertisementData["kCBAdvDataLocalName"] as! String
+                }
+                //                print(name)
+                var rssi = -9999
+                if RSSI != nil{
+                    rssi = Int(RSSI)
+                }
+                var exist = false
+                for item in self.discoveredPeripherals{
+                    if item.mac == mac{
+                        exist = true
+                        break
+                    }
+                }
+                if !exist {
+                    self.discoveredPeripherals.append((peripheral, mac))
+                }
+                //parseEddystone(result)
+                self.parseEddystone(deviceName: name, bleData: data, rssi: rssi, mac: mac)
+            }
         }
     }
     var discoveredPeripherals:[(peripheral: CBPeripheral, mac: String?)] = []
@@ -325,7 +453,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         //      self.navigationController?.pushViewController(historyView, animated: false)
         //        let smtpView = SmtpSettingController()
         //        self.navigationController?.pushViewController(smtpView, animated: false)
-        print("rightClick") 
+        print("rightClick")
         if self.isOpenFilter {
             print ("hide")
             self.searchView.isHidden = true
@@ -411,10 +539,14 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         dataTable.register(DeviceS05Cell.self,forCellReuseIdentifier:DeviceS05Cell.identifier)
         dataTable.register(DeviceErrorCell.self,forCellReuseIdentifier:DeviceErrorCell.identifier)
         dataTable.register(DeviceTireCell.self,forCellReuseIdentifier:DeviceTireCell.identifier)
+        dataTable.register(DeviceS07Cell.self,forCellReuseIdentifier:DeviceS07Cell.identifier)
+        dataTable.register(DeviceS08Cell.self,forCellReuseIdentifier:DeviceS08Cell.identifier)
+        dataTable.register(DeviceS09Cell.self,forCellReuseIdentifier:DeviceS09Cell.identifier)
+        dataTable.register(DeviceS10Cell.self,forCellReuseIdentifier:DeviceS10Cell.identifier)
         let titleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
-//        titleLabel.text = "Bluetooth sensor"
+        //        titleLabel.text = "Bluetooth sensor"
         titleLabel.text = NSLocalizedString("bluetooth_sensor", comment: "Bluetooth sensor")
-        self.navigationItem.titleView = titleLabel 
+        self.navigationItem.titleView = titleLabel
         let rightBarButtonItem = UIBarButtonItem (barButtonSystemItem: UIBarButtonItem.SystemItem.search, target: self, action: #selector(self.rightClick))
         let leftBarButtonItem = UIBarButtonItem (barButtonSystemItem: UIBarButtonItem.SystemItem.refresh, target: self, action: #selector(self.leftClick))
         self.navigationItem.rightBarButtonItem = rightBarButtonItem
@@ -442,11 +574,330 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         self.view.addSubview(self.searchView)
     }
     
+    
+    func parseEddystoneUID(deviceName:String,bleData:Data,bleData1:Data,rssi:Int,mac:String){
+        //        print("parseEddystoneUID " + deviceName)
+        var deviceItem = [String:String]()
+        if deviceName == ""{
+            return
+        }else{
+            deviceItem.updateValue(deviceName, forKey: "name")
+        }
+        var bleData1Str = ""
+        var i = 0
+        while i < bleData1.count{
+            bleData1Str.append(String(format: "%02x", bleData1[i]))
+            i+=1;
+        }
+        let nid = bleData1Str.subStr(startIndex: 4, endIndex: 24)
+        let bid = bleData1Str.subStr(startIndex: 25, endIndex: 36)
+        var deviceType = "ErrorDevice"
+        var model = ""
+        if bleData[2] == 0x07{
+            deviceType = "S07"
+            model = "T-buton"
+        }else if bleData[2] == 0x08{
+            deviceType = "S08"
+            model="T-sense"
+        }else if bleData[2] == 0x09{
+            deviceType = "S09"
+            model="T-hub"
+        }else if bleData[2] == 0x0a{
+            deviceType = "S10"
+            model = "T-one"
+        }
+        if deviceType == "ErrorDevice"{
+            print("%@",bleData)
+            print("parseEddystoneUID ErrorDevice " + deviceName)
+            return
+        }
+        let hardware = Utils.parseHardwareVersion(hardware: String(format: "%02x", bleData[3]))
+        let all = Utils.data2Short(bytes: bleData, offset: 4)
+        let version1 = bleData[4] >> 5
+        let version2 = (all & 0x1FFF) >> 7
+        let version3 = all & 0x7f
+        let testByte = bleData[6]
+        var software = ""
+        if testByte != 0{
+            software = String(format: "%d.%d.%02d  %02x",version1,version2,version3, testByte)
+        }else{
+            software = String(format: "%d.%d.%02d",version1,version2,version3)
+        }
+        let broadcastType = "Eddystone UID"
+        i = 7
+        var id = ""
+        while i < bleData.count{
+            id.append(String(format: "%02x", bleData[i]))
+            i+=1;
+        }
+        //        print("parseEddystoneUID,%@,%@,%@,%@,%@",deviceName,nid,bid,hardware,software)
+        let flag = "-"
+        let battery = "-"
+        let batteryPercent = "-"
+        let doorStatus = "-"
+        let move = "-"
+        let moveDetection = "-"
+        let stopDetection = "-"
+        let pitchAngle = "-"
+        let rollAngle = "-"
+        let deviceProp = "-"
+        let major = "-"
+        let minor = "-"
+        let warnStr = ""
+        let date = self.currentDateString()
+        deviceItem.updateValue(date,forKey:"date")
+        
+        deviceItem.updateValue(mac, forKey: "mac")
+        deviceItem.updateValue(id.uppercased(), forKey: "id")
+        if rssi != -9999{
+            let rssiStr = String.init(format: "%ddBm", rssi)
+            deviceItem.updateValue(rssiStr, forKey: "rssi")
+        }
+        deviceItem.updateValue(deviceType, forKey: "deviceType")
+        deviceItem.updateValue(model, forKey: "deviceTypeDesc")
+        deviceItem.updateValue(hardware, forKey: "hardware")
+        deviceItem.updateValue(software, forKey: "software")
+        deviceItem.updateValue(broadcastType, forKey: "broadcastType")
+        deviceItem.updateValue(flag, forKey: "flag")
+        deviceItem.updateValue(battery, forKey: "battery")
+        deviceItem.updateValue(batteryPercent, forKey: "batteryPercent")
+        deviceItem.updateValue(move, forKey: "move")
+        deviceItem.updateValue(moveDetection, forKey: "moveDetection")
+        deviceItem.updateValue(stopDetection, forKey: "stopDetection")
+        deviceItem.updateValue(pitchAngle, forKey: "pitchAngle")
+        deviceItem.updateValue(rollAngle, forKey: "rollAngle")
+        deviceItem.updateValue(deviceProp, forKey: "deviceProp")
+        deviceItem.updateValue(major, forKey: "major")
+        deviceItem.updateValue(minor, forKey: "minor")
+        deviceItem.updateValue(nid, forKey: "nid")
+        deviceItem.updateValue(bid, forKey: "bid")
+        deviceItem.updateValue(warnStr, forKey: "warn")
+        
+        updateDeviceInfo(deviceItem: deviceItem,mac:mac,deviceName:deviceName,id:id)
+    }
+    func parseEddystone(deviceName:String,bleData:Data,rssi:Int,mac:String){
+        //        print("parseEddystone")
+        var deviceItem = [String:String]()
+        if deviceName == ""{
+            return
+        }else{
+            deviceItem.updateValue(deviceName, forKey: "name")
+        }
+        var deviceType = "ErrorDevice"
+        var model = ""
+        if bleData[0] == 0x07{
+            deviceType = "S07"
+            model = "T-buton"
+        }else if bleData[0] == 0x08{
+            deviceType = "S08"
+            model="T-sense"
+        }else if bleData[0] == 0x09{
+            deviceType = "S09"
+            model="T-hub"
+        }else if bleData[0] == 0x0a{
+            deviceType = "S10"
+            model = "T-one"
+        }
+        if deviceType == "ErrorDevice"{
+            return
+        }
+        let hardware = Utils.parseHardwareVersion(hardware: String(format: "%02x", bleData[1]))
+        let all = (Int(bleData[2]) << 8) + Int(bleData[2 + 1])
+        let version1 = bleData[2] >> 5
+        let version2 = (all & 0x1FFF) >> 7
+        let version3 = all & 0x7f
+        let testByte = bleData[4]
+        var software = ""
+        if testByte != 0{
+            software = String(format: "%d.%d.%02d  %02x",version1,version2,version3, testByte)
+        }else{
+            software = String(format: "%d.%d.%02d",version1,version2,version3)
+        } 
+        var broadcastType = "Eddystone"
+        var i = 5
+        var id = ""
+        while i < 11{
+            id.append(String(format: "%02x", bleData[i]))
+            i+=1;
+        }
+        //        print("parseEddystone,%@,%@,%@",deviceName,hardware,software)
+        var flag = "-"
+        var battery = "-"
+        var batteryPercent = "-"
+        var doorStatus = "-"
+        var move = "-"
+        var moveDetection = "-"
+        var stopDetection = "-"
+        var pitchAngle = "-"
+        var rollAngle = "-"
+        var deviceProp = "-"
+        var major = "-"
+        var minor = "-"
+        var nid = "-"
+        var bid = "-"
+        let date = self.currentDateString()
+        deviceItem.updateValue(date,forKey:"date")
+       
+       
+        deviceItem.updateValue(mac, forKey: "mac")
+        deviceItem.updateValue(id.uppercased(), forKey: "id")
+        if rssi != -9999{
+            let rssiStr = String.init(format: "%ddBm", rssi)
+            deviceItem.updateValue(rssiStr, forKey: "rssi")
+        }
+        deviceItem.updateValue(deviceType, forKey: "deviceType")
+        deviceItem.updateValue(model, forKey: "deviceTypeDesc")
+        deviceItem.updateValue(hardware, forKey: "hardware")
+        deviceItem.updateValue(software, forKey: "software")
+        if bleData[0] == 0x07{
+            if((bleData[11] & 0x01) == 0x01){
+                broadcastType = "Long range"
+            }else  {
+                broadcastType.append(" ")
+                broadcastType.append(model)
+            }
+            battery = String(format: "%.3f V", Float(Utils.data2Short(bytes: bleData, offset: 12)) / 1000.0)
+            batteryPercent = String(format: "%d%%", bleData[14] & 0xff )
+            var warn =	bleData[15]
+            
+            if(bleData[16] == 0x01){
+                flag = "SOS"
+            }else if(bleData[16] == 0x02){
+                flag = NSLocalizedString("identification", comment: "Identification")
+            }
+            var warnStr = getWarnDesc(deviceType: deviceType, warnByte: warn)
+            deviceItem.updateValue(broadcastType, forKey: "broadcastType")
+            deviceItem.updateValue(flag, forKey: "flag")
+            deviceItem.updateValue(battery, forKey: "battery")
+            deviceItem.updateValue(batteryPercent, forKey: "batteryPercent")
+            deviceItem.updateValue(warnStr, forKey: "warn")
+        }else if bleData[0] == 0x08{
+            if((bleData[11] & 0x01) == 0x01){
+                broadcastType = "Long range"
+            }else  {
+                broadcastType.append(" ")
+                broadcastType.append(model)
+            }
+            var isGsensor = false
+            if((bleData[11] & 0x02) == 0x02){
+                isGsensor = true
+            }else if((bleData[11] & 0x04) == 0x04){
+                
+            }
+            battery = String(format: "%.3f V", Float(Utils.data2Short(bytes: bleData, offset: 12)) / 1000.0)
+            batteryPercent = String(format: "%d%%", bleData[14] & 0xff )
+            var tempSrc = Utils.data2Short(bytes: bleData, offset: 15)
+            var temp = (tempSrc & 0x7fff) * ((tempSrc & 0x8000) == 0x8000 ? -1 : 1)
+            deviceProp =  ""
+            if(bleData[18] == 0x00){
+                deviceProp =  NSLocalizedString("normal", comment: "Normal")
+            }else{
+                deviceProp = NSLocalizedString("strong_light", comment: "Strong light")
+            }
+            var humidityByte = bleData[17]
+            var doorByte = bleData[19]
+            var doorStatus = ""
+            if(doorByte == 0x02){
+                doorStatus = NSLocalizedString("disable", comment: "Disable")
+            }else{
+                doorStatus = doorByte == 0x01 ? NSLocalizedString("prop_door_open", comment: "Open") : NSLocalizedString("prop_door_close", comment: "Close")
+            }
+            var warnStr = ""
+            if isGsensor{
+                var moveStatus = (bleData[20] & 0xff) >> 6
+                move = ""
+                if(moveStatus == 0){
+                    move = NSLocalizedString("move_static", comment: "Static")
+                }else if(moveStatus == 1){
+                    move = NSLocalizedString("move_move", comment: "Move")
+                }else if(moveStatus == 2){
+                    move = NSLocalizedString("move_forbidden", comment: "Forbidden")
+                }
+                deviceItem.updateValue(String(moveStatus), forKey: "moveStatus")
+                var moveInt = Utils.data2Short(bytes: bleData, offset: 20)
+                var stopInt = Utils.data2Short(bytes: bleData, offset: 21)
+                moveDetection = String(format: "%d", (moveInt & 0x3FF8) >> 3)
+                stopDetection = String(format: "%d", stopInt & 0x7ff)
+                pitchAngle = String(format: "%d", bleData[23])
+                rollAngle = String(format: "%d", Utils.data2Short(bytes: bleData, offset: 24))
+                warnStr = getWarnDesc(deviceType: deviceType, warnByte: bleData[26])
+            }else{
+                warnStr = getWarnDesc(deviceType: deviceType, warnByte: bleData[20])
+            }
+            deviceItem.updateValue(doorStatus, forKey: "doorStatus")
+            deviceItem.updateValue(broadcastType, forKey: "broadcastType")
+            deviceItem.updateValue(String(temp), forKey: "sourceTemp")
+            deviceItem.updateValue(flag, forKey: "flag")
+            deviceItem.updateValue(battery, forKey: "battery")
+            deviceItem.updateValue(batteryPercent, forKey: "batteryPercent")
+            deviceItem.updateValue(move, forKey: "move")
+            deviceItem.updateValue(moveDetection, forKey: "moveDetection")
+            deviceItem.updateValue(stopDetection, forKey: "stopDetection")
+            deviceItem.updateValue(pitchAngle, forKey: "pitchAngle")
+            deviceItem.updateValue(rollAngle, forKey: "rollAngle")
+            deviceItem.updateValue(deviceProp, forKey: "deviceProp")
+            deviceItem.updateValue(major, forKey: "major")
+            deviceItem.updateValue(minor, forKey: "minor")
+            deviceItem.updateValue(nid, forKey: "nid")
+            deviceItem.updateValue(bid, forKey: "bid")
+            deviceItem.updateValue(warnStr, forKey: "warn")
+        }else if bleData[0] == 0x09{
+            broadcastType.append(" ")
+            broadcastType.append(model)
+            deviceItem.updateValue(broadcastType, forKey: "broadcastType")
+        }else if bleData[0] == 0x0a{
+            if((bleData[11] & 0x01) == 0x01){
+                broadcastType = "Long range"
+            }else  {
+                broadcastType.append(" ")
+                broadcastType.append(model)
+            }
+            var isGsensor = false
+            if((bleData[11] & 0x02) == 0x02){
+                isGsensor = true
+            }else if((bleData[11] & 0x04) == 0x04){
+                
+            }
+            var battery = String(format: "%.3f V", Float(Utils.data2Short(bytes: bleData, offset: 12)) / 1000.0)
+            var batteryPercent = String(format: "%d%%", bleData[14] & 0xff )
+            var tempSrc = Utils.data2Short(bytes: bleData, offset: 15)
+            var temp = (tempSrc & 0x7fff) * ((tempSrc & 0x8000) == 0x8000 ? -1 : 1)
+            var deviceProp =  ""
+            if(bleData[18] == 0x00){
+                deviceProp =  NSLocalizedString("normal", comment: "Normal")
+            }else{
+                deviceProp = NSLocalizedString("strong_light", comment: "Strong light")
+            }
+            var humidity = String(format: "%d%%",  bleData[17])
+            var warnStr = getWarnDesc(deviceType: deviceType, warnByte: bleData[19])
+            deviceItem.updateValue(String(temp), forKey: "sourceTemp")
+            deviceItem.updateValue(humidity, forKey: "humidity")
+            deviceItem.updateValue(broadcastType, forKey: "broadcastType")
+            deviceItem.updateValue(flag, forKey: "flag")
+            deviceItem.updateValue(battery, forKey: "battery")
+            deviceItem.updateValue(batteryPercent, forKey: "batteryPercent")
+            deviceItem.updateValue(move, forKey: "move")
+            deviceItem.updateValue(moveDetection, forKey: "moveDetection")
+            deviceItem.updateValue(stopDetection, forKey: "stopDetection")
+            deviceItem.updateValue(pitchAngle, forKey: "pitchAngle")
+            deviceItem.updateValue(rollAngle, forKey: "rollAngle")
+            deviceItem.updateValue(deviceProp, forKey: "ambientLight")
+            deviceItem.updateValue(major, forKey: "major")
+            deviceItem.updateValue(minor, forKey: "minor")
+            deviceItem.updateValue(nid, forKey: "nid")
+            deviceItem.updateValue(bid, forKey: "bid")
+            deviceItem.updateValue(warnStr, forKey: "warn")
+        }
+        
+        updateDeviceInfo(deviceItem: deviceItem,mac:mac,deviceName:deviceName,id:id)
+        
+    }
+    
     func parseBleTireData(deviceName:String,bleData:String,rssi:Int,mac:String){
         if Utils.isDebug{
-//            if rssi < -50 || rssi > 0{
-//                return
-//            }
+            //            if rssi < -50 || rssi > 0{
+            //                return
+            //            }
         }
         var deviceItem = [String:String]()
         var deviceType = "tire"
@@ -458,7 +909,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         let presssureStr = bleData.subStr(startIndex:6,endIndex:8)
         let tempStr = bleData.subStr(startIndex:8,endIndex:10)
         let statusStr = bleData.subStr(startIndex:10,endIndex:12)
-
+        
         deviceItem.updateValue(date,forKey:"date")
         deviceItem.updateValue(deviceName, forKey: "name")
         deviceItem.updateValue(mac, forKey: "mac")
@@ -494,9 +945,15 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
             statusDesc = NSLocalizedString("awaken", comment:"Awaken")
         }
         deviceItem.updateValue(statusDesc, forKey: "status")
-         
+        
+        updateDeviceInfo(deviceItem: deviceItem,mac:mac,deviceName:deviceName,id:id)
+    }
+    
+    
+    func updateDeviceInfo(deviceItem:[String:String],mac:String,deviceName:String,id:String ){
         var exist = false
         var i = 0
+        let mac = deviceItem["mac"]
         while i < deviceInfoArray.count{
             let deviceInfo = deviceInfoArray[i]
             let macStr = deviceInfo["mac"]
@@ -544,16 +1001,137 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         {
             allDeviceInfoArray.append(deviceItem)
         }
+        if deviceInfoArray.count > 0{
+            if self.waitingView != nil {
+                self.waitingView.dismiss()
+            }
+        }
         dataTable.reloadData()
-        
+    }
+    
+    
+    func getWarnDesc(deviceType:String,warnByte:UInt8) ->String{
+        if(deviceType == "S02" ){
+            var warnStr = ""
+            if (warnByte & 0x01) == 0x01 {
+                warnStr += NSLocalizedString("high_temperature_warning", comment:"High temperature warning;")
+            }
+            if (warnByte & 0x02) == 0x02 {
+                warnStr += NSLocalizedString("high_humidity_warning", comment:"High humidity warning;")
+            }
+            if (warnByte & 0x10) == 0x10 {
+                warnStr += NSLocalizedString("low_temperature_warning", comment:"Low temperature warning;")
+            }
+            if (warnByte & 0x20) == 0x20{
+                warnStr += NSLocalizedString("low_humidity_warning", comment:"Low humidity warning;")
+            }
+            if (warnByte & 0x40) == 0x40{
+                warnStr += NSLocalizedString("low_voltage_warning", comment:"Low voltage warning;")
+            }
+            return warnStr;
+        }else if(deviceType=="S04"){
+            var warnStr = ""
+            if (warnByte & 0x01) == 0x01 {
+                warnStr += NSLocalizedString("high_temperature_warning", comment:"High temperature warning;")
+            }
+            if (warnByte & 0x10) == 0x10 {
+                warnStr += NSLocalizedString("low_temperature_warning", comment:"Low temperature warning;")
+            }
+            if (warnByte & 0x40) == 0x40{
+                warnStr += NSLocalizedString("low_voltage_warning", comment:"Low voltage warning;")
+            }
+            if (warnByte & 0x80) == 0x80{
+                warnStr += NSLocalizedString("door_change_warning", comment:"Door change warning;")
+            }
+            return warnStr
+        }else if(deviceType=="S05"){
+            var warnStr = ""
+            if (warnByte & 0x01) == 0x01 {
+                warnStr += NSLocalizedString("high_temperature_warning", comment:"High temperature warning;")
+            }
+            if (warnByte & 0x02) == 0x02 {
+                warnStr += NSLocalizedString("high_humidity_warning", comment:"High humidity warning;")
+            }
+            if (warnByte & 0x10) == 0x10 {
+                warnStr += NSLocalizedString("low_temperature_warning", comment:"Low temperature warning;")
+            }
+            if (warnByte & 0x20) == 0x20{
+                warnStr += NSLocalizedString("low_humidity_warning", comment:"Low humidity warning;")
+            }
+            if (warnByte & 0x40) == 0x40{
+                warnStr += NSLocalizedString("low_voltage_warning", comment:"Low voltage warning;")
+            }
+            return warnStr;
+        }else if(deviceType=="tire"){
+            var warnStr = ""
+            if (warnByte & 0x01) == 0x01 {
+                warnStr += NSLocalizedString("high_temperature_warning", comment:"High temperature warning;")
+            }
+            if (warnByte & 0x02) == 0x02 {
+                warnStr += NSLocalizedString("high_humidity_warning", comment:"High humidity warning;")
+            }
+            if (warnByte & 0x10) == 0x10 {
+                warnStr += NSLocalizedString("low_temperature_warning", comment:"Low temperature warning;")
+            }
+            if (warnByte & 0x20) == 0x20{
+                warnStr += NSLocalizedString("low_humidity_warning", comment:"Low humidity warning;")
+            }
+            if (warnByte & 0x40) == 0x40{
+                warnStr += NSLocalizedString("low_voltage_warning", comment:"Low voltage warning;")
+            }
+            return warnStr
+        }else if(deviceType=="S07"){
+            var warnStr = ""
+            if (warnByte & 0x40) == 0x40{
+                warnStr += NSLocalizedString("low_voltage_warning", comment:"Low voltage warning;")
+            }
+            return warnStr
+        }else if(deviceType=="S08"){
+            var warnStr = ""
+            if (warnByte & 0x01) == 0x01 {
+                warnStr += NSLocalizedString("high_temperature_warning", comment:"High temperature warning;")
+            }
+            if (warnByte & 0x10) == 0x10 {
+                warnStr += NSLocalizedString("low_temperature_warning", comment:"Low temperature warning;")
+            }
+            if (warnByte & 0x40) == 0x40{
+                warnStr += NSLocalizedString("low_voltage_warning", comment:"Low voltage warning;")
+            }
+            if (warnByte & 0x80) == 0x80{
+                warnStr += NSLocalizedString("malfunction", comment:"Malfunction;")
+            }
+            return warnStr;
+        }else if(deviceType=="S10"){
+            var warnStr = ""
+            if (warnByte & 0x01) == 0x01 {
+                warnStr += NSLocalizedString("high_temperature_warning", comment:"High temperature warning;")
+            }
+            if (warnByte & 0x02) == 0x02 {
+                warnStr += NSLocalizedString("high_humidity_warning", comment:"High humidity warning;")
+            }
+            if (warnByte & 0x10) == 0x10 {
+                warnStr += NSLocalizedString("low_temperature_warning", comment:"Low temperature warning;")
+            }
+            if (warnByte & 0x20) == 0x20{
+                warnStr += NSLocalizedString("low_humidity_warning", comment:"Low humidity warning;")
+            }
+            if (warnByte & 0x40) == 0x40{
+                warnStr += NSLocalizedString("low_voltage_warning", comment:"Low voltage warning;")
+            }
+            if (warnByte & 0x80) == 0x80{
+                warnStr += NSLocalizedString("malfunction", comment:"Malfunction;")
+            }
+            return warnStr
+        }
+        return ""
         
     }
     
     func parseBleData(deviceName:String,bleData:String,rssi:Int,mac:String){
         if Utils.isDebug{
-//            if rssi < -50 || rssi > 0{
-//                return
-//            }
+            //            if rssi < -50 || rssi > 0{
+            //                return
+            //            }
         }
         var deviceItem = [String:String]()
         let deviceType = bleData.subStr(startIndex:2,endIndex:4)
@@ -563,7 +1141,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         var realData = bleData.subStr(startIndex:20,endIndex:bleData.characters.count).uppercased()
         realData = realData.replacingOccurrences(of: "FF", with: "")
         let date = self.currentDateString()
-//        print(date)
+        //        print(date)
         deviceItem.updateValue(date,forKey:"date")
         let id = bleData.subStr(startIndex: 8, endIndex: 20).uppercased()
         deviceItem.updateValue(deviceName, forKey: "name")
@@ -573,8 +1151,6 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
             let rssiStr = String.init(format: "%ddBm", rssi)
             deviceItem.updateValue(rssiStr, forKey: "rssi")
         }
-        
-        
         
         //        var softwareStr = String.init(format: "V%s", software)
         deviceItem.updateValue(hardwareStr, forKey: "hardware")
@@ -613,26 +1189,15 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 let humidity = bleData.subStr(startIndex:26,endIndex:28).hexStringToInt()
                 let humidityStr = String.init(format: "%d%%", humidity)
                 deviceItem.updateValue(humidityStr, forKey: "humidity")
+                let lightSensorDisable = bleData.subStr(startIndex:28,endIndex:30).hexStringToInt()
                 let lightStr = bleData.subStr(startIndex:30,endIndex:32)
-                let light = lightStr == "01" ?  NSLocalizedString("light1", comment: "Light") : NSLocalizedString("dark", comment: "Dark")
+                var light = lightStr == "01" ?  NSLocalizedString("light1", comment: "Light") : NSLocalizedString("dark", comment: "Dark")
+                if (lightSensorDisable & 0x80) == 0x80 {
+                    light = NSLocalizedString("lightSenseDisable", comment: "Light sense disable")
+                }
                 deviceItem.updateValue(light, forKey: "light")
                 let warn = bleData.subStr(startIndex:32,endIndex:34).hexStringToInt()
-                var warnStr = ""
-                if (warn & 0x01) == 0x01 {
-                    warnStr += NSLocalizedString("high_temperature_warning", comment:"High temperature warning;")
-                }
-                if (warn & 0x02) == 0x02 {
-                    warnStr += NSLocalizedString("high_humidity_warning", comment:"High humidity warning;")
-                }
-                if (warn & 0x10) == 0x10 {
-                    warnStr += NSLocalizedString("low_temperature_warning", comment:"Low temperature warning;")
-                }
-                if (warn & 0x20) == 0x20{
-                    warnStr += NSLocalizedString("low_humidity_warning", comment:"Low humidity warning;")
-                }
-                if (warn & 0x40) == 0x40{
-                    warnStr += NSLocalizedString("low_voltage_warning", comment:"Low voltage warning;")
-                }
+                var warnStr = getWarnDesc(deviceType: deviceType, warnByte: UInt8(warn))
                 deviceItem.updateValue(warnStr, forKey: "warn")
             }else if deviceType == "04"{
                 deviceItem.updateValue("S04", forKey: "deviceType")
@@ -647,7 +1212,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                     deviceItem.updateValue(NSLocalizedString("close", comment: "Close"), forKey: "doorSensor")
                 }
                 let warn = bleData.subStr(startIndex:28,endIndex:30).hexStringToInt()
-                let warnStr = Utils.getS04WarnDesc(warn: warn)
+                let warnStr = getWarnDesc(deviceType: deviceType, warnByte: UInt8(warn))
                 deviceItem.updateValue(warnStr, forKey: "warn")
             }else if deviceType == "05"{
                 deviceItem.updateValue("S05", forKey: "deviceType")
@@ -662,77 +1227,11 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                     deviceItem.updateValue(NSLocalizedString("no", comment: "No"), forKey: "relayStatus")
                 }
                 let warn = bleData.subStr(startIndex:28,endIndex:30).hexStringToInt()
-                var warnStr = ""
-                if (warn & 0x01) == 0x01 {
-                     warnStr += NSLocalizedString("high_temperature_warning", comment:"High temperature warning;")
-                }
-                if (warn & 0x02) == 0x02 {
-                     warnStr += NSLocalizedString("high_humidity_warning", comment:"High humidity warning;")
-                }
-                if (warn & 0x10) == 0x10 {
-                   warnStr += NSLocalizedString("low_temperature_warning", comment:"Low temperature warning;")
-                }
-                if (warn & 0x20) == 0x20{
-                     warnStr += NSLocalizedString("low_humidity_warning", comment:"Low humidity warning;")
-                }
-                if (warn & 0x40) == 0x40{
-                     warnStr += NSLocalizedString("low_voltage_warning", comment:"Low voltage warning;")
-                }
+                var warnStr = getWarnDesc(deviceType: deviceType, warnByte: UInt8(warn))
                 deviceItem.updateValue(warnStr, forKey: "warn")
             }
         }
-        var exist = false
-        var i = 0
-        while i < deviceInfoArray.count{
-            let deviceInfo = deviceInfoArray[i]
-            let macStr = deviceInfo["mac"]
-            if mac == macStr{
-                deviceInfoArray[i] = deviceItem
-                exist = true
-                break
-            }
-            i+=1
-        }
-        if !exist
-        {
-            if fuzzyKey != ""{
-                let deviceRange = deviceName.range(of: fuzzyKey)
-                var deviceNameLocation = -1
-                if deviceRange != nil{
-                    deviceNameLocation = deviceName.distance(from: deviceName.startIndex, to: deviceRange!.lowerBound)
-                }
-                let idRange = id.range(of:fuzzyKey)
-                var idLocation = -1
-                if idRange != nil{
-                    idLocation = id.distance(from: id.startIndex, to: idRange!.lowerBound)
-                }
-                if deviceNameLocation != -1 || idLocation != -1{
-                    deviceInfoArray.append(deviceItem)
-                }
-            }else{
-                deviceInfoArray.append(deviceItem)
-            }
-            
-        }
-        exist = false
-        i = 0
-        while i < allDeviceInfoArray.count{
-            let deviceInfo = allDeviceInfoArray[i]
-            let macStr = deviceInfo["mac"]
-            if mac == macStr{
-                allDeviceInfoArray[i] = deviceItem
-                exist = true
-                break
-            }
-            i+=1
-        }
-        if !exist
-        {
-            allDeviceInfoArray.append(deviceItem)
-        }
-        dataTable.reloadData()
-        
-        
+        updateDeviceInfo(deviceItem: deviceItem,mac:mac,deviceName:deviceName,id:id)
     }
     
     
@@ -755,16 +1254,13 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         dataTable.tableFooterView?.isHidden = true;
         dataTable.tableHeaderView = UIView(frame: CGRect(x: 0, y: 0, width: KSize.width, height: 0.01))
         dataTable.tableFooterView = UIView(frame: CGRect(x: 0, y: 0, width: KSize.width, height: 0.01))
-        dataTable.estimatedSectionHeaderHeight = 0;
-        dataTable.estimatedSectionFooterHeight = 0;
-        dataTable.estimatedRowHeight = 0;
-        if #available(iOS 15.0, *) {
+        dataTable.estimatedSectionHeaderHeight = 0
+        dataTable.estimatedSectionFooterHeight = 0
+        dataTable.estimatedRowHeight = 0
+        if #available(iOS 15.0, *){
             dataTable.sectionHeaderTopPadding = 0
-         } else{
-            print("is not ios 15")
         }
         self.view.addSubview(dataTable)
-        
     }
     
     //MARK:table代理
@@ -774,10 +1270,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         return 1
     }
     
-    //行数
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return deviceInfoArray.count
-    }
+    
     
     
     func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -793,6 +1286,48 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 return 230
             }else if deviceType == "tire"{
                 return 310
+            }else if deviceType == "S07"{
+                let broadcastType = deviceInfo["broadcastType"] as! String ?? ""
+                if broadcastType == "Eddystone UID"{
+                    return 360
+                }else if broadcastType == "Long range"{
+                    return 420
+                }else if broadcastType == "Beacon"{
+                    return 360
+                }
+                return 420
+            }else if deviceType == "S08"{
+                let broadcastType = deviceInfo["broadcastType"] as! String ?? ""
+                if broadcastType == "Eddystone UID"{
+                    return 390
+                } else if broadcastType == "Beacon"{
+                    return 300
+                }else{
+                    let move = deviceInfo["move"]
+                    let moveStatus = deviceInfo["moveStatus"]
+                    if move != "-"{
+                        if moveStatus != "2"{
+                            return 630
+                        }else{
+                            return 510
+                        }
+                    }else{
+                        return 480
+                    }
+                }
+                
+            }else if deviceType == "S09"{
+                return 270
+            }else if deviceType == "S10"{
+                let broadcastType = deviceInfo["broadcastType"] as! String ?? ""
+                if broadcastType == "Eddystone UID"{
+                    return 360
+                }else if broadcastType == "Long range"{
+                    return 450
+                }else if broadcastType == "Beacon"{
+                    return 360
+                }
+                return 480
             }else{
                 return 430
             }
@@ -803,6 +1338,48 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 return 230
             }else if deviceType == "tire"{
                 return 310
+            }else if deviceType == "S07"{
+                let broadcastType = deviceInfo["broadcastType"] as! String ?? ""
+                if broadcastType == "Eddystone UID"{
+                    return 360
+                }else if broadcastType == "Long range"{
+                    return 420
+                }else if broadcastType == "Beacon"{
+                    return 360
+                }
+                return 420
+            }else if deviceType == "S08"{
+                let broadcastType = deviceInfo["broadcastType"] as! String ?? ""
+                if broadcastType == "Eddystone UID"{
+                    return 390
+                } else if broadcastType == "Beacon"{
+                    return 300
+                }else{
+                    let move = deviceInfo["move"]
+                    let moveStatus = deviceInfo["moveStatus"]
+                    if move != "-"{
+                        if moveStatus != "2"{
+                            return 630
+                        }else{
+                            return 510
+                        }
+                    }else{
+                        return 480
+                    }
+                }
+                
+            }else if deviceType == "S09"{
+                return 270
+            }else if deviceType == "S10"{
+                let broadcastType = deviceInfo["broadcastType"] as! String ?? ""
+                if broadcastType == "Eddystone UID"{
+                    return 360
+                }else if broadcastType == "Long range"{
+                    return 450
+                }else if broadcastType == "Beacon"{
+                    return 360
+                }
+                return 480
             }else{
                 return 390
             }
@@ -822,6 +1399,48 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 return 230
             }else if deviceType == "tire"{
                 return 310
+            }else if deviceType == "S07"{
+                let broadcastType = deviceInfo["broadcastType"] as! String ?? ""
+                if broadcastType == "Eddystone UID"{
+                    return 360
+                }else if broadcastType == "Long range"{
+                    return 420
+                }else if broadcastType == "Beacon"{
+                    return 360
+                }
+                return 420
+            }else if deviceType == "S08"{
+                let broadcastType = deviceInfo["broadcastType"] as! String ?? ""
+                if broadcastType == "Eddystone UID"{
+                    return 390
+                } else if broadcastType == "Beacon"{
+                    return 300
+                }else{
+                    let move = deviceInfo["move"]
+                    let moveStatus = deviceInfo["moveStatus"]
+                    if move != "-"{
+                        if moveStatus != "2"{
+                            return 630
+                        }else{
+                            return 510
+                        }
+                    }else{
+                        return 480
+                    }
+                }
+                
+            }else if deviceType == "S09"{
+                return 270
+            }else if deviceType == "S10"{
+                let broadcastType = deviceInfo["broadcastType"] as! String ?? ""
+                if broadcastType == "Eddystone UID"{
+                    return 360
+                }else if broadcastType == "Long range"{
+                    return 450
+                }else if broadcastType == "Beacon"{
+                    return 360
+                }
+                return 480
             }else{
                 return 430
             }
@@ -832,6 +1451,48 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 return 230
             }else if deviceType == "tire"{
                 return 310
+            }else if deviceType == "S07"{
+                let broadcastType = deviceInfo["broadcastType"] as! String ?? ""
+                if broadcastType == "Eddystone UID"{
+                    return 360
+                }else if broadcastType == "Long range"{
+                    return 420
+                }else if broadcastType == "Beacon"{
+                    return 360
+                }
+                return 420
+            }else if deviceType == "S08"{
+                let broadcastType = deviceInfo["broadcastType"] as! String ?? ""
+                if broadcastType == "Eddystone UID"{
+                    return 390
+                } else if broadcastType == "Beacon"{
+                    return 300
+                }else{
+                    let move = deviceInfo["move"]
+                    let moveStatus = deviceInfo["moveStatus"]
+                    if move != "-"{
+                        if moveStatus != "2"{
+                            return 630
+                        }else{
+                            return 510
+                        }
+                    }else{
+                        return 480
+                    }
+                }
+                
+            }else if deviceType == "S09"{
+                return 270
+            }else if deviceType == "S10"{
+                let broadcastType = deviceInfo["broadcastType"] as! String ?? ""
+                if broadcastType == "Eddystone UID"{
+                    return 360
+                }else if broadcastType == "Long range"{
+                    return 450
+                }else if broadcastType == "Beacon"{
+                    return 360
+                }
+                return 480
             }else{
                 return 390
             }
@@ -845,8 +1506,10 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         return 0.01
     }
     
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return deviceInfoArray.count
+    }
     
-    //cell
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let deviceInfo = deviceInfoArray[indexPath.row]
         if deviceInfo["deviceType"] == nil{
@@ -862,6 +1525,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         let deviceType = deviceInfo["deviceType"] as! String ?? ""
         if deviceType == "S02"{
             let cell = (tableView.dequeueReusableCell(withIdentifier: DeviceS02Cell.identifier, for: indexPath)) as! DeviceS02Cell
+            cell.resetPosition()
             cell.deviceNameContentLabel.text = deviceInfo["name"]
             cell.idContentLabel.text = deviceInfo["id"]
             cell.dateContentLabel.text = deviceInfo["date"]
@@ -877,7 +1541,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
             let curTemp = Utils.getCurTemp(sourceTemp: temp)
             let tempStr = String.init(format: "%.2f %@", curTemp,Utils.getCurTempUnit())
             cell.tempContentLabel.text = tempStr
-            cell.warnContentLabel.text = deviceInfo["warn"] 
+            cell.warnContentLabel.text = deviceInfo["warn"]
             cell.configBtn.tag = indexPath.row
             cell.qrCodeBtn.tag = indexPath.row
             cell.switchTempUnitBtn.setTitle(Utils.getNextTempUnit(), for: .normal)
@@ -907,7 +1571,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
             let tempStr = String.init(format: "%.2f %@", curTemp,Utils.getCurTempUnit())
             cell.tempContentLabel.text = tempStr
             cell.warnContentLabel.text = deviceInfo["warn"]
-            cell.switchTempUnitBtn.setTitle(Utils.getNextTempUnit(), for: .normal)
+            
             cell.configBtn.tag = indexPath.row
             cell.qrCodeBtn.tag = indexPath.row
             let tapGesture = UITapGestureRecognizer(target: self, action: #selector(tap(tap:)))
@@ -915,12 +1579,12 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
             let qrCodeTap = UITapGestureRecognizer(target: self, action: #selector(qrCodeTap(tap:)))
             cell.qrCodeBtn.addGestureRecognizer(qrCodeTap)
             cell.switchTempUnitBtn.tag = indexPath.row
+            cell.switchTempUnitBtn.setTitle(Utils.getNextTempUnit(), for: .normal)
             let switchTempUnitTap = UITapGestureRecognizer(target: self, action: #selector(switchTempUnitTap(tap:)))
             cell.switchTempUnitBtn.addGestureRecognizer(switchTempUnitTap)
             return cell
         }else if deviceType == "errorType"{
             let cell = (tableView.dequeueReusableCell(withIdentifier: DeviceErrorCell.identifier, for: indexPath)) as! DeviceErrorCell
-            
             cell.deviceNameContentLabel.text = deviceInfo["name"]
             cell.idContentLabel.text = deviceInfo["id"]
             cell.dateContentLabel.text = deviceInfo["date"]
@@ -954,6 +1618,123 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
             cell.switchPressureUnitBtn.tag = indexPath.row
             let switchPressureUnitTap = UITapGestureRecognizer(target: self, action: #selector(switchPressureUnitTap(tap:)))
             cell.switchPressureUnitBtn.addGestureRecognizer(switchPressureUnitTap)
+            return cell
+        }else if deviceType == "S07"{
+            let cell = (tableView.dequeueReusableCell(withIdentifier: DeviceS07Cell.identifier, for: indexPath)) as! DeviceS07Cell
+            let broadcastType = deviceInfo["broadcastType"] as! String ?? ""
+            cell.resetPosition(broadcastType: broadcastType)
+            cell.deviceNameContentLabel.text = deviceInfo["name"]
+            cell.idContentLabel.text = deviceInfo["id"]
+            cell.dateContentLabel.text = deviceInfo["date"]
+            //        print("cell table " + (deviceInfo["date"] ?? ""))
+            cell.batteryContentLabel.text = deviceInfo["battery"]
+            cell.hardwareContentLabel.text = deviceInfo["hardware"]
+            cell.softwareContentLabel.text = deviceInfo["software"]
+            cell.batteryPercentContentLabel.text = deviceInfo["batteryPercent"]
+            cell.flagContentLabel.text = deviceInfo["flag"]
+            cell.modelContentLabel.text = deviceInfo["deviceTypeDesc"]
+            cell.rssiContentLabel.text = deviceInfo["rssi"]
+            cell.broadcastTypeContentLabel.text = deviceInfo["broadcastType"]
+            cell.nidContentLabel.text = deviceInfo["nid"]
+            cell.bidContentLabel.text = deviceInfo["bid"]
+            cell.majorContentLabel.text = deviceInfo["major"]
+            cell.minorContentLabel.text = deviceInfo["minor"]
+            cell.warnContentLabel.text = deviceInfo["warn"]
+            cell.configBtn.tag = indexPath.row
+            let tapGesture = UITapGestureRecognizer(target: self, action: #selector(tap(tap:)))
+            cell.configBtn.addGestureRecognizer(tapGesture)
+            
+            return cell
+        }else if deviceType == "S08"{
+            let cell = (tableView.dequeueReusableCell(withIdentifier: DeviceS08Cell.identifier, for: indexPath)) as! DeviceS08Cell
+            let broadcastType = deviceInfo["broadcastType"] as! String ?? ""
+            cell.resetPosition(bleDeviceInfo: deviceInfo)
+            cell.deviceNameContentLabel.text = deviceInfo["name"]
+            cell.idContentLabel.text = deviceInfo["id"]
+            cell.dateContentLabel.text = deviceInfo["date"]
+            //        print("cell table " + (deviceInfo["date"] ?? ""))
+            cell.batteryContentLabel.text = deviceInfo["battery"]
+            cell.hardwareContentLabel.text = deviceInfo["hardware"]
+            cell.softwareContentLabel.text = deviceInfo["software"]
+            let temp = Float(deviceInfo["sourceTemp"] ?? "0") ?? 0
+            let curTemp = Utils.getCurTemp(sourceTemp: temp)
+            let tempStr = String.init(format: "%.2f %@", Float(curTemp) / 100.0,Utils.getCurTempUnit())
+            cell.tempContentLabel.text = tempStr
+            cell.modelContentLabel.text = deviceInfo["deviceTypeDesc"]
+            cell.rssiContentLabel.text = deviceInfo["rssi"]
+            cell.broadcastTypeContentLabel.text = deviceInfo["broadcastType"]
+            cell.nidContentLabel.text = deviceInfo["nid"]
+            cell.bidContentLabel.text = deviceInfo["bid"]
+            cell.majorContentLabel.text = deviceInfo["major"]
+            cell.minorContentLabel.text = deviceInfo["minor"]
+            cell.moveContentLabel.text = deviceInfo["move"]
+            cell.moveDetectionContentLabel.text = deviceInfo["moveDetection"]
+            cell.stopDetectionContentLabel.text = deviceInfo["stopDetection"]
+            cell.pitchContentLabel.text = deviceInfo["pitchAngle"]
+            cell.rollContentLabel.text = deviceInfo["rollAngle"]
+            cell.doorContentLabel.text = deviceInfo["doorStatus"]
+            cell.ambientLightContentLabel.text = deviceInfo["deviceProp"]
+            cell.batteryPercentContentLabel.text = deviceInfo["batteryPercent"]
+            cell.warnContentLabel.text = deviceInfo["warn"]
+            cell.configBtn.tag = indexPath.row
+            let tapGesture = UITapGestureRecognizer(target: self, action: #selector(tap(tap:)))
+            cell.configBtn.addGestureRecognizer(tapGesture)
+            cell.switchTempUnitBtn.tag = indexPath.row
+            cell.switchTempUnitBtn.setTitle(Utils.getNextTempUnit(), for: .normal)
+            let switchTempUnitTap = UITapGestureRecognizer(target: self, action: #selector(switchTempUnitTap(tap:)))
+            cell.switchTempUnitBtn.addGestureRecognizer(switchTempUnitTap)
+            return cell
+        }else if deviceType == "S09"{
+            let cell = (tableView.dequeueReusableCell(withIdentifier: DeviceS09Cell.identifier, for: indexPath)) as! DeviceS09Cell
+            let broadcastType = deviceInfo["broadcastType"] as! String ?? ""
+            cell.resetPosition(broadcastType: broadcastType)
+            cell.deviceNameContentLabel.text = deviceInfo["name"]
+            cell.idContentLabel.text = deviceInfo["id"]
+            cell.dateContentLabel.text = deviceInfo["date"]
+            //        print("cell table " + (deviceInfo["date"] ?? ""))
+            cell.hardwareContentLabel.text = deviceInfo["hardware"]
+            cell.softwareContentLabel.text = deviceInfo["software"]
+            
+            cell.modelContentLabel.text = deviceInfo["deviceTypeDesc"]
+            cell.rssiContentLabel.text = deviceInfo["rssi"]
+            cell.configBtn.tag = indexPath.row
+            let tapGesture = UITapGestureRecognizer(target: self, action: #selector(tap(tap:)))
+            cell.configBtn.addGestureRecognizer(tapGesture)
+            
+            return cell
+        }else if deviceType == "S10"{
+            let cell = (tableView.dequeueReusableCell(withIdentifier: DeviceS10Cell.identifier, for: indexPath)) as! DeviceS10Cell
+            let broadcastType = deviceInfo["broadcastType"] as! String ?? ""
+            cell.resetPosition(bleDeviceInfo: deviceInfo)
+            cell.deviceNameContentLabel.text = deviceInfo["name"]
+            cell.idContentLabel.text = deviceInfo["id"]
+            cell.dateContentLabel.text = deviceInfo["date"]
+            //        print("cell table " + (deviceInfo["date"] ?? ""))
+            cell.batteryContentLabel.text = deviceInfo["battery"]
+            cell.hardwareContentLabel.text = deviceInfo["hardware"]
+            cell.softwareContentLabel.text = deviceInfo["software"]
+            let temp = Float(deviceInfo["sourceTemp"] ?? "0") ?? 0
+            let curTemp = Utils.getCurTemp(sourceTemp: temp)
+            let tempStr = String.init(format: "%.2f %@", Float(curTemp) / 100.0,Utils.getCurTempUnit())
+            cell.tempContentLabel.text = tempStr
+            cell.modelContentLabel.text = deviceInfo["deviceTypeDesc"]
+            cell.rssiContentLabel.text = deviceInfo["rssi"]
+            cell.broadcastTypeContentLabel.text = deviceInfo["broadcastType"]
+            cell.nidContentLabel.text = deviceInfo["nid"]
+            cell.bidContentLabel.text = deviceInfo["bid"]
+            cell.majorContentLabel.text = deviceInfo["major"]
+            cell.minorContentLabel.text = deviceInfo["minor"]
+            cell.batteryPercentContentLabel.text = deviceInfo["batteryPercent"]
+            cell.ambientLightContentLabel.text = deviceInfo["ambientLight"]
+            cell.warnContentLabel.text = deviceInfo["warn"]
+            cell.humidityContentLabel.text = deviceInfo["humidity"]
+            cell.configBtn.tag = indexPath.row
+            let tapGesture = UITapGestureRecognizer(target: self, action: #selector(tap(tap:)))
+            cell.configBtn.addGestureRecognizer(tapGesture)
+            cell.switchTempUnitBtn.tag = indexPath.row
+            cell.switchTempUnitBtn.setTitle(Utils.getNextTempUnit(), for: .normal)
+            let switchTempUnitTap = UITapGestureRecognizer(target: self, action: #selector(switchTempUnitTap(tap:)))
+            cell.switchTempUnitBtn.addGestureRecognizer(switchTempUnitTap)
             return cell
         }else{
             let cell = (tableView.dequeueReusableCell(withIdentifier: DeviceS05Cell.identifier, for: indexPath)) as! DeviceS05Cell
@@ -995,11 +1776,11 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
     }
     
     @objc func switchPressureUnitTap(tap: UITapGestureRecognizer) {
-       print("switchPressureUnitTap click tap")
-       Utils.switchCurPressureUnit()
-       print(Utils.getCurPressureUnit())
-       dataTable.reloadData()
-   }
+        print("switchPressureUnitTap click tap")
+        Utils.switchCurPressureUnit()
+        print(Utils.getCurPressureUnit())
+        dataTable.reloadData()
+    }
     @objc func qrCodeTap(tap: UITapGestureRecognizer) {
         print("qrCodeTap click tap")
         let index = tap.view?.tag
@@ -1008,7 +1789,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
             let idStr = deviceInfo["id"]!
             if idStr != nil{
                 let view = AEAlertView(style: .defaulted)
-        
+                
                 let action_one = AEAlertAction(title: "Cancel", style: .cancel) { (action) in
                     view.dismiss()
                 }
@@ -1060,7 +1841,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                     editView.mac = deviceInfo["id"] ?? ""
                     editView.software = deviceInfo["softwareInt"] ?? ""
                     editView.deviceType = deviceInfo["deviceType"] ?? ""
-                    self.navigationController?.pushViewController(editView, animated: false) 
+                    self.navigationController?.pushViewController(editView, animated: false)
                 }
             }
             

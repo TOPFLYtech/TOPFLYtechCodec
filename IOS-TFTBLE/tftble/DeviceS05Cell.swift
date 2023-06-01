@@ -11,30 +11,31 @@ import UIKit
 import JXMarqueeView
 import QMUIKit
 class DeviceS05Cell: UITableViewCell {
+    private var fontSize:CGFloat = Utils.fontSize
     lazy var deviceNameLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
         label.text =  NSLocalizedString("device_name_desc", comment: "Device name:")
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var deviceNameContentLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var idLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("id", comment: "ID:")
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var idContentLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var rootView :UIImageView = {
@@ -44,118 +45,118 @@ class DeviceS05Cell: UITableViewCell {
     lazy var dateLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
          label.text = NSLocalizedString("date", comment: "Date:")
         return label
     }()
     lazy var dateContentLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var rssiLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         label.text = NSLocalizedString("rssi", comment: "RSSI:")
         return label
     }()
     lazy var rssiContentLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var modelLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
          label.text = NSLocalizedString("device_model", comment: "Device model:")
         return label
     }()
     lazy var modelContentLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var hardwareLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
         label.text = NSLocalizedString("hardware", comment: "Hardware:")
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var hardwareContentLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var softwareLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         label.text = NSLocalizedString("software", comment:"Software:")
         return label
     }()
     lazy var softwareContentLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var batteryLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
         label.text = NSLocalizedString("battery", comment: "Battery:")
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var batteryContentLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var tempLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
        label.text = NSLocalizedString("temperature", comment: "Temperature:")
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var tempContentLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var relayLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
         label.text = NSLocalizedString("relay", comment: "Relay:")
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var relayContentLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var warnLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         label.text = NSLocalizedString("warn", comment: "Warn:")
         return label
     }()
     lazy var warnContentLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         label.lineBreakMode = NSLineBreakMode.byWordWrapping;
         label.numberOfLines = 0;
         return label
@@ -163,12 +164,13 @@ class DeviceS05Cell: UITableViewCell {
     lazy var configLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         label.text = NSLocalizedString("configDesc", comment: "Config:")
         return label
     }()
     lazy var configBtn:QMUIGhostButton = {
         let btn = QMUIGhostButton()
+        btn.titleLabel?.font = UIFont.systemFont(ofSize: fontSize)
         btn.setTitle(NSLocalizedString("config", comment: "Config"), for: .normal)
 //        btn.setTitleColor(UIColor.black, for: .normal)
 //        //        btn.layer.borderColor = UIColor.blue.cgColor
@@ -181,12 +183,13 @@ class DeviceS05Cell: UITableViewCell {
     lazy var qrCodeLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         label.text = NSLocalizedString("id_qr_code", comment: "ID QR Code:")
         return label
     }()
     lazy var qrCodeBtn:QMUIGhostButton = {
         let btn = QMUIGhostButton()
+        btn.titleLabel?.font = UIFont.systemFont(ofSize: fontSize)
         btn.setTitle(NSLocalizedString("qr_code", comment: "QR Code"), for: .normal)
 //        btn.setTitleColor(UIColor.black, for: .normal)
 //        //        btn.layer.borderColor = UIColor.blue.cgColor
@@ -198,6 +201,7 @@ class DeviceS05Cell: UITableViewCell {
     }()
     lazy var switchTempUnitBtn:QMUIGhostButton = {
         let btn = QMUIGhostButton()
+        btn.titleLabel?.font = UIFont.systemFont(ofSize: fontSize)
         btn.setTitle("˚F", for: .normal)
 //        btn.setTitleColor(UIColor.black, for: .normal)
 //        //        btn.layer.borderColor = UIColor.blue.cgColor
@@ -240,15 +244,15 @@ class DeviceS05Cell: UITableViewCell {
         self.batteryContentLabel.frame = CGRect(x: contentX, y: 218, width: self.bounds.size.width - contentX, height: 30)
         self.tempLabel.frame = CGRect(x: 8, y: 248, width: descWidth, height: 30)
         self.tempContentLabel.frame = CGRect(x: contentX, y: 248, width: self.bounds.size.width - contentX - 70, height: 30)
-        self.switchTempUnitBtn.frame = CGRect(x: self.bounds.size.width - 70, y: 248, width: 50, height: 30)
+        self.switchTempUnitBtn.frame = CGRect(x: self.bounds.size.width - 70, y: 248, width: 50, height: 24)
         self.relayLabel.frame = CGRect(x: 8, y: 278, width: descWidth, height: 30)
         self.relayContentLabel.frame = CGRect(x: contentX, y: 278, width: self.bounds.size.width - contentX, height: 30)
         self.warnLabel.frame = CGRect(x: 8, y: 308, width: descWidth, height: 30)
         marqueeView.frame = CGRect(x: contentX, y: 308, width: self.bounds.size.width - contentX, height: 30)
         self.configLabel.frame = CGRect(x: 8, y: 338, width: descWidth, height: 30)
-        self.configBtn.frame = CGRect(x: contentX, y: 338, width: 80, height: 30)
+        self.configBtn.frame = CGRect(x: contentX, y: 338, width: 80, height: 24)
         self.qrCodeLabel.frame = CGRect(x: 8, y: 368, width: descWidth, height: 30)
-        self.qrCodeBtn.frame = CGRect(x: contentX, y: 378, width: 80, height: 30)
+        self.qrCodeBtn.frame = CGRect(x: contentX, y: 378, width: 80, height: 24)
         self.backgroundColor = UIColor.nordicLightGray
         self.rootView.backgroundColor = UIColor.white
         self.rootView.layer.cornerRadius = 8

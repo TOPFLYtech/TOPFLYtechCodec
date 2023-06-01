@@ -14,3 +14,18 @@ protocol EditPwdDelegate {
 protocol SetConnectStatusDelegate {
     func setConnectStatus() 
 }
+
+protocol EditPositiveNegativeWarningValueDelegate {
+    func setPositiveNegativeWarningValue(port:Int,mode:Int,highVoltage:Int,lowVoltage:Int,ditheringIntervalHigh:Int,
+                    ditheringIntervalLow:Int,samplingInterval:Int)
+}
+protocol EditDoutOutputDelegate{
+    func setDoutValue(dout0:Int,dout1:Int)
+}
+
+protocol EditInstructionSequenceDelegate{
+    func setCmd(cmd:String)
+}
+protocol EditRS485CmdDelegate{
+    func setRS485Cmd(cmd:String)
+}

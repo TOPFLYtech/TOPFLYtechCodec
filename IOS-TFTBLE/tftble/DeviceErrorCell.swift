@@ -11,30 +11,31 @@ import UIKit
 import JXMarqueeView
 import QMUIKit
 class DeviceErrorCell: UITableViewCell {
+    private var fontSize:CGFloat = Utils.fontSize
     lazy var deviceNameLabel: UILabel = {
         let label = UILabel()
         label.text =  NSLocalizedString("device_name_desc", comment: "Device name:")
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var deviceNameContentLabel: UILabel = {
         let label = UILabel()
          label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var idLabel: UILabel = {
         let label = UILabel()
          label.text = NSLocalizedString("id", comment: "ID:")
          label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var idContentLabel: UILabel = {
         let label = UILabel()
          label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var rootView :UIImageView = {
@@ -44,66 +45,66 @@ class DeviceErrorCell: UITableViewCell {
     lazy var dateLabel: UILabel = {
         let label = UILabel()
          label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
          label.text = NSLocalizedString("date", comment: "Date:")
         return label
     }()
     lazy var dateContentLabel: UILabel = {
         let label = UILabel()
          label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var rssiLabel: UILabel = {
         let label = UILabel()
          label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
          label.text = NSLocalizedString("rssi", comment: "RSSI:")
         return label
     }()
     lazy var rssiContentLabel: UILabel = {
         let label = UILabel()
          label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var modelLabel: UILabel = {
         let label = UILabel()
          label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         label.text = NSLocalizedString("device_model", comment: "Device model:")
         return label
     }()
     lazy var modelContentLabel: UILabel = {
         let label = UILabel()
          label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var hardwareLabel: UILabel = {
         let label = UILabel()
          label.textColor = UIColor.black
        label.text = NSLocalizedString("hardware", comment: "Hardware:")
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var hardwareContentLabel: UILabel = {
         let label = UILabel()
          label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var softwareLabel: UILabel = {
         let label = UILabel()
          label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
        label.text = NSLocalizedString("software", comment:"Software:")
         return label
     }()
     lazy var softwareContentLabel: UILabel = {
         let label = UILabel()
          label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
      override func layoutSubviews() {

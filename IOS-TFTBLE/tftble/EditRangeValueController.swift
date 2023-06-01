@@ -29,13 +29,23 @@ class EditRangeValueController:UIViewController{
     var highOpen = false
     var lowOpen = false
     var type = ""
-    
+    private var fontSize:CGFloat = Utils.fontSize
     
     override func viewDidDisappear(_ animated: Bool) {
         self.connectStatusDelegate?.setConnectStatus()
     }
-    
+    @objc func dismissKeyboard()
+       {
+           view.endEditing(true)
+       }
     override func viewDidLoad() {
+        let tap: UITapGestureRecognizer = UITapGestureRecognizer(
+                    target: self,
+                    action: #selector(dismissKeyboard))
+
+                tap.cancelsTouchesInView = false
+                view.addGestureRecognizer(tap)
+        
         let titleLabel = UILabel()
         self.navigationItem.titleView = titleLabel
         if type == "temp"{
@@ -58,6 +68,7 @@ class EditRangeValueController:UIViewController{
         let btnHeight = 30
         self.highValueLabel = UILabel()
         self.highValueLabel.textColor = UIColor.black
+        self.highValueLabel.font = UIFont.systemFont(ofSize: fontSize)
         self.highValueLabel.text = NSLocalizedString("high_desc", comment: "High:")
         self.highValueLabel.lineBreakMode = NSLineBreakMode.byWordWrapping;
         self.highValueLabel.numberOfLines = 0;
@@ -65,6 +76,7 @@ class EditRangeValueController:UIViewController{
         self.view.addSubview(self.highValueLabel)
         self.highValueInput = UITextField()
         self.highValueInput.textColor = UIColor.black
+        self.highValueInput.font = UIFont.systemFont(ofSize: fontSize)
         self.highValueInput.borderStyle = UITextField.BorderStyle.bezel
         self.highValueInput.frame = CGRect(x:contentX,y:startInputY,width:descWidth - 20,height: 30)
         self.view.addSubview(self.highValueInput)
@@ -80,6 +92,7 @@ class EditRangeValueController:UIViewController{
         btnY += lineHigh
         startInputY += lineHigh
         self.lowValueLabel = UILabel()
+        self.lowValueLabel.font = UIFont.systemFont(ofSize: fontSize)
         self.lowValueLabel.textColor = UIColor.black
         self.lowValueLabel.text = NSLocalizedString("low_desc", comment: "Low:")
         self.lowValueLabel.lineBreakMode = NSLineBreakMode.byWordWrapping;
@@ -87,6 +100,7 @@ class EditRangeValueController:UIViewController{
         self.lowValueLabel.frame = CGRect(x: 15, y: startLabelY, width: descWidth, height: 60)
         self.view.addSubview(self.lowValueLabel)
         self.lowValueInput = UITextField()
+        self.lowValueInput.font = UIFont.systemFont(ofSize: fontSize)
         self.lowValueInput.textColor = UIColor.black
         self.lowValueInput.borderStyle = UITextField.BorderStyle.bezel
         self.lowValueInput.frame = CGRect(x:contentX,y:startInputY,width:descWidth  - 20,height: 30)
@@ -104,6 +118,7 @@ class EditRangeValueController:UIViewController{
         self.submitBtn = QMUIGhostButton()
         self.submitBtn.setTitle(NSLocalizedString("submit", comment: "Submit"), for: .normal)
         self.submitBtn.ghostColor = UIColor.colorPrimary
+        self.submitBtn.titleLabel?.font = UIFont.systemFont(ofSize: fontSize)
         self.submitBtn.frame = CGRect(x: Int((KSize.width - 200) / 2), y: startLabelY + 10, width: 200, height: 30)
         self.submitBtn.addTarget(self, action: #selector(submit), for:.touchUpInside)
         self.view.addSubview(self.submitBtn)

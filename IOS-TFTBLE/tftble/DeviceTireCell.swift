@@ -4,30 +4,31 @@ import UIKit
 import JXMarqueeView
 import QMUIKit
 class DeviceTireCell: UITableViewCell {
+    private var fontSize:CGFloat = Utils.fontSize
     lazy var deviceNameLabel: UILabel = {
         let label = UILabel()
         label.text =  NSLocalizedString("device_name_desc", comment: "Device name:")
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var deviceNameContentLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var idLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("id", comment: "ID:")
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var idContentLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var rootView :UIImageView = {
@@ -37,93 +38,93 @@ class DeviceTireCell: UITableViewCell {
     lazy var dateLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         label.text = NSLocalizedString("date", comment: "Date:")
         return label
     }()
     lazy var dateContentLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var rssiLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         label.text = NSLocalizedString("rssi", comment: "RSSI:")
         return label
     }()
     lazy var rssiContentLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var modelLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         label.text = NSLocalizedString("device_model", comment: "Device model:")
         return label
     }()
     lazy var modelContentLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var batteryLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
         label.text = NSLocalizedString("battery", comment: "Battery:")
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var batteryContentLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var pressureLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
         label.text = NSLocalizedString("tire_pressure", comment: "Tire pressure:")
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var pressureContentLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var tempLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
         label.text = NSLocalizedString("temperature", comment: "Temperature:")
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
     lazy var tempContentLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
       
     lazy var statusLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         label.text = NSLocalizedString("status", comment: "Status:")
         return label
     }()
     lazy var statusContentLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = UIFont.systemFont(ofSize: fontSize)
         label.lineBreakMode = NSLineBreakMode.byWordWrapping;
         label.numberOfLines = 0;
         return label

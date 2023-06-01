@@ -20,11 +20,14 @@ class EditPwdController : UIViewController{
     private var submitBtn:QMUIGhostButton!
     var connectStatusDelegate:SetConnectStatusDelegate?
     var oldPwd:String = ""
-    
+    private var fontSize:CGFloat = Utils.fontSize
     override func viewDidDisappear(_ animated: Bool) {
         self.connectStatusDelegate?.setConnectStatus()
     }
-    
+    @objc func dismissKeyboard()
+       {
+           view.endEditing(true)
+       }
     override func viewDidLoad() {
         self.view.backgroundColor = UIColor.white
         let titleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
@@ -32,6 +35,12 @@ class EditPwdController : UIViewController{
         self.navigationItem.titleView = titleLabel
         let descWidth = Int(KSize.width / 2)
         let contentX = Int(KSize.width / 2 + 10)
+        let tap: UITapGestureRecognizer = UITapGestureRecognizer(
+                    target: self,
+                    action: #selector(dismissKeyboard))
+
+                tap.cancelsTouchesInView = false
+                view.addGestureRecognizer(tap)
         
         var startLabelY:Int = 60
         var startInputY:Int = 75
@@ -39,6 +48,7 @@ class EditPwdController : UIViewController{
         var lineY:Int = 120
         
         self.oldPwdLabel = UILabel()
+        self.oldPwdLabel.font = UIFont.systemFont(ofSize: fontSize)
         self.oldPwdLabel.textColor = UIColor.black
         self.oldPwdLabel.text = NSLocalizedString("old_password_desc", comment: "Old password:")
         self.oldPwdLabel.lineBreakMode = NSLineBreakMode.byWordWrapping;
@@ -46,6 +56,7 @@ class EditPwdController : UIViewController{
         self.oldPwdLabel.frame = CGRect(x: 15, y: startLabelY, width: descWidth, height: 60)
         self.view.addSubview(self.oldPwdLabel)
         self.oldPwdInput = UITextField()
+        self.oldPwdInput.font = UIFont.systemFont(ofSize: fontSize)
         self.oldPwdInput.textColor = UIColor.black
         self.oldPwdInput.isSecureTextEntry = true
         self.oldPwdInput.borderStyle = UITextField.BorderStyle.bezel
@@ -59,6 +70,7 @@ class EditPwdController : UIViewController{
         lineY += lineHigh
         startInputY += lineHigh
         self.newPwdLabel = UILabel()
+        self.newPwdLabel.font = UIFont.systemFont(ofSize: fontSize)
         self.newPwdLabel.textColor = UIColor.black
         self.newPwdLabel.text = NSLocalizedString("new_password_desc", comment: "New Password:")
         self.newPwdLabel.lineBreakMode = NSLineBreakMode.byWordWrapping;
@@ -66,6 +78,7 @@ class EditPwdController : UIViewController{
         self.newPwdLabel.frame = CGRect(x: 15, y: startLabelY, width: descWidth, height: 60)
         self.view.addSubview(self.newPwdLabel)
         self.newPwdInput = UITextField()
+        self.newPwdInput.font = UIFont.systemFont(ofSize: fontSize)
         self.newPwdInput.textColor = UIColor.black
         self.newPwdInput.isSecureTextEntry = true
         self.newPwdInput.borderStyle = UITextField.BorderStyle.bezel
@@ -79,6 +92,7 @@ class EditPwdController : UIViewController{
         lineY += lineHigh
         startInputY += lineHigh
         self.repeatPwdLabel = UILabel()
+        self.repeatPwdLabel.font = UIFont.systemFont(ofSize: fontSize)
         self.repeatPwdLabel.textColor = UIColor.black
         self.repeatPwdLabel.text = NSLocalizedString("repeat_password_desc", comment: "Repeat Password:")
         self.repeatPwdLabel.lineBreakMode = NSLineBreakMode.byWordWrapping;
@@ -86,6 +100,7 @@ class EditPwdController : UIViewController{
         self.repeatPwdLabel.frame = CGRect(x: 15, y: startLabelY, width: descWidth, height: 60)
         self.view.addSubview(self.repeatPwdLabel)
         self.repeatPwdInput = UITextField()
+        self.repeatPwdInput.font = UIFont.systemFont(ofSize: fontSize)
         self.repeatPwdInput.isSecureTextEntry = true
         self.repeatPwdInput.textColor = UIColor.black
         self.repeatPwdInput.borderStyle = UITextField.BorderStyle.bezel
@@ -99,6 +114,7 @@ class EditPwdController : UIViewController{
         lineY += lineHigh
         startInputY += lineHigh
         self.submitBtn = QMUIGhostButton()
+        self.submitBtn.titleLabel?.font = UIFont.systemFont(ofSize: fontSize)
         self.submitBtn.setTitle(NSLocalizedString("submit", comment: "Submit"), for: .normal)
         self.submitBtn.ghostColor = UIColor.colorPrimary 
         self.submitBtn.frame = CGRect(x: Int((KSize.width - 200) / 2), y: startLabelY + 10, width: 200, height: 30)
