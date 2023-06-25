@@ -7,6 +7,21 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		915502832A0B30C300C09DB2 /* LocationMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 915502822A0B30C300C09DB2 /* LocationMessage.swift */; };
+		915502972A13AEE400C09DB2 /* TopflytechByteBuf .swift in Sources */ = {isa = PBXBuildFile; fileRef = 915502962A13AEE400C09DB2 /* TopflytechByteBuf .swift */; };
+		915502992A177E8900C09DB2 /* ReadHisDataViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 915502982A177E8900C09DB2 /* ReadHisDataViewController.swift */; };
+		9155029F2A1B12CA00C09DB2 /* HistorySelectDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9155029D2A1B12CA00C09DB2 /* HistorySelectDelegate.swift */; };
+		915502A02A1B12CA00C09DB2 /* HistorySelectController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9155029E2A1B12CA00C09DB2 /* HistorySelectController.swift */; };
+		915502A42A1B516600C09DB2 /* ic_date.png in Resources */ = {isa = PBXBuildFile; fileRef = 915502A12A1B516600C09DB2 /* ic_date.png */; };
+		915502A52A1B516600C09DB2 /* light_red.png in Resources */ = {isa = PBXBuildFile; fileRef = 915502A22A1B516600C09DB2 /* light_red.png */; };
+		915502A62A1B516600C09DB2 /* light_blue.png in Resources */ = {isa = PBXBuildFile; fileRef = 915502A32A1B516600C09DB2 /* light_blue.png */; };
+		915502A92A1B53AD00C09DB2 /* ic_refresh.png in Resources */ = {isa = PBXBuildFile; fileRef = 915502A72A1B53AD00C09DB2 /* ic_refresh.png */; };
+		915502AA2A1B53AD00C09DB2 /* ic_list.png in Resources */ = {isa = PBXBuildFile; fileRef = 915502A82A1B53AD00C09DB2 /* ic_list.png */; };
+		915502AC2A1B765300C09DB2 /* HistoryHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 915502AB2A1B765300C09DB2 /* HistoryHeader.swift */; };
+		915502AF2A1F12F800C09DB2 /* ic_page_prev.png in Resources */ = {isa = PBXBuildFile; fileRef = 915502AD2A1F12F800C09DB2 /* ic_page_prev.png */; };
+		915502B02A1F12F800C09DB2 /* ic_page_next.png in Resources */ = {isa = PBXBuildFile; fileRef = 915502AE2A1F12F800C09DB2 /* ic_page_next.png */; };
+		915502B22A1F32C700C09DB2 /* HistoryCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 915502B12A1F32C700C09DB2 /* HistoryCell.swift */; };
+		9172CC352A429FB100FFC62C /* NoReadDataBleDetailItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9172CC342A429FB100FFC62C /* NoReadDataBleDetailItem.swift */; };
 		91CD0B4F2817DBDC006AC2CB /* UniqueIDTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91CD0B4E2817DBDC006AC2CB /* UniqueIDTool.swift */; };
 		91DFBD1027F586B2007F24E8 /* ic_lock.png in Resources */ = {isa = PBXBuildFile; fileRef = 91DFBD0B27F586B2007F24E8 /* ic_lock.png */; };
 		91DFBD1127F586B2007F24E8 /* ic_unlock.png in Resources */ = {isa = PBXBuildFile; fileRef = 91DFBD0C27F586B2007F24E8 /* ic_unlock.png */; };
@@ -82,6 +97,22 @@
 		194367EEEB1EE6362FFB87C6 /* Pods-TFT_Elock.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TFT_Elock.debug.xcconfig"; path = "Target Support Files/Pods-TFT_Elock/Pods-TFT_Elock.debug.xcconfig"; sourceTree = "<group>"; };
 		358FA72EBDD9D1A9E9474DEE /* Pods-TFT Elock.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TFT Elock.release.xcconfig"; path = "Target Support Files/Pods-TFT Elock/Pods-TFT Elock.release.xcconfig"; sourceTree = "<group>"; };
 		535091048AEDBF7507B93187 /* Pods_TFT_Elock.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TFT_Elock.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		915502822A0B30C300C09DB2 /* LocationMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationMessage.swift; sourceTree = "<group>"; };
+		915502962A13AEE400C09DB2 /* TopflytechByteBuf .swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TopflytechByteBuf .swift"; sourceTree = "<group>"; };
+		915502982A177E8900C09DB2 /* ReadHisDataViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadHisDataViewController.swift; sourceTree = "<group>"; };
+		9155029D2A1B12CA00C09DB2 /* HistorySelectDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HistorySelectDelegate.swift; sourceTree = "<group>"; };
+		9155029E2A1B12CA00C09DB2 /* HistorySelectController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HistorySelectController.swift; sourceTree = "<group>"; };
+		915502A12A1B516600C09DB2 /* ic_date.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_date.png; sourceTree = "<group>"; };
+		915502A22A1B516600C09DB2 /* light_red.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = light_red.png; sourceTree = "<group>"; };
+		915502A32A1B516600C09DB2 /* light_blue.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = light_blue.png; sourceTree = "<group>"; };
+		915502A72A1B53AD00C09DB2 /* ic_refresh.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_refresh.png; sourceTree = "<group>"; };
+		915502A82A1B53AD00C09DB2 /* ic_list.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_list.png; sourceTree = "<group>"; };
+		915502AB2A1B765300C09DB2 /* HistoryHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryHeader.swift; sourceTree = "<group>"; };
+		915502AD2A1F12F800C09DB2 /* ic_page_prev.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_page_prev.png; sourceTree = "<group>"; };
+		915502AE2A1F12F800C09DB2 /* ic_page_next.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_page_next.png; sourceTree = "<group>"; };
+		915502B12A1F32C700C09DB2 /* HistoryCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryCell.swift; sourceTree = "<group>"; };
+		915502B42A205F6100C09DB2 /* Bridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Bridge.h; path = "../../../tftble-ios/tftble/tftble/Bridge.h"; sourceTree = "<group>"; };
+		9172CC342A429FB100FFC62C /* NoReadDataBleDetailItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoReadDataBleDetailItem.swift; sourceTree = "<group>"; };
 		91CD0B4D2817DB25006AC2CB /* TFT Elock.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "TFT Elock.entitlements"; sourceTree = "<group>"; };
 		91CD0B4E2817DBDC006AC2CB /* UniqueIDTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniqueIDTool.swift; sourceTree = "<group>"; };
 		91DFBD0B27F586B2007F24E8 /* ic_lock.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_lock.png; sourceTree = "<group>"; };
@@ -192,10 +223,10 @@
 		E86DB34D23A0EC7B002BAACA = {
 			isa = PBXGroup;
 			children = (
-				E86DB35823A0EC7B002BAACA /* TFT Elock */,
-				E86DB35723A0EC7B002BAACA /* Products */,
-				58F24C6C70B18BBD61BB5664 /* Pods */,
 				504596D1CAF8F7DB2F785172 /* Frameworks */,
+				58F24C6C70B18BBD61BB5664 /* Pods */,
+				E86DB35723A0EC7B002BAACA /* Products */,
+				E86DB35823A0EC7B002BAACA /* TFT Elock */,
 			);
 			sourceTree = "<group>";
 		};
@@ -210,24 +241,32 @@
 		E86DB35823A0EC7B002BAACA /* TFT Elock */ = {
 			isa = PBXGroup;
 			children = (
-				91CD0B4E2817DBDC006AC2CB /* UniqueIDTool.swift */,
-				91CD0B4D2817DB25006AC2CB /* TFT Elock.entitlements */,
-				E8AE747C266F60EA00D4E78A /* itemView */,
-				E8AE7467266E4EFF00D4E78A /* data */,
-				E8D7C76223BDDEC600E67C7A /* Resources */,
+				915502B42A205F6100C09DB2 /* Bridge.h */,
 				E8B6DB4823AAFF92001980BF /* AEAlertView */,
-				E86DB37723A335DB002BAACA /* splash */,
-				E86DB36F23A1CC15002BAACA /* UIColor+Nordic.swift */,
 				E86DB35923A0EC7B002BAACA /* AppDelegate.swift */,
-				E86DB35B23A0EC7B002BAACA /* SceneDelegate.swift */,
-				E86DB35D23A0EC7B002BAACA /* ViewController.swift */,
 				E86DB36223A0EC8C002BAACA /* Assets.xcassets */,
-				E86DB36423A0EC8C002BAACA /* LaunchScreen.storyboard */,
-				E86DB36723A0EC8C002BAACA /* Info.plist */,
-				E8D2A3A423ACCC9B00B42242 /* Utils.swift */,
-				E8D7C75A23B5A55800E67C7A /* MyProgress.swift */,
-				E8C859D224BD4849006EE3F7 /* Localizable.strings */,
+				E8AE7467266E4EFF00D4E78A /* data */,
 				E8AE74812670E69B00D4E78A /* EditController.swift */,
+				915502B12A1F32C700C09DB2 /* HistoryCell.swift */,
+				915502AB2A1B765300C09DB2 /* HistoryHeader.swift */,
+				9155029E2A1B12CA00C09DB2 /* HistorySelectController.swift */,
+				9155029D2A1B12CA00C09DB2 /* HistorySelectDelegate.swift */,
+				E86DB36723A0EC8C002BAACA /* Info.plist */,
+				E8AE747C266F60EA00D4E78A /* itemView */,
+				E86DB36423A0EC8C002BAACA /* LaunchScreen.storyboard */,
+				E8C859D224BD4849006EE3F7 /* Localizable.strings */,
+				915502822A0B30C300C09DB2 /* LocationMessage.swift */,
+				E8D7C75A23B5A55800E67C7A /* MyProgress.swift */,
+				915502982A177E8900C09DB2 /* ReadHisDataViewController.swift */,
+				E8D7C76223BDDEC600E67C7A /* Resources */,
+				E86DB35B23A0EC7B002BAACA /* SceneDelegate.swift */,
+				E86DB37723A335DB002BAACA /* splash */,
+				91CD0B4D2817DB25006AC2CB /* TFT Elock.entitlements */,
+				915502962A13AEE400C09DB2 /* TopflytechByteBuf .swift */,
+				E86DB36F23A1CC15002BAACA /* UIColor+Nordic.swift */,
+				91CD0B4E2817DBDC006AC2CB /* UniqueIDTool.swift */,
+				E8D2A3A423ACCC9B00B42242 /* Utils.swift */,
+				E86DB35D23A0EC7B002BAACA /* ViewController.swift */,
 			);
 			path = "TFT Elock";
 			sourceTree = "<group>";
@@ -281,6 +320,7 @@
 			isa = PBXGroup;
 			children = (
 				E8AE747D266F614E00D4E78A /* BleDetailItem.swift */,
+				9172CC342A429FB100FFC62C /* NoReadDataBleDetailItem.swift */,
 			);
 			path = itemView;
 			sourceTree = "<group>";
@@ -309,6 +349,13 @@
 		E8D7C76223BDDEC600E67C7A /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				915502AE2A1F12F800C09DB2 /* ic_page_next.png */,
+				915502AD2A1F12F800C09DB2 /* ic_page_prev.png */,
+				915502A82A1B53AD00C09DB2 /* ic_list.png */,
+				915502A72A1B53AD00C09DB2 /* ic_refresh.png */,
+				915502A12A1B516600C09DB2 /* ic_date.png */,
+				915502A32A1B516600C09DB2 /* light_blue.png */,
+				915502A22A1B516600C09DB2 /* light_red.png */,
 				91DFBD0F27F586B2007F24E8 /* ic_lock_error.png */,
 				91DFBD0B27F586B2007F24E8 /* ic_lock.png */,
 				91DFBD0D27F586B2007F24E8 /* ic_suocut.png */,
@@ -396,13 +443,17 @@
 				E84A30C4267B2ABA00365EB1 /* ic_sensor_blue.png in Resources */,
 				E86DB39C23A335DD002BAACA /* Default-Landscape-1366h@2x~ipad.png in Resources */,
 				E86DB3A123A335DD002BAACA /* Default-Landscape-896h@2x.png in Resources */,
+				915502AA2A1B53AD00C09DB2 /* ic_list.png in Resources */,
 				E8CBBC3B242EED1A00CE91B7 /* flash.bin in Resources */,
+				915502A52A1B516600C09DB2 /* light_red.png in Resources */,
 				E86DB39E23A335DD002BAACA /* Default-Landscape-667h@2x.png in Resources */,
 				E86DB3A423A335DD002BAACA /* Default-Landscape7~ipad.png in Resources */,
 				E86DB3AE23A335DD002BAACA /* Default.png in Resources */,
 				E86DB36623A0EC8C002BAACA /* LaunchScreen.storyboard in Resources */,
+				915502A92A1B53AD00C09DB2 /* ic_refresh.png in Resources */,
 				E86DB39B23A335DD002BAACA /* Default-Landscape-1194h@2x~ipad.png in Resources */,
 				E86DB39823A335DD002BAACA /* Default-896h@2x.png in Resources */,
+				915502A42A1B516600C09DB2 /* ic_date.png in Resources */,
 				E86DB3A623A335DD002BAACA /* Default-Landscape~ipad.png in Resources */,
 				91DFBD1227F586B2007F24E8 /* ic_suocut.png in Resources */,
 				E86DB39523A335DD002BAACA /* Default-667h@2x.png in Resources */,
@@ -426,12 +477,14 @@
 				E86DB3A523A335DD002BAACA /* Default-Landscape@2x~ipad.png in Resources */,
 				EA596D4826C11687000F0D95 /* ic_category.png in Resources */,
 				E86DB39A23A335DD002BAACA /* Default-Landscape-1112h@2x~ipad.png in Resources */,
+				915502AF2A1F12F800C09DB2 /* ic_page_prev.png in Resources */,
 				E86DB3A223A335DD002BAACA /* Default-Landscape-896h@3x.png in Resources */,
 				E86DB3AC23A335DD002BAACA /* Default-Portrait@2x~ipad.png in Resources */,
 				E86DB39723A335DD002BAACA /* Default-812h@3x.png in Resources */,
 				E84A30CA267B2ABA00365EB1 /* ic_sensor_dark.png in Resources */,
 				91DFBD1027F586B2007F24E8 /* ic_lock.png in Resources */,
 				E86DB3A023A335DD002BAACA /* Default-Landscape-812h@3x.png in Resources */,
+				915502B02A1F12F800C09DB2 /* ic_page_next.png in Resources */,
 				E84A30C9267B2ABA00365EB1 /* ic_status_dark.png in Resources */,
 				E86DB39F23A335DD002BAACA /* Default-Landscape-736h@3x.png in Resources */,
 				E86DB39923A335DD002BAACA /* Default-896h@3x.png in Resources */,
@@ -439,6 +492,7 @@
 				E86DB39623A335DD002BAACA /* Default-736h@3x.png in Resources */,
 				E86DB3A323A335DD002BAACA /* Default-Landscape7@2x~ipad.png in Resources */,
 				E86DB3AB23A335DD002BAACA /* Default-Portrait7~ipad.png in Resources */,
+				915502A62A1B516600C09DB2 /* light_blue.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -500,6 +554,9 @@
 				E81CC88B26A000F400340C50 /* MsgQueue.swift in Sources */,
 				E8B6DB4F23AAFF92001980BF /* AEAlertAction.swift in Sources */,
 				E86DB35E23A0EC7B002BAACA /* ViewController.swift in Sources */,
+				915502AC2A1B765300C09DB2 /* HistoryHeader.swift in Sources */,
+				9172CC352A429FB100FFC62C /* NoReadDataBleDetailItem.swift in Sources */,
+				9155029F2A1B12CA00C09DB2 /* HistorySelectDelegate.swift in Sources */,
 				E8D7C75B23B5A55800E67C7A /* MyProgress.swift in Sources */,
 				E86DB35A23A0EC7B002BAACA /* AppDelegate.swift in Sources */,
 				E8B6DB5123AAFF92001980BF /* AEBaseAlertView.swift in Sources */,
@@ -507,8 +564,13 @@
 				E86DB37023A1CC15002BAACA /* UIColor+Nordic.swift in Sources */,
 				E8AE747A266F479400D4E78A /* BleDeviceData.swift in Sources */,
 				E8B6DB5323AAFF92001980BF /* AEUIAlertView.swift in Sources */,
+				915502992A177E8900C09DB2 /* ReadHisDataViewController.swift in Sources */,
+				915502B22A1F32C700C09DB2 /* HistoryCell.swift in Sources */,
 				E86DB35C23A0EC7B002BAACA /* SceneDelegate.swift in Sources */,
+				915502832A0B30C300C09DB2 /* LocationMessage.swift in Sources */,
+				915502972A13AEE400C09DB2 /* TopflytechByteBuf .swift in Sources */,
 				E8D2A3A523ACCC9B00B42242 /* Utils.swift in Sources */,
+				915502A02A1B12CA00C09DB2 /* HistorySelectController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -660,7 +722,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "TFT Elock/TFT Elock.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.0.4;
+				CURRENT_PROJECT_VERSION = 1.0.6;
 				DEVELOPMENT_TEAM = 6W672XHN78;
 				INFOPLIST_FILE = "$(SRCROOT)/TFT Elock/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
@@ -668,7 +730,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.4;
+				MARKETING_VERSION = 1.0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.topflytech.lockActive;
 				PRODUCT_NAME = "TFT Elock";
 				SWIFT_ENABLE_BATCH_MODE = NO;
@@ -686,7 +748,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "TFT Elock/TFT Elock.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.0.4;
+				CURRENT_PROJECT_VERSION = 1.0.6;
 				DEVELOPMENT_TEAM = 6W672XHN78;
 				INFOPLIST_FILE = "$(SRCROOT)/TFT Elock/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
@@ -694,7 +756,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.4;
+				MARKETING_VERSION = 1.0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.topflytech.lockActive;
 				PRODUCT_NAME = "TFT Elock";
 				SWIFT_ENABLE_BATCH_MODE = NO;

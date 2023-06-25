@@ -58,9 +58,10 @@ class EditController:UIViewController,CBCentralManagerDelegate,CBPeripheralDeleg
             self.selfPeripheral = peripheral
             self.foundDevice = true
             self.selfPeripheral.delegate = self
-            print("connect to device...")
-            self.centralManager.connect(self.selfPeripheral)
-            
+            if self.needConnect{
+                print("connect to device...")
+                self.centralManager.connect(self.selfPeripheral)
+            }
         }
     }
     
@@ -307,6 +308,7 @@ class EditController:UIViewController,CBCentralManagerDelegate,CBPeripheralDeleg
         self.centralManager.stopScan()
         self.centralManager.cancelPeripheralConnection(self.cbPeripheral)
         self.onView = false
+        self.needConnect = false
     }
     
     override func viewDidLoad() {
@@ -618,42 +620,41 @@ class EditController:UIViewController,CBCentralManagerDelegate,CBPeripheralDeleg
         return isError
     }
     
-    func isDeviceLock(code:UInt8)->Bool{
+    func isDeviceLock(lockType:UInt8)->Bool{
         var isLock = false
-        if code == 0x00 ||
-            code == 0x02 ||
-            code == 0x03 ||
-            code == 0x04 ||
-            code == 0x05 ||
-            code == 0x07 ||
-            code == 0x12 ||
-            code == 0x13 ||
-            code == 0x14 ||
-            code == 0x22 ||
-            code == 0x23 ||
-            code == 0x24 ||
-            code == 0x32 ||
-            code == 0x33 ||
-            code == 0x34 ||
-            code == 0x42 ||
-            code == 0x43 ||
-            code == 0x44 ||
-            code == 0x52 ||
-            code == 0x53 ||
-            code == 0x54
+        if lockType == 0x00 ||
+            lockType == 0x02 ||
+            lockType == 0x03 ||
+            lockType == 0x05 ||
+            lockType == 0x07 ||
+            lockType == 0x12 ||
+            lockType == 0x13 ||
+            lockType == 0x14 ||
+            lockType == 0x22 ||
+            lockType == 0x23 ||
+            lockType == 0x24 ||
+            lockType == 0x32 ||
+            lockType == 0x33 ||
+            lockType == 0x34 ||
+            lockType == 0x42 ||
+            lockType == 0x43 ||
+            lockType == 0x44 ||
+            lockType == 0x52 ||
+            lockType == 0x53 ||
+            lockType == 0x54
         {
             isLock = true
         }
         return isLock
     }
     
-    func isDeviceLockThreadTrimming(code:UInt8)->Bool{
-        if code == 0x01
-            || code == 0x16
-            || code == 0x26
-            || code == 0x36
-            || code == 0x46
-            || code == 0x56
+    func isDeviceLockThreadTrimming(lockType:UInt8)->Bool{
+        if lockType == 0x01
+            || lockType == 0x16
+            || lockType == 0x26
+            || lockType == 0x36
+            || lockType == 0x46
+            || lockType == 0x56
         {
             return true
         }else{
@@ -661,13 +662,13 @@ class EditController:UIViewController,CBCentralManagerDelegate,CBPeripheralDeleg
         }
     }
     
-    func setImgLockStatus(code:UInt8){
-        if (code == 0xff){
+    func setImgLockStatus(lockType:UInt8){
+        if (lockType == 0xff || lockType == 0x04 || lockType == 0x09){
            return;
         }
-        let isLock = self.isDeviceLock(code: code)
-        let isTrimming = self.isDeviceLockThreadTrimming(code: code)
-        let isLockError = self.isDeviceLockErrorState(code: code)
+        let isLock = self.isDeviceLock(lockType: lockType)
+        let isTrimming = self.isDeviceLockThreadTrimming(lockType: lockType)
+        let isLockError = self.isDeviceLockErrorState(code: lockType)
         if isTrimming{
             self.lockStatusImg.image = UIImage(named: "ic_suocut.png")
         }else if isLock{
@@ -690,7 +691,7 @@ class EditController:UIViewController,CBCentralManagerDelegate,CBPeripheralDeleg
     }
     
     func parseLockType(lockType:UInt8){
-        self.setImgLockStatus(code: lockType)
+        self.setImgLockStatus(lockType: lockType)
         if lockType == 0x00{
             showDetailMsg(msg: NSLocalizedString("lock_status_00", comment: "lock_status_00"))
         }else if lockType == 0x01{
@@ -699,6 +700,8 @@ class EditController:UIViewController,CBCentralManagerDelegate,CBPeripheralDeleg
             showDetailMsg(msg: NSLocalizedString("lock_status_03", comment: "lock_status_03"))
         }else if lockType == 0x04{
             showDetailMsg(msg: NSLocalizedString("lock_status_04", comment: "lock_status_04"))
+        }else if lockType == 0x09{
+            showDetailMsg(msg: NSLocalizedString("lock_status_09", comment: "lock_status_09"))
         }else if lockType == 0x05{
             showDetailMsg(msg: NSLocalizedString("lock_status_05", comment: "lock_status_05"))
         }else if lockType == 0x06{

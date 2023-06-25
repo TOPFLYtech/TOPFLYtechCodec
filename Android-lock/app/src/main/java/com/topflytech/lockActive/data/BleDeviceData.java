@@ -6,9 +6,14 @@ import java.util.HashMap;
 import java.util.UUID;
 
 public class BleDeviceData {
-    public static UUID serviceId = UUID.fromString("27760001-999c-4d6a-9fc4-c7272be10900");
-    public static UUID writeUUID = UUID.fromString("27760003-999c-4d6a-9fc4-c7272be10900");
-    public static UUID notifyUUID = UUID.fromString("27760003-999c-4d6a-9fc4-c7272be10900");
+    public static UUID unlockServiceId = UUID.fromString("27760001-999c-4d6a-9fc4-c7272be10900");
+    public static UUID unlockWriteUUID = UUID.fromString("27760003-999c-4d6a-9fc4-c7272be10900");
+    public static UUID unlockNotifyUUID = UUID.fromString("27760003-999c-4d6a-9fc4-c7272be10900");
+
+
+    public static UUID readDataServiceId = UUID.fromString("27760001-999d-4d6a-9fc4-c7272be10900");
+    public static UUID readDataWriteUUID = UUID.fromString("27760002-999d-4d6a-9fc4-c7272be10900");
+    public static UUID readDataNotifyUUID = UUID.fromString("27760003-999d-4d6a-9fc4-c7272be10900");
     private String deviceName;
     private String mac;
     private String imei;
@@ -85,6 +90,8 @@ public class BleDeviceData {
     public static String parseModel(byte protocolByte){
         if(protocolByte == (byte)0x62){
             return "SolarGuardX 100";
+        }else if(protocolByte == (byte)0x65){
+            return "SolarGuardX 200";
         }else{
             return "";
         }

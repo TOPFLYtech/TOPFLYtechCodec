@@ -23,6 +23,8 @@ class BleDeviceData{
     static func parseModel(protocolByte:UInt8) -> String{
         if protocolByte == 0x62{
             return "SolarGuardX 100"
+        }else if protocolByte == 0x65{
+            return "SolarGuardX 200"
         }
         return ""
     }

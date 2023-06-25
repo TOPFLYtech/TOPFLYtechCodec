@@ -19,11 +19,6 @@
 			<key>isShown</key>
 			<false/>
 		</dict>
-		<key>Charts.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
 		<key>DateTimePicker-DateTimePicker.xcscheme</key>
 		<dict>
 			<key>isShown</key>
@@ -44,12 +39,27 @@
 			<key>isShown</key>
 			<false/>
 		</dict>
+		<key>QMUIKit-QMUIResources.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+		</dict>
+		<key>QMUIKit.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+		</dict>
 		<key>SAMKeychain.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
 		</dict>
 		<key>SwiftPopMenu.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+		</dict>
+		<key>libxlsxwriter.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>

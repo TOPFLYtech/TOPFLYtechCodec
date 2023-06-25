@@ -178,21 +178,23 @@ code_sign_if_enabled() {
 if [[ "$CONFIGURATION" == "Debug" ]]; then
   install_framework "${BUILT_PRODUCTS_DIR}/ActionSheetPicker-3.0/ActionSheetPicker_3_0.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/CLXToast/CLXToast.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/Charts/Charts.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/DateTimePicker/DateTimePicker.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/JXMarqueeView/JXMarqueeView.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/QMUIKit/QMUIKit.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/SAMKeychain/SAMKeychain.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/SwiftPopMenu/SwiftPopMenu.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/libxlsxwriter/xlsxwriter.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/swiftScan/swiftScan.framework"
 fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
   install_framework "${BUILT_PRODUCTS_DIR}/ActionSheetPicker-3.0/ActionSheetPicker_3_0.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/CLXToast/CLXToast.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/Charts/Charts.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/DateTimePicker/DateTimePicker.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/JXMarqueeView/JXMarqueeView.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/QMUIKit/QMUIKit.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/SAMKeychain/SAMKeychain.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/SwiftPopMenu/SwiftPopMenu.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/libxlsxwriter/xlsxwriter.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/swiftScan/swiftScan.framework"
 fi
 if [ "${COCOAPODS_PARALLEL_CODE_SIGN}" == "true" ]; then

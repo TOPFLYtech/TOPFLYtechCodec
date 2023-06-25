@@ -24,4 +24,9 @@
     <color name="line_color10">#546570</color>
     <color name="line_color11">#c4ccd3</color>
     <color name="drop_pop_menu_bg_color">#a0000000</color>
+    <color name="colorBlue">#D7E9F5</color>
+    <color name="colorHeader">#398BDC</color>
+    <color name="colorWhite">#FFFFFF</color>
+    <color name="colorCyan">#BCEAE3</color>
+    <color name="colorGray">#DBDBDB</color>
 </resources>

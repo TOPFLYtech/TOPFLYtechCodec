@@ -26,7 +26,6 @@ import com.inuker.bluetooth.library.connect.response.BleConnectResponse;
 import com.inuker.bluetooth.library.connect.response.BleNotifyResponse;
 import com.inuker.bluetooth.library.connect.response.BleWriteResponse;
 import com.inuker.bluetooth.library.model.BleGattProfile;
-import com.inuker.bluetooth.library.utils.ByteUtils;
 import com.topflytech.lockActive.data.BleDeviceData;
 import com.topflytech.lockActive.data.MyByteUtils;
 import com.topflytech.lockActive.data.UniqueIDTool;
@@ -43,7 +42,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import cn.pedant.SweetAlert.SweetAlertDialog;
 
 public class EditActivity extends AppCompatActivity {
-    public static boolean isDebug = true;
+    public static boolean isDebug = false;
     public static boolean isOnlyActiveNetwork = false;
 
     private ActionBar actionBar;
@@ -389,6 +388,7 @@ public class EditActivity extends AppCompatActivity {
             waitingCancelDlg.dismiss();
             waitingCancelDlg = null;
         }
+        reconnectBtn.setImageResource(R.mipmap.ic_disconnect);
         mClient.disconnect(mac);
         connectSucc = false;
         isDeviceReady = false;
@@ -418,12 +418,13 @@ public class EditActivity extends AppCompatActivity {
         @Override
         public void onResponse(int code, BleGattProfile data) {
             if (code == REQUEST_SUCCESS) {
-                mClient.notify(mac, BleDeviceData.serviceId, BleDeviceData.notifyUUID, bleNotifyResponse);
+                mClient.notify(mac, BleDeviceData.unlockServiceId, BleDeviceData.unlockNotifyUUID, bleNotifyResponse);
             }else{
                 new SweetAlertDialog(EditActivity.this, SweetAlertDialog.ERROR_TYPE)
                         .setTitleText(getResources().getString(R.string.warning))
                         .setContentText(getResources().getString(R.string.connect_fail))
                         .show();
+                reconnectBtn.setImageResource(R.mipmap.ic_disconnect);
                 waitingDlg.hide();
             }
         }
@@ -574,6 +575,7 @@ public class EditActivity extends AppCompatActivity {
                         .setContentText(getResources().getString(R.string.connect_fail))
                         .show();
                 waitingDlg.hide();
+                reconnectBtn.setImageResource(R.mipmap.ic_disconnect);
                 mClient.disconnect(mac);
             }
         }
@@ -607,7 +609,7 @@ public class EditActivity extends AppCompatActivity {
         if (content != null && content.length > 0){
             Log.e("writeContent",MyByteUtils.bytes2HexString(content,0));
             addLog("write:"+MyByteUtils.bytes2HexString(content,0));
-            mClient.write(mac, BleDeviceData.serviceId, BleDeviceData.writeUUID, content, new BleWriteResponse() {
+            mClient.write(mac, BleDeviceData.unlockServiceId, BleDeviceData.unlockWriteUUID, content, new BleWriteResponse() {
                 @Override
                 public void onResponse(int code) {
                     if (code == REQUEST_SUCCESS) {
@@ -641,43 +643,41 @@ public class EditActivity extends AppCompatActivity {
         return isError;
     }
 
-    private boolean isDeviceLock(int code){
+    private boolean isDeviceLock(int lockType){
         boolean isLock = false;
-        if (code == 0x00 ||
-                code == 0x02 ||
-                code == 0x03 ||
-                code == 0x04 ||
-                code == 0x05 ||
-                code == 0x07 ||
-                code == 0x12 ||
-                code == 0x13 ||
-                code == 0x14 ||
-                code == 0x22 ||
-                code == 0x23 ||
-                code == 0x24 ||
-                code == 0x32 ||
-                code == 0x33 ||
-                code == 0x34 ||
-                code == 0x42 ||
-                code == 0x43 ||
-                code == 0x44 ||
-                code == 0x52 ||
-                code == 0x53 ||
-                code == 0x54
+        if (lockType == 0x00 ||
+                lockType == 0x02 ||
+                lockType == 0x05 ||
+                lockType == 0x07 ||
+                lockType == 0x12 ||
+                lockType == 0x13 ||
+                lockType == 0x14 ||
+                lockType == 0x22 ||
+                lockType == 0x23 ||
+                lockType == 0x24 ||
+                lockType == 0x32 ||
+                lockType == 0x33 ||
+                lockType == 0x34 ||
+                lockType == 0x42 ||
+                lockType == 0x43 ||
+                lockType == 0x44 ||
+                lockType == 0x52 ||
+                lockType == 0x53 ||
+                lockType == 0x54
         ) {
             isLock = true;
         }
         return isLock;
     }
 
-    private boolean isDeviceLockThreadTrimming(int code){
+    private boolean isDeviceLockThreadTrimming(int lockType){
         if (
-                code == 0x01
-                        || code == 0x16
-                        || code == 0x26
-                        || code == 0x36
-                        || code == 0x46
-                        || code == 0x56
+                lockType == 0x01
+                        || lockType == 0x16
+                        || lockType == 0x26
+                        || lockType == 0x36
+                        || lockType == 0x46
+                        || lockType == 0x56
         ) {
             return true;
         } else {
@@ -686,7 +686,7 @@ public class EditActivity extends AppCompatActivity {
     }
 
     private void setImgLockStatus(int lockType){
-        if (lockType == 0xff){
+        if (lockType == 0xff || lockType == 0x04 || lockType == 0x09){
             return;
         }
         if (lockType < 0){
@@ -725,6 +725,8 @@ public class EditActivity extends AppCompatActivity {
             showDetailMsg(getString(R.string.lock_status_03));
         }else if (lockType == 0x04){
             showDetailMsg(getString(R.string.lock_status_04));
+        }else if (lockType == 0x09){
+            showDetailMsg(getString(R.string.lock_status_09));
         }else if (lockType == 0x05){
             showDetailMsg(getString(R.string.lock_status_05));
         }else if (lockType == 0x06){

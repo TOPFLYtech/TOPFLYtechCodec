@@ -251,7 +251,44 @@
                     android:layout_height="match_parent"
                     android:layout_margin="5dp"
                     android:focusable="false"
-                    android:text="@string/config"
+                    android:text="@string/unlock"
+                    android:textAllCaps="false"
+                    android:textSize="10dp"></com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton>
+            </LinearLayout>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:gravity="center"
+            android:id="@+id/read_data_ll"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_weight="3"
+                android:background="@color/bg_color_white"
+                android:text="@string/read_data"
+                android:textColor="@color/tx_black"
+                android:textSize="14dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:descendantFocusability="blocksDescendants"
+                android:orientation="horizontal">
+
+                <com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton
+                    android:id="@+id/btn_read_his_data"
+                    android:layout_width="300px"
+                    android:layout_height="match_parent"
+                    android:layout_margin="5dp"
+                    android:focusable="false"
+                    android:text="@string/read"
                     android:textAllCaps="false"
                     android:textSize="10dp"></com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton>
             </LinearLayout>

@@ -1,6 +1,7 @@
 package com.topflytech.lockActive;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
@@ -64,9 +65,9 @@ public class MainActivity extends AppCompatActivity {
     private ItemAdapter mListAdapter;
     private LinearLayout llFuzzySearch;
     private ScheduledExecutorService service = Executors.newScheduledThreadPool(10);
-    private boolean isFuzzySearchStatus = false,isOnView = false;
+    private boolean isFuzzySearchStatus = false, isOnView = false;
     private String fuzzyKey = "";
-    public static final int REQUEST_SCAN_QRCODE= 1;
+    public static final int REQUEST_SCAN_QRCODE = 1;
     public static final int RESPONSE_SCAN_QRCODE = 1;
     private Date dataNotifyDate;
     private Date enterDate;
@@ -75,12 +76,16 @@ public class MainActivity extends AppCompatActivity {
     private Date lastRecvDate;
     private static final int REQUEST_CODE_ACCESS_COARSE_LOCATION = 1;
     private static final int REQUEST_CODE_ACCESS_FINE_LOCATION = 2;
+    private static final int REQUEST_CODE_BLUETOOTH_SCAN = 3;
+    private static final int REQUEST_CODE_BLUETOOTH_ADVERTISE = 4;
+    private static final int REQUEST_CODE_BLUETOOTH_CONNECT = 5;
     private final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     public static ArrayList<BleDeviceData> allBleDeviceDataList = new ArrayList<BleDeviceData>();
     public static ArrayList<BleDeviceData> showBleDeviceDataList = new ArrayList<BleDeviceData>();
     private ConcurrentHashMap<String, Integer> allMacIndex = new ConcurrentHashMap<String, Integer>(32);
     private ConcurrentHashMap<String, Integer> showMacIndex = new ConcurrentHashMap<String, Integer>(32);
     private String uniqueID = "";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,41 +113,73 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
             confirmRelayDlg.show();
-        }else{
-            if(bluetoothadapter.isEnabled()){
+        } else {
+            if (bluetoothadapter.isEnabled()) {
 
-            }else{
-                Intent enabler = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                this.startActivity(enabler);
+            } else {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
+                            Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                        //判断是否需要向用户解释为什么需要申请该权限
+                        if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                                Manifest.permission.BLUETOOTH_CONNECT)) {
+//                        Toast.makeText(context,"Need to open ")
+                        }
+                        //请求权限
+                        ActivityCompat.requestPermissions(MainActivity.this,
+                                new String[]{Manifest.permission.BLUETOOTH_CONNECT},
+                                REQUEST_CODE_BLUETOOTH_CONNECT);
+                    }
+                    Intent enabler = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                    MainActivity.this.startActivity(enabler);
+                } else {
+                    Intent enabler = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                    MainActivity.this.startActivity(enabler);
+                }
             }
             refreshButton = (ImageView) findViewById(R.id.main_left_refresh);
             refreshButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+//                    Intent intent = new Intent( MainActivity.this, ReadHisDataActivity.class);
+//                    startActivity(intent);
+                    if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+                        // TODO: Consider calling
+                        //    ActivityCompat#requestPermissions
+                        // here to request the missing permissions, and then overriding
+                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                        //                                          int[] grantResults)
+                        // to handle the case where the user grants the permission. See the documentation
+                        // for ActivityCompat#requestPermissions for more details.
+//                        return;
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            return;
+                        }
+                    }
                     mBluetoothAdapter.stopLeScan(startSearchCallback);
                     allBleDeviceDataList.clear();
                     allMacIndex.clear();
                     showBleDeviceDataList.clear();
                     showMacIndex.clear();
                     mListAdapter.notifyDataSetChanged();
-                    if (bluetoothadapter.isEnabled()){
+                    if (bluetoothadapter.isEnabled()) {
                         mBluetoothAdapter.startLeScan(startSearchCallback);
                         showWaitingCancelDlg("");
-                    }else{
+                    } else {
                         Intent enabler = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                         MainActivity.this.startActivity(enabler);
                     }
 
                 }
             });
-            searchEditText = (EditText)findViewById(R.id.et_fuzzy_search);
-            llFuzzySearch = (LinearLayout)findViewById(R.id.ll_fuzzy_search);
-            scanBtn = (ImageButton)findViewById(R.id.btn_scan);
+            searchEditText = (EditText) findViewById(R.id.et_fuzzy_search);
+            llFuzzySearch = (LinearLayout) findViewById(R.id.ll_fuzzy_search);
+            scanBtn = (ImageButton) findViewById(R.id.btn_scan);
             scanBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    Intent intent = new Intent(MainActivity.this,ScanActivity.class);
-                    startActivityForResult(intent,REQUEST_SCAN_QRCODE);
+                    Intent intent = new Intent(MainActivity.this, ScanActivity.class);
+                    startActivityForResult(intent, REQUEST_SCAN_QRCODE);
                 }
             });
             searchEditText.addTextChangedListener(new TextWatcher() {
@@ -160,13 +197,13 @@ public class MainActivity extends AppCompatActivity {
                 public void afterTextChanged(Editable editable) {
                     fuzzyKey = editable.toString().trim();
                     refreshShowItem();
-                    if(fuzzyKey.length() == 15){
-                        for(BleDeviceData bleDeviceData : allBleDeviceDataList){
-                            if (bleDeviceData.getImei().equals(fuzzyKey)){
-                                Intent intent = new Intent( MainActivity.this, EditActivity.class);
-                                intent.putExtra("mac",bleDeviceData.getMac());
-                                intent.putExtra("deviceName",bleDeviceData.getDeviceName());
-                                intent.putExtra("id",bleDeviceData.getId());
+                    if (fuzzyKey.length() == 15) {
+                        for (BleDeviceData bleDeviceData : allBleDeviceDataList) {
+                            if (bleDeviceData.getImei().equals(fuzzyKey)) {
+                                Intent intent = new Intent(MainActivity.this, EditActivity.class);
+                                intent.putExtra("mac", bleDeviceData.getMac());
+                                intent.putExtra("deviceName", bleDeviceData.getDeviceName());
+                                intent.putExtra("id", bleDeviceData.getId());
                                 startActivity(intent);
                                 break;
                             }
@@ -179,9 +216,9 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View view) {
 
-                    if(!isFuzzySearchStatus){
+                    if (!isFuzzySearchStatus) {
                         llFuzzySearch.setVisibility(View.VISIBLE);
-                    }else{
+                    } else {
                         fuzzyKey = "";
                         refreshShowItem();
                         llFuzzySearch.setVisibility(View.GONE);
@@ -217,6 +254,44 @@ public class MainActivity extends AppCompatActivity {
                             REQUEST_CODE_ACCESS_FINE_LOCATION);
                 }
             }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S){
+                if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
+                        Manifest.permission.BLUETOOTH_CONNECT  ) != PackageManager.PERMISSION_GRANTED) {
+                    //判断是否需要向用户解释为什么需要申请该权限
+                    if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                            Manifest.permission.BLUETOOTH_CONNECT  )) {
+//                        Toast.makeText(context,"Need to open ")
+                    }
+                    //请求权限
+                    ActivityCompat.requestPermissions(MainActivity.this,
+                            new String[]{Manifest.permission.BLUETOOTH_CONNECT  },
+                            REQUEST_CODE_BLUETOOTH_CONNECT  );
+                }
+                if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
+                        Manifest.permission.BLUETOOTH_SCAN ) != PackageManager.PERMISSION_GRANTED) {
+                    //判断是否需要向用户解释为什么需要申请该权限
+                    if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                            Manifest.permission.BLUETOOTH_SCAN )) {
+//                        Toast.makeText(context,"Need to open ")
+                    }
+                    //请求权限
+                    ActivityCompat.requestPermissions(MainActivity.this,
+                            new String[]{Manifest.permission.BLUETOOTH_SCAN },
+                            REQUEST_CODE_BLUETOOTH_CONNECT );
+                }
+                if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
+                        Manifest.permission.BLUETOOTH_ADVERTISE  ) != PackageManager.PERMISSION_GRANTED) {
+                    //判断是否需要向用户解释为什么需要申请该权限
+                    if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                            Manifest.permission.BLUETOOTH_ADVERTISE  )) {
+//                        Toast.makeText(context,"Need to open ")
+                    }
+                    //请求权限
+                    ActivityCompat.requestPermissions(MainActivity.this,
+                            new String[]{Manifest.permission.BLUETOOTH_ADVERTISE  },
+                            REQUEST_CODE_BLUETOOTH_ADVERTISE  );
+                }
+            }
             mListView = (ListView) findViewById(R.id.listView);
             mListView.setDividerHeight(0);
             mListAdapter = new ItemAdapter();
@@ -233,10 +308,10 @@ public class MainActivity extends AppCompatActivity {
             service.scheduleWithFixedDelay(checkBleSearchStatus, 1, 1, TimeUnit.SECONDS);
         }
         uniqueID = UniqueIDTool.getUniqueID();
-        Log.e("BluetoothUtils","my UUID:" + uniqueID);
+        Log.e("BluetoothUtils", "my UUID:" + uniqueID);
     }
 
-    private void showWaitingCancelDlg(String warning){
+    private void showWaitingCancelDlg(String warning) {
         waitingCancelDlg = new SweetAlertDialog(MainActivity.this, SweetAlertDialog.PROGRESS_TYPE);
         waitingCancelDlg.getProgressHelper().setBarColor(Color.parseColor("#A5DC86"));
         waitingCancelDlg.showCancelButton(true);
@@ -248,7 +323,7 @@ public class MainActivity extends AppCompatActivity {
                 sweetAlertDialog.hide();
             }
         });
-        if (warning != null && !warning.isEmpty()){
+        if (warning != null && !warning.isEmpty()) {
             waitingCancelDlg.setTitleText(warning);
         }
         waitingCancelDlg.show();
@@ -257,7 +332,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == REQUEST_SCAN_QRCODE && resultCode == RESPONSE_SCAN_QRCODE){
+        if (requestCode == REQUEST_SCAN_QRCODE && resultCode == RESPONSE_SCAN_QRCODE) {
             String value = data.getStringExtra("value");
             searchEditText.setText(value);
         }
@@ -266,40 +341,68 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_CODE_ACCESS_FINE_LOCATION || requestCode == REQUEST_CODE_ACCESS_COARSE_LOCATION){
+        if (requestCode == REQUEST_CODE_ACCESS_FINE_LOCATION || requestCode == REQUEST_CODE_ACCESS_COARSE_LOCATION) {
             reStartApp();
+        }else if(requestCode == REQUEST_CODE_BLUETOOTH_CONNECT || requestCode == REQUEST_CODE_BLUETOOTH_CONNECT){
+            BluetoothManager bluetoothManager = (BluetoothManager) this.getSystemService(Context.BLUETOOTH_SERVICE);
+            BluetoothAdapter bluetoothadapter = bluetoothManager.getAdapter();
+            if(bluetoothadapter != null){
+                if (bluetoothadapter.isEnabled()) {
+                    if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+                        // TODO: Consider calling
+                        //    ActivityCompat#requestPermissions
+                        // here to request the missing permissions, and then overriding
+                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                        //                                          int[] grantResults)
+                        // to handle the case where the user grants the permission. See the documentation
+                        // for ActivityCompat#requestPermissions for more details.
+//                            return;
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            return;
+                        }
+                    }
+
+                        mBluetoothAdapter.startLeScan(startSearchCallback);
+                    showWaitingCancelDlg("");
+                } else {
+                    Intent enabler = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                    MainActivity.this.startActivity(enabler);
+                }
+            }
+
         }
     }
 
 
-    public void reStartApp()
-    {
-        Intent intent = getBaseContext().getPackageManager().getLaunchIntentForPackage(MainActivity.this.getBaseContext().getPackageName());
-        intent.putExtra("REBOOT","reboot");
-        PendingIntent restartIntent = PendingIntent.getActivity(MainActivity.this.getApplicationContext(), 0, intent, PendingIntent.FLAG_ONE_SHOT);
-        AlarmManager mgr = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
-        mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 1000, restartIntent);
-        android.os.Process.killProcess(android.os.Process.myPid());
+    public void reStartApp() {
+        try {
+            Intent intent = getBaseContext().getPackageManager().getLaunchIntentForPackage(MainActivity.this.getBaseContext().getPackageName());
+            intent.putExtra("REBOOT", "reboot");
+            PendingIntent restartIntent = PendingIntent.getActivity(MainActivity.this.getApplicationContext(), 0, intent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
+            AlarmManager mgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 1000, restartIntent);
+            android.os.Process.killProcess(android.os.Process.myPid());
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
 
-
-
-    private void refreshShowItem(){
+    private void refreshShowItem() {
         showBleDeviceDataList.clear();
         showMacIndex.clear();
-        for(BleDeviceData bleDeviceData : allBleDeviceDataList){
+        for (BleDeviceData bleDeviceData : allBleDeviceDataList) {
 //            if(fuzzyKey == null || fuzzyKey.isEmpty() || bleDeviceData.getId().contains(fuzzyKey.toUpperCase())
 //                    || (bleDeviceData.getDeviceName()!=null && bleDeviceData.getDeviceName().toUpperCase().contains(fuzzyKey.toUpperCase()))){
 //                showBleDeviceDataList.add(bleDeviceData);
 //                showMacIndex.put(bleDeviceData.getMac(), showBleDeviceDataList.size() - 1);
 //            }
-            if (fuzzyKey == null || fuzzyKey.isEmpty()){
+            if (fuzzyKey == null || fuzzyKey.isEmpty()) {
                 showBleDeviceDataList.add(bleDeviceData);
                 showMacIndex.put(bleDeviceData.getMac(), showBleDeviceDataList.size() - 1);
-            }else{
-                if((bleDeviceData.getImei() != null && bleDeviceData.getImei().contains(fuzzyKey.toUpperCase()))
-                        || (bleDeviceData.getDeviceName()!= null && bleDeviceData.getDeviceName().toUpperCase().contains(fuzzyKey.toUpperCase()))){
+            } else {
+                if ((bleDeviceData.getImei() != null && bleDeviceData.getImei().contains(fuzzyKey.toUpperCase()))
+                        || (bleDeviceData.getDeviceName() != null && bleDeviceData.getDeviceName().toUpperCase().contains(fuzzyKey.toUpperCase()))) {
                     showBleDeviceDataList.add(bleDeviceData);
                     showMacIndex.put(bleDeviceData.getMac(), showBleDeviceDataList.size() - 1);
                 }
@@ -311,19 +414,22 @@ public class MainActivity extends AppCompatActivity {
     private Runnable checkBleSearchStatus = new Runnable() {
         @Override
         public void run() {
-            if(!isOnView){
+            if (!isOnView) {
                 return;
             }
             Date checkDate = lastRecvDate;
-            if(lastRecvDate == null){
+            if (lastRecvDate == null) {
                 checkDate = enterDate;
             }
 
 //            Log.e("BluetoothUtils","checkBleSearchStatus");
             Date now = new Date();
-            if(now.getTime() - checkDate.getTime() > 45000){
+            if (now.getTime() - checkDate.getTime() > 45000) {
                 //need restart ble search
-                Log.e("BluetoothUtils","restart search");
+                Log.e("BluetoothUtils", "restart search");
+                if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+
+                }
                 mBluetoothAdapter.stopLeScan(startSearchCallback);
                 try {
                     Thread.sleep(2000);
@@ -350,6 +456,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         if(mBluetoothAdapter != null){
+            if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+
+            }
             mBluetoothAdapter.startLeScan(startSearchCallback);
         }
         isOnView = true;
@@ -390,10 +499,13 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
             String id = device.getAddress().replaceAll(":","").toUpperCase();
-//            Log.e("BluetoothUtils","MainActivity.onDeviceFounded " + device.getName() + "  " + device.getAddress());
             lastRecvDate = new Date();
             HashMap<Byte,byte[]> rawDataList = BleDeviceData.parseRawData(scanRecord);
             if (rawDataList.containsKey((byte)0xfe) || rawDataList.containsKey((byte)0xfd)){
+                if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+
+                }
+//                Log.e("BluetoothUtils","MainActivity.onDeviceFounded " + device.getName() + "  " + device.getAddress() + " " + MyByteUtils.bytes2HexString(scanRecord,0));
                 byte[] versionInfo = rawDataList.get((byte)0xfe);
                 byte[] imeiInfo = rawDataList.get((byte)0xfd);
                 String imei = null;
@@ -406,16 +518,25 @@ public class MainActivity extends AppCompatActivity {
                 String model = null;
                 String voltageStr = null;
                 byte protocolByte = 0x00;
+                if (versionInfo != null && versionInfo.length >= 7) {
+                    protocolByte = versionInfo[2];
+                }
+                if (protocolByte != (byte)0x62 && protocolByte != (byte)0x65) {
+                    return;
+                }
                 if (versionInfo != null && versionInfo.length >= 7){
                     protocolByte = versionInfo[2];
                     String versionStr = MyByteUtils.bytes2HexString(versionInfo,3);
                     hardware = String.format("V%s.%s",versionStr.substring(0,1),versionStr.substring(1,2));
-                    software =  String.format("V%d",Integer.valueOf(versionStr.substring(2,6)));;
+                    try {
+                        software =  String.format("V%d",Integer.valueOf(versionStr.substring(2,6)));
+                    }catch (Exception e){
+                        software = "";
+                        Log.e("error software",imei);
+                        e.printStackTrace();
+                    }
                     voltageStr = String.format("%s.%s",versionStr.substring(6,7),versionStr.substring(7,8));
                     model = BleDeviceData.parseModel(protocolByte);
-                }
-                if (protocolByte != (byte)0x62) {
-                    return;
                 }
                 Integer index = allMacIndex.get(device.getAddress());
                 if(index != null && allBleDeviceDataList.size() > index){
@@ -484,6 +605,9 @@ public class MainActivity extends AppCompatActivity {
     View.OnClickListener configDeviceClick = new View.OnClickListener() {
         @Override
         public void onClick(final View view) {
+            if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+
+            }
             mBluetoothAdapter.stopLeScan(startSearchCallback);
             final String mac = (String)view.getTag();
             Log.e("Click", "config device " + mac);
@@ -494,6 +618,30 @@ public class MainActivity extends AppCompatActivity {
             BleDeviceData bleDeviceData = allBleDeviceDataList.get(index);
             if(bleDeviceData != null){
                 Intent intent = new Intent( MainActivity.this, EditActivity.class);
+                intent.putExtra("mac",mac);
+                intent.putExtra("deviceName",bleDeviceData.getDeviceName());
+                intent.putExtra("id",bleDeviceData.getId());
+                startActivity(intent);
+            }
+
+        }
+    };
+    View.OnClickListener readHisDataClick = new View.OnClickListener() {
+        @Override
+        public void onClick(final View view) {
+            if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+
+            }
+            mBluetoothAdapter.stopLeScan(startSearchCallback);
+            final String mac = (String)view.getTag();
+            Log.e("Click", "config device " + mac);
+            Integer index = allMacIndex.get(mac);
+            if (index == null || allBleDeviceDataList.size() <= 0){
+                return;
+            }
+            BleDeviceData bleDeviceData = allBleDeviceDataList.get(index);
+            if(bleDeviceData != null){
+                Intent intent = new Intent( MainActivity.this, ReadHisDataActivity.class);
                 intent.putExtra("mac",mac);
                 intent.putExtra("deviceName",bleDeviceData.getDeviceName());
                 intent.putExtra("id",bleDeviceData.getId());
@@ -545,6 +693,8 @@ public class MainActivity extends AppCompatActivity {
                 holder.hardwareTextView = (TextView)convertView.findViewById(R.id.tx_hardware);
                 holder.modelTextView = (TextView)convertView.findViewById(R.id.tx_model);
                 holder.configBtn = (Button) convertView.findViewById(R.id.btn_config);
+                holder.readDataBtn = (Button) convertView.findViewById(R.id.btn_read_his_data);
+                holder.readDataLL = (LinearLayout)convertView.findViewById(R.id.read_data_ll);
                 convertView.setTag(holder);
             }
 
@@ -560,12 +710,20 @@ public class MainActivity extends AppCompatActivity {
             holder.configBtn.setTag(bleDeviceData.getMac());
             holder.configBtn.setOnClickListener(configDeviceClick);
             holder.configBtn.setText(getString(R.string.unlock));
+            holder.readDataBtn.setTag(bleDeviceData.getMac());
+            holder.readDataBtn.setOnClickListener(readHisDataClick);
+            if(bleDeviceData.getModel().equals("SolarGuardX 200")){
+                holder.readDataLL.setVisibility(View.VISIBLE);
+            }else{
+                holder.readDataLL.setVisibility(View.GONE);
+            }
             return convertView;
 
         }
         class DeviceViewHolder {
             TextView deviceNameTextView,  idTextView, dateTextView, rssiTextView , imeiTextView , softwareTextView , hardwareTextView , modelTextView ;
-            Button configBtn;
+            Button configBtn,readDataBtn;
+            LinearLayout readDataLL;
         }
     }
 }

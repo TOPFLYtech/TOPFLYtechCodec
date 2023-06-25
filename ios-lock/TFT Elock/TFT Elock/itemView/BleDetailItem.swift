@@ -1,11 +1,4 @@
-//
-//  BleDetailItem.swift
-//  TFTElock
-//
-//  Created by jeech on 2021/6/8.
-//  Copyright © 2021 com.tftiot. All rights reserved.
-//
-
+ 
 import Foundation
 import UIKit 
 class BleDetailItem:  UITableViewCell {
@@ -23,18 +16,18 @@ class BleDetailItem:  UITableViewCell {
         return label
     }()
     lazy var imeiLabel: UILabel = {
-          let label = UILabel()
+        let label = UILabel()
         label.text = "IMEI:"
-          label.textColor = UIColor.black
+        label.textColor = UIColor.black
         label.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
-          return label
-      }()
-      lazy var imeiContentLabel: UILabel = {
-          let label = UILabel()
-          label.textColor = UIColor.black
-          label.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
-          return label
-      }()
+        return label
+    }()
+    lazy var imeiContentLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.black
+        label.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
+        return label
+    }()
     lazy var dateLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
@@ -100,10 +93,10 @@ class BleDetailItem:  UITableViewCell {
         label.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
         return label
     }()
-lazy var configLabel: UILabel = {
+    lazy var configLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
-    label.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
+        label.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
         label.text = NSLocalizedString("configDesc", comment: "Config:")
         return label
     }()
@@ -112,42 +105,62 @@ lazy var configLabel: UILabel = {
         btn.setTitle(NSLocalizedString("unlock", comment: "Unlock"), for: .normal)
         btn.setTitleColor(UIColor.nordicBlue, for: .normal)
         btn.layer.cornerRadius = 15;
-        btn.layer.borderWidth = 1.0; 
+        btn.layer.borderWidth = 1.0;
+        btn.layer.borderColor = UIColor.nordicBlue.cgColor
+        btn.titleLabel!.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
+        return btn
+    }()
+    
+    lazy var readDataLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.black
+        label.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
+        label.text = NSLocalizedString("read_data", comment: "Read Data:")
+        return label
+    }()
+    lazy var readDataBtn:UIButton = {
+        let btn = UIButton()
+        btn.setTitle(NSLocalizedString("read", comment: "Read"), for: .normal)
+        btn.setTitleColor(UIColor.nordicBlue, for: .normal)
+        btn.layer.cornerRadius = 15;
+        btn.layer.borderWidth = 1.0;
         btn.layer.borderColor = UIColor.nordicBlue.cgColor
         btn.titleLabel!.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
         return btn
     }()
     lazy var rootView :UIImageView = {
-           let view = UIImageView()
-           return view
-       }()
+        let view = UIImageView()
+        return view
+    }()
     func initLayoutPosition()
     {
         let descWidth = self.bounds.size.width / 2 - 20
         let contentX = self.bounds.size.width / 2
-        self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 260)
+        self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 290)
         self.rootView.isUserInteractionEnabled=true
         self.deviceNameLabel.frame = CGRect(x: 8, y: 8, width: descWidth, height: 30)
         self.deviceNameContentLabel.frame = CGRect(x: contentX, y: 8, width: self.bounds.size.width - contentX, height: 30)
         self.imeiLabel.frame = CGRect(x: 8, y: 38, width: descWidth, height: 30)
         self.imeiContentLabel.frame = CGRect(x: contentX, y: 38, width: self.bounds.size.width - contentX, height: 30)
         self.modelLabel.frame = CGRect(x: 8, y: 68, width: descWidth, height: 30)
-         self.modelContentLabel.frame = CGRect(x: contentX, y: 68, width: self.bounds.size.width - contentX, height: 30)
+        self.modelContentLabel.frame = CGRect(x: contentX, y: 68, width: self.bounds.size.width - contentX, height: 30)
         self.hardwareLabel.frame = CGRect(x: 8, y: 98, width: descWidth, height: 30)
-         self.hardwareContentLabel.frame = CGRect(x: contentX, y: 98, width: self.bounds.size.width - contentX, height: 30)
-         self.softwareLabel.frame = CGRect(x: 8, y: 128, width: descWidth, height: 30)
-         self.softwareContentLabel.frame = CGRect(x: contentX, y: 128, width: self.bounds.size.width - contentX, height: 30)
+        self.hardwareContentLabel.frame = CGRect(x: contentX, y: 98, width: self.bounds.size.width - contentX, height: 30)
+        self.softwareLabel.frame = CGRect(x: 8, y: 128, width: descWidth, height: 30)
+        self.softwareContentLabel.frame = CGRect(x: contentX, y: 128, width: self.bounds.size.width - contentX, height: 30)
         self.dateLabel.frame = CGRect(x: 8, y: 158, width: descWidth, height: 30)
         self.dateContentLabel.frame = CGRect(x: contentX, y: 158, width: self.bounds.size.width - contentX, height: 30)
         self.rssiLabel.frame = CGRect(x: 8, y: 188, width: descWidth, height: 30)
         self.rssiContentLabel.frame = CGRect(x: contentX, y: 188, width: self.bounds.size.width - contentX, height: 30)
         self.configLabel.frame = CGRect(x: 8, y: 218, width: descWidth, height: 30)
-        self.configBtn.frame = CGRect(x: contentX, y: 218, width: 80, height: 30)
+        self.configBtn.frame = CGRect(x: contentX, y: 223, width: 70, height: 25)
+        self.readDataLabel.frame = CGRect(x: 8, y: 248, width: descWidth, height: 30)
+        self.readDataBtn.frame = CGRect(x: contentX, y: 253, width: 70, height: 25)
         self.rootView.backgroundColor = UIColor.white
-      self.rootView.layer.cornerRadius = 8
-      self.rootView.layer.masksToBounds = true
-      self.rootView.layer.borderWidth = 1
-      self.rootView.layer.borderColor = UIColor.nordicLightGray.cgColor
+        self.rootView.layer.cornerRadius = 8
+        self.rootView.layer.masksToBounds = true
+        self.rootView.layer.borderWidth = 1
+        self.rootView.layer.borderColor = UIColor.nordicLightGray.cgColor
     }
     
     
@@ -170,8 +183,10 @@ lazy var configLabel: UILabel = {
         self.rootView.addSubview(configBtn)
         self.rootView.addSubview(imeiLabel)
         self.rootView.addSubview(imeiContentLabel)
+        self.rootView.addSubview(readDataLabel)
+        self.rootView.addSubview(readDataBtn)
         self.initLayoutPosition()
-       
+        
     }
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)

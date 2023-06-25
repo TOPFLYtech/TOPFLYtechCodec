@@ -328,6 +328,11 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
             var voltage:Float = 0.0
             if versionInfo != nil && versionInfo.count >= 5{
                 protocolByte = versionInfo[0]
+            }
+            if protocolByte != 0x62 && protocolByte != 0x65{
+                return;
+            }
+            if versionInfo != nil && versionInfo.count >= 5{ 
                 let versionByte = Utils.arraysCopyOfRange(src: versionInfo, from: 1, to: versionInfo.count)
                 var versionStr = Utils.uint8ArrayToHexStr(value: versionByte)
                 var hardwarePart1 = versionStr.subStr(startIndex: 0, endIndex: 1)
@@ -340,10 +345,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                var voltage1 = versionStr.subStr(startIndex: 6, endIndex: 7)
                var voltage2 = versionStr.subStr(startIndex: 7, endIndex: 8)
                 let voltageStr = String.init(format: "%@.%@", voltage1,voltage2)
-               voltage = Float(voltageStr)!
-            }
-            if protocolByte != 0x62{
-                return;
+               voltage = Float(voltageStr) ?? 0
             }
             var bleDeviceData = BleDeviceData()
             bleDeviceData.hardware = hardware
@@ -589,6 +591,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         makeTable()
         dataTable.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
         dataTable.register(BleDetailItem.self,forCellReuseIdentifier:BleDetailItem.identifier)
+        dataTable.register(NoReadDataBleDetailItem.self,forCellReuseIdentifier:NoReadDataBleDetailItem.identifier)
         let titleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
 //        titleLabel.text = "Bluetooth sensor"
         titleLabel.text = NSLocalizedString("main_bar_text", comment: "Bluetooth sensor")
@@ -667,11 +670,22 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
     
     
     func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 270
+        let bleDeviceData = bleDeviceInfoArray[indexPath.row]
+        if bleDeviceData.model == "SolarGuardX 200"{
+            return 300
+        }else{
+            return 270
+        }
+       
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 270
+        let bleDeviceData = bleDeviceInfoArray[indexPath.row]
+        if bleDeviceData.model == "SolarGuardX 200"{
+            return 300
+        }else{
+            return 270
+        }
     }
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
         return 0.01
@@ -685,18 +699,39 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
     //cell
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let bleDeviceData = bleDeviceInfoArray[indexPath.row]
-        let cell = (tableView.dequeueReusableCell(withIdentifier: BleDetailItem.identifier, for: indexPath)) as! BleDetailItem
-        cell.deviceNameContentLabel.text = bleDeviceData.deviceName
-        cell.dateContentLabel.text = bleDeviceData.date
-        cell.rssiContentLabel.text = bleDeviceData.rssi + "dBm"
-        cell.softwareContentLabel.text = bleDeviceData.software
-        cell.hardwareContentLabel.text = bleDeviceData.hardware
-        cell.imeiContentLabel.text = bleDeviceData.imei
-        cell.modelContentLabel.text = bleDeviceData.model
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(tap(tap:)))
-        cell.configBtn.addGestureRecognizer(tapGesture)
-        cell.configBtn.tag = indexPath.row
-        return cell
+        if bleDeviceData.model == "SolarGuardX 200"{
+            let cell = (tableView.dequeueReusableCell(withIdentifier: BleDetailItem.identifier, for: indexPath)) as! BleDetailItem
+            cell.deviceNameContentLabel.text = bleDeviceData.deviceName
+            cell.dateContentLabel.text = bleDeviceData.date
+            cell.rssiContentLabel.text = bleDeviceData.rssi + "dBm"
+            cell.softwareContentLabel.text = bleDeviceData.software
+            cell.hardwareContentLabel.text = bleDeviceData.hardware
+            cell.imeiContentLabel.text = bleDeviceData.imei
+            cell.modelContentLabel.text = bleDeviceData.model
+            let tapGesture = UITapGestureRecognizer(target: self, action: #selector(tap(tap:)))
+            cell.configBtn.addGestureRecognizer(tapGesture)
+            cell.configBtn.tag = indexPath.row
+            
+            let readDataGesture = UITapGestureRecognizer(target: self, action: #selector(readData(tap:)))
+            cell.readDataBtn.addGestureRecognizer(readDataGesture)
+            cell.readDataBtn.tag = indexPath.row
+            return cell
+        }else{
+            let cell = (tableView.dequeueReusableCell(withIdentifier: NoReadDataBleDetailItem.identifier, for: indexPath)) as! NoReadDataBleDetailItem
+            cell.deviceNameContentLabel.text = bleDeviceData.deviceName
+            cell.dateContentLabel.text = bleDeviceData.date
+            cell.rssiContentLabel.text = bleDeviceData.rssi + "dBm"
+            cell.softwareContentLabel.text = bleDeviceData.software
+            cell.hardwareContentLabel.text = bleDeviceData.hardware
+            cell.imeiContentLabel.text = bleDeviceData.imei
+            cell.modelContentLabel.text = bleDeviceData.model
+            let tapGesture = UITapGestureRecognizer(target: self, action: #selector(tap(tap:)))
+            cell.configBtn.addGestureRecognizer(tapGesture)
+            cell.configBtn.tag = indexPath.row
+            return cell
+        }
+     
+        
     }
   
     
@@ -707,6 +742,26 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         qrFilter?.setValue(stringData, forKey: "inputMessage")
         qrFilter?.setValue("H", forKey: "inputCorrectionLevel")
         return UIImage.init(ciImage: (qrFilter?.outputImage)!)
+    }
+    
+    @objc func readData(tap: UITapGestureRecognizer) {
+        print("config click tap")
+        let index = tap.view?.tag
+        if index != nil {
+            let bleDeviceData = bleDeviceInfoArray[index ?? 0]
+            let macStr = bleDeviceData.mac
+            print(macStr)
+            for item in self.discoveredPeripherals{
+                if item.mac == macStr {
+                    let peripheral = item.peripheral
+                    self.centralManager.stopScan()
+                    let editView = ReadHisDataViewController()
+                    editView.cbPeripheral = peripheral
+                    editView.name = bleDeviceData.deviceName
+                    self.navigationController?.pushViewController(editView, animated: false)
+                }
+            }
+        }
     }
     
     @objc func tap(tap: UITapGestureRecognizer) {
