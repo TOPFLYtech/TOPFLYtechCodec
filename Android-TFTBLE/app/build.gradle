@@ -11,15 +11,17 @@ android {
             v2SigningEnabled true
         }
     }
-
-    compileSdkVersion 29
-    buildToolsVersion "29.0.2"
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+    compileSdkVersion 34
     defaultConfig {
         applicationId "com.topflytech.tftble"
-        minSdkVersion 21
-        targetSdkVersion 30
-        versionCode 41
-        versionName "1.0.38"
+        minSdkVersion 23
+        targetSdkVersion 31
+        versionCode 45
+        versionName "1.0.43"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         ndk {
             // 设置支持的SO库架构
@@ -36,6 +38,10 @@ android {
         debug{
             signingConfig signingConfigs.release
         }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
     repositories {
         maven { url 'https://jitpack.io' }
@@ -63,10 +69,16 @@ dependencies {
     implementation 'pub.devrel:easypermissions:1.0.1'
     implementation 'com.sun.mail:android-mail:1.6.0'
     implementation 'net.sourceforge.jexcelapi:jxl:2.6.12'
-    implementation project(path: ':dfu')
+//    implementation project(path: ':dfu')
     implementation 'com.tencent.bugly:crashreport:latest.release'
     implementation 'com.tencent.bugly:nativecrashreport:latest.release'
     implementation 'com.contrarywind:Android-PickerView:4.1.9'
     implementation 'com.qmuiteam:qmui:2.0.0-alpha10'
+    implementation 'androidx.core:core:1.9.0'
+    implementation 'androidx.annotation:annotation-experimental:1.3.0'
+    implementation 'no.nordicsemi.android:dfu:2.3.0'
+//    implementation 'androidx.work:work-runtime:2.7.1'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'com.github.loper7:DateTimePicker:0.6.2'
 
 }

@@ -18,6 +18,7 @@ import android.widget.Toast;
 import com.borax12.materialdaterangepicker.date.DatePickerDialog;
 import com.borax12.materialdaterangepicker.time.RadialPickerLayout;
 import com.borax12.materialdaterangepicker.time.TimePickerDialog;
+import com.loper7.date_time_picker.dialog.CardDatePickerDialog;
 import com.topflytech.tftble.data.DateSpinnerAdapter;
 
 
@@ -26,30 +27,28 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 
 import cn.pedant.SweetAlert.SweetAlertDialog;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function1;
 
-public class HistorySelectActivity extends AppCompatActivity implements  DatePickerDialog.OnDateSetListener, TimePickerDialog.OnTimeSetListener{
+public class HistorySelectActivity extends AppCompatActivity {
     private ActionBar actionBar;
     private ImageView backButton;
     private ImageView rightButton;
     private TextView tvHead;
-    private DatePickerDialog datePickerDialog;
-    private TimePickerDialog timePickerDialog;
     private boolean selectEndDate = false;
-    public static final String DATEPICKER_TAG = "datepicker";
-    public static final String TIMEPICKER_TAG = "timepicker";
     private TextView startDateText;
     private TextView endDateText;
-
+    private String dateFormatStr = "yyyy-MM-dd HH:mm:ss";
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat(dateFormatStr, Locale.ENGLISH);
     private LinearLayout startDateSpan;
     private LinearLayout endDateSpan;
     private DateSpinnerAdapter mDateSpinnerAdapter;
     private Spinner dateSpinner;
-    final Calendar startCalendar = Calendar.getInstance();
-    final Calendar endCalendar = Calendar.getInstance();
-    private String mac,software,deviceType,reportType,id;
     private Button btnSelectDate;
+    private String mac,software,deviceType,reportType,id;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -83,13 +82,11 @@ public class HistorySelectActivity extends AppCompatActivity implements  DatePic
             }
         });
         initDateTexts();
-        initDateTimePickers();
         initSpinner();
     }
     View.OnClickListener submitClick = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd  HH : mm");
             String textFromDate = startDateText.getText().toString();
             String textToDate = endDateText.getText().toString();
             try {
@@ -113,7 +110,6 @@ public class HistorySelectActivity extends AppCompatActivity implements  DatePic
                     setResult(EditActivity.RESPONSE_READ_ALARM_TIME,intent);
                     finish();
                 }
-//                presentReviewActivity(mCurrentImei, startDate, endDate);
             } catch (ParseException e) {
                 e.printStackTrace();
                 SweetAlertDialog wrongDateWarningDlg = new SweetAlertDialog(HistorySelectActivity.this, SweetAlertDialog.ERROR_TYPE);
@@ -124,7 +120,7 @@ public class HistorySelectActivity extends AppCompatActivity implements  DatePic
                 wrongDateWarningDlg.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
                     @Override
                     public void onClick(SweetAlertDialog sweetAlertDialog) {
-                     sweetAlertDialog.hide();
+                        sweetAlertDialog.hide();
                     }
                 });
                 wrongDateWarningDlg.show();
@@ -140,60 +136,53 @@ public class HistorySelectActivity extends AppCompatActivity implements  DatePic
 
             @Override
             public void onClick(View v) {
-                selectEndDate = false;
-                DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                String textFromDate = startDateText.getText().toString();
-                try {
-                    Date startDateTmp = dateFormat.parse(textFromDate);
-                    Calendar calendarTmp = Calendar.getInstance();
-                    calendarTmp.setTime(startDateTmp);
-                    datePickerDialog.initialize(HistorySelectActivity.this, calendarTmp.get(Calendar.YEAR), calendarTmp.get(Calendar.MONTH), calendarTmp.get(Calendar.DAY_OF_MONTH));
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-                datePickerDialog.show(getFragmentManager(), DATEPICKER_TAG);
+                CardDatePickerDialog datePickerDialog = new CardDatePickerDialog.Builder(HistorySelectActivity.this)
+                        .setTitle(getString(R.string.start_date))
+                        .setOnCancel(getString(R.string.cancel),null)
+                        .showBackNow(false)
+                        .showDateLabel(false)
+                        .showFocusDateInfo(false)
+                        .setLabelText("","","","","","")
+                        .setOnChoose(getString(R.string.confirm), new Function1<Long, Unit>() {
+                            @Override
+                            public Unit invoke(Long aLong) {
+                                startDateText.setText(dateFormat.format(new Date(aLong)));
+                                return null;
+                            }
+                        })
+                        .build();
+                datePickerDialog.show();
+
             }
         });
 
         endDateSpan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                selectEndDate = true;
-                DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                String textFromDate = endDateText.getText().toString();
-                try {
-                    Date endDateTmp = dateFormat.parse(textFromDate);
-                    Calendar calendarTmp = Calendar.getInstance();
-                    calendarTmp.setTime(endDateTmp);
-                    datePickerDialog.initialize(HistorySelectActivity.this, calendarTmp.get(Calendar.YEAR), calendarTmp.get(Calendar.MONTH), calendarTmp.get(Calendar.DAY_OF_MONTH));
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-                datePickerDialog.show(getFragmentManager(), DATEPICKER_TAG);
+                CardDatePickerDialog datePickerDialog = new CardDatePickerDialog.Builder(HistorySelectActivity.this)
+                        .setTitle(getString(R.string.end_date))
+                        .setOnCancel(getString(R.string.cancel),null)
+                        .showBackNow(false)
+                        .showDateLabel(false)
+                        .showFocusDateInfo(false)
+                        .setLabelText("","","","","","")
+                        .setOnChoose(getString(R.string.confirm), new Function1<Long, Unit>() {
+                            @Override
+                            public Unit invoke(Long aLong) {
+                                endDateText.setText(dateFormat.format(new Date(aLong)));
+                                return null;
+                            }
+                        })
+                        .build();
+                datePickerDialog.show();
             }
         });
 
-        final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd  HH : mm");
         startDateText.setText(dateFormat.format(DateSpinnerAdapter.getStartDate(0)));
         endDateText.setText(dateFormat.format(DateSpinnerAdapter.getEndDate(0)));
     }
 
-    private void initDateTimePickers() {
-        datePickerDialog= DatePickerDialog.newInstance(HistorySelectActivity.this, startCalendar.get(Calendar.YEAR), startCalendar.get(Calendar.MONTH), startCalendar.get(Calendar.DAY_OF_MONTH), endCalendar.get(Calendar.YEAR), endCalendar.get(Calendar.MONTH), endCalendar.get(Calendar.DAY_OF_MONTH));
-        timePickerDialog= TimePickerDialog.newInstance(HistorySelectActivity.this, startCalendar.get(Calendar.HOUR_OF_DAY), startCalendar.get(Calendar.MINUTE), true, endCalendar.get(Calendar.HOUR_OF_DAY), endCalendar.get(Calendar.MINUTE));
-//        datePickerDialog.setVibrate(true);
-
-        datePickerDialog.setYearRange(2014, 2028);
-//        datePickerDialog.setCloseOnSingleTapDay(true);
-//        timePickerDialog.setVibrate(true);
-//        timePickerDialog.setCloseOnSingleTapMinute(false);
-        datePickerDialog.setOnDateSetListener(this);
-        timePickerDialog.setOnTimeSetListener(this);
-    }
-
     private void initSpinner() {
-
-
         mDateSpinnerAdapter = new DateSpinnerAdapter(HistorySelectActivity.this);
         dateSpinner = (Spinner)findViewById(R.id.date_spinner);
         dateSpinner.setAdapter(mDateSpinnerAdapter);
@@ -204,7 +193,7 @@ public class HistorySelectActivity extends AppCompatActivity implements  DatePic
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 Date startDate = DateSpinnerAdapter.getStartDate(position);
                 Date endDate = DateSpinnerAdapter.getEndDate(position);
-                DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd  HH : mm");
+                DateFormat dateFormat = new SimpleDateFormat(dateFormatStr);
                 startDateText.setText(dateFormat.format(startDate));
                 endDateText.setText(dateFormat.format(endDate));
             }
@@ -216,42 +205,4 @@ public class HistorySelectActivity extends AppCompatActivity implements  DatePic
         });
     }
 
-    @Override
-    public void onDateSet(DatePickerDialog view, int year, int monthOfYear, int dayOfMonth, int yearEnd, int monthOfYearEnd, int dayOfMonthEnd) {
-        try {
-            startCalendar.set(year, monthOfYear, dayOfMonth);
-            endCalendar.set(yearEnd, monthOfYearEnd, dayOfMonthEnd);
-            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd  HH : mm");
-            String startTextFromDate = startDateText.getText().toString();
-            String endTextFromDate = endDateText.getText().toString();;
-
-            Date startDateTmp = dateFormat.parse(startTextFromDate);
-            Calendar startCalendarTmp = Calendar.getInstance();
-            startCalendarTmp.setTime(startDateTmp);
-            Date endDateTmp = dateFormat.parse(endTextFromDate);
-            Calendar endCalendarTmp = Calendar.getInstance();
-            endCalendarTmp.setTime(endDateTmp);
-            timePickerDialog.initialize(HistorySelectActivity.this, startCalendarTmp.get(Calendar.HOUR_OF_DAY), startCalendarTmp.get(Calendar.MINUTE), endCalendarTmp.get(Calendar.HOUR_OF_DAY),endCalendarTmp.get(Calendar.MINUTE),true);
-        }catch (Exception e){
-        }
-
-        timePickerDialog.show(getFragmentManager(), TIMEPICKER_TAG);
-    }
-
-    @Override
-    public void onTimeSet(RadialPickerLayout view, int hourOfDay, int minute, int hourOfDayEnd, int minuteEnd) {
-        startCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
-        startCalendar.set(Calendar.MINUTE, minute);
-        endCalendar.set(Calendar.HOUR_OF_DAY, hourOfDayEnd);
-        endCalendar.set(Calendar.MINUTE, minuteEnd);
-        final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd  HH : mm");
-        try {
-            ((TextView) findViewById(R.id.text_end_date)).setText(dateFormat.format(endCalendar.getTime()), TextView.BufferType.EDITABLE);
-            findViewById(R.id.text_end_date).setTag(startCalendar.getTime());
-            ((TextView) findViewById(R.id.text_start_date)).setText(dateFormat.format(startCalendar.getTime()), TextView.BufferType.EDITABLE);
-            findViewById(R.id.text_start_date).setTag(startCalendar.getTime());
-
-        } catch (Exception e) {
-        }
-    }
 }

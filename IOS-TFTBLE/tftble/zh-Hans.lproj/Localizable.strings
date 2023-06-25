@@ -251,3 +251,5 @@
 "send_data"="RS485发送";
 "send_instruction_sequence"="发送指令序列";
 "ainVoltage"="Ain/Vin电压";
+"betaUpgrade"="Beta升级";
+"new_beta_version_found_warning"="找到Beta新版本，已更新？";

@@ -112,6 +112,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     private var connected = false
     private var needConnect = false
     private var isUpgrade = false
+    private var isBetaUpgrade = false
     private var foundDevice = false
     private var connectControl = ""
     private var progressView:AEAlertView!
@@ -182,10 +183,14 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     private var waitingView:AEUIAlertView!
     private var pwdAlert:AEUIAlertView!
     private var upgradeWarningView:AEAlertView!
+    private var betaUpgradeWarningView:AEAlertView!
     private var hardware = ""
     var software = ""
     private var netSoftwareVersion = "0"
     private var upgradePackageLink = ""
+    private var betaNetSoftwareVersion = "0"
+    private var betaUpgradePackageLink = ""
+    private var betaUpgradePackUrl = ""
     private var editRangeValueType = ""
     private var newPwd : String!
     private var broadcastCycle = 0
@@ -210,6 +215,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     private var hardwareLabel:UILabel!
     private var hardwareContentLabel:UILabel!
     private var debugUpgradeBtn:QMUIGhostButton!
+    private var betaUpgradeBtn:QMUIGhostButton!
     private var softwareLabel:UILabel!
     private var softwareContentLabel:UILabel!
     private var editSoftwareBtn:QMUIGhostButton!
@@ -415,7 +421,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         self.initUI()
         self.showWaitingWin(title: NSLocalizedString("connecting", comment: "Connecting"))
         self.checkUpdate(isEnterCheck: true)
-        
+        self.checkBetaUpdate()
     }
     
     @objc private func refreshClick() {
@@ -430,14 +436,73 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
       
         self.notUpdateInit()
     }
-    
+    func checkBetaUpdate(){
+            var deviceType = self.deviceType
+            var curVersion = self.software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "")
+            curVersion = curVersion.replacingOccurrences(of: ".", with: "")
+            var curVerionInt = Int(curVersion) ?? 0
+            if (deviceType == "S02") && (curVerionInt <= 8){
+                deviceType = "S01"
+            }
+         var debugStr = "0"
+         if Utils.isDebug{
+            debugStr = "1"
+         }
+         let url: NSURL = NSURL(string: "http://openapi.tftiot.com:8050/v1/sensor-upgrade-control-out?opr_type=getSensorBetaVersion&device_type=\(deviceType)&mac=\(mac)&is_debug=\(debugStr)")!
+            let request: NSURLRequest = NSURLRequest(url: url as URL)
+            self.showWaitingWin(title: "Waiting")
+            NSURLConnection.sendAsynchronousRequest(request as URLRequest, queue: OperationQueue.main, completionHandler:{
+                (response, data, error) -> Void in
+                self.waitingView.dismiss()
+                if (error != nil) {
+                    //Handle Error here
+                    print(error)
+                    self.notUpdateInit()
+                }else{
+                    //Handle data in NSData type
+                    var dict: NSDictionary? = nil
+                    do{
+                        dict =  try JSONSerialization.jsonObject(with: data!, options: JSONSerialization.ReadingOptions.mutableLeaves) as! NSDictionary
+                    }catch{
+                    }
+                    print("%@",dict)
+                    if dict != nil{
+                        var code:Int = dict?["code"] as! Int
+                        print(String(code))
+                        if code == 0{
+                            let jsonData:NSDictionary = dict?["data"] as! NSDictionary
+                            if jsonData != nil{
+                                var version = jsonData["version"] as! String
+                                var packageLink = jsonData["link"] as! String
+                                self.betaUpgradePackUrl = NSHomeDirectory() + "/Documents/dfu_app_\(self.deviceType)_V\(self.betaNetSoftwareVersion).zip"
+                                if version != nil && packageLink != nil && version.count > 0 && packageLink.count > 0{
+                                    version = version.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "")
+                                    version = version.replacingOccurrences(of: ".", with: "")
+                                    var netVersionInt = Int(version) ?? 0
+                                    self.betaNetSoftwareVersion = version
+                                    self.betaUpgradePackageLink = packageLink
+                                   if netVersionInt > curVerionInt {
+                                        self.betaUpgradeBtn.isHidden = false
+                                   }else{
+                                       self.betaUpgradeBtn.isHidden = true
+                                   }
+                                }
+                            }
+                        }
+                        
+                    }
+                }
+            })
+        }
     func checkUpdate(isEnterCheck:Bool){
         var deviceType = self.deviceType
-        var curVerionInt = Int(self.software) ?? 0
+        var curVersion = self.software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "")
+        curVersion = curVersion.replacingOccurrences(of: ".", with: "")
+        var curVerionInt = Int(curVersion) ?? 0
         if (deviceType == "S02") && (curVerionInt <= 8){
             deviceType = "S01"
         }
-        let url: NSURL = NSURL(string: "http://openapi.tftiot.com:8010/v1/ble-version?device_type=\(deviceType)")!
+        let url: NSURL = NSURL(string: "http://openapi.tftiot.com:8050/v1/sensor-upgrade-control-out?opr_type=getSensorVersion&device_type=\(deviceType)")!
         let request: NSURLRequest = NSURLRequest(url: url as URL)
         self.showWaitingWin(title: "Waiting")
         NSURLConnection.sendAsynchronousRequest(request as URLRequest, queue: OperationQueue.main, completionHandler:{
@@ -458,21 +523,26 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                 if dict != nil{
                     var code:Int = dict?["code"] as! Int
                     print(String(code))
-                    let jsonData:NSDictionary = dict?["data"] as! NSDictionary
-                    if jsonData != nil{
-                        var version = jsonData["version"] as! String
-                        var packageLink = jsonData["link"] as! String
-                        self.upgradePackUrl = NSHomeDirectory() + "/Documents/dfu_app_\(self.deviceType)_V\(self.netSoftwareVersion).zip"
-                        if version != nil && packageLink != nil{
-                            version = version.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "")
-                            var netVersionInt = Int(version) ?? 0
-                            self.netSoftwareVersion = version
-                            self.upgradePackageLink = packageLink
-                            if !isEnterCheck{
-                                if netVersionInt != curVerionInt {
-                                    //need update
-                                    self.editSoftwareBtn.isHidden = false
-                                    self.showUpgradeWin()
+                    if code == 0{
+                        let jsonData:NSDictionary = dict?["data"] as! NSDictionary
+                        if jsonData != nil{
+                            var version = jsonData["version"] as! String
+                            var packageLink = jsonData["link"] as! String
+                            self.upgradePackUrl = NSHomeDirectory() + "/Documents/dfu_app_\(self.deviceType)_V\(self.netSoftwareVersion).zip"
+                            if version != nil && packageLink != nil && version.count > 0 && packageLink.count > 0{
+                                version = version.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "")
+                                version = version.replacingOccurrences(of: ".", with: "")
+                                var netVersionInt = Int(version) ?? 0
+                                self.netSoftwareVersion = version
+                                self.upgradePackageLink = packageLink
+                                if !isEnterCheck{
+                                    if netVersionInt != curVerionInt && netVersionInt != 0 && curVerionInt != 0 {
+                                        //need update
+                                        self.editSoftwareBtn.isHidden = false
+                                        self.showUpgradeWin()
+                                    }else{
+                                        self.notUpdateInit()
+                                    }
                                 }else{
                                     self.notUpdateInit()
                                 }
@@ -485,6 +555,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                     }else{
                         self.notUpdateInit()
                     }
+                    
                 }else{
                     self.notUpdateInit()
                 }
@@ -518,7 +589,9 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                 self.doUpgrade()
             }else{
                 print("find device ,try to connect")
-                self.centralManager.connect(self.selfPeripheral)
+                if self.needConnect{
+                    self.centralManager.connect(self.selfPeripheral)
+                }
             }
             
         }
@@ -1239,9 +1312,6 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             let hardware = Utils.parseHardwareVersion(hardware: Utils.uint8ToHexStr(value: resp[3]))
             self.hardwareContentLabel.text = hardware
             self.software = String(resp[4])
-            if self.software != self.netSoftwareVersion{
-                self.editSoftwareBtn.isHidden = false
-            }
             self.softwareContentLabel.text = String.init(format:"V%d",resp[4])
         }else if resp.count == 7 || resp.count == 8{
             if resp[2] == 0x07{
@@ -1256,9 +1326,24 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             let hardware = Utils.parseHardwareVersion(hardware: Utils.uint8ToHexStr(value: resp[3]))
             self.hardwareContentLabel.text = hardware
             let software = Utils.parseS78910SoftwaeVersion(data: resp, index: 4)
+            self.software = software.replacingOccurrences(of: ".", with: "")
             self.softwareContentLabel.text = software
         }
-        
+        print("readVersionResp:\(self.netSoftwareVersion),\(self.software)")
+        if self.software != self.netSoftwareVersion && self.netSoftwareVersion != "0"{
+            self.editSoftwareBtn.isHidden = false
+        }else{
+            self.editSoftwareBtn.isHidden = true
+        }
+        var netVersionInt = Int(self.betaNetSoftwareVersion) ?? 0
+        var curVersion = self.software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "")
+        curVersion = curVersion.replacingOccurrences(of: ".", with: "")
+        var curVerionInt = Int(curVersion) ?? 0
+        if netVersionInt > curVerionInt {
+           self.betaUpgradeBtn.isHidden = false
+        }else{
+           self.betaUpgradeBtn.isHidden = true
+        }
     }
     
     func readHumidityAlarm(){
@@ -2732,6 +2817,34 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         self.checkUpdate(isEnterCheck: false)
     }
     
+    @objc func betaUpgradeClick(){
+        if self.betaUpgradeWarningView != nil && !self.betaUpgradeWarningView.isDismiss{
+                   self.betaUpgradeWarningView.show()
+                   return
+               }
+               self.betaUpgradeWarningView = AEAlertView(style: .defaulted)
+               self.betaUpgradeWarningView.title = NSLocalizedString("betaUpgrade", comment:"Beta upgrade")
+               self.betaUpgradeWarningView.message = NSLocalizedString("new_beta_version_found_warning", comment:"New beta version found,updated?")
+               let upgradeCancel = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
+                   self.betaUpgradeWarningView.dismiss()
+                   if self.initStart == false{
+                       self.showWaitingWin(title: NSLocalizedString("waiting", comment:"Waiting"))
+                       self.showPwdWin()
+                   }
+               }
+               let upgradeConfirm = AEAlertAction(title: NSLocalizedString("confirm", comment: "Confirm"), style: .defaulted) { (action) in
+                   self.isUpgrade = true
+                   self.betaUpgradeWarningView.dismiss()
+                   self.showWaitingWin(title: NSLocalizedString("waiting", comment:"Waiting"))
+                   if self.foundDevice {
+                       self.doBetaUpgrade()
+                   }
+               }
+               self.betaUpgradeWarningView.addAction(action: upgradeCancel)
+               self.betaUpgradeWarningView.addAction(action: upgradeConfirm)
+               self.betaUpgradeWarningView.show()
+    }
+    
     @objc func debugUpgradeClick(){
         let inputUrlAlert = AEUIAlertView(style: .textField, title: NSLocalizedString("upgradePackageUrl", comment: "Upgrade package url"), message: nil)
         inputUrlAlert.textField.placeholder = NSLocalizedString("upgradePackageUrl", comment: "Upgrade package url")
@@ -2754,6 +2867,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                 if FileTool.fileExists(filePath: self.upgradePackUrl){
                     FileTool.removeFile(self.upgradePackUrl)
                 }
+                self.isBetaUpgrade = false
                 let downloadUrl = URL(string: self.upgradePackageLink)
                 //请求
                 let request = URLRequest(url: downloadUrl!)
@@ -2815,6 +2929,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         if FileTool.fileExists(filePath: lastUpgradeFileUrl){
             FileTool.removeFile(lastUpgradeFileUrl)
         }
+        self.isBetaUpgrade = false
         self.showWaitingWin(title: NSLocalizedString("waiting", comment: "Waiting"))
         if FileTool.fileExists(filePath: self.upgradePackUrl){
             self.upgradeDevice()
@@ -2828,7 +2943,30 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             downloadTask.resume()
         }
     }
-    
+    func doBetaUpgrade(){
+            self.waitingView.dismiss()
+            self.showProgressBar()
+            print("try to update")
+            self.isUpgrade = false
+            self.needConnect = false
+            self.centralManager.cancelPeripheralConnection(self.selfPeripheral)
+            let lastUpgradeFileUrl = NSHomeDirectory() + "/Documents/dfu_app_\(self.deviceType)_V\(self.software).zip"
+            if FileTool.fileExists(filePath: lastUpgradeFileUrl){
+                FileTool.removeFile(lastUpgradeFileUrl)
+            }
+            self.isBetaUpgrade = true
+            if FileTool.fileExists(filePath: self.betaUpgradePackUrl){
+                FileTool.removeFile(self.betaUpgradePackUrl)
+            }
+            self.showWaitingWin(title: NSLocalizedString("waiting", comment: "Waiting"))
+            let downloadUrl = URL(string: self.betaUpgradePackageLink)
+                //请求
+            let request = URLRequest(url: downloadUrl!)
+            //下载任务
+            let downloadTask = session.downloadTask(with: request)
+            //使用resume方法启动任务
+            downloadTask.resume()
+        }
     
     //下载代理方法，下载结束
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask,
@@ -2842,14 +2980,23 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         //拷贝到用户目录
         //创建文件管理器
         let fileManager = FileManager.default
-        try! fileManager.moveItem(atPath: locationPath, toPath: self.upgradePackUrl)
-        print("new location:\(self.upgradePackUrl)")
+        if self.isBetaUpgrade{
+            try! fileManager.moveItem(atPath: locationPath, toPath: self.betaUpgradePackUrl)
+            print("new location:\(self.betaUpgradePackUrl)")
+        }else{
+            try! fileManager.moveItem(atPath: locationPath, toPath: self.upgradePackUrl)
+            print("new location:\(self.upgradePackUrl)")
+        }
+      
         self.upgradeDevice()
     }
     
     func upgradeDevice(){
         self.waitingView.dismiss()
-        let url = URL(string:self.upgradePackUrl)
+        var url = URL(string:self.upgradePackUrl)
+        if self.isBetaUpgrade{
+            url = URL(string:self.betaUpgradePackUrl)
+        }
         if url != nil{
             let dfuFirmware = DFUFirmware(urlToZipFile: url!)!
             let initiator = DFUServiceInitiator().with(firmware: dfuFirmware)
@@ -3079,7 +3226,18 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         modelLine.backgroundColor = UIColor.gray
         modelLine.frame =  CGRect(x: 0, y: Double(60), width: Double(KSize.width), height: 0.5)
         modelView.addSubview(modelLine)
-        
+        self.debugUpgradeBtn = QMUIGhostButton()
+        self.debugUpgradeBtn.titleLabel?.font = UIFont.systemFont(ofSize: fontSize)
+        self.debugUpgradeBtn.setTitle(NSLocalizedString("debugUpgrade", comment: "Debug Upgrade"), for: .normal)
+        self.debugUpgradeBtn.ghostColor = UIColor.colorPrimary
+        self.debugUpgradeBtn.frame = CGRect(x: btnX, y: 15, width: 90, height: btnHeight)
+        if(Utils.isDebug){
+            self.debugUpgradeBtn.isHidden = false
+        }else{
+            self.debugUpgradeBtn.isHidden = true
+        }
+        self.debugUpgradeBtn.addTarget(self, action: #selector(debugUpgradeClick), for:.touchUpInside)
+        modelView.addSubview(self.debugUpgradeBtn)
         
         
         hardwareView = UIView()
@@ -3101,18 +3259,14 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         self.hardwareContentLabel.text = ""
         self.hardwareContentLabel.frame = CGRect(x: contentX, y: 0, width: 70, height: 60)
         hardwareView.addSubview(self.hardwareContentLabel)
-        self.debugUpgradeBtn = QMUIGhostButton()
-        self.debugUpgradeBtn.titleLabel?.font = UIFont.systemFont(ofSize: fontSize)
-        self.debugUpgradeBtn.setTitle(NSLocalizedString("debugUpgrade", comment: "Debug Upgrade"), for: .normal)
-        self.debugUpgradeBtn.ghostColor = UIColor.colorPrimary
-        self.debugUpgradeBtn.frame = CGRect(x: btnX, y: 15, width: 60, height: btnHeight)
-        if(Utils.isDebug){
-            self.debugUpgradeBtn.isHidden = false
-        }else{
-            self.debugUpgradeBtn.isHidden = true
-        }
-        self.debugUpgradeBtn.addTarget(self, action: #selector(debugUpgradeClick), for:.touchUpInside)
-        hardwareView.addSubview(self.debugUpgradeBtn)
+        self.betaUpgradeBtn = QMUIGhostButton()
+        self.betaUpgradeBtn.titleLabel?.font = UIFont.systemFont(ofSize: fontSize)
+        self.betaUpgradeBtn.setTitle(NSLocalizedString("betaUpgrade", comment: "Beta Upgrade"), for: .normal)
+        self.betaUpgradeBtn.ghostColor = UIColor.colorPrimary
+        self.betaUpgradeBtn.frame = CGRect(x: btnX, y: 15, width: 90, height: btnHeight)
+        self.betaUpgradeBtn.isHidden = true
+        self.betaUpgradeBtn.addTarget(self, action: #selector(betaUpgradeClick), for:.touchUpInside)
+        hardwareView.addSubview(self.betaUpgradeBtn)
         
         let hardwareLine = UIView()
         hardwareLine.backgroundColor = UIColor.gray
@@ -4614,31 +4768,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     }
     
     func showUpgradeWin(){
-        if self.upgradeWarningView != nil && !self.upgradeWarningView.isDismiss{
-            self.upgradeWarningView.show()
-            return
-        }
-        self.upgradeWarningView = AEAlertView(style: .defaulted)
-        self.upgradeWarningView.title = NSLocalizedString("upgrade", comment:"Upgrade")
-        self.upgradeWarningView.message = NSLocalizedString("new_version_found_warning", comment:"New version found,updated?")
-        let upgradeCancel = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
-            self.upgradeWarningView.dismiss()
-            if self.initStart == false{
-                self.showWaitingWin(title: NSLocalizedString("waiting", comment:"Waiting"))
-                self.showPwdWin()
-            }
-        }
-        let upgradeConfirm = AEAlertAction(title: NSLocalizedString("confirm", comment: "Confirm"), style: .defaulted) { (action) in
-            self.isUpgrade = true
-            self.upgradeWarningView.dismiss()
-            self.showWaitingWin(title: NSLocalizedString("waiting", comment:"Waiting"))
-            if self.foundDevice {
-                self.doUpgrade()
-            }
-        }
-        self.upgradeWarningView.addAction(action: upgradeCancel)
-        self.upgradeWarningView.addAction(action: upgradeConfirm)
-        self.upgradeWarningView.show()
+       	
     }
     private var isShowPwdDlg = false
     func showPwdWin(){
@@ -4657,7 +4787,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         let action_one = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
             self.isShowPwdDlg = false
             self.pwdAlert.dismiss()
-            self.waitingView.dismiss()
+            self.waitingView.dismiss()	
             self.navigationController?.popViewController(animated: true)
             
         }

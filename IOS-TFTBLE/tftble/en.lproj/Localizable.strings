@@ -253,3 +253,5 @@
 "send_data"="RS485 send";
 "send_instruction_sequence"="Send instruction sequence";
 "ainVoltage"="Ain/Vin voltage";
+"betaUpgrade"="Beta upgrade";
+"new_beta_version_found_warning"="New beta version found,updated?";

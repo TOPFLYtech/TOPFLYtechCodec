@@ -118,7 +118,7 @@ public class EditRangeValueActivity extends AppCompatActivity {
         }else{
             saveLowValue = Float.valueOf(Float.valueOf(lowValue) * 10).intValue();
         }
-        if ((saveHighValue < saveLowValue && saveLowValue != 4095) || (saveHighValue != 4095 && saveHighValue > 1000) ||
+        if ((saveHighValue <= saveLowValue && saveLowValue != 4095) || (saveHighValue != 4095 && saveHighValue > 1000) ||
                 (saveLowValue != 4095 && saveLowValue < -400)){
             Toast.makeText(EditRangeValueActivity.this,R.string.temp_range_error_warning,Toast.LENGTH_SHORT).show();
             return false;
@@ -167,7 +167,7 @@ public class EditRangeValueActivity extends AppCompatActivity {
         }else{
             saveLowValue = Integer.valueOf(lowValue);
         }
-        if  ((saveHighValue < saveLowValue && saveLowValue != 4095) || (saveHighValue != 4095 && saveHighValue > 1000) ||
+        if  ((saveHighValue <= saveLowValue && saveLowValue != 4095) || (saveHighValue != 4095 && saveHighValue > 1000) ||
                 (saveLowValue != 4095 && saveLowValue < 0)){
             Toast.makeText(EditRangeValueActivity.this,R.string.opt_of_range_warning,Toast.LENGTH_SHORT).show();
             return false;

@@ -7,15 +7,19 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.READ_LOGS"
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission
+        android:name="android.permission.READ_LOGS"
         tools:ignore="ProtectedPermissions" />
 
     <uses-feature android:name="android.hardware.camera" />
@@ -24,17 +28,20 @@
         android:name="android.hardware.bluetooth_le"
         android:required="true" />
 
-
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:requestLegacyExternalStorage="true"
-        android:usesCleartextTraffic="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/MyAppTheme"
+        android:usesCleartextTraffic="true"
         tools:replace="android:icon, android:theme">
+        <activity
+            android:name=".EditRS485CmdActivity"
+            android:exported="false" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.topflytech.tftble.fileprovider"
@@ -44,29 +51,39 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths" />
         </provider>
+
         <meta-data
             android:name="BUGLY_APPID"
             android:value="88ff3fb810" />
         <meta-data
             android:name="BUGLY_APP_CHANNEL"
-            android:value="play" />
-        <!-- 配置Bugly调试模式（true或者false）-->
+            android:value="play" /> <!-- 配置Bugly调试模式（true或者false） -->
         <meta-data
             android:name="BUGLY_ENABLE_DEBUG"
             android:value="false" />
-        <activity android:name=".SmtpSettingActivity"></activity>
+
+        <activity android:name=".SmtpSettingActivity" />
         <activity android:name=".ScanActivity" />
         <activity android:name=".ChartDetailActivity" />
         <activity android:name=".HistoryReportActivity" />
         <activity android:name=".HistorySelectActivity" />
         <activity android:name=".EditRangeValueActivity" />
-        <activity android:name=".EditPwdActivity"
-            android:configChanges="orientation|screenSize"/>
+        <activity android:name=".EditConnectPwdActivity" />
+        <activity android:name=".EditDoutOutputStatusActivity" />
+        <activity android:name=".EditPositiveNegativeWarningActivity" />
+        <activity
+            android:name=".EditInstructionSequenceActivity"
+            android:exported="false" />
+        <activity
+            android:name=".EditPwdActivity"
+            android:configChanges="orientation|screenSize" />
         <activity
             android:name=".EditActivity"
-            android:label="@string/title_activity_edit"  />
-        <activity android:name=".MainActivity"
-            android:configChanges="orientation|screenSize">
+            android:label="@string/title_activity_edit" />
+        <activity
+            android:name=".MainActivity"
+            android:configChanges="orientation|screenSize"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

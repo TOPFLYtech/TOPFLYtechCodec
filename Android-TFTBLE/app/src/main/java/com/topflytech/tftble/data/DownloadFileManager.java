@@ -74,59 +74,49 @@ public class DownloadFileManager {
 
     }
     private static String versionExt = "bleVersion";
-    public void geetUpdateFileUrl(Context context,String serverUpgradeLink, int serverUpgradeVersion, String deviceType, final Callback callback){
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        String bleVersionStr = sharedPreferences.getString(deviceType+versionExt,"");
-        int bleVersion = 0;
-        if(!bleVersionStr.isEmpty()){
-            bleVersion = Integer.valueOf(bleVersionStr);
-        }
-        String diskFile = serverUpgradeVersion + "_" + deviceType + "_" + versionExt + ".zip";
+    public void geetUpdateFileUrl(Context context,String serverUpgradeLink, String serverUpgradeVersion, String deviceType, final Callback callback){
+        String diskFile = deviceType + "_" + versionExt + ".zip";
         String path = context.getFilesDir().getPath() + "/";
         final String relativePath = path + diskFile;
-        if(bleVersion != serverUpgradeVersion){
-            delFile(path + bleVersion + "_" + deviceType + "_"+versionExt+".zip");
-            FileDownloader.setup(context);
-            delFile(relativePath);
-            FileDownloader.getImpl().create(serverUpgradeLink).setPath(relativePath).setListener(new FileDownloadListener() {
-                @Override
-                protected void pending(BaseDownloadTask task, int soFarBytes, int totalBytes) {
-                    System.out.println("pending");
-                }
+        delFile(relativePath);
+        FileDownloader.setup(context);
 
-                @Override
-                protected void progress(BaseDownloadTask task, int soFarBytes, int totalBytes) {
-                    System.out.println("progress");
-                }
+        FileDownloader.getImpl().create(serverUpgradeLink).setPath(relativePath).setListener(new FileDownloadListener() {
+            @Override
+            protected void pending(BaseDownloadTask task, int soFarBytes, int totalBytes) {
+                System.out.println("pending");
+            }
 
-                @Override
-                protected void completed(BaseDownloadTask task) {
-                    System.out.println("complete");
-                    callback.callback(Callback.StatusCode.OK,relativePath);
-                }
+            @Override
+            protected void progress(BaseDownloadTask task, int soFarBytes, int totalBytes) {
+                System.out.println("progress");
+            }
 
-                @Override
-                protected void paused(BaseDownloadTask task, int soFarBytes, int totalBytes) {
-                    System.out.println("paused");
-                    callback.callback(Callback.StatusCode.ERROR,null);
-                }
+            @Override
+            protected void completed(BaseDownloadTask task) {
+                System.out.println("complete");
+                callback.callback(Callback.StatusCode.OK,relativePath);
+            }
 
-                @Override
-                protected void error(BaseDownloadTask task, Throwable e) {
-                    e.printStackTrace();
-                    System.out.println("error");
-                    callback.callback(Callback.StatusCode.ERROR,null);
-                }
+            @Override
+            protected void paused(BaseDownloadTask task, int soFarBytes, int totalBytes) {
+                System.out.println("paused");
+                callback.callback(Callback.StatusCode.ERROR,null);
+            }
 
-                @Override
-                protected void warn(BaseDownloadTask task) {
-                    System.out.println("warn");
-                    callback.callback(Callback.StatusCode.ERROR,null);
-                }
-            }).start();
-        }else{
-            callback.callback(Callback.StatusCode.OK,relativePath);
-        }
+            @Override
+            protected void error(BaseDownloadTask task, Throwable e) {
+                e.printStackTrace();
+                System.out.println("error");
+                callback.callback(Callback.StatusCode.ERROR,null);
+            }
+
+            @Override
+            protected void warn(BaseDownloadTask task) {
+                System.out.println("warn");
+                callback.callback(Callback.StatusCode.ERROR,null);
+            }
+        }).start();
 
     }
 

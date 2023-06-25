@@ -1,2 +1,2 @@
-include ':app', ':dfu', ':sweetAlert'
+include ':app', ':sweetAlert'
 rootProject.name='TFTBLE'

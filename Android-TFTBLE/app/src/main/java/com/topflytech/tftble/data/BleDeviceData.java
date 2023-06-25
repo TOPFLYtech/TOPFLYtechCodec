@@ -8,6 +8,7 @@ import com.topflytech.tftble.R;
 
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 
 public class BleDeviceData {
     public String getDeviceName() {
@@ -34,8 +35,26 @@ public class BleDeviceData {
         this.id = id;
     }
 
+    private int unitAttenuationOfS07 = 58;
+    private int unitAttenuationOfS08 = 67;
+    private int unitAttenuationOfS09 = 50;
+    private int unitAttenuationOfS10 = 58;
     public String getRssi() {
+        if(deviceType != null && deviceType.equals("S07")){
+            return getDistByRSSI(rssiInt,unitAttenuationOfS07);
+        }else if(deviceType != null && deviceType.equals("S08")){
+            return getDistByRSSI(rssiInt,unitAttenuationOfS08);
+        }else if(deviceType != null && deviceType.equals("S09")){
+            return getDistByRSSI(rssiInt,unitAttenuationOfS09);
+        }else if(deviceType != null && deviceType.equals("S10")){
+            return getDistByRSSI(rssiInt,unitAttenuationOfS10);
+        }
         return rssi;
+    }
+    private String getDistByRSSI(int rssi,int A){
+        int iRssi = Math.abs(rssi);
+        double power = (iRssi - A) / ( 10 * 2.65);
+        return String.format("%ddBm    ≈%.2fm",rssi,Math.pow(10,power));
     }
 
     public void setRssi(String rssi) {
@@ -64,6 +83,15 @@ public class BleDeviceData {
     public void setNormalDevice(boolean normalDevice) {
         this.normalDevice = normalDevice;
     }
+
+    public int getRssiInt() {
+        return rssiInt;
+    }
+
+    public void setRssiInt(int rssiInt) {
+        this.rssiInt = rssiInt;
+    }
+
     private String deviceName;
     private String deviceType;
     private String modelName;
@@ -77,12 +105,140 @@ public class BleDeviceData {
     private byte warn;
     private String id;
     private String rssi;
+    private int rssiInt;
     private Date date;
     private String hexData;
     private byte[] srcData;
     private boolean normalDevice = true;
     private float tirePressure;
     private byte status;
+    private String batteryPercent;
+    private String flag;
+    private String doorStatus;
+    private String broadcastType;
+    private String move;
+    private String moveDetection;
+    private String stopDetection;
+    private String pitchAngle;
+    private String rollAngle;
+    private String nid;
+    private String bid;
+    private int moveStatus;
+    private String major;
+    private String minor;
+
+    public String getMajor() {
+        return major;
+    }
+
+    public void setMajor(String major) {
+        this.major = major;
+    }
+
+    public String getMinor() {
+        return minor;
+    }
+
+    public void setMinor(String minor) {
+        this.minor = minor;
+    }
+
+    public int getMoveStatus() {
+        return moveStatus;
+    }
+
+    public void setMoveStatus(int moveStatus) {
+        this.moveStatus = moveStatus;
+    }
+
+    public String getNid() {
+        return nid;
+    }
+
+    public void setNid(String nid) {
+        this.nid = nid;
+    }
+
+    public String getBid() {
+        return bid;
+    }
+
+    public void setBid(String bid) {
+        this.bid = bid;
+    }
+
+
+    public String getMove() {
+        return move;
+    }
+
+    public void setMove(String move) {
+        this.move = move;
+    }
+
+    public String getMoveDetection() {
+        return moveDetection;
+    }
+
+    public void setMoveDetection(String moveDetection) {
+        this.moveDetection = moveDetection;
+    }
+
+    public String getStopDetection() {
+        return stopDetection;
+    }
+
+    public void setStopDetection(String stopDetection) {
+        this.stopDetection = stopDetection;
+    }
+
+    public String getPitchAngle() {
+        return pitchAngle;
+    }
+
+    public void setPitchAngle(String pitchAngle) {
+        this.pitchAngle = pitchAngle;
+    }
+
+    public String getRollAngle() {
+        return rollAngle;
+    }
+
+    public void setRollAngle(String rollAngle) {
+        this.rollAngle = rollAngle;
+    }
+
+    public String getBroadcastType() {
+        return broadcastType;
+    }
+
+    public void setBroadcastType(String broadcastType) {
+        this.broadcastType = broadcastType;
+    }
+
+    public String getDoorStatus() {
+        return doorStatus;
+    }
+
+    public void setDoorStatus(String doorStatus) {
+        this.doorStatus = doorStatus;
+    }
+
+    public String getBatteryPercent() {
+        return batteryPercent;
+    }
+
+    public void setBatteryPercent(String batteryPercent) {
+        this.batteryPercent = batteryPercent;
+    }
+
+    public String getFlag() {
+        return flag;
+    }
+
+    public void setFlag(String flag) {
+        this.flag = flag;
+    }
 
     public float getTirePressure() {
         return tirePressure;
@@ -274,7 +430,7 @@ public class BleDeviceData {
 
 
     public static String getWarnDesc(Context context,String deviceType,byte warnByte){
-        if(deviceType.equals("S02")){
+        if(deviceType.equals("S02") ){
             String warnStr = "";
             if ((warnByte & 0x01) == 0x01) {
                 warnStr += context.getResources().getString(R.string.device_high_temp_warning);
@@ -336,8 +492,367 @@ public class BleDeviceData {
             }else if (warnByte == 0x05) {
                 return context.getResources().getString(R.string.awaken);
             }
+        }else if(deviceType.equals("S07")){
+            String warnStr = "";
+            if ((warnByte & 0x40) == 0x40) {
+                warnStr += context.getResources().getString(R.string.device_low_voltage_warning);
+            }
+            return warnStr;
+        }else if(deviceType.equals("S08")){
+            String warnStr = "";
+            if ((warnByte & 0x01) == 0x01) {
+                warnStr += context.getResources().getString(R.string.device_high_temp_warning);
+            }
+            if ((warnByte & 0x10) == 0x10) {
+                warnStr += context.getResources().getString(R.string.device_low_temp_warning);
+            }
+            if ((warnByte & 0x40) == 0x40) {
+                warnStr += context.getResources().getString(R.string.device_low_voltage_warning);
+            }
+            if ((warnByte & 0x80) == 0x80) {
+                warnStr += context.getResources().getString(R.string.malfunction);
+            }
+            return warnStr;
+        }else if(deviceType.equals("S10")){
+            String warnStr = "";
+            if ((warnByte & 0x01) == 0x01) {
+                warnStr += context.getResources().getString(R.string.device_high_temp_warning);
+            }
+            if ((warnByte & 0x02) == 0x02) {
+                warnStr += context.getResources().getString(R.string.device_high_humidity_warning);
+            }
+            if ((warnByte & 0x10) == 0x10) {
+                warnStr += context.getResources().getString(R.string.device_low_temp_warning);
+            }
+            if ((warnByte & 0x20) == 0x20) {
+                warnStr += context.getResources().getString(R.string.device_low_humidity_warning);
+            }
+            if ((warnByte & 0x40) == 0x40) {
+                warnStr += context.getResources().getString(R.string.device_low_voltage_warning);
+            }
+            if ((warnByte & 0x80) == 0x80) {
+                warnStr += context.getResources().getString(R.string.malfunction);
+            }
+
+            return warnStr;
         }
         return "";
+    }
+
+    private HashMap<String ,byte[]> parseRawData(byte[] rawData){
+        HashMap<String ,byte[]> result = new HashMap<>();
+        int index = 0;
+        while (index < rawData.length){
+            int len = rawData[index];
+            if (index + len + 1 <= rawData.length && len > 2){
+                byte type = rawData[index + 1];
+                byte[] itemData = Arrays.copyOfRange(rawData,index+2,index + len  + 1);
+                result.put(String.valueOf(type & 0xff),itemData);
+            }
+            index += len + 1;
+        }
+        return result;
+    }
+
+    public void parseS0789Data(Context context){
+        HashMap<String ,byte[]> items = parseRawData(srcData);
+
+        if(items.containsKey("22")){
+            byte[] data = items.get("22");
+            String hexData = MyUtils.bytes2HexString(data, 0);
+            String head = hexData.substring(0,4);
+            if (!(head.toLowerCase().equals("aafe") || head.toLowerCase().equals("0708") || head.toLowerCase().equals("3561"))){
+                deviceType = "errorDevice";
+                return;
+            }
+            if(data.length == 20){
+                this.nid = hexData.substring(8,28);
+                this.bid = hexData.substring(28,40);
+            }else{
+                if(data[2] == 0x07){
+                    if(data.length < 13){
+                        return;
+                    }
+                    this.hardware = MyUtils.parseHardwareVersion(data[3]);
+                    this.software = MyUtils.parseSoftwareVersion(data,4);
+                    id = hexData.substring(14,26).toUpperCase();
+                    this.modelName = "T-button";
+                    this.deviceType = "S07";
+                    this.broadcastType = "Beacon";
+                    this.flag = "-";
+                    this.battery = "-";
+                    this.batteryPercent = "-";
+                    this.move = "-";
+                    this.moveDetection = "-";
+                    this.stopDetection = "-";
+                    this.pitchAngle = "-";
+                    this.rollAngle = "-";
+                    this.deviceProp = "-";
+                    this.major = "-";
+                    this.minor = "-";
+                    if(data.length < 19){
+
+                    }else{
+                        if(data[13] == 0x01){
+                            this.broadcastType = "Long range";
+                        } else{
+                            this.broadcastType = "Eddystone T-button";
+                        }
+                        int batteryVoltage = MyUtils.bytes2Short(data,14);
+                        battery = String.format("%.3f V",batteryVoltage / 1000.0f);
+                        batteryPercent = (data[16] & 0xff) + "%";
+                        byte warnByte = data[17];
+                        warn = warnByte;
+                        if(data[18] == 0x01){
+                            flag = "SOS";
+                        }else if(data[18] == 0x02){
+                            flag = context.getResources().getString(R.string.identification);
+                        }else{
+                            flag = "";
+                        }
+                    }
+
+
+                }else if(data[2] == 0x08){
+                    if(data.length < 13){
+                        return;
+                    }
+                    this.hardware = MyUtils.parseHardwareVersion(data[3]);
+                    this.software = MyUtils.parseSoftwareVersion(data,4);
+                    id = hexData.substring(14,26).toUpperCase();
+                    this.modelName = "T-sense";
+                    this.deviceType = "S08";
+                    this.broadcastType = "Beacon";
+                    this.flag = "-";
+                    this.battery = "-";
+                    this.batteryPercent = "-";
+                    this.doorStatus = "-";
+                    this.move = "-";
+                    this.moveDetection = "-";
+                    this.stopDetection = "-";
+                    this.pitchAngle = "-";
+                    this.rollAngle = "-";
+                    this.deviceProp = "-";
+                    this.major = "-";
+                    this.minor = "-";
+                    if(data.length < 23){
+
+                    }else{
+                        Boolean isGensor = false;
+                        if((data[13] & 0x01) == 0x01){
+                            this.broadcastType = "Long range";
+                        }else  {
+                            this.broadcastType = "Eddystone T-sense";
+                        }
+                        if((data[13] & 0x02) == 0x02){
+                            isGensor = true;
+                        }else if((data[13] & 0x04) == 0x04){
+                            //"One wire";
+                        }
+                        int batteryVoltage = MyUtils.bytes2Short(data,14);
+                        battery = String.format("%.3f V",batteryVoltage / 1000.0f);
+                        batteryPercent = (data[16] & 0xff) + "%";
+                        int tempSrc =  MyUtils.bytes2Short(data,17);
+                        int temp = (tempSrc & 0x7fff) * ((tempSrc & 0x8000) == 0x8000 ? -1 : 1);
+                        sourceTemp = temp /100.0f;
+                        if(data[20] == 0x00){
+                            deviceProp = context.getResources().getString(R.string.normal);
+                        }else{
+                            deviceProp = context.getResources().getString(R.string.strong_light);
+                        }
+                        byte humidityByte = data[19];
+                        byte doorByte = data[21];
+                        if(doorByte == 0x02){
+                            doorStatus = context.getResources().getString(R.string.disable);
+                        }else{
+                            doorStatus = doorByte == 0x01 ? context.getResources().getString(R.string.prop_door_open) : context.getResources().getString(R.string.prop_door_close);
+                        }
+                        if(isGensor){
+                            this.moveStatus = (data[22] & 0xff) >> 6;
+                            if(moveStatus == 0){
+                                this.move = context.getResources().getString(R.string.move_static);
+                            }else if(moveStatus == 1){
+                                this.move = context.getResources().getString(R.string.move_move);
+                            }else if(moveStatus == 2){
+                                this.move = context.getResources().getString(R.string.move_forbidden);
+                            }
+                            int moveInt = MyUtils.bytes2Short(data,22);
+                            int stopInt  = MyUtils.bytes2Short(data,23);
+                            this.moveDetection = String.valueOf((moveInt & 0x3FF8) >> 3);
+                            this.stopDetection = String.valueOf(stopInt & 0x7ff);
+
+                            this.pitchAngle =  String.valueOf((int)data[25]);
+                            this.rollAngle = String.valueOf(MyUtils.byte2SignShort(data,26));
+                            byte warnByte = data[28];
+                            warn = warnByte;
+                        }else{
+                            byte warnByte = data[22];
+                            warn = warnByte;
+                        }
+                    }
+
+
+                }else if(data[2] == 0x09){
+                    if(data.length < 13){
+                        return;
+                    }
+                    this.hardware = MyUtils.parseHardwareVersion(data[3]);
+                    this.software = MyUtils.parseSoftwareVersion(data,4);
+                    id = hexData.substring(14,26).toUpperCase();
+                    this.modelName = "T-hub";
+                    this.deviceType = "S09";
+                }else if(data[2] == 0x0a){
+                    if(data.length < 13){
+                        return;
+                    }
+                    this.hardware = MyUtils.parseHardwareVersion(data[3]);
+                    this.software = MyUtils.parseSoftwareVersion(data,4);
+                    id = hexData.substring(14,26).toUpperCase();
+                    this.modelName = "T-one";
+                    this.deviceType = "S10";
+                    this.broadcastType = "Beacon";
+                    this.flag = "-";
+                    this.battery = "-";
+                    this.batteryPercent = "-";
+                    this.doorStatus = "-";
+                    this.humidity = "-";
+                    this.move = "-";
+                    this.moveDetection = "-";
+                    this.stopDetection = "-";
+                    this.pitchAngle = "-";
+                    this.rollAngle = "-";
+                    this.deviceProp = "-";
+                    this.major = "-";
+                    this.minor = "-";
+                    if(data.length < 22){
+
+                    }else{
+                        Boolean isGensor = false;
+                        if((data[13] & 0x01) == 0x01){
+                            this.broadcastType = "Long range";
+                        }else  {
+                            this.broadcastType = "Eddystone T-one";
+                        }
+                        if((data[13] & 0x02) == 0x02){
+                            isGensor = true;
+                        }else if((data[13] & 0x04) == 0x04){
+                            //"One wire";
+                        }
+                        int batteryVoltage = MyUtils.bytes2Short(data,14);
+                        battery = String.format("%.3f V",batteryVoltage / 1000.0f);
+                        batteryPercent = (data[16] & 0xff) + "%";
+                        int tempSrc =  MyUtils.bytes2Short(data,17);
+                        int temp = (tempSrc & 0x7fff) * ((tempSrc & 0x8000) == 0x8000 ? -1 : 1);
+                        sourceTemp = temp /100.0f;
+                        if(data[20] == 0x00){
+                            deviceProp = context.getResources().getString(R.string.normal);
+                        }else{
+                            deviceProp = context.getResources().getString(R.string.strong_light);
+                        }
+                        byte humidityByte = data[19];
+                        humidity = String.valueOf((int)humidityByte);
+
+                        byte warnByte = data[21];
+                        warn = warnByte;
+                    }
+
+                }else{
+                    deviceType = "errorDevice";
+                }
+            }
+
+        }
+        if(items.containsKey("255") == true){
+            byte[] data = items.get("255");
+            if(data.length == 13){
+                String hexData = MyUtils.bytes2HexString(data, 0);
+                String head = hexData.substring(0,4);
+                if(data[2] == 0x07){
+                    if(data.length < 13){
+                        return;
+                    }
+                    this.hardware = MyUtils.parseHardwareVersion(data[3]);
+                    this.software = MyUtils.parseSoftwareVersion(data,4);
+                    id = hexData.substring(14,26).toUpperCase();
+                    this.modelName = "T-button";
+                    this.deviceType = "S07";
+                    this.broadcastType = "Eddystone UID";
+                    this.flag = "-";
+                    this.battery = "-";
+                    this.batteryPercent = "-";
+                    this.move = "-";
+                    this.moveDetection = "-";
+                    this.stopDetection = "-";
+                    this.pitchAngle = "-";
+                    this.rollAngle = "-";
+                    this.deviceProp = "-";
+                    this.major = "-";
+                    this.minor = "-";
+                }else if(data[2] == 0x08){
+                    if(data.length < 13){
+                        return;
+                    }
+                    this.hardware = MyUtils.parseHardwareVersion(data[3]);
+                    this.software = MyUtils.parseSoftwareVersion(data,4);
+                    id = hexData.substring(14,26).toUpperCase();
+                    this.modelName = "T-sense";
+                    this.deviceType = "S08";
+                    this.broadcastType = "Eddystone UID";
+                    this.flag = "-";
+                    this.battery = "-";
+                    this.batteryPercent = "-";
+                    this.doorStatus = "-";
+                    this.move = "-";
+                    this.moveDetection = "-";
+                    this.stopDetection = "-";
+                    this.pitchAngle = "-";
+                    this.rollAngle = "-";
+                    this.deviceProp = "-";
+                    this.major = "-";
+                    this.minor = "-";
+                }else if(data[2] == 0x09){
+                    if(data.length < 13){
+                        return;
+                    }
+                    this.hardware = MyUtils.parseHardwareVersion(data[3]);
+                    this.software = MyUtils.parseSoftwareVersion(data,4);
+                    id = hexData.substring(14,26).toUpperCase();
+                    this.modelName = "T-hub";
+                    this.deviceType = "S09";
+                }else if(data[2] == 0x0a){
+                    if(data.length < 13){
+                        return;
+                    }
+                    this.hardware = MyUtils.parseHardwareVersion(data[3]);
+                    this.software = MyUtils.parseSoftwareVersion(data,4);
+                    id = hexData.substring(14,26).toUpperCase();
+                    this.modelName = "T-one";
+                    this.deviceType = "S10";
+                    this.broadcastType = "Eddystone UID";
+                    this.flag = "-";
+                    this.battery = "-";
+                    this.batteryPercent = "-";
+                    this.doorStatus = "-";
+                    this.humidity = "-";
+                    this.move = "-";
+                    this.moveDetection = "-";
+                    this.stopDetection = "-";
+                    this.pitchAngle = "-";
+                    this.rollAngle = "-";
+                    this.deviceProp = "-";
+                    this.major = "-";
+                    this.minor = "-";
+                }else{
+                    deviceType = "errorDevice";
+                }
+            }else if(data.length == 25){
+                this.major = String.valueOf(MyUtils.bytes2Short(data,20));
+                this.minor = String.valueOf(MyUtils.bytes2Short(data,22));
+            }
+        }
+        if(deviceType == null){
+            deviceType = "errorDevice";
+        }
     }
 
     public void parseData(Context context){
@@ -398,9 +913,14 @@ public class BleDeviceData {
                     sourceTemp = temp /100.0f;
                     byte humidityByte = srcData[17];
                     byte lightByte = srcData[19];
+                    byte lightStatusByte = srcData[18];
                     byte warnByte = srcData[20];
                     humidity = String.valueOf((int)humidityByte);
                     deviceProp = lightByte == 0x01 ? context.getResources().getString(R.string.prop_light) : context.getResources().getString(R.string.prop_dark);
+
+                    if((lightStatusByte & 0x80) == 0x80){
+                        deviceProp = context.getResources().getString(R.string.lightSenseDisable);
+                    }
                     warn = warnByte;
 
                 }else if(deviceTypeByte == 0x04){

@@ -31,7 +31,7 @@ import java.util.concurrent.Executors;
 
 public class OpenAPI {
 
-    private static final String URL = "http://openapi.tftiot.com:8010/v1/";
+    private static final String URL = "http://openapi.tftiot.com:8050/v1/";
 
     private static class SingletonHolder {
         static OpenAPI openAPI = new OpenAPI();
@@ -194,6 +194,85 @@ public class OpenAPI {
         }.executeOnExecutor(openapiThreadPool);
     }
 
+    private void commonPostNoNeedToken(final Callback callback, final String urlStr, final HashMap<String, String> httpParams, final String requestMethod,String actionName){
+
+        new AsyncTask<String, Void, JSONObject>() {
+            @Override
+            protected JSONObject doInBackground(String... params) {
+                StringBuffer sb = new StringBuffer();
+                JSONObject object = new JSONObject();
+                if (httpParams != null){
+                    for (String key : httpParams.keySet()){
+                        try {
+                            object.put(key,httpParams.get(key));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                if(actionName != null){
+                    JSONObject outObj = new JSONObject();
+                    try {
+                        outObj.put(actionName,object);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    object = outObj;
+                }
+                try {
+                    HttpURLConnection conn = getHttpURLConnection(urlStr , requestMethod);// + "&" + param
+                    if (!requestMethod.equals("DELETE")){
+                        OutputStreamWriter writer = new OutputStreamWriter(conn.getOutputStream(), "UTF-8");
+                        writer.write(object.toString());
+                        writer.close();
+                    } else {
+                        conn.setDoOutput(false);
+                    }
+                    BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                    StringBuffer jsonString = new StringBuffer();
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        jsonString.append(line);
+                    }
+                    br.close();
+                    conn.disconnect();
+                    String resultStr = jsonString.toString();
+                    JSONObject jsonObj = new JSONObject(resultStr);
+                    return jsonObj;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    JSONObject err = new JSONObject();
+                    try {
+                        err.put("status",-1);
+                        err.put("err",e.getLocalizedMessage());
+                        return err;
+                    } catch (JSONException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(JSONObject result) {
+                if (null == result) {
+                    callback.callback(Callback.StatusCode.ERROR,"");
+                } else {
+                    try {
+                        int errCode = result.getInt("status");
+                        if (errCode == -1){
+                            callback.callback(Callback.StatusCode.ERROR,result.toString());
+                            return;
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    callback.callback(Callback.StatusCode.OK,result.toString());
+                }
+            }
+        }.executeOnExecutor(openapiThreadPool);
+    }
+
     private void getNotNeedAccessToken(final Callback callback,final String urlStr, final HashMap<String,String> httpParams){
         new AsyncTask<String, Void, JSONObject>() {
             @Override
@@ -226,7 +305,7 @@ public class OpenAPI {
                     e.printStackTrace();
                     JSONObject err = new JSONObject();
                     try {
-                        err.put("status",-1);
+                        err.put("code",-1);
                         err.put("err",e.getLocalizedMessage());
                         return err;
                     } catch (JSONException ex) {
@@ -243,7 +322,7 @@ public class OpenAPI {
                     callback.callback(Callback.StatusCode.ERROR,"");
                 } else {
                     try {
-                        int errCode = result.getInt("status");
+                        int errCode = result.getInt("code");
                         if (errCode == -1){
                             callback.callback(Callback.StatusCode.ERROR,result.toString());
                             return;
@@ -341,10 +420,23 @@ public class OpenAPI {
 
 
     public void getServerVersion(String deviceType,final Callback callback){
-        String urlStr = URL + "ble-version";
+        String urlStr = URL + "sensor-upgrade-control-out";
         HashMap<String,String> params = new HashMap<>();
         params.put("device_type",deviceType);
+        params.put("opr_type","getSensorVersion");
         getNotNeedAccessToken(callback,urlStr,params);
+//        commonPostNoNeedToken(callback,urlStr,params,"POST","getSensorVersion");
+    }
+
+    public void getBetaServerVersion(String deviceType,String mac,final Callback callback){
+        String urlStr = URL + "sensor-upgrade-control-out";
+        HashMap<String,String> params = new HashMap<>();
+        params.put("device_type",deviceType);
+        params.put("mac",mac);
+        params.put("opr_type","getSensorBetaVersion");
+        params.put("is_debug",MyUtils.isDebug ? "1" : "0");
+        getNotNeedAccessToken(callback,urlStr,params);
+//        commonPostNoNeedToken(callback,urlStr,params,"POST","getSensorBetaVersion");
     }
 
 }

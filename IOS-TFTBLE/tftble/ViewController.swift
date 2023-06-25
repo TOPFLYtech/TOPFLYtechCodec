@@ -748,7 +748,10 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         deviceItem.updateValue(deviceType, forKey: "deviceType")
         deviceItem.updateValue(model, forKey: "deviceTypeDesc")
         deviceItem.updateValue(hardware, forKey: "hardware")
+        var softwareStr = "V" + software
+        var softwareInt = Int(software.replacingOccurrences(of: ".", with: "")) ?? 0
         deviceItem.updateValue(software, forKey: "software")
+        deviceItem.updateValue(String(softwareInt), forKey: "softwareInt")
         if bleData[0] == 0x07{
             if((bleData[11] & 0x01) == 0x01){
                 broadcastType = "Long range"

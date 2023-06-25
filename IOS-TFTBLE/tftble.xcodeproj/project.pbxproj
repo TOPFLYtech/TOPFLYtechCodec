@@ -780,7 +780,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.0.17;
+				CURRENT_PROJECT_VERSION = 1.0.18;
 				DEVELOPMENT_TEAM = 6W672XHN78;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = tftble/Info.plist;
@@ -789,7 +789,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.17;
+				MARKETING_VERSION = 1.0.18;
 				"OTHER_CODE_SIGN_FLAGS[sdk=*]" = "--generate-entitlement-der";
 				PRODUCT_BUNDLE_IDENTIFIER = com.topflytech.tftble;
 				PRODUCT_NAME = TFTBLE;
@@ -807,7 +807,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.0.17;
+				CURRENT_PROJECT_VERSION = 1.0.18;
 				DEVELOPMENT_TEAM = 6W672XHN78;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = tftble/Info.plist;
@@ -816,7 +816,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.17;
+				MARKETING_VERSION = 1.0.18;
 				"OTHER_CODE_SIGN_FLAGS[sdk=*]" = "--generate-entitlement-der";
 				PRODUCT_BUNDLE_IDENTIFIER = com.topflytech.tftble;
 				PRODUCT_NAME = TFTBLE;

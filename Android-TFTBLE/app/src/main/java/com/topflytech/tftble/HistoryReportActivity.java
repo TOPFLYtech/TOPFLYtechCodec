@@ -7,6 +7,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.ContextWrapper;
 import android.content.Intent;
@@ -164,6 +165,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_history_report);
+        @SuppressLint("ResourceType")
         String yaHeiFontName = getResources().getString(R.raw.msyhl);
         yaHeiFontName += ",1";
         selector = new FontSelector();
@@ -280,7 +282,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
                     overMinTempLimitTime += endTempCalDate - startTempCalDate;
                 }
             }
-            if(deviceType.equals("S02")){
+            if(deviceType.equals("S02") || deviceType.equals("S10")){
                 if(humidityAlarmUp != 4095 && bleHisData.getHumidity() > humidityAlarmUp){
                     if (!beginHumidityUp){
                         beginHumidityUp = true;
@@ -367,7 +369,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
         imgOpenCount = (ImageView)findViewById(R.id.img_open_count);
         imgCloseCount = (ImageView)findViewById(R.id.img_close_count);
         txDeviceModel = (TextView)findViewById(R.id.tx_ble_model);
-        if(deviceType.equals("S04")){
+        if(deviceType.equals("S04") || deviceType.equals("S08")){
             llS02Summary.setVisibility(View.GONE);
             llS04Summary.setVisibility(View.VISIBLE);
             llHumidityChart.setVisibility(View.GONE);
@@ -384,16 +386,24 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
         txReportEndTime.setText(tableDateFormat.format(new Date(endDate)));
         txBatteryBegin.setText(getResources().getString(R.string.begin)+startBattery + "%");
         txBatteryEnd.setText(getResources().getString(R.string.end)+endBattery+"%");
-        if(deviceType.equals("S02")){
+        if(deviceType.equals("S02") || deviceType.equals("S10")){
             txReportProp.setText(R.string.light);
             imgOpenCount.setImageResource(R.mipmap.ic_light_open);
             imgCloseCount.setImageResource(R.mipmap.ic_light_close);
-            txDeviceModel.setText("TSTH1-B");
+            if(deviceType.equals("S10")){
+                txDeviceModel.setText("T-one");
+            }else{
+                txDeviceModel.setText("TSTH1-B");
+            }
         }else{
             txReportProp.setText(R.string.door);
             imgOpenCount.setImageResource(R.mipmap.ic_door_open);
             imgCloseCount.setImageResource(R.mipmap.ic_door_close);
-            txDeviceModel.setText("TSDT1-B");
+            if(deviceType.equals("S08")){
+                txDeviceModel.setText("T-sense");
+            }else{
+                txDeviceModel.setText("TSDT1-B");
+            }
         }
         txOpenCount.setText(String.valueOf(propOpenCount));
         txCloseCount.setText(String.valueOf(propCloseCount));
@@ -922,19 +932,19 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
         };
         final Column<Float> humidityColumn = new Column<>(getResources().getString(R.string.table_head_humidity), "humidity",humidityFormat);
         String propDesc = getResources().getString(R.string.table_head_light);
-        if(deviceType.equals("S04")){
+        if(deviceType.equals("S04") || deviceType.equals("S08")){
             propDesc = getResources().getString(R.string.table_head_door);
         }
         IFormat<Integer> propFormat =  new IFormat<Integer>() {
             @Override
             public String format(Integer value) {
-                if(deviceType.equals("S02")){
+                if(deviceType.equals("S02")  || deviceType.equals("S10")){
                     if(value == 1){
                         return getResources().getString(R.string.prop_light);
                     }else{
                         return getResources().getString(R.string.prop_dark);
                     }
-                }else if(deviceType.equals("S04")){
+                }else if(deviceType.equals("S04") || deviceType.equals("S08")){
                     if(value == 1){
                         return getResources().getString(R.string.prop_door_open);
                     }else{
@@ -954,13 +964,13 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
                 }
             };
             final Column<Byte> alarmColumn = new Column<>(getResources().getString(R.string.table_head_warn), "alarm",alarmFormat);
-            if(deviceType.equals("S02")){
+            if(deviceType.equals("S02") || deviceType.equals("S10")){
                 tableData = new PageTableData<>("",showBleHisData,dateColumn,batteryColumn,tempColumn,humidityColumn,propColumn,alarmColumn);
             }else{
                 tableData = new PageTableData<>("",showBleHisData,dateColumn,batteryColumn,tempColumn,propColumn,alarmColumn);
             }
         }else{
-            if(deviceType.equals("S02")){
+            if(deviceType.equals("S02") || deviceType.equals("S10")){
                 tableData = new PageTableData<>("",showBleHisData,dateColumn,batteryColumn,tempColumn,humidityColumn,propColumn);
             }else{
                 tableData = new PageTableData<>("",showBleHisData,dateColumn,batteryColumn,tempColumn,propColumn);
@@ -1433,7 +1443,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
         Document document = new Document();
         try {
             saveToGallery(tempChart, getSaveName("temp"));
-            if(deviceType.equals("S02")){
+            if(deviceType.equals("S02") || deviceType.equals("S10")){
                 saveToGallery(humidityChart, getSaveName("humidity"));
             }
             File file = new File(realPath);
@@ -1498,7 +1508,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
             reportSumTable.addCell(lightCloseCell);
             document.add(reportSumTable);
 
-            if(deviceType.equals("S02")){
+            if(deviceType.equals("S02")  || deviceType.equals("S10")){
                 PdfPTable detailSumTable = new PdfPTable(3);
                 detailSumTable.setSpacingBefore(10f);
                 detailSumTable.setSpacingAfter(10f);
@@ -1695,13 +1705,13 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
             }
             int detailColumnCount = 6;
             if(reportType.equals("alarm")){
-                if(deviceType.equals("S02")){
+                if(deviceType.equals("S02") || deviceType.equals("S10")){
                     detailColumnCount = 6;
                 }else{
                     detailColumnCount = 5;
                 }
             }else{
-                if(deviceType.equals("S02")){
+                if(deviceType.equals("S02") || deviceType.equals("S10")){
                     detailColumnCount = 5;
                 }else{
                     detailColumnCount = 4;
@@ -1714,7 +1724,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
             detailTable.addCell(tableBatteryHeadCell);
             PdfPCell tableTempHeadCell = new PdfPCell(new Paragraph(selector.process(getResources().getString(R.string.table_head_temp))));
             detailTable.addCell(tableTempHeadCell);
-            if(deviceType.equals("S02")){
+            if(deviceType.equals("S02") || deviceType.equals("S10")){
                 PdfPCell tableHumidityHeadCell = new PdfPCell(new Paragraph(selector.process(getResources().getString(R.string.table_head_humidity))));
                 detailTable.addCell(tableHumidityHeadCell);
                 PdfPCell tablePropHeadCell = new PdfPCell(new Paragraph(selector.process(getResources().getString(R.string.table_head_light))));
@@ -1735,7 +1745,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
                 detailTable.addCell(tableBatteryValueCell);
                 PdfPCell tableTempValueCell = new PdfPCell(new Paragraph(BleDeviceData.getCurTemp(HistoryReportActivity.this,bleHisData.getTemp())));
                 detailTable.addCell(tableTempValueCell);
-                if(deviceType.equals("S02")){
+                if(deviceType.equals("S02") || deviceType.equals("S10")){
                     PdfPCell tableHumidityValueCell = new PdfPCell(new Paragraph(String.format("%.0f",bleHisData.getHumidity())));
                     detailTable.addCell(tableHumidityValueCell);
                     String propValue = bleHisData.getProp() == 1 ? getResources().getString(R.string.prop_light) : getResources().getString(R.string.prop_dark);
@@ -1865,7 +1875,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
         head.add(getResources().getString(R.string.table_head_date));
         head.add(getResources().getString(R.string.table_head_battery));
         head.add(getResources().getString(R.string.table_head_temp));
-        if(deviceType.equals("S02")){
+        if(deviceType.equals("S02") || deviceType.equals("S10")){
             head.add(getResources().getString(R.string.table_head_humidity));
             head.add(getResources().getString(R.string.table_head_light));
         }else{
@@ -1880,7 +1890,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
             line.add(tableDateFormat.format(bleHisData.getDate()));
             line.add(bleHisData.getBattery() + "%");
             line.add(BleDeviceData.getCurTemp(HistoryReportActivity.this,bleHisData.getTemp()) + BleDeviceData.getCurTempUnit(HistoryReportActivity.this));
-            if(deviceType.equals("S02")){
+            if(deviceType.equals("S02") || deviceType.equals("S10")){
                 line.add(String.format("%.0f",bleHisData.getHumidity()));
                 String propValue = bleHisData.getProp() == 1 ? getResources().getString(R.string.prop_light) : getResources().getString(R.string.prop_dark);
                 line.add(propValue);
@@ -2024,7 +2034,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
     public boolean exportExcel(String filePath){
         try {
             saveToGallery(tempChart, getSaveName("temp"));
-            if(deviceType.equals("S02")){
+            if(deviceType.equals("S02") || deviceType.equals("S10")){
                 saveToGallery(humidityChart, getSaveName("humidity"));
             }
             OutputStream os = new FileOutputStream(filePath);
@@ -2068,7 +2078,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
             addExcelString(mWritableSheet,2,rowIndex,"↓:" + txCloseCount.getText().toString());
             rowIndex++;
 
-            if(deviceType.equals("S02")){
+            if(deviceType.equals("S02") || deviceType.equals("S10")){
                 rowIndex++;
                 addExcelString(mWritableSheet,1,rowIndex,getResources().getString(R.string.table_head_temp) + "(" + BleDeviceData.getCurTempUnit(HistoryReportActivity.this) + ")");
                 addExcelString(mWritableSheet,2,rowIndex,getResources().getString(R.string.table_head_humidity));
@@ -2186,7 +2196,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
             addExcelString(mWritableSheet,colIndex,rowIndex,getResources().getString(R.string.table_head_battery));
             colIndex++;
             addExcelString(mWritableSheet,colIndex,rowIndex,getResources().getString(R.string.table_head_temp));
-            if(deviceType.equals("S02")){
+            if(deviceType.equals("S02") || deviceType.equals("S10")){
                 colIndex++;
                 addExcelString(mWritableSheet,colIndex,rowIndex,getResources().getString(R.string.table_head_humidity));
                 colIndex++;
@@ -2209,7 +2219,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
                 colIndex++;
                 addExcelString(mWritableSheet,colIndex,rowIndex,BleDeviceData.getCurTemp(HistoryReportActivity.this,bleHisData.getTemp()) + BleDeviceData.getCurTempUnit(HistoryReportActivity.this));
 
-                if(deviceType.equals("S02")){
+                if(deviceType.equals("S02") || deviceType.equals("S10")){
                     colIndex++;
                     addExcelString(mWritableSheet,colIndex,rowIndex,String.format("%.0f",bleHisData.getHumidity()));
                     colIndex++;
