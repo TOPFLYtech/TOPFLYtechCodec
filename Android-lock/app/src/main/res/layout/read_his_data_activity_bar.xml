@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+    <ImageView
+        android:id="@+id/command_list_bar_back_id"
+        android:layout_width="@dimen/tab_action_bar_img_size"
+        android:layout_height="@dimen/tab_action_bar_img_size"
+        android:src="@mipmap/ic_back"
+        android:padding="5dp"
+        android:layout_centerVertical="true"
+        android:scaleType="centerCrop"
+        android:clickable="true"
+        />
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+
+        >
+
+        <TextView
+            android:id="@+id/edit_command_title"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:gravity="center"
+            android:maxLines="1"
+            android:text="@string/main_bar_text"
+            android:textColor="@color/actionbar_text"
+            android:textSize="14dp" />
+    </RelativeLayout>
+    <ImageView
+        android:id="@+id/btn_light_status"
+        android:layout_toLeftOf="@+id/command_edit_menu"
+        android:layout_height="@dimen/tab_action_bar_right_imgbtn_size"
+        android:layout_width="@dimen/tab_action_bar_right_imgbtn_size"
+        android:layout_centerVertical="true"
+        android:src="@mipmap/light_blue"
+        android:padding="5dp"
+        android:gravity="center"
+        />
+    <ImageView
+        android:id="@+id/command_edit_menu"
+        android:layout_toLeftOf="@+id/command_edit_reconnect"
+        android:layout_height="@dimen/tab_action_bar_right_imgbtn_size"
+        android:layout_width="@dimen/tab_action_bar_right_imgbtn_size"
+        android:layout_centerVertical="true"
+        android:src="@mipmap/ic_list"
+        android:padding="5dp"
+        android:gravity="center"
+        />
+    <ImageView
+        android:id="@+id/command_edit_reconnect"
+        android:layout_alignParentRight="true"
+        android:layout_height="@dimen/tab_action_bar_right_imgbtn_size"
+        android:layout_width="@dimen/tab_action_bar_right_imgbtn_size"
+        android:layout_centerVertical="true"
+        android:src="@mipmap/ic_refresh"
+        android:padding="5dp"
+        android:gravity="center"
+        />
+</RelativeLayout>

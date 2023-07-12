@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" android:background="@color/bg_color_white"
+    >
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="420dp"
+        android:orientation="horizontal"
+        android:gravity="center"
+        >
+        <EditText
+            android:id="@+id/et_instruction_sequence"
+            android:inputType="textMultiLine"
+            android:gravity="top"
+            android:layout_width="match_parent"
+            android:layout_height="400dp"
+            android:background="@drawable/edit_bg"
+            android:textCursorDrawable="@drawable/edit_cursor_color"
+            android:singleLine="false"
+            android:layout_marginRight="15dp"
+            android:layout_marginLeft="15dp"
+            android:textColor="@color/tx_black"
+            android:scrollbars="horizontal"
+            android:textSize="@dimen/btn_size" />
+
+    </LinearLayout>　
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/edit_item_high"
+        android:orientation="horizontal"
+        android:gravity="center"
+        >
+        <com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton
+            android:layout_width="200dp"
+            android:layout_height="30dp"
+            android:textAllCaps="false"
+            android:text="@string/confirm"
+            android:layout_margin="12dp"
+            android:id="@+id/btn_send_instruction_sequence_confirm">
+        </com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton>
+    </LinearLayout>
+</LinearLayout>
