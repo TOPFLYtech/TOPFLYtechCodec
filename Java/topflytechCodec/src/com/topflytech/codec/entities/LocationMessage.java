@@ -1168,7 +1168,53 @@ public class LocationMessage extends Message{
     private int exPowerConsumpStatus; //0:unknown,1:normal,2abnormal
 
     private int remainFuelUnit = 0;//0:% ,1:L
-    private int mileageSource = 0;//0:GPS 1:ECU
+    private int mileageSource = 0;//0:GPS 1:ECU,2:FMS
+    private boolean isHadFmsData = false;
+    private Long fmsEngineHours;
+    private Integer hdop;
+    private Integer fmsSpeed;// km/h
+    private Long fmsAccumulatingFuelConsumption;
+
+    public Long getFmsAccumulatingFuelConsumption() {
+        return fmsAccumulatingFuelConsumption;
+    }
+
+    public void setFmsAccumulatingFuelConsumption(Long fmsAccumulatingFuelConsumption) {
+        this.fmsAccumulatingFuelConsumption = fmsAccumulatingFuelConsumption;
+    }
+
+    public Integer getFmsSpeed() {
+        return fmsSpeed;
+    }
+
+    public void setFmsSpeed(Integer fmsSpeed) {
+        this.fmsSpeed = fmsSpeed;
+    }
+
+    public boolean isHadFmsData() {
+        return isHadFmsData;
+    }
+
+    public void setHadFmsData(boolean hadFmsData) {
+        isHadFmsData = hadFmsData;
+    }
+
+    public Long getFmsEngineHours() {
+        return fmsEngineHours;
+    }
+
+    public void setFmsEngineHours(Long fmsEngineHours) {
+        this.fmsEngineHours = fmsEngineHours;
+    }
+    public Integer getHdop() {
+        return hdop;
+    }
+
+    public void setHdop(Integer hdop) {
+        this.hdop = hdop;
+    }
+
+
 
     public int getMileageSource() {
         return mileageSource;

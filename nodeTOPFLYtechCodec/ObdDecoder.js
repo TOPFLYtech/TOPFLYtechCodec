@@ -22,6 +22,7 @@ var ObdDecoder = {
     obdHead:[0x55,0xAA],
     LOCATION_DATA_WITH_SENSOR:[0x26, 0x26, 0x16],
     LOCATION_ALARM_WITH_SENSOR:[0x26, 0x26, 0x18],
+    WIFI_DATA :  [0x26, 0x26, 0x15],
     encryptType:0,
     aesKey:"",
     MASK_IGNITION : 0x4000,
@@ -48,6 +49,7 @@ var ObdDecoder = {
             || ByteUtils.arrayEquals(this.OBD_DATA,bytes)
             || ByteUtils.arrayEquals(this.LOCATION_DATA_WITH_SENSOR,bytes)
             || ByteUtils.arrayEquals(this.LOCATION_ALARM_WITH_SENSOR,bytes)
+            || ByteUtils.arrayEquals(this.WIFI_DATA,bytes)
     },
     decode(buf){
         TopflytechByteBuf.putBuf(buf);
@@ -135,6 +137,9 @@ var ObdDecoder = {
                 case 0x12:
                     var bluetoothPeripheralDataSecondMessage = this.parseSecondBluetoothDataMessage(bytes);
                     return bluetoothPeripheralDataSecondMessage;
+                case 0x15:
+                        var  wifiMessage = this.parseWifiMessage(bytes);
+                        return wifiMessage;
                 case 0x81:
                     var message =  this.parseInteractMessage(bytes);
                     return message;
@@ -178,7 +183,7 @@ var ObdDecoder = {
         var strSp = ByteUtils.bytes2HexString(bytesSpeed, 0);
         var startSpeed = 0;
         if (strSp.toLowerCase() !== "ffff"){
-            startSpeed = parseFloat(strSp.substring(0, 3) + "." + strSp.substring(3, strSp.length()));
+            startSpeed = parseFloat(strSp.substring(0, 3) + "." + strSp.substring(3, strSp.length));
         }
         gpsDriverBehaviorMessage.startSpeed = startSpeed;
         var azimuth = ByteUtils.byteToShort(bytes, 36);
@@ -303,7 +308,7 @@ var ObdDecoder = {
         if (!latlngValid){
             var lbsByte = bytes[curParseIndex + 12];
             if ((lbsByte & 0x80) == 0x80){
-                is_4g_lbs = true; 
+                is_4g_lbs = true;
             }else{
                 is_2g_lbs = true;
             }
@@ -319,7 +324,7 @@ var ObdDecoder = {
             ci_2g_3 = ByteUtils.byteToShort(bytes,curParseIndex + 26);
         }
         if (is_4g_lbs){
-            mcc_4g = ByteUtils.byteToShort(bytes,curParseIndex + 12);
+            mcc_4g = ByteUtils.byteToShort(bytes,curParseIndex + 12) & 0x7FFF;
             mnc_4g = ByteUtils.byteToShort(bytes,curParseIndex + 14);
             ci_4g = ByteUtils.byteToLong(bytes, curParseIndex + 16);
             earfcn_4g_1 = ByteUtils.byteToShort(bytes, curParseIndex + 20);
@@ -438,7 +443,7 @@ var ObdDecoder = {
         if (!latlngValid){
             var lbsByte = bytes[curParseIndex + 12];
             if ((lbsByte & 0x80) == 0x80){
-                is_4g_lbs = true; 
+                is_4g_lbs = true;
             }else{
                 is_2g_lbs = true;
             }
@@ -454,7 +459,7 @@ var ObdDecoder = {
             ci_2g_3 = ByteUtils.byteToShort(bytes,curParseIndex + 26);
         }
         if (is_4g_lbs){
-            mcc_4g = ByteUtils.byteToShort(bytes,curParseIndex + 12);
+            mcc_4g = ByteUtils.byteToShort(bytes,curParseIndex + 12) & 0x7FFF;
             mnc_4g = ByteUtils.byteToShort(bytes,curParseIndex + 14);
             ci_4g = ByteUtils.byteToLong(bytes, curParseIndex + 16);
             earfcn_4g_1 = ByteUtils.byteToShort(bytes, curParseIndex + 20);
@@ -597,7 +602,7 @@ var ObdDecoder = {
             if (!latlngValid){
                 var lbsByte = bleData[11];
                 if ((lbsByte & 0x80) == 0x80){
-                    is_4g_lbs = true; 
+                    is_4g_lbs = true;
                 }else{
                     is_2g_lbs = true;
                 }
@@ -613,7 +618,7 @@ var ObdDecoder = {
                 ci_2g_3 = ByteUtils.byteToShort(bleData,25);
             }
             if (is_4g_lbs){
-                mcc_4g = ByteUtils.byteToShort(bleData,11);
+                mcc_4g = ByteUtils.byteToShort(bleData,11) & 0x7FFF;
                 mnc_4g = ByteUtils.byteToShort(bleData,13);
                 ci_4g = ByteUtils.byteToLong(bleData, 15);
                 earfcn_4g_1 = ByteUtils.byteToShort(bleData, 19);
@@ -694,7 +699,7 @@ var ObdDecoder = {
             if (!latlngValid){
                 var lbsByte = bleData[11];
                 if ((lbsByte & 0x80) == 0x80){
-                    is_4g_lbs = true; 
+                    is_4g_lbs = true;
                 }else{
                     is_2g_lbs = true;
                 }
@@ -710,7 +715,7 @@ var ObdDecoder = {
                 ci_2g_3 = ByteUtils.byteToShort(bleData,25);
             }
             if (is_4g_lbs){
-                mcc_4g = ByteUtils.byteToShort(bleData,11);
+                mcc_4g = ByteUtils.byteToShort(bleData,11) & 0x7FFF;
                 mnc_4g = ByteUtils.byteToShort(bleData,13);
                 ci_4g = ByteUtils.byteToLong(bleData, 15);
                 earfcn_4g_1 = ByteUtils.byteToShort(bleData, 19);
@@ -1055,7 +1060,7 @@ var ObdDecoder = {
         if (!latlngValid){
             var lbsByte = bytes[23];
             if ((lbsByte & 0x80) == 0x80){
-                is_4g_lbs = true; 
+                is_4g_lbs = true;
             }else{
                 is_2g_lbs = true;
             }
@@ -1071,7 +1076,7 @@ var ObdDecoder = {
             ci_2g_3 = ByteUtils.byteToShort(bytes,37);
         }
         if (is_4g_lbs){
-            mcc_4g = ByteUtils.byteToShort(bytes,23);
+            mcc_4g = ByteUtils.byteToShort(bytes,23) & 0x7FFF;
             mnc_4g = ByteUtils.byteToShort(bytes,25);
             ci_4g = ByteUtils.byteToLong(bytes, 27);
             earfcn_4g_1 = ByteUtils.byteToShort(bytes, 31);
@@ -1528,7 +1533,73 @@ var ObdDecoder = {
                 messageType:"signIn",
             }
             return signInMessage
+        }else if(bytes.length >= 35){
+            var serialNo = ByteUtils.byteToShort(bytes,5);
+            var imei = ByteUtils.IMEI.decode(bytes,7)
+            var model = BytesUtils.bytes2Short(bytes,15);
+            var str = BytesUtils.bytes2HexString(bytes, 17);
+            var software = "V" + str.substring(0, 1) + "." + str.substring(1, 2) + "." + str.substring(2, 3) + "." + str.substring(3, 4)
+            var platform = str.substring(4, 10);
+            var firmware = "V" + str.substring(10, 11) + "." + str.substring(11, 12)+ "." + str.substring(12, 13)+ "." + str.substring(13, 14)
+            var hardware = "V" + str.substring(14, 15) + "." + str.substring(15, 16)
+            var obdV1 = bytes[25];
+            var obdV2 = bytes[26];
+            var obdV3 = bytes[27];
+            if(obdV1 < 0){
+                obdV1 += 256;
+            }
+            if(obdV2 < 0){
+                obdV2 += 256;
+            }
+            if(obdV3 < 0){
+                obdV3 += 256;
+            }
+            var obdSoftware = "V" + obdV1 + "." + obdV2 + "." + obdV3
+            obdV1 = bytes[28];
+            obdV2 = bytes[29];
+            obdV3 = bytes[30];
+            if(obdV1 < 0){
+                obdV1 += 256;
+            }
+            if(obdV2 < 0){
+                obdV2 += 256;
+            }
+            if(obdV3 < 0){
+                obdV3 += 256;
+            }
+            var obdBootVersion = "V" + obdV1 + "." + obdV2 + "." + obdV3
+            obdV1 = bytes[31];
+            obdV2 = bytes[32];
+            obdV3 = bytes[33];
+            if(obdV1 < 0){
+                obdV1 += 256;
+            }
+            if(obdV2 < 0){
+                obdV2 += 256;
+            }
+            if(obdV3 < 0){
+                obdV3 += 256;
+            }
+            var obdDataVersion = "V" + obdV1 + "." + obdV2 + "." + obdV3
+            var obdHardware = "V" + ((bytes[34] & 0xf0) >> 4) + "." + (bytes[34] & 0xf)
+            var signInMessage = {
+                serialNo:serialNo,
+                imei:imei,
+                software:software,
+                firmware:firmware,
+                platform:platform,
+                hardware:hardware,
+                srcBytes:bytes,
+                obdSoftware:obdSoftware,
+                obdHardware:obdHardware,
+                messageType:"signIn",
+                model:model,
+                obdDataVersion:obdBootVersion,
+                obdBootVersion:obdBootVersion,
+            }
+            return signInMessage;
         }
+        return null
     },
     parseDataMessage:function(bytes){
         var serialNo = ByteUtils.byteToShort(bytes,5);
@@ -1592,7 +1663,7 @@ var ObdDecoder = {
         var isSendSmsAlarmToManagerPhone = (data[19] & 0x20) == 0x20;
         var isSendSmsAlarmWhenDigitalInput2Change = (data[19] & 0x10) == 0x10;
         var jammerDetectionStatus = (data[19] & 0xC);
-        var mileageSource  = (data[19] & 0x01) == 0x01 ? "GPS" : "ECU";
+        var mileageSource  = (data[19] & 0x02) == 0x02 ? "GPS" : "ECU";
         var isAlarmData = bytes[2] == 0x04  || bytes[2] == 0x18;
         var mileage = ByteUtils.byteToLong(data, 20);
         var batteryBytes = [data[24]]
@@ -1628,7 +1699,7 @@ var ObdDecoder = {
         if (!latlngValid){
             var lbsByte = data[31];
             if ((lbsByte & 0x80) == 0x80){
-                is_4g_lbs = true; 
+                is_4g_lbs = true;
             }else{
                 is_2g_lbs = true;
             }
@@ -1644,7 +1715,7 @@ var ObdDecoder = {
             ci_2g_3 = ByteUtils.byteToShort(data,45);
         }
         if (is_4g_lbs){
-            mcc_4g = ByteUtils.byteToShort(data,31);
+            mcc_4g = ByteUtils.byteToShort(data,31) & 0x7FFF;
             mnc_4g = ByteUtils.byteToShort(data,33);
             ci_4g = ByteUtils.byteToLong(data, 35);
             earfcn_4g_1 = ByteUtils.byteToShort(data, 39);
@@ -1914,7 +1985,34 @@ var ObdDecoder = {
         }else{
             return "U" + data[0] - 12
         }
-    }
+    },
+    parseWifiMessage:function(bytes){
+        var serialNo = ByteUtils.byteToShort(bytes,5);
+        var imei = ByteUtils.IMEI.decode(bytes,7)
+        var wifiMessage = {
+            serialNo:serialNo,
+            imei:imei,
+            srcBytes:bytes,
+            messageType:"wifi",
+        }
+        var date = ByteUtils.getGTM0Date(bytes, 15);
+        var selfMac =  ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes, 21, 27), 0);
+        var ap1Mac =  ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes, 27, 33), 0);
+        var ap1Rssi = bytes[33];
+        var ap2Mac =  ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes,34,40),0);
+        var ap2Rssi = bytes[40];
+        var ap3Mac =  ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes,41,47),0);
+        var ap3Rssi = bytes[47];
+        wifiMessage.setDate = date
+        wifiMessage.selfMac = selfMac.toUpperCase()
+        wifiMessage.ap1Mac = ap1Mac.toUpperCase()
+        wifiMessage.ap1Rssi = ap1Rssi
+        wifiMessage.ap2Mac = ap2Mac.toUpperCase()
+        wifiMessage.ap2Rssi = ap2Rssi
+        wifiMessage.ap3Mac = ap3Mac.toUpperCase()
+        wifiMessage.ap3Rssi = ap3Rssi
+        return wifiMessage;
+    },
 }
 
 module.exports = ObdDecoder;

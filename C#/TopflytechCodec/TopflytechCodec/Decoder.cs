@@ -56,31 +56,40 @@ namespace TopflytechCodec
         private static byte[] rs232FingerprintHead = { (byte)0x00, (byte)0x02, (byte)0x6C, (byte)0x62, (byte)0x63 };
         private static byte[] rs232CapacitorFuelHead = { (byte)0x00, (byte)0x04 };
         private static byte[] rs232UltrasonicFuelHead = { (byte)0x00, (byte)0x05 };
+        private static byte[] WIFI_DATA = { 0x25, 0x25, (byte)0x15 };
+        private static byte[] RS485_DATA = { 0x25, 0x25, (byte)0x21 };
+        private static byte[] OBD_DATA = { 0x25, 0x25, (byte)0x22 };
+        private static byte[] ONE_WIRE_DATA = { 0x25, 0x25, (byte)0x23 };
 
+        private static byte[] obdHead = { 0x55, (byte)0xAA };
         private static bool match(byte[] bytes)
         {
             return Utils.ArrayEquals(SIGNUP, bytes)
-                    || Utils.ArrayEquals(HEARTBEAT, bytes)
-                    || Utils.ArrayEquals(DATA, bytes)
-                    || Utils.ArrayEquals(ALARM, bytes)
-                    || Utils.ArrayEquals(CONFIG, bytes)
-                    || Utils.ArrayEquals(SIGNUP_880XPlUS, bytes)
-                    || Utils.ArrayEquals(HEARTBEAT_880XPlUS, bytes)
-                    || Utils.ArrayEquals(DATA_880XPlUS, bytes)
-                    || Utils.ArrayEquals(ALARM_880XPlUS, bytes)
-                    || Utils.ArrayEquals(CONFIG_880XPlUS, bytes)
-                    || Utils.ArrayEquals(GPS_DRIVER_BEHAVIOR, bytes)
-                    || Utils.ArrayEquals(ACCELERATION_DRIVER_BEHAVIOR, bytes)
-                    || Utils.ArrayEquals(ACCELERATION_ALARM, bytes)
-                    || Utils.ArrayEquals(BLUETOOTH_MAC, bytes)
-                    || Utils.ArrayEquals(RS232, bytes)
-                    || Utils.ArrayEquals(BLUETOOTH_DATA, bytes)
-                    || Utils.ArrayEquals(NETWORK_INFO_DATA, bytes)
-                    || Utils.ArrayEquals(BLUETOOTH_SECOND_DATA, bytes)
-                    || Utils.ArrayEquals(LOCATION_SECOND_DATA, bytes)
-                    || Utils.ArrayEquals(ALARM_SECOND_DATA, bytes)
-                    || Utils.ArrayEquals(LOCATION_DATA_WITH_SENSOR, bytes)
-                    || Utils.ArrayEquals(LOCATION_ALARM_WITH_SENSOR, bytes);
+                || Utils.ArrayEquals(HEARTBEAT, bytes)
+                || Utils.ArrayEquals(DATA, bytes)
+                || Utils.ArrayEquals(ALARM, bytes)
+                || Utils.ArrayEquals(CONFIG, bytes)
+                || Utils.ArrayEquals(SIGNUP_880XPlUS, bytes)
+                || Utils.ArrayEquals(HEARTBEAT_880XPlUS, bytes)
+                || Utils.ArrayEquals(DATA_880XPlUS, bytes)
+                || Utils.ArrayEquals(ALARM_880XPlUS, bytes)
+                || Utils.ArrayEquals(CONFIG_880XPlUS, bytes)
+                || Utils.ArrayEquals(GPS_DRIVER_BEHAVIOR, bytes)
+                || Utils.ArrayEquals(ACCELERATION_DRIVER_BEHAVIOR, bytes)
+                || Utils.ArrayEquals(ACCELERATION_ALARM, bytes)
+                || Utils.ArrayEquals(BLUETOOTH_MAC, bytes)
+                || Utils.ArrayEquals(BLUETOOTH_DATA, bytes)
+                || Utils.ArrayEquals(NETWORK_INFO_DATA, bytes)
+                || Utils.ArrayEquals(BLUETOOTH_SECOND_DATA, bytes)
+                || Utils.ArrayEquals(LOCATION_SECOND_DATA, bytes)
+                || Utils.ArrayEquals(ALARM_SECOND_DATA, bytes)
+                || Utils.ArrayEquals(RS232, bytes)
+                || Utils.ArrayEquals(LOCATION_DATA_WITH_SENSOR, bytes)
+                || Utils.ArrayEquals(WIFI_DATA, bytes)
+                || Utils.ArrayEquals(RS485_DATA, bytes)
+                || Utils.ArrayEquals(OBD_DATA, bytes)
+                || Utils.ArrayEquals(ONE_WIRE_DATA, bytes)
+                || Utils.ArrayEquals(LOCATION_ALARM_WITH_SENSOR, bytes);
         }
 
 
@@ -215,6 +224,18 @@ namespace TopflytechCodec
                     case 0x14:
                         LocationMessage locationSecondMessage = parseSecondDataMessage(bytes);
                         return locationSecondMessage;
+                    case 0x15:
+                        WifiMessage wifiMessage = parseWifiMessage(bytes);
+                        return wifiMessage;
+                    case 0x21:
+                        RS485Message rs485Message = parseRs485Message(bytes);
+                        return rs485Message;
+                    case 0x22:
+                        ObdMessage obdMessage = parseObdMessage(bytes);
+                        return obdMessage;
+                    case 0x23:
+                        OneWireMessage oneWireMessage = parseOneWireMessage(bytes);
+                        return oneWireMessage;
                     case (byte)0x81:
                         Message message = parseInteractMessage(bytes);
                         return message;
@@ -225,6 +246,221 @@ namespace TopflytechCodec
             return null;
         }
 
+        private OneWireMessage parseOneWireMessage(byte[] bytes)
+        {
+            OneWireMessage oneWireMessage = new OneWireMessage();
+            int serialNo = BytesUtils.Bytes2Short(bytes, 5);
+            String imei = BytesUtils.IMEI.Decode(bytes, 7);
+            DateTime gmt0 = Utils.getGTM0Date(bytes, 15);
+            bool isIgnition = (bytes[21] & 0x01) == 0x01;
+            String deviceId = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 22, 30), 0);
+            byte[] oneWireData = Utils.ArrayCopyOfRange(bytes, 30, bytes.Length);
+            oneWireMessage.OrignBytes = bytes;
+            oneWireMessage.Imei = imei;
+            oneWireMessage.SerialNo = serialNo;
+            oneWireMessage.Date = gmt0;
+            oneWireMessage.DeviceId = deviceId;
+            oneWireMessage.IsIgnition = isIgnition;
+            oneWireMessage.OneWireData = oneWireData;
+            return oneWireMessage;
+        }
+
+        private RS485Message parseRs485Message(byte[] bytes)
+        {
+            RS485Message rs485Message = new RS485Message();
+            int serialNo = BytesUtils.Bytes2Short(bytes, 5); 
+            String imei = BytesUtils.IMEI.Decode(bytes, 7);
+            DateTime gmt0 = Utils.getGTM0Date(bytes, 15);
+            bool isIgnition = (bytes[21] & 0x01) == 0x01;
+            int deviceId = bytes[22];
+            byte[] rs485Data = Utils.ArrayCopyOfRange(bytes, 23, bytes.Length);
+            rs485Message.OrignBytes = bytes;
+            rs485Message.Imei = imei;
+            rs485Message.SerialNo = serialNo;
+            rs485Message.Date = gmt0; 
+            rs485Message.DeviceId = deviceId;
+            rs485Message.IsIgnition = isIgnition;
+            rs485Message.Rs485Data = rs485Data;
+            return rs485Message;
+        }
+
+        private WifiMessage parseWifiMessage(byte[] bytes)
+        {
+            WifiMessage wifiMessage = new WifiMessage();
+            int serialNo = BytesUtils.Bytes2Short(bytes, 5);
+            //Boolean isNeedResp = (serialNo & 0x8000) != 0x8000;
+            String imei = BytesUtils.IMEI.Decode(bytes, 7);
+            DateTime gmt0 = Utils.getGTM0Date(bytes, 15);
+            String selfMac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 21, 27), 0);
+            String ap1Mac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 27, 33), 0);
+            int ap1Rssi;
+            int rssiTemp = (int)bytes[33] < 0 ? (int)bytes[33] + 256 : (int)bytes[33];
+            if (rssiTemp == 255)
+            {
+                ap1Rssi = -999;
+            }
+            else
+            {
+                ap1Rssi = rssiTemp - 256;
+            }
+            String ap2Mac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 34, 40), 0);
+            int ap2Rssi;
+            rssiTemp = (int)bytes[40] < 0 ? (int)bytes[40] + 256 : (int)bytes[40];
+            if (rssiTemp == 255)
+            {
+                ap2Rssi = -999;
+            }
+            else
+            {
+                ap2Rssi = rssiTemp - 256;
+            }
+            String ap3Mac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 41, 47), 0);
+            int ap3Rssi;
+            rssiTemp = (int)bytes[47] < 0 ? (int)bytes[47] + 256 : (int)bytes[47];
+            if (rssiTemp == 255)
+            {
+                ap3Rssi = -999;
+            }
+            else
+            {
+                ap3Rssi = rssiTemp - 256;
+            }
+            wifiMessage.OrignBytes = bytes;
+            wifiMessage.Imei = imei;
+            wifiMessage.SerialNo = serialNo;
+            wifiMessage.Date = gmt0;
+            wifiMessage.SelfMac = selfMac.ToUpper();
+            wifiMessage.Ap1Mac = ap1Mac.ToUpper();
+            wifiMessage.Ap1RSSI = ap1Rssi;
+            wifiMessage.Ap2Mac = ap2Mac.ToUpper();
+            wifiMessage.Ap2RSSI = ap2Rssi;
+            wifiMessage.Ap3Mac = ap3Mac.ToUpper();
+            wifiMessage.Ap3RSSI = ap3Rssi;
+            return wifiMessage;
+        }
+        private ObdMessage parseObdMessage(byte[] bytes)
+        {
+            int serialNo = BytesUtils.Bytes2Short(bytes, 5);
+            //Boolean isNeedResp = (serialNo & 0x8000) != 0x8000; 
+            String imei = BytesUtils.IMEI.Decode(bytes, 7);
+            DateTime date = Utils.getGTM0Date(bytes, 15);
+
+            ObdMessage obdData = new ObdMessage();
+            obdData.Imei = imei;
+            obdData.OrignBytes = bytes;
+            obdData.SerialNo = serialNo;
+            //obdData.IsNeedResp = isNeedResp;
+            obdData.Date = date;
+            byte[] obdBytes = Utils.ArrayCopyOfRange(bytes, 21, bytes.Length);
+
+            byte[] head = new byte[2];
+            head[0] = obdBytes[0];
+            head[1] = obdBytes[1];
+            if (Utils.ArrayEquals(head, obdHead))
+            {
+                obdBytes[2] = (byte)(obdBytes[2] & 0x0F);//去除高位
+                int length = BytesUtils.Bytes2Short(obdBytes, 2);
+                if (length > 0)
+                {
+                    try
+                    {
+                        byte[] data = Utils.ArrayCopyOfRange(obdBytes, 4, 4 + length);
+                        if ((data[0] & 0x41) == 0x41 && data[1] == 0x04 && data.Length > 3)
+                        {
+                            obdData.MessageType = ObdMessage.CLEAR_ERROR_CODE_MESSAGE;
+                            obdData.ClearErrorCodeSuccess = data[2] == 0x01;
+                        }
+                        else if ((data[0] & 0x41) == 0x41 && data[1] == 0x05 && data.Length > 2)
+                        {
+                            byte[] vinData = Utils.ArrayCopyOfRange(data, 2, data.Length - 1);
+                            bool dataValid = false;
+                            foreach (byte item in vinData)
+                            {
+                                if ((item & 0xFF) != 0xFF)
+                                {
+                                    dataValid = true;
+                                }
+                            }
+                            if (vinData.Length > 0 && dataValid)
+                            {
+                                obdData.MessageType = ObdMessage.VIN_MESSAGE;
+                                obdData.Vin = System.Text.Encoding.UTF8.GetString(vinData);
+                            }
+                        }
+                        else if ((data[0] & 0x41) == 0x41 && (data[1] == 0x03 || data[1] == 0x0A))
+                        {
+                            int errorCode = data[2];
+                            byte[] errorDataByte = Utils.ArrayCopyOfRange(data, 3, data.Length - 1);
+                            String errorDataStr = BytesUtils.Bytes2HexString(errorDataByte, 0);
+                            if (errorDataStr != null)
+                            {
+                                String errorDataSum = "";
+                                for (int i = 0; i + 6 <= errorDataStr.Length; i += 6)
+                                {
+                                    String errorDataItem = errorDataStr.Substring(i, 6);
+                                    String srcFlag = errorDataItem.Substring(0, 1);
+                                    String errorDataCode = getObdErrorFlag(srcFlag) + errorDataItem.Substring(1, 4);
+                                    if (!errorDataSum.Contains(errorDataCode))
+                                    {
+                                        if (i != 0)
+                                        {
+                                            errorDataSum += ";";
+                                        }
+                                        errorDataSum += errorDataCode;
+                                    }
+                                    if (i + 6 >= errorDataStr.Length)
+                                    {
+                                        break;
+                                    }
+                                }
+                                obdData.MessageType = ObdMessage.ERROR_CODE_MESSAGE;
+                                obdData.ErrorCode = getObdErrorCode(errorCode);
+                                obdData.ErrorData = errorDataSum;
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+
+                    }
+                }
+            }
+            return obdData;
+        }
+
+        private String getObdErrorCode(int errorCode)
+        {
+            if (errorCode == 0)
+            {
+                return "J1979";
+            }
+            else if (errorCode == 1)
+            {
+                return "J1939";
+            }
+            return "";
+        }
+
+        private String getObdErrorFlag(String srcFlag)
+        {
+            byte[] data = BytesUtils.HexString2Bytes(srcFlag);
+            if (data[0] >= 0 && data[0] < 4)
+            {
+                return "P" + (int)(data[0]);
+            }
+            else if (data[0] >= 4 && data[0] < 8)
+            {
+                return "C" + (int)(data[0] - 4);
+            }
+            else if (data[0] >= 8 && data[0] < 12)
+            {
+                return "B" + (int)(data[0] - 8);
+            }
+            else
+            {
+                return "U" + (int)(data[0] - 12);
+            }
+        }
         private NetworkInfoMessage parseNetworkInfoMessage(byte[] bytes)
         {
             NetworkInfoMessage networkInfoMessage = new NetworkInfoMessage();
@@ -690,7 +926,11 @@ namespace TopflytechCodec
             byte[] bytesSpeed = new byte[2];
             Array.Copy(bytes, 34, bytesSpeed, 0, 2);
             String strSp = BytesUtils.Bytes2HexString(bytesSpeed, 0);
-            float speedf = (float)Convert.ToDouble(String.Format("{0}.{1}", Convert.ToInt32(strSp.Substring(0, 3)), Convert.ToInt32(strSp.Substring(3, strSp.Length - 3))));
+            float speedf = 0f;
+            if (!strSp.Equals("ffff"))
+            {
+                speedf = (float)Convert.ToDouble(String.Format("{0}.{1}", Convert.ToInt32(strSp.Substring(0, 3)), Convert.ToInt32(strSp.Substring(3, strSp.Length - 3))));
+            }
             gpsDriverBehaviorMessage.StartSpeed = speedf;
             int azimuth = BytesUtils.Bytes2Short(bytes, 36);
             gpsDriverBehaviorMessage.StartAzimuth = azimuth;
@@ -830,7 +1070,7 @@ namespace TopflytechCodec
             }
             if (is_4g_lbs)
             {
-                mcc_4g = BytesUtils.Bytes2Short(bytes, curParseIndex + 12);
+                mcc_4g = BytesUtils.Bytes2Short(bytes, curParseIndex + 12) & 0x7FFF;
                 mnc_4g = BytesUtils.Bytes2Short(bytes, curParseIndex + 14);
                 ci_4g = BytesUtils.Byte2Int(bytes, curParseIndex + 16);
                 earfcn_4g_1 = BytesUtils.Bytes2Short(bytes, curParseIndex + 20);
@@ -933,7 +1173,7 @@ namespace TopflytechCodec
             }
             if (is_4g_lbs)
             {
-                mcc_4g = BytesUtils.Bytes2Short(bytes, curParseIndex + 12);
+                mcc_4g = BytesUtils.Bytes2Short(bytes, curParseIndex + 12) & 0x7FFF;
                 mnc_4g = BytesUtils.Bytes2Short(bytes, curParseIndex + 14);
                 ci_4g = BytesUtils.Byte2Int(bytes, curParseIndex + 16);
                 earfcn_4g_1 = BytesUtils.Bytes2Short(bytes, curParseIndex + 20);
@@ -1064,7 +1304,7 @@ namespace TopflytechCodec
             }
             if (is_4g_lbs)
             {
-                mcc_4g = BytesUtils.Bytes2Short(bytes, 23);
+                mcc_4g = BytesUtils.Bytes2Short(bytes, 23) & 0x7FFF;
                 mnc_4g = BytesUtils.Bytes2Short(bytes, 25);
                 ci_4g = BytesUtils.Byte2Int(bytes, 27);
                 earfcn_4g_1 = BytesUtils.Bytes2Short(bytes, 31);
@@ -1720,7 +1960,7 @@ namespace TopflytechCodec
                 }
                 if (is_4g_lbs)
                 {
-                    mcc_4g = BytesUtils.Bytes2Short(bleData, 11);
+                    mcc_4g = BytesUtils.Bytes2Short(bleData, 11) & 0x7FFF;
                     mnc_4g = BytesUtils.Bytes2Short(bleData, 13);
                     ci_4g = BytesUtils.Byte2Int(bleData, 15);
                     earfcn_4g_1 = BytesUtils.Bytes2Short(bleData, 19);
@@ -1843,7 +2083,7 @@ namespace TopflytechCodec
                 }
                 if (is_4g_lbs)
                 {
-                    mcc_4g = BytesUtils.Bytes2Short(bleData, 11);
+                    mcc_4g = BytesUtils.Bytes2Short(bleData, 11) & 0x7FFF;
                     mnc_4g = BytesUtils.Bytes2Short(bleData, 13);
                     ci_4g = BytesUtils.Byte2Int(bleData, 15);
                     earfcn_4g_1 = BytesUtils.Bytes2Short(bleData, 19);
@@ -2266,6 +2506,8 @@ namespace TopflytechCodec
             int input4 = (iop & 0x800) == 0x800 ? 1 : 0;
             int input5 = (iop & 0x400) == 0x400 ? 1 : 0;
             int input6 = (iop & 0x200) == 0x200 ? 1 : 0;
+            bool isHadFmsData = (iop & 0x80) == 0x80;
+            bool isMileageSrcIsFms = (iop & 0x40) == 0x40;
             int output1 = (data[18] & 0x20) == 0x20 ? 1 : 0;
             int output2 = (data[18] & 0x10) == 0x10 ? 1 : 0;
             int output3 = (data[18] & 0x8) == 0x8 ? 1 : 0;
@@ -2292,7 +2534,7 @@ namespace TopflytechCodec
 
             str = BytesUtils.Bytes2HexString(data, 22);
             float analoginput2 = 0;
-            if (!str.ToLower().Equals("ffff"))
+            if (!str.ToLower().StartsWith("ffff"))
             {
                 try
                 {
@@ -2310,7 +2552,7 @@ namespace TopflytechCodec
 
             str = BytesUtils.Bytes2HexString(data, 24);
             float analoginput3 = 0;
-            if (!str.ToLower().Equals("ffff"))
+            if (!str.ToLower().StartsWith("ffff"))
             {
                 try
                 {
@@ -2328,7 +2570,7 @@ namespace TopflytechCodec
 
             str = BytesUtils.Bytes2HexString(data, 26);
             float analoginput4 = 0;
-            if (!str.ToLower().Equals("ffff"))
+            if (!str.ToLower().StartsWith("ffff"))
             {
                 try
                 {
@@ -2346,7 +2588,7 @@ namespace TopflytechCodec
 
             str = BytesUtils.Bytes2HexString(data, 28);
             float analoginput5 = 0;
-            if (!str.ToLower().Equals("ffff"))
+            if (!str.ToLower().StartsWith("ffff"))
             {
                 try
                 {
@@ -2440,7 +2682,7 @@ namespace TopflytechCodec
             }
             if (is_4g_lbs)
             {
-                mcc_4g = BytesUtils.Bytes2Short(data, 43);
+                mcc_4g = BytesUtils.Bytes2Short(data, 43) & 0x7FFF;
                 mnc_4g = BytesUtils.Bytes2Short(data, 45);
                 ci_4g = BytesUtils.Byte2Int(data, 47);
                 earfcn_4g_1 = BytesUtils.Bytes2Short(data, 51);
@@ -2476,6 +2718,10 @@ namespace TopflytechCodec
             }
             int rpm = 0;
             rpm = BytesUtils.Bytes2Short(data, 63);
+            if (rpm == 32768 || rpm == 65535)
+            {
+                rpm = -999;
+            }
             bool isSmartUploadSupport = (data[65] & 0x8) == 0x8;
             bool supportChangeBattery = (data[66] & 0x8) == 0x8;
             float deviceTemp = -999;
@@ -2483,6 +2729,7 @@ namespace TopflytechCodec
             {
                 deviceTemp = (data[68] & 0x7F) * ((data[68] & 0x80) == 0x80 ? -1 : 1);
             }
+            int fmsSpeed = data[66];
             LocationMessage message;
             if (isAlarmData)
             {
@@ -2493,6 +2740,64 @@ namespace TopflytechCodec
             {
                 message = new LocationInfoMessage();
                 message.ProtocolHeadType = 0x13;
+            }
+            message.IsHadFmsData = isHadFmsData;
+            if (data.Length >= 74)
+            {
+                int hdop = BytesUtils.Bytes2Short(data, 69);
+                message.Hdop = hdop;
+                if (isHadFmsData)
+                {
+                    analoginput4 = -999;
+                    analoginput5 = -999;
+                    long engineHours = BytesUtils.Byte2Int(data, 26);
+                    if (engineHours == 4294967295l)
+                    {
+                        engineHours = -999;
+                    }
+                    int coolingFluidTemp = (int)data[71] < 0 ? (int)data[71] + 256 : (int)data[71];
+                    if (coolingFluidTemp == 255)
+                    {
+                        coolingFluidTemp = -999;
+                    }
+                    else
+                    {
+                        coolingFluidTemp = coolingFluidTemp - 40;
+                    }
+                    int remainFuel = (int)data[72];
+                    if (remainFuel == 255)
+                    {
+                        remainFuel = -999;
+                    }
+                    int engineLoad = (int)data[73];
+                    if (engineLoad == 255)
+                    {
+                        engineLoad = -999;
+                    }
+                    message.FmsEngineHours= engineHours;
+                    message.RemainFuelRate= remainFuel;
+                    message.EngineLoad = engineLoad;
+                    message.CoolingFluidTemp = coolingFluidTemp;
+                    message.FmsSpeed = fmsSpeed;
+                    if (data.Length >= 78)
+                    {
+                        long fmsAccumulatingFuelConsumption = BytesUtils.Byte2Int(data, 74);
+                        if (fmsAccumulatingFuelConsumption == 4294967295l)
+                        {
+                            fmsAccumulatingFuelConsumption = -999;
+                        }
+                        else
+                        {
+                            fmsAccumulatingFuelConsumption = fmsAccumulatingFuelConsumption * 1000;
+                        }
+                        message.FmsAccumulatingFuelConsumption = fmsAccumulatingFuelConsumption;
+                    }
+                    supportChangeBattery = false;
+                }
+            }
+            if (isMileageSrcIsFms)
+            {
+                message.MileageSource = 2;
             }
             message.OrignBytes = bytes;
             message.SerialNo = serialNo;
@@ -2745,7 +3050,7 @@ namespace TopflytechCodec
             }
             if (is_4g_lbs)
             {
-                mcc_4g = BytesUtils.Bytes2Short(data, 35);
+                mcc_4g = BytesUtils.Bytes2Short(data, 35) & 0x7FFF;
                 mnc_4g = BytesUtils.Bytes2Short(data, 37);
                 ci_4g = BytesUtils.Byte2Int(data, 39);
                 earfcn_4g_1 = BytesUtils.Bytes2Short(data, 43);

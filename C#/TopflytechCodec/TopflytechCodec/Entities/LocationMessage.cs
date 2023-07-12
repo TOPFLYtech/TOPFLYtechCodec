@@ -818,11 +818,24 @@ namespace TopflytechCodec.Entities
             set { remainFuelUnit = value; }
         }
 
-        private int mileageSource = 0;//0:GPS; 1:ECU
+        private int mileageSource = 0;//0:GPS; 1:ECU,2:FMS
         public Int32 MileageSource
         {
             get { return mileageSource; }
             set { mileageSource = value; }
         }
+
+        public long FmsEngineHours { get => fmsEngineHours; set => fmsEngineHours = value; }
+        public bool IsHadFmsData { get => isHadFmsData; set => isHadFmsData = value; }
+        public int Hdop { get => hdop; set => hdop = value; }
+        public int FmsSpeed { get => fmsSpeed; set => fmsSpeed = value; }
+        public long FmsAccumulatingFuelConsumption { get => fmsAccumulatingFuelConsumption; set => fmsAccumulatingFuelConsumption = value; }
+
+        private bool isHadFmsData = false;
+        private Int64 fmsEngineHours;
+        private Int32 hdop;
+        private Int32 fmsSpeed;// km/h
+        private Int64 fmsAccumulatingFuelConsumption;
+
     }
 }

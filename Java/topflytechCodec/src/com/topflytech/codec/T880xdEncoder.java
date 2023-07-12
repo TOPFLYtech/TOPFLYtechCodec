@@ -228,5 +228,8 @@ public class T880xdEncoder {
         byte[] command = {0x26, 0x26, (byte)0x82};
         return Encoder.getObdConfigSettingMsg(imei, content, command, encryptType, aesKey);
     }
-
+    public  byte[] getWifiMsgReply(String imei,boolean needSerialNo,int serialNo) throws IOException {
+        byte[] command = {0x26, 0x26, 0x15};
+        return Encoder.getWifiMsgReply(imei, needSerialNo, serialNo, command, encryptType, aesKey);
+    }
 }

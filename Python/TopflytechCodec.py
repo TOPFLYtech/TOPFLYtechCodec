@@ -94,6 +94,52 @@ class WifiMessage(Message):
     ap2RSSI=0
     ap3Mac=""
     ap3RSSI=0
+class WifiWithDeviceInfoMessage(Message):
+    def __init__(self):
+        self.date = None
+        self.selfMac = None
+        self.ap1Mac = None
+        self.ap1RSSI = 0
+        self.ap2Mac = None
+        self.ap2RSSI = 0
+        self.ap3Mac = None
+        self.ap3RSSI = 0
+
+        self.axisX = 0.0
+        self.axisY = 0.0
+        self.axisZ = 0.0
+        self.deviceTemp = None
+        self.lightSensor = None
+        self.batteryVoltage = None
+        self.batteryCharge = 0
+        self.solarVoltage = None
+        self.mileage = 0
+        self.isUsbCharging = None
+        self.isSolarCharging = None
+        self.isManagerConfigured1 = False
+        self.isManagerConfigured2 = False
+        self.isManagerConfigured3 = False
+        self.isManagerConfigured4 = False
+        self.networkSignal = 0
+        self.iopIgnition = None
+        self.samplingIntervalAccOn = 0
+        self.samplingIntervalAccOff = 0
+        self.angleCompensation = 0
+        self.distanceCompensation = 0
+        self.heartbeatInterval = 0
+        self.originalAlarmCode = None
+        self.smartPowerSettingStatus = None
+        self.smartPowerOpenStatus = None
+        self.lockType = None
+
+        self.isLockSim = False
+        self.isLockDevice = False
+        self.AGPSEphemerisDataDownloadSettingStatus = False
+        self.gSensorSettingStatus = False
+        self.frontSensorSettingStatus = False
+        self.deviceRemoveAlarmSettingStatus = False
+        self.openCaseAlarmSettingStatus = False
+        self.deviceInternalTempReadingANdUploadingSettingStatus = False
 
 class LockMessage(Message):
     latlngValid = False
@@ -337,10 +383,12 @@ class SignInMessage(Message):
     """
     software = ""  #The software version.like 1.1.1
     firmware = ""  #The firmware version.like 1.1
-    hareware = ""  #The hareware version.like 5.0
+    hardware = ""  #The hardware version.like 5.0
     platform = ""  #The platform. like 6250
     obdHardware = ""
     obdSoftware = ""
+    obdBootVersion = ""
+    obdDataVersion = ""
 
 class HeartbeatMessage(Message):
     pass
@@ -464,7 +512,12 @@ class LocationMessage(Message):
     exPowerConsumpStatus = 0 #0:unknown,1:normal,2abnormal
     hasThirdPartyObd = 0 # 0, 1
     remainFuelUnit = 0
-    mileageSource = 0
+    mileageSource = 0  #0:GPS 1:ECU,2:FMS
+    isHadFmsData = False
+    fmsEngineHours = 0
+    hdop = 0
+    fmsSpeed = 0
+    fmsAccumulatingFuelConsumption = 0
 
 
 class LocationInfoMessage(LocationMessage):
@@ -523,6 +576,150 @@ class GpsDriverBehaviorMessage(Message):
     startRpm = 0
     endRpm = 0
 
+class InnerGeoDataMessage(Message):
+    def __init__(self):
+        self.date = None
+        self.geoList = []
+        self.lockGeofenceEnable = 0
+
+    def getLockGeofenceEnable(self):
+        return self.lockGeofenceEnable
+
+    def setLockGeofenceEnable(self, lockGeofenceEnable):
+        self.lockGeofenceEnable = lockGeofenceEnable
+
+    def getDate(self):
+        return self.date
+
+    def setDate(self, date):
+        self.date = date
+
+    def getGeoList(self):
+        return self.geoList
+
+    def setGeoList(self, geoList):
+        self.geoList = geoList
+
+    def addGeoPoint(self, geo):
+        self.geoList.append(geo)
+
+class InnerGeofence:
+    def __init__(self):
+        self.id = 0
+        self.type = 0
+        self.radius = -1
+        self.points = []
+
+    def getId(self):
+        return self.id
+
+    def setId(self, id):
+        self.id = id
+
+    def getType(self):
+        return self.type
+
+    def setType(self, type):
+        self.type = type
+
+    def getRadius(self):
+        return self.radius
+
+    def setRadius(self, radius):
+        self.radius = radius
+
+    def getPoints(self):
+        return self.points
+
+    def setPoints(self, points):
+        self.points = points
+
+    def addPoint(self, lat, lng):
+        self.points.append([lat, lng])
+
+class OneWireMessage(Message):
+    def __init__(self):
+        self.date = None
+        self.isIgnition = False
+        self.deviceId = ""
+        self.oneWireData = b""
+
+    def getDeviceId(self):
+        return self.deviceId
+
+    def setDeviceId(self, deviceId):
+        self.deviceId = deviceId
+
+    def getOneWireData(self):
+        return self.oneWireData
+
+    def setOneWireData(self, oneWireData):
+        self.oneWireData = oneWireData
+
+    def getDate(self):
+        return self.date
+
+    def setDate(self, date):
+        self.date = date
+
+    def isIgnition(self):
+        return self.isIgnition
+
+    def setIsIgnition(self, ignition):
+        self.isIgnition = ignition
+
+class TalkEndMessage(Message):
+    pass
+class TalkStartMessage(Message):
+    pass
+
+class VoiceMessage(Message):
+    def __init__(self):
+        self.encodeType = 0
+        self.voiceData = b""
+
+    def getEncodeType(self):
+        return self.encodeType
+
+    def setEncodeType(self, encodeType):
+        self.encodeType = encodeType
+
+    def getVoiceData(self):
+        return self.voiceData
+
+    def setVoiceData(self, voiceData):
+        self.voiceData = voiceData
+
+class RS485Message(Message):
+    def __init__(self):
+        self.date = None
+        self.isIgnition = False
+        self.deviceId = 0
+        self.rs485Data = b""
+
+    def getDeviceId(self):
+        return self.deviceId
+
+    def setDeviceId(self, deviceId):
+        self.deviceId = deviceId
+
+    def getRs485Data(self):
+        return self.rs485Data
+
+    def setRs485Data(self, rs485Data):
+        self.rs485Data = rs485Data
+
+    def getDate(self):
+        return self.date
+
+    def setDate(self, date):
+        self.date = date
+
+    def isIgnition(self):
+        return self.isIgnition
+
+    def setIsIgnition(self, ignition):
+        self.isIgnition = ignition
 class AccelerationDriverBehaviorMessage(Message):
     """
         Driver Behavior Via Acceleration (AST Command Control, Default Disable the feature)
@@ -785,12 +982,17 @@ class Decoder:
     rs232FingerprintHead = [0x00,0x02,0x6C,0x62,0x63]
     rs232CapacitorFuelHead = [0x00,0x04]
     rs232UltrasonicFuelHead = [0x00,0x05]
+    WIFI_DATA = [0x25, 0x25,0x15]
+    RS485_DATA = [0x25, 0x25, 0x21]
+    OBD_DATA = [0x25, 0x25, 0x22]
+    ONE_WIRE_DATA = [0x25, 0x25, 0x23]
     MASK_IGNITION =0x4000
     MASK_POWER_CUT =0x8000
     MASK_AC=0x2000
     IOP_RS232_DEVICE_VALID=0x20
     encryptType = 0
     aesKey = ""
+    obdHead = [0x55, 0xAA]
     def __init__(self,messageEncryptType,aesKey):
         """
             Instantiates a new Decoder.
@@ -811,7 +1013,9 @@ class Decoder:
                byteArray == self.ACCELERATION_ALARM or byteArray == self.BLUETOOTH_MAC or byteArray == self.RS232\
                or byteArray == self.BLUETOOTH_DATA or byteArray == self.NETWORK_INFO_DATA or \
                byteArray == self.BLUETOOTH_SECOND_DATA or byteArray == self.LOCATION_SECOND_DATA or \
-               byteArray == self.ALARM_SECOND_DATA or byteArray == self.LOCATION_DATA_WITH_SENSOR or byteArray == self.LOCATION_ALARM_WITH_SENSOR
+               byteArray == self.ALARM_SECOND_DATA or byteArray == self.LOCATION_DATA_WITH_SENSOR or byteArray == self.LOCATION_ALARM_WITH_SENSOR \
+               or byteArray == self.WIFI_DATA or byteArray == self.RS485_DATA or byteArray == self.OBD_DATA \
+               or byteArray == self.ONE_WIRE_DATA
 
     decoderBuf = TopflytechByteBuf()
 
@@ -881,10 +1085,176 @@ class Decoder:
                 return self.parseSecondBluetoothDataMessage(byteArray)
             elif byteArray[2] == 0x13 or byteArray[2] == 0x14:
                 return self.parseSecondDataMessage(byteArray)
+            elif byteArray[2] == 0x15:
+                return self.parseWifiMessage(byteArray)
+            elif byteArray[2] == 0x21:
+                return self.parseRs485Message(byteArray)
+            elif byteArray[2] == 0x22:
+                return self.parseObdMessage(byteArray)
+            elif byteArray[2] == 0x23:
+                return self.parseOneWireMessage(byteArray)
             else:
                 return None
         return None
 
+    def parseRs485Message(self,byteArray):
+        serialNo = bytes2Short(byteArray,5)
+        imei = decodeImei(byteArray,7)
+        rS485Message = RS485Message()
+        rS485Message.serialNo = serialNo
+        rS485Message.imei = imei
+        rS485Message.orignBytes = byteArray
+        isIgnition = (byteArray[21] & 0x01) == 0x01
+        deviceId = byteArray[22]
+        rs485Data = byteArray[23:]
+        rS485Message.isIgnition = isIgnition
+        rS485Message.deviceId = deviceId
+        rS485Message.rs485Data = rs485Data
+        return rS485Message
+
+    def parseOneWireMessage(self, byteArray):
+        serialNo = bytes2Short(byteArray, 5)
+        imei = decodeImei(byteArray, 7)
+        oneWireMessage = OneWireMessage()
+        oneWireMessage.serialNo = serialNo
+        oneWireMessage.imei = imei
+        oneWireMessage.orignBytes = byteArray
+        isIgnition = (byteArray[21] & 0x01) == 0x01
+        deviceId = byte2HexString(byteArray[22:30], 0)
+        oneWireData = byteArray[30:]
+        oneWireMessage.deviceId = deviceId
+        oneWireMessage.oneWireData = oneWireData
+        oneWireMessage.isIgnition = isIgnition
+        return oneWireMessage
+
+    def getObdErrorCode(self,errorCode):
+        if errorCode == 0:
+            return "J1979"
+        elif errorCode == 1:
+            return "J1939"
+        return ""
+
+    def getObdErrorFlag(self,srcFlag):
+        data = int(srcFlag,16)
+        if data >= 0 and data < 4:
+            return "P" + str(data)
+        elif data[0] >= 4 and data < 8:
+            return "C" + str(data - 4)
+        elif data >= 8 and data < 12:
+            return "B" + str(data - 8)
+        else:
+            return "U" + str(data - 12)
+
+    def parseObdMessage(self,byteArray):
+        serialNo = bytes2Short(byteArray,5)
+        # isNeedResp = (serialNo & 0x8000) != 0x8000
+        imei = decodeImei(byteArray,7)
+        dateStr = "20" + byte2HexString(byteArray[15:21],0)
+        gtm0 = GTM0(dateStr)
+        obdData = ObdMessage()
+        obdData.imei = imei
+        obdData.orignBytes = byteArray
+        obdData.serialNo = serialNo
+        # obdData.isNeedResp = isNeedResp
+        obdData.date = gtm0
+        obdBytes = byteArray[21:len(byteArray)]
+
+        head = [obdBytes[0],obdBytes[1]]
+        if head == self.obdHead:
+            obdBytes[2] = obdBytes[2] & 0x0F
+            length = bytes2Short(obdBytes,2)
+            if length > 0:
+                try:
+                    data = obdBytes[4:4+length]
+                    if (data[0] & 0x41) == 0x41 and data[1] == 0x04 and len(data) > 3:
+                        obdData.messageType = ObdMessage.CLEAR_ERROR_CODE_MESSAGE
+                        obdData.clearErrorCodeSuccess = data[2] == 0x01
+                    elif (data[0] & 0x41) == 0x41 and data[1] == 0x05 and len(data) > 2:
+                        vinData = data[2:len(data) - 1]
+                        dataValid = False
+                        for i in range(len(vinData)):
+                            item = vinData[i]
+                            if (item & 0xFF) != 0xFF:
+                                dataValid = True
+                        if len(vinData) and dataValid:
+                            obdData.messageType = ObdMessage.VIN_MESSAGE
+                            obdData.vin = ''.join(chr(i) for i in vinData).encode().decode("UTF-8")
+                    elif (data[0] & 0x41) == 0x41 and (data[1] == 0x03 or data[1] == 0x0A):
+                        errorCode = data[2]
+                        errorDataByte = data[3:len(data) - 1]
+                        errorDataStr = byte2HexString(errorDataByte,0);
+                        if errorDataStr is not None:
+                            errorDataSum = "";
+                            i = 0
+                            while i < len(errorDataStr):
+                                errorDataItem = errorDataStr[i:i+6]
+                                srcFlag = errorDataItem[0:1]
+                                errorDataCode = self.getObdErrorFlag(srcFlag) + errorDataItem[1:4]
+                                if errorDataSum.find(errorDataCode) == -1:
+                                    if i != 0:
+                                        errorDataSum += ";"
+                                    errorDataSum += errorDataCode;
+                                if i+6 >= len(errorDataStr) :
+                                    break;
+                                i+=6
+                            obdData.messageType = ObdMessage.ERROR_CODE_MESSAGE
+                            obdData.errorCode = self.getObdErrorCode(errorCode)
+                            obdData.errorData = errorDataSum
+                except:
+                    print ("error")
+        return obdData
+
+    def parseWifiMessage(self, bytes):
+        wifiMessage = WifiMessage();
+        serialNo = bytes2Short(bytes, 5)
+        imei = decodeImei(bytes, 7)
+        dateStr = "20" + byte2HexString(bytes[15:21], 0)
+        gtm0 = GTM0(dateStr)
+        selfMacByte = bytes[21:27]
+        selfMac = byte2HexString(selfMacByte, 0)
+        ap1MacByte = bytes[27:33]
+        ap1Mac = byte2HexString(ap1MacByte, 0)
+        rssiTemp = (int)(bytes[33])
+        if rssiTemp < 0:
+            rssiTemp += 256
+        ap1RSSI = 0
+        if rssiTemp == 255:
+            ap1RSSI = -999
+        else:
+            ap1RSSI = rssiTemp - 256
+        ap2MacByte = bytes[34:40]
+        ap2Mac = byte2HexString(ap2MacByte, 0)
+        rssiTemp = (int)(bytes[40])
+        if rssiTemp < 0:
+            rssiTemp += 256
+        ap2RSSI = 0
+        if rssiTemp == 255:
+            ap2RSSI = -999
+        else:
+            ap2RSSI = rssiTemp - 256
+        ap3MacByte = bytes[41:47]
+        ap3Mac = byte2HexString(ap3MacByte, 0)
+        rssiTemp = (int)(bytes[47])
+        if rssiTemp < 0:
+            rssiTemp += 256
+        ap3RSSI = 0
+        if rssiTemp == 255:
+            ap3RSSI = -999
+        else:
+            ap3RSSI = rssiTemp - 256
+        wifiMessage.serialNo = serialNo
+        # networkInfoMessage.isNeedResp = isNeedResp
+        wifiMessage.imei = imei
+        wifiMessage.orignBytes = bytes
+        wifiMessage.date = gtm0
+        wifiMessage.selfMac = selfMac
+        wifiMessage.ap1Mac = ap1Mac
+        wifiMessage.ap1RSSI = ap1RSSI
+        wifiMessage.ap2Mac = ap2Mac
+        wifiMessage.ap2RSSI = ap2RSSI
+        wifiMessage.ap3Mac = ap3Mac
+        wifiMessage.ap3RSSI = ap3RSSI
+        return wifiMessage
 
     def parseSignInMessage(self,byteArray):
         serialNo = bytes2Short(byteArray,5)
@@ -895,7 +1265,7 @@ class Decoder:
             software = "V{0}.{1}.{2}".format((byteArray[15] & 0xf0) >> 4, byteArray[15] & 0xf, (byteArray[16] & 0xf0) >> 4)
             firmware = "V{0}.{1}.{2}".format(byteArray[16] & 0xf, (byteArray[17] & 0xf0) >> 4, byteArray[17] & 0xf)
             platform = str[6:10]
-            hareware = "V{0}.{1}".format( (byteArray[20] & 0xf0) >> 4, byteArray[20] & 0xf)
+            hardware = "V{0}.{1}".format( (byteArray[20] & 0xf0) >> 4, byteArray[20] & 0xf)
             signInMessage = SignInMessage()
             signInMessage.firmware = firmware
             signInMessage.imei = imei
@@ -903,20 +1273,20 @@ class Decoder:
             # signInMessage.isNeedResp = isNeedResp
             signInMessage.platform = platform
             signInMessage.software = software
-            signInMessage.hareware = hareware
+            signInMessage.hardware = hardware
             signInMessage.orignBytes = byteArray
             return signInMessage
         elif len(str) == 16:
             software = "V{0}.{1}.{2}.{3}".format((byteArray[15] & 0xf0) >> 4, byteArray[15] & 0xf, (byteArray[16] & 0xf0) >> 4, byteArray[16] & 0xf)
             firmware = "V{0}.{1}.{2}.{3}".format((byteArray[20] & 0xf0) >> 4, byteArray[20] & 0xf, (byteArray[21] & 0xf0) >> 4, byteArray[21] & 0xf)
-            hareware = "V{0}.{1}".format( (byteArray[22] & 0xf0) >> 4, byteArray[22] & 0xf)
+            hardware = "V{0}.{1}".format( (byteArray[22] & 0xf0) >> 4, byteArray[22] & 0xf)
             signInMessage = SignInMessage()
             signInMessage.firmware = firmware
             signInMessage.imei = imei
             signInMessage.serialNo = serialNo
             # signInMessage.isNeedResp = isNeedResp
             signInMessage.software = software
-            signInMessage.hareware = hareware
+            signInMessage.hardware = hardware
             signInMessage.orignBytes = byteArray
             return signInMessage
         return None
@@ -1168,7 +1538,7 @@ class Decoder:
             lac_2g_3 = bytes2Short(byteArray,35)
             ci_2g_3 = bytes2Short(byteArray,37)
         if is_4g_lbs:
-            mcc_4g = bytes2Short(byteArray,23)
+            mcc_4g = bytes2Short(byteArray,23) & 0x7FFF
             mnc_4g = bytes2Short(byteArray,25)
             ci_4g = bytes2Integer(byteArray, 27)
             earfcn_4g_1 = bytes2Short(byteArray, 31)
@@ -1580,7 +1950,7 @@ class Decoder:
                 bleDataList.append(bleFuelData)
                 i+=15
         bluetoothPeripheralDataMessage.bleDataList =bleDataList
-        return bluetoothPeripheralDataMessage;
+        return bluetoothPeripheralDataMessage
 
     def parseBluetoothDataMessage(self,byteArray):
         bluetoothPeripheralDataMessage = BluetoothPeripheralDataMessage()
@@ -1708,7 +2078,7 @@ class Decoder:
                 lac_2g_3 = bytes2Short(bleData,23)
                 ci_2g_3 = bytes2Short(bleData,25)
             if is_4g_lbs:
-                mcc_4g = bytes2Short(bleData,11)
+                mcc_4g = bytes2Short(bleData,11) & 0x7FFF
                 mnc_4g = bytes2Short(bleData,13)
                 ci_4g = bytes2Integer(bleData, 15)
                 earfcn_4g_1 = bytes2Short(bleData, 19)
@@ -1811,7 +2181,7 @@ class Decoder:
                 lac_2g_3 = bytes2Short(bleData,23)
                 ci_2g_3 = bytes2Short(bleData,25)
             if is_4g_lbs:
-                mcc_4g = bytes2Short(bleData,11)
+                mcc_4g = bytes2Short(bleData,11) & 0x7FFF
                 mnc_4g = bytes2Short(bleData,13)
                 ci_4g = bytes2Integer(bleData, 15)
                 earfcn_4g_1 = bytes2Short(bleData, 19)
@@ -2286,7 +2656,7 @@ class Decoder:
             lac_2g_3 = bytes2Short(byteArray,curParseIndex + 24)
             ci_2g_3 = bytes2Short(byteArray,curParseIndex + 26)
         if is_4g_lbs:
-            mcc_4g = bytes2Short(byteArray,curParseIndex + 12)
+            mcc_4g = bytes2Short(byteArray,curParseIndex + 12) & 0x7FFF
             mnc_4g = bytes2Short(byteArray,curParseIndex + 14)
             ci_4g = bytes2Integer(byteArray, curParseIndex + 16)
             earfcn_4g_1 = bytes2Short(byteArray, curParseIndex + 20)
@@ -2388,7 +2758,7 @@ class Decoder:
             lac_2g_3 = bytes2Short(byteArray,curParseIndex + 24)
             ci_2g_3 = bytes2Short(byteArray,curParseIndex + 26)
         if is_4g_lbs:
-            mcc_4g = bytes2Short(byteArray,curParseIndex + 12)
+            mcc_4g = bytes2Short(byteArray,curParseIndex + 12) & 0x7FFF
             mnc_4g = bytes2Short(byteArray,curParseIndex + 14)
             ci_4g = bytes2Integer(byteArray, curParseIndex + 16)
             earfcn_4g_1 = bytes2Short(byteArray, curParseIndex + 20)
@@ -2495,7 +2865,9 @@ class Decoder:
         input3 = (input & 0x1000) == 0x1000
         input4 = (input & 0x800) == 0x800
         input5 = (input & 0x400) == 0x400
-
+        input6 = (input & 0x200) == 0x200
+        isHadFmsData = (input & 0x80) == 0x80;
+        isMileageSrcIsFms = (input & 0x40) == 0x40
         output1 = (data[18] & 0x20) == 0x20
         output2 = (data[18] & 0x10) == 0x10
         output3 = (data[18] & 0x8) == 0x8
@@ -2506,34 +2878,49 @@ class Decoder:
             accdetSettingStatus = 1
         str = byte2HexString(data, 20)
         analoginput = 0
-        try:
-            analoginput = (float)("{0}.{1}".format(str[0:2],str[2:4]))
-        except:
-            print ("alalog1 error")
+        if str.lower().startswith("ffff"):
+            try:
+                analoginput = (float)("{0}.{1}".format(str[0:2],str[2:4]))
+            except:
+                print ("alalog1 error")
+        else:
+            analoginput = -999
         analoginput2 = 0
         str = byte2HexString(data, 22)
-        try:
-            analoginput2 = (float)("{0}.{1}".format(str[0:2],str[2:4]))
-        except:
-            print ("alalog2 error")
+        if str.lower().startswith("ffff"):
+            try:
+                analoginput2 = (float)("{0}.{1}".format(str[0:2],str[2:4]))
+            except:
+                print ("alalog2 error")
+        else:
+            analoginput2 = -999
         analoginput3 = 0
         str = byte2HexString(data, 24)
-        try:
-            analoginput3 = (float)("{0}.{1}".format(str[0:2],str[2:4]))
-        except:
-            print ("alalog3 error")
+        if str.lower().startswith("ffff"):
+            try:
+                analoginput3 = (float)("{0}.{1}".format(str[0:2],str[2:4]))
+            except:
+                print ("alalog3 error")
+        else:
+            analoginput3 = -999
         analoginput4 = 0
         str = byte2HexString(data, 26)
-        try:
-            analoginput4 = (float)("{0}.{1}".format(str[0:2],str[2:4]))
-        except:
-            print ("alalog4 error")
+        if str.lower().startswith("ffff"):
+            try:
+                analoginput4 = (float)("{0}.{1}".format(str[0:2],str[2:4]))
+            except:
+                print ("alalog4 error")
+        else:
+            analoginput4 = -999
         analoginput5 = 0
         str = byte2HexString(data, 28)
-        try:
-            analoginput5 = (float)("{0}.{1}".format(str[0:2],str[2:4]))
-        except:
-            print ("alalog5 error")
+        if str.lower().startswith("ffff"):
+            try:
+                analoginput5 = (float)("{0}.{1}".format(str[0:2],str[2:4]))
+            except:
+                print ("alalog5 error")
+        else:
+            analoginput5 = -999
         originalAlarmCode = (int) (data[30])
         isAlarmData = command[2] == 0x14
         isSendSmsAlarmToManagerPhone = (data[31] & 0x20) == 0x20
@@ -2589,7 +2976,7 @@ class Decoder:
             lac_2g_3 = bytes2Short(data,55)
             ci_2g_3 = bytes2Short(data,57)
         if is_4g_lbs:
-            mcc_4g = bytes2Short(data,43)
+            mcc_4g = bytes2Short(data,43) & 0x7FFF
             mnc_4g = bytes2Short(data,45)
             ci_4g = bytes2Integer(data, 47)
             earfcn_4g_1 = bytes2Short(data, 51)
@@ -2605,6 +2992,8 @@ class Decoder:
 
         rpm = 0
         rpm = bytes2Short(data,63)
+        if rpm == 32768 or rpm == 65535:
+            rpm = -999
         isSmartUploadSupport = (data[65] & 0x8) == 0x8
         supportChangeBattery =  (data[66] & 0x8) == 0x8
         deviceTemp = -999
@@ -2612,11 +3001,57 @@ class Decoder:
             deviceTemp = byteArray[68] & 0x7F
             if (byteArray[68] & 0x80) == 0x80:
                 deviceTemp = -1 * deviceTemp
+        fmsSpeed = data[66]
         locationMessage = LocationInfoMessage()
         locationMessage.protocolHeadType = 0x13
         if isAlarmData:
             locationMessage = LocationAlarmMessage()
             locationMessage.protocolHeadType = 0x14
+        locationMessage.isHadFmsData = isHadFmsData
+        if len(data) >= 74:
+            hdop = bytes2Short(data,69)
+            locationMessage.hdop = hdop
+            if isHadFmsData:
+                analoginput4 = -999
+                analoginput5 = -999
+                engineHours = bytes2Integer(data, 26)
+                if engineHours == 4294967295l:
+                    engineHours = -999
+                coolingFluidTemp = data[71]
+                if coolingFluidTemp < 0:
+                    coolingFluidTemp = coolingFluidTemp + 256
+                if coolingFluidTemp == 255:
+                    coolingFluidTemp = -999;
+                else:
+                    coolingFluidTemp = coolingFluidTemp - 40;
+
+                remainFuel = data[72]
+                if remainFuel < 0:
+                    remainFuel = remainFuel + 256
+                if remainFuel == 255:
+                    remainFuel = -999
+
+                engineLoad = data[73]
+                if engineLoad < 0:
+                    engineLoad = engineLoad + 256
+                if engineLoad == 255:
+                    engineLoad = -999
+                locationMessage.fmsEngineHours = engineHours
+                locationMessage.remainFuelRate = remainFuel
+                locationMessage.engineLoad = engineLoad
+                locationMessage.coolingFluidTemp = coolingFluidTemp
+                locationMessage.fmsSpeed  = fmsSpeed
+                if data.length >= 78:
+                    fmsAccumulatingFuelConsumption =  bytes2Integer(data, 74);
+                    if fmsAccumulatingFuelConsumption == 4294967295:
+                        fmsAccumulatingFuelConsumption = -999;
+                    else:
+                        fmsAccumulatingFuelConsumption = fmsAccumulatingFuelConsumption * 1000
+                    locationMessage.accumulatingFuelConsumption = fmsAccumulatingFuelConsumption
+                supportChangeBattery = False
+
+        if isMileageSrcIsFms:
+            locationMessage.mileageSource = 2
         locationMessage.orignBytes = byteArray
         locationMessage.serialNo = serialNo
         # locationMessage.isNeedResp = isNeedResp
@@ -2653,6 +3088,7 @@ class Decoder:
         locationMessage.input3 = input3
         locationMessage.input4 = input4
         locationMessage.input5 = input5
+        locationMessage.input6 = input6
         locationMessage.analogInput4 = analoginput4
         locationMessage.analogInput5 = analoginput5
         locationMessage.output1 = output1
@@ -2835,7 +3271,7 @@ class Decoder:
             lac_2g_3 = bytes2Short(data,47)
             ci_2g_3 = bytes2Short(data,49)
         if is_4g_lbs:
-            mcc_4g = bytes2Short(data,35)
+            mcc_4g = bytes2Short(data,35) & 0x7FFF
             mnc_4g = bytes2Short(data,37)
             ci_4g = bytes2Integer(data, 39)
             earfcn_4g_1 = bytes2Short(data, 43)
@@ -2967,7 +3403,7 @@ class Encoder:
 
     @staticmethod
     def encode(imei,useSerialNo,serialNo,command,protocol,content,length):
-        command.extend([0x00,length])
+        command.extend(short2Bytes(length))
         if useSerialNo:
             command.extend(short2Bytes(serialNo))
         else:
@@ -2979,7 +3415,7 @@ class Encoder:
 
     @staticmethod
     def encode(imei,useSerialNo,serialNo,command,content,length):
-        command.extend([0x00,length])
+        command.extend(short2Bytes(length))
         if useSerialNo:
             command.extend(short2Bytes(serialNo))
         else:
@@ -3006,6 +3442,10 @@ class Encoder:
         data = Encoder.encode(imei,needSerialNo,serialNo,command,bytearray(content,"ascii"),15)
         return Encoder.encrypt(data,messageEncryptType,aesKey)
 
+    @staticmethod
+    def getNormalMsgReply(imei, serialNo, command,content, messageEncryptType, aesKey):
+        data = Encoder.encode(imei, True, serialNo, command, content, 15 + len(content))
+        return Encoder.encrypt(data, messageEncryptType, aesKey)
 
     @staticmethod
     def getLocationAlarmMsgReply(imei,needSerialNo,serialNo,sourceAlarmCode,commad,messageEncryptType,aesKey):
@@ -3279,6 +3719,18 @@ class T880xPlusEncoder:
     def getNetworkMsgReply(self,imei,needSerialNo,serialNo):
         command = [0x25,0x25,0x11]
         return Encoder.getCommonMsgReply(imei,needSerialNo,serialNo,command,self.encryptType,self.aesKey)
+    def getWifiMsgReply(self,imei,needSerialNo,serialNo):
+        command = [0x25,0x25,0x15]
+        return Encoder.getCommonMsgReply(imei,needSerialNo,serialNo,command,self.encryptType,self.aesKey)
+    def getRs485MsgReply(self,imei,needSerialNo,serialNo):
+        command = [0x25,0x25,0x21]
+        return Encoder.getCommonMsgReply(imei,needSerialNo,serialNo,command,self.encryptType,self.aesKey)
+    def getOneWireMsgReply(self,imei,needSerialNo,serialNo):
+        command = [0x25,0x25,0x23]
+        return Encoder.getCommonMsgReply(imei,needSerialNo,serialNo,command,self.encryptType,self.aesKey)
+    def getObdMsgReply(self,imei,needSerialNo,serialNo):
+        command = [0x25,0x25,0x22]
+        return Encoder.getCommonMsgReply(imei,needSerialNo,serialNo,command,self.encryptType,self.aesKey)
 
     def getConfigSettingMsg(self,imei,content):
         """
@@ -3350,7 +3802,7 @@ class ObdDecoder:
     LOCATION_DATA_WITH_SENSOR = [0x26, 0x26, 0x16]
     LOCATION_ALARM_WITH_SENSOR = [0x26, 0x26, 0x18]
     latlngInvalidData = [0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]
-
+    WIFI_DATA = [0x26, 0x26, 0x15]
     obdHead = [0x55,0xAA]
     encryptType = 0
     aesKey=""
@@ -3367,7 +3819,7 @@ class ObdDecoder:
                byteArray == self.GPS_DRIVER_BEHAVIOR or byteArray == self.ACCELERATION_DRIVER_BEHAVIOR or \
                byteArray == self.ACCELERATION_ALARM or byteArray == self.OBD_DATA\
                or byteArray == self.BLUETOOTH_DATA or byteArray == self.NETWORK_INFO_DATA or byteArray == self.SECOND_BLUETOOTH_DATA\
-               or byteArray == self.LOCATION_DATA_WITH_SENSOR or byteArray == self.LOCATION_ALARM_WITH_SENSOR
+               or byteArray == self.LOCATION_DATA_WITH_SENSOR or byteArray == self.LOCATION_ALARM_WITH_SENSOR  or byteArray == self.WIFI_DATA
 
     decoderBuf = TopflytechByteBuf()
 
@@ -3433,22 +3885,108 @@ class ObdDecoder:
                 return self.parseNetworkInfoMessage(byteArray)
             elif byteArray[2] == 0x12:
                 return self.parseSecondBluetoothDataMessage(byteArray)
+            elif byteArray[2] == 0x15:
+                return self.parseWifiMessage(byteArray)
             elif byteArray[2] == 0x81:
                 return self.parseInteractMessage(byteArray)
             else:
                 return None
         return None
 
+    def parseWifiMessage(self, bytes):
+        wifiMessage = WifiMessage();
+        serialNo = bytes2Short(bytes, 5)
+        imei = decodeImei(bytes, 7)
+        dateStr = "20" + byte2HexString(bytes[15:21], 0)
+        gtm0 = GTM0(dateStr)
+        selfMacByte = bytes[21:27]
+        selfMac = byte2HexString(selfMacByte, 0)
+        ap1MacByte = bytes[27:33]
+        ap1Mac = byte2HexString(ap1MacByte, 0)
+        rssiTemp = (int)(bytes[33])
+        if rssiTemp < 0:
+            rssiTemp += 256
+        ap1RSSI = 0
+        if rssiTemp == 255:
+            ap1RSSI = -999
+        else:
+            ap1RSSI = rssiTemp - 256
+        ap2MacByte = bytes[34:40]
+        ap2Mac = byte2HexString(ap2MacByte, 0)
+        rssiTemp = (int)(bytes[40])
+        if rssiTemp < 0:
+            rssiTemp += 256
+        ap2RSSI = 0
+        if rssiTemp == 255:
+            ap2RSSI = -999
+        else:
+            ap2RSSI = rssiTemp - 256
+        ap3MacByte = bytes[41:47]
+        ap3Mac = byte2HexString(ap3MacByte, 0)
+        rssiTemp = (int)(bytes[47])
+        if rssiTemp < 0:
+            rssiTemp += 256
+        ap3RSSI = 0
+        if rssiTemp == 255:
+            ap3RSSI = -999
+        else:
+            ap3RSSI = rssiTemp - 256
+        wifiMessage.serialNo = serialNo
+        # networkInfoMessage.isNeedResp = isNeedResp
+        wifiMessage.imei = imei
+        wifiMessage.orignBytes = bytes
+        wifiMessage.date = gtm0
+        wifiMessage.selfMac = selfMac
+        wifiMessage.ap1Mac = ap1Mac
+        wifiMessage.ap1RSSI = ap1RSSI
+        wifiMessage.ap2Mac = ap2Mac
+        wifiMessage.ap2RSSI = ap2RSSI
+        wifiMessage.ap3Mac = ap3Mac
+        wifiMessage.ap3RSSI = ap3RSSI
+        return wifiMessage
+
     def parseSignInMessage(self,byteArray):
-        serialNo = bytes2Short(byteArray,5)
-        # isNeedResp = (serialNo & 0x8000) != 0x8000
-        imei = decodeImei(byteArray,7)
-        str = byte2HexString(byteArray,15)
-        if len(str) == 20:
-            software = "V{0}.{1}.{2}".format((byteArray[15] & 0xf0) >> 4, byteArray[15] & 0xf, (byteArray[16] & 0xf0) >> 4)
-            firmware = "V{0}.{1}.{2}".format(byteArray[16] & 0xf, (byteArray[17] & 0xf0) >> 4, byteArray[17] & 0xf)
-            platform = str[6:10]
-            hareware = "V{0}.{1}".format( (byteArray[20] & 0xf0) >> 4, byteArray[20] & 0xf)
+        if len(byteArray) == 25:
+            serialNo = bytes2Short(byteArray,5)
+            # isNeedResp = (serialNo & 0x8000) != 0x8000
+            imei = decodeImei(byteArray,7)
+            str = byte2HexString(byteArray,15)
+            if len(str) == 20:
+                software = "V{0}.{1}.{2}".format((byteArray[15] & 0xf0) >> 4, byteArray[15] & 0xf, (byteArray[16] & 0xf0) >> 4)
+                firmware = "V{0}.{1}.{2}".format(byteArray[16] & 0xf, (byteArray[17] & 0xf0) >> 4, byteArray[17] & 0xf)
+                platform = str[6:10]
+                hardware = "V{0}.{1}".format( (byteArray[20] & 0xf0) >> 4, byteArray[20] & 0xf)
+                obdV1 = (int)(byteArray[21])
+                obdV2 = (int)(byteArray[22])
+                obdV3 = (int)(byteArray[23])
+                if obdV1 < 0:
+                    obdV1 += 256
+                if obdV2 < 0:
+                    obdV2 += 256
+                if obdV3 < 0:
+                    obdV3 += 256
+                obdSoftware = "V{0}.{1}.{2}".format(obdV1, obdV2, obdV3)
+                obdHardware = "V{0}.{1}".format((byteArray[24] & 0xf0) >> 4, byteArray[24] & 0xf)
+                signInMessage = SignInMessage()
+                signInMessage.firmware = firmware
+                signInMessage.imei = imei
+                signInMessage.serialNo = serialNo
+                # signInMessage.isNeedResp = isNeedResp
+                signInMessage.platform = platform
+                signInMessage.software = software
+                signInMessage.hardware = hardware
+                signInMessage.orignBytes = byteArray
+                signInMessage.obdHardware = obdHardware
+                signInMessage.obdSoftware = obdSoftware
+                return signInMessage
+        elif len(byteArray) == 27:
+            serialNo = bytes2Short(byteArray, 5)
+            imei = decodeImei(byteArray, 7)
+            software = "V{0}.{1}.{2}".format(byteArray[15] & 0xf, (byteArray[16] & 0xf0) >> 4, byteArray[16] & 0xf)
+            str = byte2HexString(byteArray, 17)
+            platform = str[0:6]
+            firmware = "V{0}.{1}.{2}.{3}".format(str[6:7], str[7:8], str[8:9], str[9:10])
+            hardware = "V{0}.{1}".format(str[10:11], str[11:12])
             obdV1 = (int)(byteArray[21])
             obdV2 = (int)(byteArray[22])
             obdV3 = (int)(byteArray[23])
@@ -3459,18 +3997,70 @@ class ObdDecoder:
             if obdV3 < 0:
                 obdV3 += 256
             obdSoftware = "V{0}.{1}.{2}".format(obdV1, obdV2, obdV3)
-            obdHardware = "V{0}.{1}".format((byteArray[24] & 0xf0) >> 4, byteArray[24] & 0xf)
+            obdHardware = "V{0}.{1}".format((byteArray[26] & 0xf0) >> 4, byteArray[26] & 0xf)
             signInMessage = SignInMessage()
             signInMessage.firmware = firmware
             signInMessage.imei = imei
             signInMessage.serialNo = serialNo
-            # signInMessage.isNeedResp = isNeedResp
             signInMessage.platform = platform
             signInMessage.software = software
-            signInMessage.hareware = hareware
+            signInMessage.hardware = hardware
             signInMessage.orignBytes = byteArray
             signInMessage.obdHardware = obdHardware
             signInMessage.obdSoftware = obdSoftware
+            return signInMessage
+        elif len(byteArray) >= 35:
+            serialNo = bytes2Short(byteArray, 5)
+            imei = decodeImei(byteArray, 7)
+            model = bytes2Short(byteArray,15)
+            str = byte2HexString(byteArray, 17)
+            software = "V{0}.{1}.{2}.{3}".format(str[0:1], str[1:2],str[2:3],str[3:4])
+            platform = str[4:10]
+            firmware = "V{0}.{1}.{2}.{3}".format(str[10:11], str[11:12], str[12:13], str[13:14])
+            hardware = "V{0}.{1}".format(str[14:15], str[15:16])
+            obdV1 = (int)(byteArray[21])
+            obdV2 = (int)(byteArray[22])
+            obdV3 = (int)(byteArray[23])
+            if obdV1 < 0:
+                obdV1 += 256
+            if obdV2 < 0:
+                obdV2 += 256
+            if obdV3 < 0:
+                obdV3 += 256
+            obdSoftware = "V{0}.{1}.{2}".format(obdV1, obdV2, obdV3)
+            obdV1 = (int)(byteArray[24])
+            obdV2 = (int)(byteArray[25])
+            obdV3 = (int)(byteArray[26])
+            if obdV1 < 0:
+                obdV1 += 256
+            if obdV2 < 0:
+                obdV2 += 256
+            if obdV3 < 0:
+                obdV3 += 256
+            obdBootVersion = "V{0}.{1}.{2}".format(obdV1, obdV2, obdV3)
+            obdV1 = (int)(byteArray[27])
+            obdV2 = (int)(byteArray[28])
+            obdV3 = (int)(byteArray[29])
+            if obdV1 < 0:
+                obdV1 += 256
+            if obdV2 < 0:
+                obdV2 += 256
+            if obdV3 < 0:
+                obdV3 += 256
+            obdDataVersion = "V{0}.{1}.{2}".format(obdV1, obdV2, obdV3)
+            obdHardware = "V{0}.{1}".format((bytes[34] & 0xf0) >> 4, bytes[34] & 0xf)
+            signInMessage = SignInMessage()
+            signInMessage.firmware = firmware
+            signInMessage.imei = imei
+            signInMessage.serialNo = serialNo
+            signInMessage.platform = platform
+            signInMessage.software = software
+            signInMessage.hardware = hardware
+            signInMessage.orignBytes = byteArray
+            signInMessage.obdHardware = obdHardware
+            signInMessage.obdSoftware = obdSoftware
+            signInMessage.obdDataVersion = obdDataVersion
+            signInMessage.obdBootVersion = obdBootVersion
             return signInMessage
         return None
 
@@ -3560,7 +4150,7 @@ class ObdDecoder:
                             obdData.errorData = errorDataSum
                 except:
                     print ("error")
-        return obdData;
+        return obdData
 
 
     def parseDataMessage(self,byteArray):
@@ -3626,7 +4216,7 @@ class ObdDecoder:
         isSendSmsAlarmWhenDigitalInput2Change = (data[19] & 0x10) == 0x10
         jammerDetectionStatus = (data[19] & 0xC)
         mileageSource = 1
-        if (data[19] & 0x01) == 0x01:
+        if (data[19] & 0x02) == 0x02:
             mileageSource = 0
         mileage = bytes2Integer(data, 20)
         batteryBytes = [data[24]]
@@ -3681,7 +4271,7 @@ class ObdDecoder:
             lac_2g_3 = bytes2Short(data,43)
             ci_2g_3 = bytes2Short(data,45)
         if is_4g_lbs:
-            mcc_4g = bytes2Short(data,31)
+            mcc_4g = bytes2Short(data,31) & 0x7FFF
             mnc_4g = bytes2Short(data,33)
             ci_4g = bytes2Integer(data, 35)
             earfcn_4g_1 = bytes2Short(data, 39)
@@ -3946,7 +4536,7 @@ class ObdDecoder:
             lac_2g_3 = bytes2Short(byteArray,curParseIndex + 24)
             ci_2g_3 = bytes2Short(byteArray,curParseIndex + 26)
         if is_4g_lbs:
-            mcc_4g = bytes2Short(byteArray,curParseIndex + 12)
+            mcc_4g = bytes2Short(byteArray,curParseIndex + 12) & 0x7FFF
             mnc_4g = bytes2Short(byteArray,curParseIndex + 14)
             ci_4g = bytes2Integer(byteArray, curParseIndex + 16)
             earfcn_4g_1 = bytes2Short(byteArray, curParseIndex + 20)
@@ -4098,7 +4688,7 @@ class ObdDecoder:
             lac_2g_3 = bytes2Short(byteArray,35)
             ci_2g_3 = bytes2Short(byteArray,37)
         if is_4g_lbs:
-            mcc_4g = bytes2Short(byteArray,23)
+            mcc_4g = bytes2Short(byteArray,23) & 0x7FFF
             mnc_4g = bytes2Short(byteArray,25)
             ci_4g = bytes2Integer(byteArray, 27)
             earfcn_4g_1 = bytes2Short(byteArray, 31)
@@ -4642,7 +5232,7 @@ class ObdDecoder:
                 lac_2g_3 = bytes2Short(bleData,23)
                 ci_2g_3 = bytes2Short(bleData,25)
             if is_4g_lbs:
-                mcc_4g = bytes2Short(bleData,11)
+                mcc_4g = bytes2Short(bleData,11) & 0x7FFF
                 mnc_4g = bytes2Short(bleData,13)
                 ci_4g = bytes2Integer(bleData, 15)
                 earfcn_4g_1 = bytes2Short(bleData, 19)
@@ -4746,7 +5336,7 @@ class ObdDecoder:
                 lac_2g_3 = bytes2Short(bleData,23)
                 ci_2g_3 = bytes2Short(bleData,25)
             if is_4g_lbs:
-                mcc_4g = bytes2Short(bleData,11)
+                mcc_4g = bytes2Short(bleData,11) & 0x7FFF
                 mnc_4g = bytes2Short(bleData,13)
                 ci_4g = bytes2Integer(bleData, 15)
                 earfcn_4g_1 = bytes2Short(bleData, 19)
@@ -5211,6 +5801,9 @@ class T880xdEncoder:
         command = [0x26,0x26,0x81]
         return Encoder.getConfigSettingMsg(imei,content,command,self.encryptType,self.aesKey)
 
+    def getWifiMsgReply(self, imei, needSerialNo, serialNo):
+        command = [0x26, 0x26, 0x15]
+        return Encoder.getCommonMsgReply(imei, needSerialNo, serialNo, command, self.encryptType, self.aesKey)
 
     def getBrocastSettingMsg(self,imei,content):
         """
@@ -5271,7 +5864,9 @@ class PersonalAssetMsgDecoder:
     WIFI_DATA = [0x27,0x27,0x15]
     
     LOCK_DATA = [0x27,0x27,0x17]
-
+    GEO_DATA = [0x27, 0x27, 0x20]
+    BLUETOOTH_SECOND_DATA = [0x27, 0x27, 0x12]
+    WIFI_WITH_DEVICE_INFO_DATA = [0x27, 0x27, 0x24]
     CONFIG = [0x27, 0x27, 0x81]
     encryptType = 0
     esKey = ""
@@ -5288,7 +5883,8 @@ class PersonalAssetMsgDecoder:
     def match (self,byteArray):
         return byteArray == self.SIGNUP or byteArray == self.DATA or byteArray == self.HEARTBEAT \
                or byteArray == self.ALARM or byteArray == self.NETWORK_INFO_DATA or byteArray == self.BLUETOOTH_DATA \
-               or byteArray == self.CONFIG or byteArray == self.WIFI_DATA or byteArray == self.LOCK_DATA
+               or byteArray == self.CONFIG or byteArray == self.WIFI_DATA or byteArray == self.LOCK_DATA  \
+               or byteArray == self.GEO_DATA or byteArray == self.BLUETOOTH_SECOND_DATA or byteArray == self.WIFI_WITH_DEVICE_INFO_DATA
 
 
     decoderBuf = TopflytechByteBuf()
@@ -5351,10 +5947,521 @@ class PersonalAssetMsgDecoder:
                 return self.parseWifiMessage(byteArray)
             elif byteArray[2] == 0x17:
                 return self.parseLockMessage(byteArray)
+            elif byteArray[2] == 0x12:
+                return self.parseSecondBluetoothDataMessage(byteArray)
+            elif byteArray[2] == 0x20:
+                return self.parseInnerGeoMessage(byteArray)
+            elif byteArray[2] == 0x24:
+                return self.parseWifiWithDeviceInfoMessage(byteArray)
             else:
                 return None
         return None
 
+    def parseInnerGeoMessage(self,byteArray):
+        innerGeoDataMessage = InnerGeoDataMessage()
+        serialNo = bytes2Short(byteArray, 5)
+        imei = decodeImei(byteArray, 7)
+        dateStr = "20" + byte2HexString(byteArray[15:21], 0)
+        gtm0 = GTM0(dateStr)
+        innerGeoDataMessage.serialNo = serialNo
+        innerGeoDataMessage.imei = imei
+        innerGeoDataMessage.orignBytes = bytes
+        innerGeoDataMessage.date = gtm0
+        lockGeofenceEnable = byteArray[21]
+        innerGeoDataMessage.lockGeofenceEnable = lockGeofenceEnable
+        i = 22
+        while i + 3 <= len(byteArray):
+            id = byteArray[i];
+            itemLen = bytes2Short(byteArray, i + 1);
+            innerGeofence = InnerGeofence()
+            innerGeofence.id = id
+            if i + 3 + itemLen > len(byteArray):
+                break
+            if itemLen == 0:
+                i = i + 3 + itemLen
+                innerGeofence.type = -1
+                innerGeoDataMessage.addGeoPoint(innerGeofence)
+                continue
+            geoType = byteArray[i + 3]
+            innerGeofence.type = geoType
+            if geoType == 0x01 or geoType == 0x02 or geoType == 0x03 or geoType == 0x07 or geoType == 0x08:
+                j = i + 4
+                while j < i + 3 + itemLen:
+                    lng = bytes2Float(byteArray, j)
+                    lat = bytes2Float(byteArray, j + 4)
+                    innerGeofence.addPoint(lat,lng)
+                    j = j + 8
+            else:
+                radius = bytes2Integer(byteArray, i + 4)
+                lng = bytes2Float(byteArray, i + 8)
+                lat = bytes2Float(byteArray, i + 12)
+            innerGeoDataMessage.addGeoPoint(innerGeofence)
+            i = i + 3 + itemLen
+        return innerGeoDataMessage
+
+    def parseSecondBluetoothDataMessage(self,byteArray):
+        bluetoothPeripheralDataMessage = BluetoothPeripheralDataMessage()
+        serialNo = bytes2Short(byteArray,5)
+        # isNeedResp = (serialNo & 0x8000) != 0x8000
+        imei = decodeImei(byteArray,7)
+        isHistoryData = (byteArray[22] & 0x40) == 0x40
+        latlngValid = (byteArray[22] & 0x80) == 0x80
+        altitude = 0
+        latitude = 0
+        longitude = 0
+        azimuth = 0
+        speed = 0
+        strSp = byte2HexString(byteArray[35:37], 0);
+        is_4g_lbs = False
+        mcc_4g = 0
+        mnc_4g = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
+        pcid_4g_1 = 0
+        earfcn_4g_2 = 0
+        pcid_4g_2 = 0
+        is_2g_lbs = False
+        mcc_2g = 0
+        mnc_2g = 0
+        lac_2g_1 = 0
+        ci_2g_1 = 0
+        lac_2g_2 = 0
+        ci_2g_2 = 0
+        lac_2g_3 = 0
+        ci_2g_3 = 0
+        if  latlngValid:
+            altitude = bytes2Float(byteArray, 23)
+            latitude = bytes2Float(byteArray, 27)
+            longitude = bytes2Float(byteArray, 31)
+            azimuth = bytes2Short(byteArray, 37)
+        else:
+            if (byteArray[23] & 0x80) == 0x80:
+                is_4g_lbs = True
+            else:
+                is_2g_lbs = True
+        if is_2g_lbs:
+            mcc_2g = bytes2Short(byteArray,23)
+            mnc_2g = bytes2Short(byteArray,25)
+            lac_2g_1 = bytes2Short(byteArray,27)
+            ci_2g_1 = bytes2Short(byteArray,29)
+            lac_2g_2 = bytes2Short(byteArray,31)
+            ci_2g_2 = bytes2Short(byteArray,33)
+            lac_2g_3 = bytes2Short(byteArray,35)
+            ci_2g_3 = bytes2Short(byteArray,37)
+        if is_4g_lbs:
+            mcc_4g = bytes2Short(byteArray,23) & 0x7FFF
+            mnc_4g = bytes2Short(byteArray,25)
+            ci_4g = bytes2Integer(byteArray, 27)
+            earfcn_4g_1 = bytes2Short(byteArray, 31)
+            pcid_4g_1 = bytes2Short(byteArray, 33)
+            earfcn_4g_2 = bytes2Short(byteArray, 35)
+            pcid_4g_2 = bytes2Short(byteArray,37)
+        if strSp.find("f") == -1:
+                speed = -1
+        else:
+            speed = (float)("{0}.{1}".format(strSp[0:3],strSp[3:]))
+        if (byteArray[21] & 0x01) == 0x01:
+            bluetoothPeripheralDataMessage.isIgnition = True
+        else:
+            bluetoothPeripheralDataMessage.isIgnition = False
+        dateStr = "20" + byte2HexString(byteArray[15:21],0)
+        gtm0 = GTM0(dateStr)
+        bluetoothPeripheralDataMessage.date = gtm0
+        bluetoothPeripheralDataMessage.orignBytes = byteArray
+        bluetoothPeripheralDataMessage.isHistoryData = isHistoryData
+        bluetoothPeripheralDataMessage.serialNo = serialNo
+        bluetoothPeripheralDataMessage.latlngValid = latlngValid
+        bluetoothPeripheralDataMessage.altitude = altitude
+        bluetoothPeripheralDataMessage.latitude = latitude
+        bluetoothPeripheralDataMessage.longitude = longitude
+        bluetoothPeripheralDataMessage.azimuth = azimuth
+        bluetoothPeripheralDataMessage.isHadLocationInfo = True
+        bluetoothPeripheralDataMessage.protocolHeadType = 0x12
+        # bluetoothPeripheralDataMessage.isNeedResp = isNeedResp
+        bluetoothPeripheralDataMessage.imei = imei
+        bluetoothPeripheralDataMessage.is_4g_lbs = is_4g_lbs
+        bluetoothPeripheralDataMessage.is_2g_lbs = is_2g_lbs
+        bluetoothPeripheralDataMessage.mcc_4g = mcc_4g
+        bluetoothPeripheralDataMessage.mnc_4g = mnc_4g
+        bluetoothPeripheralDataMessage.ci_4g = ci_4g
+        bluetoothPeripheralDataMessage.earfcn_4g_1 = earfcn_4g_1
+        bluetoothPeripheralDataMessage.pcid_4g_1 = pcid_4g_1
+        bluetoothPeripheralDataMessage.earfcn_4g_2 = earfcn_4g_2
+        bluetoothPeripheralDataMessage.pcid_4g_2 = pcid_4g_2
+        bluetoothPeripheralDataMessage.mcc_2g = mcc_2g
+        bluetoothPeripheralDataMessage.mnc_2g = mnc_2g
+        bluetoothPeripheralDataMessage.lac_2g_1 = lac_2g_1
+        bluetoothPeripheralDataMessage.ci_2g_1 = ci_2g_1
+        bluetoothPeripheralDataMessage.lac_2g_2 = lac_2g_2
+        bluetoothPeripheralDataMessage.ci_2g_2 = ci_2g_2
+        bluetoothPeripheralDataMessage.lac_2g_3 = lac_2g_3
+        bluetoothPeripheralDataMessage.ci_2g_3 = ci_2g_3
+        bleData = byteArray[39:len(byteArray)]
+        if len(bleData) <= 0:
+            return bluetoothPeripheralDataMessage
+        bleDataList = []
+        if bleData[0] == 0x00 and bleData[1] == 0x01:
+            bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_TIRE
+            i = 2
+            while i < len(bleData):
+                bleTireData = BleTireData()
+                macArray = bleData[i:i + 6]
+                mac = byte2HexString(macArray, 0);
+                voltageTmp = (int) (bleData[i + 6])
+                if voltageTmp < 0:
+                    voltageTmp += 256
+                voltage = -999
+                if voltageTmp == 255:
+                    voltage = -999
+                else:
+                    voltage = 1.22 + 0.01 * voltageTmp
+                airPressureTmp = (int) (bleData[i + 7])
+                if airPressureTmp < 0:
+                    airPressureTmp += 256
+                airPressure = - 999
+                if airPressureTmp == 255:
+                    airPressure = -999;
+                else:
+                    airPressure = 1.572 * 2 * airPressureTmp
+                airTempTmp = (int) (bleData[i + 8])
+                if airTempTmp < 0:
+                    airTempTmp += 256
+                airTemp = 0
+                if airTempTmp == 255:
+                    airTemp = -999
+                else:
+                    airTemp = airTempTmp - 55
+                bleTireData.mac = mac
+                bleTireData.voltage = voltage
+                bleTireData.airPressure = airPressure
+                bleTireData.airTemp = airTemp
+                alarm = (int) (bleData[i + 9])
+                if alarm == -1:
+                    alarm = 0
+                bleTireData.status  = alarm
+                bleDataList.append(bleTireData)
+                i+=10
+        elif bleData[0] == 0x00 and bleData[1] == 0x02:
+            bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_SOS
+            bleAlertData = BleAlertData()
+            macArray = bleData[2: 8]
+            mac = byte2HexString(macArray, 0)
+            voltageStr = byte2HexString(bleData,8)[0:2]
+            voltage = 0
+            try:
+                voltage = (float)(voltageStr) / 10
+            except:
+                print ("voltage error")
+            alertByte = bleData[9]
+            alert = BleAlertData.ALERT_TYPE_LOW_BATTERY
+            if alertByte == 0x01:
+                alert = BleAlertData.ALERT_TYPE_LOW_BATTERY
+            else:
+                alert = BleAlertData.ALERT_TYPE_SOS
+            bleAlertData.alertType = alert
+            bleAlertData.altitude = altitude
+            bleAlertData.azimuth = azimuth
+            bleAlertData.innerVoltage = voltage
+            bleAlertData.isHistoryData = isHistoryData
+            bleAlertData.latitude  =latitude
+            bleAlertData.latlngValid  =latlngValid
+            bleAlertData.longitude = longitude
+            bleAlertData.mac = mac
+            bleAlertData.speed = speed
+            bleAlertData.is_4g_lbs = is_4g_lbs
+            bleAlertData.is_2g_lbs = is_2g_lbs
+            bleAlertData.mcc_4g = mcc_4g
+            bleAlertData.mnc_4g = mnc_4g
+            bleAlertData.ci_4g = ci_4g
+            bleAlertData.earfcn_4g_1 = earfcn_4g_1
+            bleAlertData.pcid_4g_1 = pcid_4g_1
+            bleAlertData.earfcn_4g_2 = earfcn_4g_2
+            bleAlertData.pcid_4g_2 = pcid_4g_2
+            bleAlertData.mcc_2g = mcc_2g
+            bleAlertData.mnc_2g = mnc_2g
+            bleAlertData.lac_2g_1 = lac_2g_1
+            bleAlertData.ci_2g_1 = ci_2g_1
+            bleAlertData.lac_2g_2 = lac_2g_2
+            bleAlertData.ci_2g_2 = ci_2g_2
+            bleAlertData.lac_2g_3 = lac_2g_3
+            bleAlertData.ci_2g_3 = ci_2g_3
+            bleDataList.append(bleAlertData);
+        elif bleData[0] == 0x00 and bleData[1] == 0x03:
+            bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_DRIVER
+            bleDriverSignInData = BleDriverSignInData()
+            macArray = bleData[2:8]
+            mac = byte2HexString(macArray, 0);
+            voltageStr = byte2HexString(bleData,8)[0: 2]
+            voltage = 0;
+            try:
+                voltage = (float)(voltageStr) / 10
+            except:
+                print ("voltage error")
+            alertByte = bleData[9];
+            alert = BleAlertData.ALERT_TYPE_LOW_BATTERY
+            if alertByte == 0x01:
+                alert = BleAlertData.ALERT_TYPE_LOW_BATTERY
+            else:
+                alert = BleAlertData.ALERT_TYPE_SOS
+            bleDriverSignInData.alert = alert
+            bleDriverSignInData.altitude = altitude
+            bleDriverSignInData.azimuth = azimuth
+            bleDriverSignInData.voltage = voltage
+            bleDriverSignInData.isHistoryData = isHistoryData
+            bleDriverSignInData.latitude  =latitude
+            bleDriverSignInData.latlngValid  =latlngValid
+            bleDriverSignInData.longitude = longitude
+            bleDriverSignInData.mac = mac
+            bleDriverSignInData.speed = speed
+            bleDriverSignInData.is_4g_lbs = is_4g_lbs
+            bleDriverSignInData.is_2g_lbs = is_2g_lbs
+            bleDriverSignInData.mcc_4g = mcc_4g
+            bleDriverSignInData.mnc_4g = mnc_4g
+            bleDriverSignInData.ci_4g = ci_4g
+            bleDriverSignInData.earfcn_4g_1 = earfcn_4g_1
+            bleDriverSignInData.pcid_4g_1 = pcid_4g_1
+            bleDriverSignInData.earfcn_4g_2 = earfcn_4g_2
+            bleDriverSignInData.pcid_4g_2 = pcid_4g_2
+            bleDriverSignInData.mcc_2g = mcc_2g
+            bleDriverSignInData.mnc_2g = mnc_2g
+            bleDriverSignInData.lac_2g_1 = lac_2g_1
+            bleDriverSignInData.ci_2g_1 = ci_2g_1
+            bleDriverSignInData.lac_2g_2 = lac_2g_2
+            bleDriverSignInData.ci_2g_2 = ci_2g_2
+            bleDriverSignInData.lac_2g_3 = lac_2g_3
+            bleDriverSignInData.ci_2g_3 = ci_2g_3
+            bleDataList.append(bleDriverSignInData);
+        elif bleData[0] == 0x00 and bleData[1] == 0x04:
+            bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_TEMP
+            i = 2
+            while i < len(bleData):
+                bleTempData = BleTempData()
+                macArray = bleData[i + 0:i + 6]
+                mac = byte2HexString(macArray, 0)
+                if mac.startswith('0000'):
+                    mac = mac[4:12]
+                voltageTmp = (int) (bleData[i + 6])
+                if voltageTmp < 0:
+                   voltageTmp +=  256
+                voltage = 0
+                if voltageTmp == 255:
+                    voltage = -999
+                else:
+                    voltage = 2 + 0.01 * voltageTmp
+                batteryPercentTemp = (int) (bleData[i + 7])
+                if batteryPercentTemp < 0:
+                    batteryPercentTemp += 256
+                batteryPercent=0
+                if batteryPercentTemp == 255:
+                    batteryPercent = -999
+                else:
+                    batteryPercent = batteryPercentTemp
+                temperatureTemp = bytes2Short(bleData,i+8)
+                tempPositive = 1
+                if (temperatureTemp & 0x8000) == 0:
+                    tempPositive = -1
+                temperature = -999
+                if temperatureTemp == 65535:
+                    temperature = -999
+                else:
+                    temperature = (temperatureTemp & 0x7fff) * 0.01 * tempPositive
+                humidityTemp = bytes2Short(bleData,i+10)
+                humidity = -999
+                if humidityTemp == 65535:
+                    humidity = -999
+                else:
+                    humidity = humidityTemp * 0.01
+                lightTemp = bytes2Short(bleData,i+12)
+                lightIntensity = -999
+                if lightTemp == 65535:
+                    lightIntensity = -999
+                else:
+                    lightIntensity = lightTemp & 0x0001;
+                rssiTemp = (int) (bleData[i + 14])
+                if rssiTemp < 0:
+                    rssiTemp += 256
+                rssi = 0
+                if rssiTemp == 255:
+                    rssi = -999
+                else:
+                    rssi = rssiTemp - 256
+                bleTempData.rssi = rssi
+                bleTempData.mac = mac
+                bleTempData.lightIntensity = lightIntensity
+                bleTempData.humidity = formatNumb(humidity)
+                bleTempData.voltage = formatNumb(voltage)
+                bleTempData.batteryPercent = batteryPercent
+                bleTempData.temp = formatNumb(temperature)
+                bleDataList.append(bleTempData);
+                i+=15
+        elif bleData[0] == 0x00 and bleData[1] == 0x05:
+            bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_DOOR
+            i = 2
+            while i < len(bleData):
+                bleDoorData = BleDoorData()
+                macArray = bleData[i + 0:i + 6]
+                mac = byte2HexString(macArray, 0)
+                voltageTmp = (int) (bleData[i + 6])
+                if voltageTmp < 0:
+                   voltageTmp +=  256
+                voltage = 0
+                if voltageTmp == 255:
+                    voltage = -999
+                else:
+                    voltage = 2 + 0.01 * voltageTmp
+                batteryPercentTemp = (int) (bleData[i + 7])
+                if batteryPercentTemp < 0:
+                    batteryPercentTemp += 256
+                batteryPercent=0
+                if batteryPercentTemp == 255:
+                    batteryPercent = -999
+                else:
+                    batteryPercent = batteryPercentTemp
+                temperatureTemp = bytes2Short(bleData,i+8)
+                tempPositive = 1
+                if (temperatureTemp & 0x8000) == 0:
+                    tempPositive = -1
+                temperature = -999
+                if temperatureTemp == 65535:
+                    temperature = -999
+                else:
+                    temperature = (temperatureTemp & 0x7fff) * 0.01 * tempPositive
+                online = 1
+                doorStatus = bleData[i+10]
+                if doorStatus == 255:
+                    doorStatus = -999
+                    online = 0
+                rssiTemp = 0
+                if (int)(bleData[i + 11]) < 0:
+                    rssiTemp =  (int) (bleData[i + 11]) + 256
+                else:
+                    rssiTemp = (int) (bleData[i + 11])
+                rssi = 0
+                if rssiTemp == 255:
+                    rssi = -999
+                else:
+                    rssi = rssiTemp - 256
+                bleDoorData.rssi = rssi
+                bleDoorData.mac = mac
+                bleDoorData.online = online
+                bleDoorData.doorStatus = doorStatus
+                bleDoorData.voltage = formatNumb(voltage)
+                bleDoorData.batteryPercent = batteryPercent
+                bleDoorData.temp = formatNumb(temperature)
+                bleDataList.append(bleDoorData)
+                i+=12
+        elif bleData[0] == 0x00 and bleData[1] == 0x06:
+            bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_CTRL
+            i = 2
+            while i < len(bleData):
+                bleCtrlData = BleCtrlData()
+                macArray = bleData[i + 0:i + 6]
+                mac = byte2HexString(macArray, 0)
+                voltageTmp = (int) (bleData[i + 6])
+                if voltageTmp < 0:
+                   voltageTmp +=  256
+                voltage = 0
+                if voltageTmp == 255:
+                    voltage = -999
+                else:
+                    voltage = 2 + 0.01 * voltageTmp
+                batteryPercentTemp = (int) (bleData[i + 7])
+                if batteryPercentTemp < 0:
+                    batteryPercentTemp += 256
+                batteryPercent=0
+                if batteryPercentTemp == 255:
+                    batteryPercent = -999
+                else:
+                    batteryPercent = batteryPercentTemp
+                temperatureTemp = bytes2Short(bleData,i+8)
+                tempPositive = 1
+                if (temperatureTemp & 0x8000) == 0:
+                    tempPositive = -1
+                temperature = -999
+                if temperatureTemp == 65535:
+                    temperature = -999
+                else:
+                    temperature = (temperatureTemp & 0x7fff) * 0.01 * tempPositive
+                online = 1
+                ctrlStatus = bleData[i+10]
+                if ctrlStatus == 255:
+                    ctrlStatus = -999
+                    online = 0
+                rssiTemp = 0
+                if (int)(bleData[i + 11]) < 0:
+                    rssiTemp =  (int) (bleData[i + 11]) + 256
+                else:
+                    rssiTemp = (int) (bleData[i + 11])
+                rssi = 0
+                if rssiTemp == 255:
+                    rssi = -999
+                else:
+                    rssi = rssiTemp - 256
+                bleCtrlData.rssi = rssi
+                bleCtrlData.mac = mac
+                bleCtrlData.online = online
+                bleCtrlData.ctrlStatus = ctrlStatus
+                bleCtrlData.voltage = formatNumb(voltage)
+                bleCtrlData.batteryPercent = batteryPercent
+                bleCtrlData.temp = formatNumb(temperature)
+                bleDataList.append(bleCtrlData)
+                i+=12
+        elif bleData[0] == 0x00 and bleData[1] == 0x07:
+            bluetoothPeripheralDataMessage.messageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_FUEL
+            i = 2
+            while i < len(bleData):
+                bleFuelData = BleFuelData()
+                macArray = bleData[i + 0:i + 6]
+                mac = byte2HexString(macArray, 0)
+                voltageTmp = (int) (bleData[i + 6])
+                if voltageTmp < 0:
+                   voltageTmp +=  256
+                voltage = 0
+                if voltageTmp == 255:
+                    voltage = -999
+                else:
+                    voltage = 2 + 0.01 * voltageTmp
+                valueTemp = bytes2Short(bleData,i+7)
+                value=0
+                if valueTemp == 65535:
+                    value = -999
+                else:
+                    value = valueTemp
+                temperatureTemp = bytes2Short(bleData,i+9)
+                tempPositive = 1
+                if (temperatureTemp & 0x8000) == 0:
+                    tempPositive = -1
+                temperature = -999
+                if temperatureTemp == 65535:
+                    temperature = -999
+                else:
+                    temperature = (temperatureTemp & 0x7fff) * 0.01 * tempPositive
+                online = 1
+                status = bleData[i+13]
+                if status == 255:
+                    status = -999
+                    online = 0
+                rssiTemp = 0
+                if (int)(bleData[i + 14]) < 0:
+                    rssiTemp =  (int) (bleData[i + 14]) + 256
+                else:
+                    rssiTemp = (int) (bleData[i + 14])
+                rssi = 0
+                if rssiTemp == 255:
+                    rssi = -999
+                else:
+                    rssi = rssiTemp - 256
+                bleFuelData.rssi = rssi
+                bleFuelData.mac = mac
+                bleFuelData.online = online
+                bleFuelData.alarm = status
+                bleFuelData.value = value
+                bleFuelData.voltage = formatNumb(voltage)
+                bleFuelData.temp = formatNumb(temperature)
+                bleDataList.append(bleFuelData)
+                i+=15
+        bluetoothPeripheralDataMessage.bleDataList =bleDataList
+        return bluetoothPeripheralDataMessage
 
     def parseLockMessage(self,byteArray):
         serialNo = bytes2Short(byteArray,5)
@@ -5411,7 +6518,7 @@ class PersonalAssetMsgDecoder:
             lac_2g_3 = bytes2Short(byteArray, 34)
             ci_2g_3 = bytes2Short(byteArray, 36)
         if is_4g_lbs:
-            mcc_4g = bytes2Short(byteArray, 22)
+            mcc_4g = bytes2Short(byteArray, 22) & 0x7FFF
             mnc_4g = bytes2Short(byteArray, 24)
             ci_4g = bytes2Integer(byteArray, 26)
             earfcn_4g_1 = bytes2Short(byteArray, 30)
@@ -5502,15 +6609,20 @@ class PersonalAssetMsgDecoder:
         software = "V{0}.{1}.{2}".format(byteArray[15] & 0xf, (byteArray[16] & 0xf0) >> 4, byteArray[16] & 0xf)
         firmware = byte2HexString(byteArray[20:22], 0);
         firmware = "V{0}.{1}.{2}".format(firmware[0:1], firmware[1: 2], firmware[2:4])
-        hareware = byte2HexString(byteArray[22:23], 0);
-        hareware = "V{0}.{1}".format(firmware[0:1], firmware[1: 2])
+        hardware = ""
+        hardwareByte = byteArray[22]
+        if (hardwareByte & 0x80) == 0x80:
+            hardware = byte2HexString([hardwareByte & 0x7f],0)
+        else:
+            hardware = byte2HexString(byteArray[22:23], 0)
+        hardware = "V{0}.{1}".format(hardware[0:1], hardware[1: 2])
         signInMessage = SignInMessage()
         signInMessage.firmware = firmware
         signInMessage.imei = imei
         signInMessage.serialNo = serialNo
         # signInMessage.isNeedResp = isNeedResp
         signInMessage.software = software
-        signInMessage.hareware = hareware
+        signInMessage.hardware = hardware
         signInMessage.orignBytes = byteArray
         return signInMessage
 
@@ -5642,7 +6754,7 @@ class PersonalAssetMsgDecoder:
                 lac_2g_3 = bytes2Short(bleData,23)
                 ci_2g_3 = bytes2Short(bleData,25)
             if is_4g_lbs:
-                mcc_4g = bytes2Short(bleData,11)
+                mcc_4g = bytes2Short(bleData,11) & 0x7FFF
                 mnc_4g = bytes2Short(bleData,13)
                 ci_4g = bytes2Integer(bleData, 15)
                 earfcn_4g_1 = bytes2Short(bleData, 19)
@@ -5745,7 +6857,7 @@ class PersonalAssetMsgDecoder:
                 lac_2g_3 = bytes2Short(bleData,23)
                 ci_2g_3 = bytes2Short(bleData,25)
             if is_4g_lbs:
-                mcc_4g = bytes2Short(bleData,11)
+                mcc_4g = bytes2Short(bleData,11) & 0x7FFF
                 mnc_4g = bytes2Short(bleData,13)
                 ci_4g = bytes2Integer(bleData, 15)
                 earfcn_4g_1 = bytes2Short(bleData, 19)
@@ -6002,6 +7114,177 @@ class PersonalAssetMsgDecoder:
         heartbeatMessage.orignBytes = byteArray
         return heartbeatMessage
 
+    def parseWifiWithDeviceInfoMessage(self,byteArray):
+        wifiWithDeviceInfoMessage = WifiWithDeviceInfoMessage();
+        serialNo = bytes2Short(byteArray,5)
+        imei = decodeImei(byteArray,7)
+        isHisData = (byteArray[15] & 0x80) == 0x80
+        dateStr = "20" + byte2HexString(byteArray[17:23],0)
+        gtm0 = GTM0(dateStr)
+        selfMacByte = byteArray[23:29]
+        selfMac = byte2HexString(selfMacByte,0)
+        ap1MacByte = byteArray[29:35]
+        ap1Mac = byte2HexString(ap1MacByte,0)
+        rssiTemp = (int) (byteArray[35])
+        if rssiTemp < 0:
+            rssiTemp += 256
+        ap1RSSI = 0
+        if rssiTemp == 255:
+            ap1RSSI = -999
+        else:
+            ap1RSSI = rssiTemp - 256
+        ap2MacByte = byteArray[36:42]
+        ap2Mac = byte2HexString(ap2MacByte,0)
+        rssiTemp = (int) (byteArray[42])
+        if rssiTemp < 0:
+            rssiTemp += 256
+        ap2RSSI = 0
+        if rssiTemp == 255:
+            ap2RSSI = -999
+        else:
+            ap2RSSI = rssiTemp - 256
+        ap3MacByte = byteArray[43:49]
+        ap3Mac = byte2HexString(ap3MacByte, 0)
+        rssiTemp = (int)(byteArray[49])
+        if rssiTemp < 0:
+            rssiTemp += 256
+        ap3RSSI = 0
+        if rssiTemp == 255:
+            ap3RSSI = -999
+        else:
+            ap3RSSI = rssiTemp - 256
+
+        axisXDirect = -1
+        if (byteArray[50] & 0x80) == 0x80:
+            axisXDirect = -1
+        axisX = ((byteArray[50] & 0x7F & 0xff) + (((byteArray[51] & 0xf0) >> 4) & 0xff) / 10.0) * axisXDirect
+        axisYDirect = -1
+        if (byteArray[51] & 0x08) == 0x08:
+            axisYDirect = 1
+        axisY = (((((byteArray[51] & 0x07) << 4) & 0xff) + (((byteArray[52] & 0xf0) >> 4) & 0xff)) + (
+                    byteArray[52] & 0x0F & 0xff) / 10.0) * axisYDirect
+        axisZDirect = -1
+        if (byteArray[53] & 0x80) == 0x80:
+            axisZDirect = 1
+        axisZ = ((byteArray[53] & 0x7F & 0xff) + (((byteArray[54] & 0xf0) >> 4) & 0xff) / 10.0) * axisZDirect
+
+        batteryPercentBytes = [byteArray[55]]
+        batteryPercentStr = byte2HexString(batteryPercentBytes, 0)
+        batteryPercent = 100
+        if batteryPercentStr.lower() == "ff":
+            batteryPercent = -999
+        else:
+            batteryPercent = (int)(batteryPercentStr)
+            if batteryPercent == 0:
+                batteryPercent = 100
+        deviceTemp = -999
+        if byteArray[56] != 0xff:
+            deviceTemp = byteArray[45] & 0x7F
+            if (byteArray[56] & 0x80) == 0x80:
+                deviceTemp = -1 * deviceTemp
+            lightSensorBytes = [byteArray[57]]
+        lightSensorStr = byte2HexString(lightSensorBytes, 0)
+        lightSensor = 0
+        if lightSensorStr.lower() == "ff":
+            lightSensor = -1
+        else:
+            lightSensor = (int)(lightSensorStr) / 10.0
+
+        batteryVoltageBytes = [byteArray[58]]
+        batteryVoltageStr = byte2HexString(batteryVoltageBytes, 0)
+        batteryVoltage = 0
+        if batteryVoltageStr.lower() == "ff":
+            batteryVoltage = -1
+        else:
+            batteryVoltage = (int)(batteryVoltageStr) / 10.0
+        solarVoltageBytes = [byteArray[59]]
+        solarVoltageStr = byte2HexString(solarVoltageBytes, 0)
+        solarVoltage = 0
+        if solarVoltageStr.lower() == "ff":
+            solarVoltage = -1
+        else:
+            solarVoltage = (int)(solarVoltageStr) / 10.0
+
+        mileage = bytes2Integer(byteArray, 60)
+        status = bytes2Short(byteArray, 64)
+        network = (status & 0x7F0) >> 4
+        accOnInterval = bytes2Short(byteArray, 66)
+        accOffInterval = bytes2Integer(byteArray, 68)
+        angleCompensation = (int)(byteArray[72])
+        distanceCompensation = bytes2Short(byteArray, 73)
+        heartbeatInterval = (int)(byteArray[75])
+        isUsbCharging = (status & 0x8000) == 0x8000
+        isSolarCharging = (status & 0x8) == 0x8
+        iopIgnition = (status & 0x4) == 0x4
+        alarmByte = byteArray[16]
+        originalAlarmCode = (int)(alarmByte)
+        status1 = byteArray[68]
+        smartPowerOpenStatus = "close"
+        if (status1 & 0x01) == 0x01:
+            smartPowerOpenStatus = "enable"
+        status2 = byteArray[77]
+        isLockSim = (status2 & 0x80) == 0x80
+        isLockDevice = (status2 & 0x40) == 0x40
+        AGPSEphemerisDataDownloadSettingStatus = (status2 & 0x20) == 0x10
+        gSensorSettingStatus = (status2 & 0x10) == 0x10
+        frontSensorSettingStatus = (status2 & 0x08) == 0x08
+        deviceRemoveAlarmSettingStatus = (status2 & 0x04) == 0x04
+        openCaseAlarmSettingStatus = (status2 & 0x02) == 0x02
+        deviceInternalTempReadingANdUploadingSettingStatus = (status2 & 0x01) == 0x01
+        status3 = byteArray[78];
+        smartPowerSettingStatus = "disable"
+        if (status3 & 0x80) == 0x80:
+            smartPowerSettingStatus = "enable"
+        lockType = 0xff
+        if len(byteArray) >= 82:
+            lockType = byteArray[81]
+        wifiWithDeviceInfoMessage.serialNo = serialNo
+        wifiWithDeviceInfoMessage.imei= imei
+        wifiWithDeviceInfoMessage.orignBytes = bytes
+        wifiWithDeviceInfoMessage.date = gtm0
+        wifiWithDeviceInfoMessage.selfMac = selfMac
+        wifiWithDeviceInfoMessage.ap1Mac = ap1Mac
+        wifiWithDeviceInfoMessage.ap1RSSI = ap1RSSI
+        wifiWithDeviceInfoMessage.ap2Mac = ap2Mac
+        wifiWithDeviceInfoMessage.ap2RSSI = ap2RSSI
+        wifiWithDeviceInfoMessage.ap3Mac = ap3Mac
+        wifiWithDeviceInfoMessage.ap3RSSI = ap3RSSI
+        wifiWithDeviceInfoMessage.isHisData = isHisData
+        wifiWithDeviceInfoMessage.originalAlarmCode = originalAlarmCode
+        wifiWithDeviceInfoMessage.axisX = axisX
+        wifiWithDeviceInfoMessage.axisY = axisY
+        wifiWithDeviceInfoMessage.axisZ = axisZ
+        wifiWithDeviceInfoMessage.mileage = mileage
+        wifiWithDeviceInfoMessage.networkSignal = network
+        wifiWithDeviceInfoMessage.accOnInterval = accOnInterval
+        wifiWithDeviceInfoMessage.accOffInterval = accOffInterval
+        wifiWithDeviceInfoMessage.angleCompensation = angleCompensation
+        wifiWithDeviceInfoMessage.distanceCompensation = distanceCompensation
+        wifiWithDeviceInfoMessage.heartbeatInterval = heartbeatInterval
+        wifiWithDeviceInfoMessage.isUsbCharging = isUsbCharging
+        wifiWithDeviceInfoMessage.isSolarCharging = isSolarCharging
+        wifiWithDeviceInfoMessage.iopIgnition = iopIgnition
+        if iopIgnition:
+            wifiWithDeviceInfoMessage.iop = 0x4000
+        else:
+            wifiWithDeviceInfoMessage.iop = 0x0000
+        wifiWithDeviceInfoMessage.batteryCharge = batteryPercent
+        wifiWithDeviceInfoMessage.isLockSim = isLockSim
+        wifiWithDeviceInfoMessage.isLockDevice = isLockDevice
+        wifiWithDeviceInfoMessage.AGPSEphemerisDataDownloadSettingStatus = AGPSEphemerisDataDownloadSettingStatus
+        wifiWithDeviceInfoMessage.gSensorSettingStatus = gSensorSettingStatus
+        wifiWithDeviceInfoMessage.frontSensorSettingStatus = frontSensorSettingStatus
+        wifiWithDeviceInfoMessage.deviceRemoveAlarmSettingStatus = deviceRemoveAlarmSettingStatus
+        wifiWithDeviceInfoMessage.openCaseAlarmSettingStatus = openCaseAlarmSettingStatus
+        wifiWithDeviceInfoMessage.deviceInternalTempReadingANdUploadingSettingStatus = deviceInternalTempReadingANdUploadingSettingStatus
+        wifiWithDeviceInfoMessage.deviceTemp = deviceTemp
+        wifiWithDeviceInfoMessage.lightSensor = lightSensor
+        wifiWithDeviceInfoMessage.batteryVoltage = batteryVoltage
+        wifiWithDeviceInfoMessage.solarVoltage = solarVoltage
+        wifiWithDeviceInfoMessage.smartPowerSettingStatus = smartPowerSettingStatus
+        wifiWithDeviceInfoMessage.smartPowerOpenStatus = smartPowerOpenStatus
+        return wifiWithDeviceInfoMessage
+
     def parseWifiMessage(self,bytes):
         wifiMessage = WifiMessage();
         serialNo = bytes2Short(bytes,5)
@@ -6030,9 +7313,9 @@ class PersonalAssetMsgDecoder:
             ap2RSSI = -999
         else:
             ap2RSSI = rssiTemp - 256
-        ap3MacByte = bytes[27:33]
+        ap3MacByte = bytes[41:47]
         ap3Mac = byte2HexString(ap3MacByte,0)
-        rssiTemp = (int) (bytes[33])
+        rssiTemp = (int) (bytes[47])
         if rssiTemp < 0:
             rssiTemp += 256
         ap3RSSI = 0
@@ -6189,7 +7472,7 @@ class PersonalAssetMsgDecoder:
             lac_2g_3 = bytes2Short(byteArray,35)
             ci_2g_3 = bytes2Short(byteArray,37)
         if is_4g_lbs:
-            mcc_4g = bytes2Short(byteArray,23)
+            mcc_4g = bytes2Short(byteArray,23) & 0x7FFF
             mnc_4g = bytes2Short(byteArray,25)
             ci_4g = bytes2Integer(byteArray, 27)
             earfcn_4g_1 = bytes2Short(byteArray, 31)
@@ -6213,7 +7496,7 @@ class PersonalAssetMsgDecoder:
         batteryPercentStr = byte2HexString(batteryPercentBytes, 0)
         batteryPercent = 100
         if batteryPercentStr.lower() == "ff":
-            batteryPercent = 100
+            batteryPercent = -999
         else:
             batteryPercent = (int)(batteryPercentStr)
             if  batteryPercent == 0:
@@ -6256,7 +7539,6 @@ class PersonalAssetMsgDecoder:
         heartbeatInterval = (int) (byteArray[64])
         isUsbCharging = (status & 0x8000) == 0x8000
         isSolarCharging = (status & 0x8) == 0x8
-        iopIgnition = (status & 0x4) == 0x4
         alarmByte = byteArray[16]
         originalAlarmCode = (int) (alarmByte)
         isAlarmData = command[2] == 0x04
@@ -6414,8 +7696,8 @@ class PersonalAssetMsgEncoder:
     def getWifiMsgReply(self,imei,needSerialNo,serialNo):
         command = [0x27,0x27,0x15]
         return Encoder.getCommonMsgReply(imei,needSerialNo,serialNo,command,self.encryptType,self.aesKey)
-    def getBluetoothPeripheralMsgReply(self,imei,needSerialNo,serialNo):
-        command = [0x27,0x27,0x10]
+    def getBluetoothPeripheralMsgReply(self,imei,needSerialNo,serialNo,protocolHeadType):
+        command = [0x27,0x27,protocolHeadType]
         return Encoder.getCommonMsgReply(imei,needSerialNo,serialNo,command,self.encryptType,self.aesKey)
     def getNetworkMsgReply(self,imei,needSerialNo,serialNo):
         command = [0x27,0x27,0x05]
@@ -6430,6 +7712,12 @@ class PersonalAssetMsgEncoder:
         command = [0x27,0x27,0x81]
         return Encoder.getConfigSettingMsg(imei,content,command,self.encryptType,self.aesKey)
 
+    def getInnerGeoDataMsgReply(self,imei,serialNo,protocolHeadType):
+        command = [0x27, 0x27, 0x20]
+        return Encoder.getCommonMsgReply(imei,  True,serialNo, command, self.encryptType, self.aesKey)
+    def getWifiWithDeviceInfoMsgReply(self,imei,serialNo,sourceAlarmCode):
+        command = [0x27, 0x27, 0x24]
+        return Encoder.getNormalMsgReply(imei,serialNo,command,[sourceAlarmCode],self.encryptType,self.aesKey)
 
     def getBrocastSettingMsg(self,imei,content):
         """
@@ -6452,3 +7740,157 @@ class PersonalAssetMsgEncoder:
         """
         command = [0x27,0x27,0x81]
         return Encoder.getUSSDMsg(imei,content,command,self.encryptType,self.aesKey)
+
+class PTTDecoder:
+    HEADER_LENGTH = 3
+    HEARTBEAT = [0x28, 0x28, 0x03]
+    TALK_START = [0x28, 0x28, 0x04]
+    TALK_END = [0x28, 0x28, 0x05]
+    VOICE_DATA = [0x28, 0x28, 0x06]
+    encryptType = 0
+    aesKey = ""
+
+    def __init__(self, messageEncryptType, aesKey):
+        """
+            Instantiates a new Decoder.
+        :param messageEncryptType:The message encrypt type .Use the value of MessageEncryptType.
+        :param aesKey:The aes key.If you do not use AES encryption, the value can be empty.The type is string
+        :return:
+        """
+        self.encryptType = messageEncryptType
+        self.aesKey = aesKey
+
+    def match(self, byteArray):
+        return byteArray == self.HEARTBEAT or byteArray == self.TALK_START or byteArray == self.TALK_END or byteArray == self.VOICE_DATA
+
+    decoderBuf = TopflytechByteBuf()
+
+    def decode(self, buf):
+        """
+        Decode list.You can get all message at once.
+        :param buf:The buf is from socket
+        :return:The message list
+        """
+        buf = bytearray(buf)
+        self.decoderBuf.pubBuf(buf)
+        messages = []
+        if self.decoderBuf.getReadableBytes() < self.HEADER_LENGTH + 2:
+            return messages
+        bytes = [0, 0, 0]
+        while self.decoderBuf.getReadableBytes() > 5:
+            self.decoderBuf.markReaderIndex()
+            bytes[0] = self.decoderBuf.getByte(0)
+            bytes[1] = self.decoderBuf.getByte(1)
+            bytes[2] = self.decoderBuf.getByte(2)
+            if self.match(bytes):
+                self.decoderBuf.skipBytes(self.HEADER_LENGTH)
+                lengthBuf = self.decoderBuf.readBytes(2)
+                packageLength = bytes2Short(lengthBuf, 0)
+                if self.encryptType == MessageEncryptType.MD5:
+                    packageLength = packageLength + 8
+                elif self.encryptType == MessageEncryptType.AES:
+                    packageLength = self.getAesLength(packageLength)
+                self.decoderBuf.resetReaderIndex()
+                if packageLength <= 0:
+                    self.decoderBuf.skipBytes(5)
+                    break
+                if packageLength > self.decoderBuf.getReadableBytes():
+                    break
+                data = self.decoderBuf.readBytes(packageLength)
+                data = Crypto.decryptData(data, self.encryptType, self.aesKey)
+                if data:
+                    message = self.build(data)
+                    if message:
+                        messages.append(message)
+            else:
+                self.decoderBuf.skipBytes(1)
+        return messages
+
+    def build(self, byteArray):
+        if (byteArray is not None and len(byteArray) > PTTDecoder.HEADER_LENGTH) or  (byteArray[0] == 0x28 and byteArray[1] == 0x28):
+            if byteArray[2] == 0x03:
+                return self.parseHeartbeatMessage(byteArray)
+            elif byteArray[2] == 0x04:
+                return self.parseTalkStartMessage(byteArray)
+            elif byteArray[2] == 0x05:
+                return self.parseTalkEndMessage(byteArray)
+            elif byteArray[2] == 0x06:
+                return self.parseVoiceMessage(byteArray)
+            else:
+                return None
+        return None
+
+    def parseHeartbeatMessage(self, byteArray):
+        serialNo = bytes2Short(byteArray, 5)
+        imei = decodeImei(byteArray, 7)
+        heartbeatMessage = HeartbeatMessage()
+        heartbeatMessage.serialNo = serialNo
+        heartbeatMessage.imei = imei
+        heartbeatMessage.orignBytes = byteArray
+        return heartbeatMessage
+
+    def parseTalkStartMessage(self, byteArray):
+        serialNo = bytes2Short(byteArray, 5)
+        imei = decodeImei(byteArray, 7)
+        talkStartMessage = TalkStartMessage()
+        talkStartMessage.serialNo = serialNo
+        talkStartMessage.imei = imei
+        talkStartMessage.orignBytes = byteArray
+        return talkStartMessage
+
+    def parseTalkEndMessage(self, byteArray):
+        serialNo = bytes2Short(byteArray, 5)
+        imei = decodeImei(byteArray, 7)
+        talkEndMessage = TalkEndMessage()
+        talkEndMessage.serialNo = serialNo
+        talkEndMessage.imei = imei
+        talkEndMessage.orignBytes = byteArray
+        return talkEndMessage
+
+    def parseVoiceMessage(self, byteArray):
+        serialNo = bytes2Short(byteArray, 5)
+        imei = decodeImei(byteArray, 7)
+        voiceMessage = VoiceMessage()
+        voiceMessage.serialNo = serialNo
+        voiceMessage.imei = imei
+        voiceMessage.orignBytes = byteArray
+        voiceMessage.setEncodeType(byteArray[15])
+        voiceLen = bytes2Short(byteArray, 16);
+        if len(byteArray) >= 18 + voiceLen:
+            voiceData = byteArray[18:18 + voiceLen]
+            voiceMessage.setVoiceData(voiceData)
+        return voiceMessage
+
+class PTTEncoder:
+    def __init__(self, message_encrypt_type, aes_key):
+        self.encrypt_type = message_encrypt_type
+        self.aes_key = aes_key
+
+    def get_heartbeat_msg_reply(self, imei, serial_no):
+        command = [0x28,0x28,0x03]
+        return Encoder.getCommonMsgReply(imei, True, serial_no, command, self.encrypt_type, self.aes_key)
+
+    def get_talk_start_msg_reply(self, imei, serial_no, status):
+        command = [0x28, 0x28, 0x04]
+        content = [status]
+        return Encoder.getNormalMsgReply(imei, serial_no, command, content, self.encrypt_type, self.aes_key)
+
+    def get_talk_end_msg_reply(self, imei, serial_no, status):
+        command = [0x28, 0x28, 0x05]
+        content = struct.pack('b', status)
+        return Encoder.getNormalMsgReply(imei, serial_no, command, content, self.encrypt_type, self.aes_key)
+
+    def get_voice_data(self, imei, serial_no, encode_type, voice_data):
+        command = [0x28, 0x28, 0x06]
+        content = []
+        content.extend([encode_type])
+        content.extend(voice_data)
+        return Encoder.getNormalMsgReply(imei, serial_no, command, content, self.encrypt_type, self.aes_key)
+
+    def get_listen_start_data(self, imei, serial_no):
+        command = [0x28, 0x28, 0x07]
+        return Encoder.getNormalMsgReply(imei, serial_no, command, [], self.encrypt_type, self.aes_key)
+
+    def get_listen_end_data(self, imei, serial_no):
+        command = [0x28, 0x28, 0x08]
+        return Encoder.getNormalMsgReply(imei, serial_no, command, [], self.encrypt_type, self.aes_key)

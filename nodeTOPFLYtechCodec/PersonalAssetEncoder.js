@@ -49,6 +49,14 @@ var PersonalAssetEncoder = {
         var command = [0x27, 0x27, 0x17]
         return EncoderHelper.getLockMsgReply(imei,needSerialNo,serialNo,command,encryptType,aesKey);
     },
+    getInnerGeoDataMsgReply:function (imei,serialNo,encryptType,aesKey){
+        var command = [0x27, 0x27, 0x20]
+        return EncoderHelper.getNormalMsgReply(imei,serialNo,command,[],encryptType,aesKey);
+    },
+    getWifiWithDeviceInfoMsgReply:function (imei,serialNo,sourceAlarmCode,encryptType,aesKey){
+        var command = [0x27, 0x27, 0x24]
+        return EncoderHelper.getNormalMsgReply(imei,serialNo,command,[sourceAlarmCode],encryptType,aesKey);
+    },
 }
 
 module.exports = PersonalAssetEncoder

@@ -75,7 +75,7 @@ public class T880xEncoder {
      */
     public static byte[] getConfigSettingMsg(String imei,String content) throws IOException {
         byte[] command = {0x23, 0x23, (byte)0x81};
-        return Encoder.getConfigSettingMsg(imei, content, command, MessageEncryptType.NONE,null);
+        return Encoder.getConfigSettingMsg(imei, content.trim(), command, MessageEncryptType.NONE,null);
     }
 
     /**
@@ -88,7 +88,7 @@ public class T880xEncoder {
      */
     public static byte[] getBrocastSmsMsg(String imei,String content) throws IOException {
         byte[] command = {0x23, 0x23, (byte)0x81};
-        return Encoder.getBrocastSmsMsg(imei, content, command, MessageEncryptType.NONE,null);
+        return Encoder.getBrocastSmsMsg(imei, content.trim(), command, MessageEncryptType.NONE,null);
     }
 
 }

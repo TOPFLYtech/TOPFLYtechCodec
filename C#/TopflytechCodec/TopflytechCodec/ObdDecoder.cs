@@ -28,9 +28,10 @@ namespace TopflytechCodec
         private static byte[] NETWORK_INFO_DATA = { 0x26, 0x26, (byte)0x11 };
         private static byte[] LOCATION_DATA_WITH_SENSOR =  {0x26, 0x26, (byte)0x16};
         private static byte[] LOCATION_ALARM_WITH_SENSOR =  {0x26, 0x26, (byte)0x18};
+        private static byte[] BLUETOOTH_SECOND_DATA = { 0x26, 0x26, (byte)0x12 };
         private static byte[] latlngInvalidData = {(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,
             (byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF};
-
+        private static byte[] WIFI_DATA = { 0x26, 0x26, (byte)0x15 };
         private static byte[] obdHead = { 0x55, (byte)0xAA };
         private int encryptType = 0;
         private String aesKey;
@@ -59,6 +60,8 @@ namespace TopflytechCodec
                     || Utils.ArrayEquals(BLUETOOTH_DATA, bytes)
                     || Utils.ArrayEquals(NETWORK_INFO_DATA, bytes)
                     || Utils.ArrayEquals(LOCATION_DATA_WITH_SENSOR, bytes)
+                    || Utils.ArrayEquals(WIFI_DATA, bytes) 
+                    || Utils.ArrayEquals(BLUETOOTH_SECOND_DATA, bytes)
                     || Utils.ArrayEquals(LOCATION_ALARM_WITH_SENSOR, bytes);
         }
 
@@ -161,6 +164,9 @@ namespace TopflytechCodec
                     case 0x12:
                         BluetoothPeripheralDataMessage bluetoothPeripheralDataSecondMessage = parseSecondBluetoothDataMessage(bytes);
                         return bluetoothPeripheralDataSecondMessage;
+                    case 0x15:
+                        WifiMessage wifiMessage = parseWifiMessage(bytes);
+                        return wifiMessage;
                     case (byte)0x81:
                         Message message = parseInteractMessage(bytes);
                         return message;
@@ -171,6 +177,60 @@ namespace TopflytechCodec
             return null;
         }
 
+        private WifiMessage parseWifiMessage(byte[] bytes)
+        {
+            WifiMessage wifiMessage = new WifiMessage();
+            int serialNo = BytesUtils.Bytes2Short(bytes, 5);
+            //Boolean isNeedResp = (serialNo & 0x8000) != 0x8000;
+            String imei = BytesUtils.IMEI.Decode(bytes, 7);
+            DateTime gmt0 = Utils.getGTM0Date(bytes, 15);
+            String selfMac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 21, 27), 0);
+            String ap1Mac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 27, 33), 0);
+            int ap1Rssi;
+            int rssiTemp = (int)bytes[33] < 0 ? (int)bytes[33] + 256 : (int)bytes[33];
+            if (rssiTemp == 255)
+            {
+                ap1Rssi = -999;
+            }
+            else
+            {
+                ap1Rssi = rssiTemp - 256;
+            }
+            String ap2Mac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 34, 40), 0);
+            int ap2Rssi;
+            rssiTemp = (int)bytes[40] < 0 ? (int)bytes[40] + 256 : (int)bytes[40];
+            if (rssiTemp == 255)
+            {
+                ap2Rssi = -999;
+            }
+            else
+            {
+                ap2Rssi = rssiTemp - 256;
+            }
+            String ap3Mac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 41, 47), 0);
+            int ap3Rssi;
+            rssiTemp = (int)bytes[47] < 0 ? (int)bytes[47] + 256 : (int)bytes[47];
+            if (rssiTemp == 255)
+            {
+                ap3Rssi = -999;
+            }
+            else
+            {
+                ap3Rssi = rssiTemp - 256;
+            }
+            wifiMessage.OrignBytes = bytes;
+            wifiMessage.Imei = imei;
+            wifiMessage.SerialNo = serialNo;
+            wifiMessage.Date = gmt0;
+            wifiMessage.SelfMac = selfMac.ToUpper();
+            wifiMessage.Ap1Mac = ap1Mac.ToUpper();
+            wifiMessage.Ap1RSSI = ap1Rssi;
+            wifiMessage.Ap2Mac = ap2Mac.ToUpper();
+            wifiMessage.Ap2RSSI = ap2Rssi;
+            wifiMessage.Ap3Mac = ap3Mac.ToUpper();
+            wifiMessage.Ap3RSSI = ap3Rssi;
+            return wifiMessage;
+        }
         private NetworkInfoMessage parseNetworkInfoMessage(byte[] bytes)
         {
             NetworkInfoMessage networkInfoMessage = new NetworkInfoMessage();
@@ -234,7 +294,7 @@ namespace TopflytechCodec
                 bluetoothPeripheralDataMessage.IsIgnition = false;
             }
             bluetoothPeripheralDataMessage.Date = Utils.getGTM0Date(bytes, 15);
-            bluetoothPeripheralDataMessage.ProtocolHeadType = 0x12;
+            bluetoothPeripheralDataMessage.ProtocolHeadType = bytes[2];
             bluetoothPeripheralDataMessage.OrignBytes = bytes;
             bluetoothPeripheralDataMessage.IsHistoryData = (bytes[15] & 0x80) != 0x00;
             bluetoothPeripheralDataMessage.SerialNo = serialNo;
@@ -309,7 +369,7 @@ namespace TopflytechCodec
             }
             if (is_4g_lbs)
             {
-                mcc_4g = BytesUtils.Bytes2Short(bytes, 23);
+                mcc_4g = BytesUtils.Bytes2Short(bytes, 23) & 0x7FFF;
                 mnc_4g = BytesUtils.Bytes2Short(bytes, 25);
                 ci_4g = BytesUtils.Byte2Int(bytes, 27);
                 earfcn_4g_1 = BytesUtils.Bytes2Short(bytes, 31);
@@ -817,6 +877,7 @@ namespace TopflytechCodec
             bluetoothPeripheralDataMessage.OrignBytes = bytes;
             bluetoothPeripheralDataMessage.IsHistoryData = (bytes[15] & 0x80) != 0x00;
             bluetoothPeripheralDataMessage.SerialNo = serialNo;
+            bluetoothPeripheralDataMessage.ProtocolHeadType = bytes[2];
             //bluetoothPeripheralDataMessage.IsNeedResp = isNeedResp;
             bluetoothPeripheralDataMessage.Imei = imei;
             byte[] bleData = new byte[bytes.Length - 22];
@@ -963,7 +1024,7 @@ namespace TopflytechCodec
                 }
                 if (is_4g_lbs)
                 {
-                    mcc_4g = BytesUtils.Bytes2Short(bleData, 11);
+                    mcc_4g = BytesUtils.Bytes2Short(bleData, 11) & 0x7FFF;
                     mnc_4g = BytesUtils.Bytes2Short(bleData, 13);
                     ci_4g = BytesUtils.Byte2Int(bleData, 15);
                     earfcn_4g_1 = BytesUtils.Bytes2Short(bleData, 19);
@@ -1086,7 +1147,7 @@ namespace TopflytechCodec
                 }
                 if (is_4g_lbs)
                 {
-                    mcc_4g = BytesUtils.Bytes2Short(bleData, 11);
+                    mcc_4g = BytesUtils.Bytes2Short(bleData, 11) & 0x7FFF;
                     mnc_4g = BytesUtils.Bytes2Short(bleData, 13);
                     ci_4g = BytesUtils.Byte2Int(bleData, 15);
                     earfcn_4g_1 = BytesUtils.Bytes2Short(bleData, 19);
@@ -1428,44 +1489,168 @@ namespace TopflytechCodec
 
         private SignInMessage parseLoginMessage(byte[] bytes)
         {
-            int serialNo = BytesUtils.Bytes2Short(bytes, 5);
-            //Boolean isNeedResp = (serialNo & 0x8000) != 0x8000; 
-            String imei = BytesUtils.IMEI.Decode(bytes, 7);
-            String str = BytesUtils.Bytes2HexString(bytes, 15);
-            char[] strChars = str.ToCharArray();
-            String software = String.Format("V{0}.{1}.{2}", Convert.ToInt32(str.Substring(0, 1), 16), Convert.ToInt32(str.Substring(1, 1), 16), Convert.ToInt32(str.Substring(2, 1), 16));
-            String firmware = String.Format("V{0}.{1}.{2}", Convert.ToInt32(str.Substring(3, 1), 16), Convert.ToInt32(str.Substring(4, 1), 16), Convert.ToInt32(str.Substring(5, 1), 16));
-            String platform = str.Substring(6, 4);
-            String hardware = String.Format("{0}.{1}", Convert.ToInt32(str.Substring(10, 1), 16), Convert.ToInt32(str.Substring(11, 1), 16));
-            int obdV1 = (int)bytes[21];
-            int obdV2 = (int)bytes[22];
-            int obdV3 = (int)bytes[23];
-            if (obdV1 < 0)
+            if (bytes.Length == 25)
             {
-                obdV1 += 256;
+                int serialNo = BytesUtils.Bytes2Short(bytes, 5); 
+                String imei = BytesUtils.IMEI.Decode(bytes, 7);
+                String str = BytesUtils.Bytes2HexString(bytes, 15);
+                if (20 == str.Length)
+                {
+                    String software = String.Format("V{0}.{1}.{2}", (bytes[15] & 0xf0) >> 4, bytes[15] & 0xf, (bytes[16] & 0xf0) >> 4);
+                    String firmware = String.Format("V{0}.{1}.{2}", bytes[16] & 0xf, (bytes[17] & 0xf0) >> 4, bytes[17] & 0xf);
+                    String platform = String.Format("%s", str.Substring(6, 4));
+                    String hardware = String.Format("{0}.{1}", (bytes[20] & 0xf0) >> 4, bytes[20] & 0xf);
+                    int obdV1 = (int)bytes[21];
+                    int obdV2 = (int)bytes[22];
+                    int obdV3 = (int)bytes[23];
+                    if (obdV1 < 0)
+                    {
+                        obdV1 += 256;
+                    }
+                    if (obdV2 < 0)
+                    {
+                        obdV2 += 256;
+                    }
+                    if (obdV3 < 0)
+                    {
+                        obdV3 += 256;
+                    }
+                    String obdSoftware = String.Format("V{0}.{1}.{2}", obdV1, obdV2, obdV3);
+                    String obdHardware = String.Format("{0}.{1}", (bytes[24] & 0xf0) >> 4, bytes[24] & 0xf);
+                    SignInMessage signInMessage = new SignInMessage();
+                    signInMessage.SerialNo = serialNo; 
+                    signInMessage.Imei = imei;
+                    signInMessage.Software = software;
+                    signInMessage.Firmware = firmware;
+                    signInMessage.Platform = platform;
+                    signInMessage.Hareware = hardware;
+                    signInMessage.OrignBytes = bytes;
+                    signInMessage.ObdHareware = obdHardware;
+                    signInMessage.ObdSoftware = obdSoftware;
+                    return signInMessage;
+                }
+                else
+                {
+                    return null;
+                }
             }
-            if (obdV2 < 0)
+            else if (bytes.Length == 27)
             {
-                obdV2 += 256;
+
+                int serialNo = BytesUtils.Bytes2Short(bytes, 5);
+                String imei = BytesUtils.IMEI.Decode(bytes, 7);
+                String software = String.Format("V{0}.{1}.{2}", bytes[15] & 0xf, (bytes[16] & 0xf0) >> 4, bytes[16] & 0xf);
+                String str = BytesUtils.Bytes2HexString(bytes, 17);
+                String platform = str.Substring(0, 6);
+                String firmware = String.Format("V{0}.{1}.{2}.{3}", str.Substring(6, 1), str.Substring(7, 1), str.Substring(8, 1), str.Substring(9, 1));
+                String hardware = String.Format("%s.%s", str.Substring(10, 1), str.Substring(11, 1));
+                int obdV1 = (int)bytes[23];
+                int obdV2 = (int)bytes[24];
+                int obdV3 = (int)bytes[25];
+                if (obdV1 < 0)
+                {
+                    obdV1 += 256;
+                }
+                if (obdV2 < 0)
+                {
+                    obdV2 += 256;
+                }
+                if (obdV3 < 0)
+                {
+                    obdV3 += 256;
+                }
+                String obdSoftware = String.Format("V{0}.{1}.{2}", obdV1, obdV2, obdV3);
+                String obdHardware = String.Format("{0}.{1}", (bytes[26] & 0xf0) >> 4, bytes[26] & 0xf);
+                SignInMessage signInMessage = new SignInMessage();
+                signInMessage.SerialNo = serialNo;
+                signInMessage.Imei = imei;
+                signInMessage.Software = software;
+                signInMessage.Firmware = firmware;
+                signInMessage.Platform = platform;
+                signInMessage.Hareware = hardware;
+                signInMessage.OrignBytes = bytes;
+                signInMessage.ObdHareware = obdHardware;
+                signInMessage.ObdSoftware = obdSoftware;
+                return signInMessage;
+                return signInMessage;
             }
-            if (obdV3 < 0)
+            else if (bytes.Length >= 35)
             {
-                obdV3 += 256;
+                int serialNo = BytesUtils.Bytes2Short(bytes, 5);
+                String imei = BytesUtils.IMEI.Decode(bytes, 7);
+                int model = BytesUtils.Bytes2Short(bytes, 15);
+                String str = BytesUtils.Bytes2HexString(bytes, 17);
+                String software = String.Format("V{0}.{1}.{2}.{3}", str.Substring(0, 1), str.Substring(1, 1), str.Substring(2, 1), str.Substring(3, 1));
+                String platform = str.Substring(4, 6);
+                String firmware = String.Format("V{0}.{1}.{2}.{3}", str.Substring(10, 11), str.Substring(11, 12), str.Substring(12, 13), str.Substring(13, 14));
+                String hardware = String.Format("{0}.{1}", str.Substring(14, 15), str.Substring(15, 16));
+                int obdV1 = (int)bytes[25];
+                int obdV2 = (int)bytes[26];
+                int obdV3 = (int)bytes[27];
+                if (obdV1 < 0)
+                {
+                    obdV1 += 256;
+                }
+                if (obdV2 < 0)
+                {
+                    obdV2 += 256;
+                }
+                if (obdV3 < 0)
+                {
+                    obdV3 += 256;
+                }
+                String obdSoftware = String.Format("V{0}.{1}.{2}", obdV1, obdV2, obdV3);
+                obdV1 = (int)bytes[28];
+                obdV2 = (int)bytes[29];
+                obdV3 = (int)bytes[30];
+                if (obdV1 < 0)
+                {
+                    obdV1 += 256;
+                }
+                if (obdV2 < 0)
+                {
+                    obdV2 += 256;
+                }
+                if (obdV3 < 0)
+                {
+                    obdV3 += 256;
+                }
+                String obdBootVersion = String.Format("V{0}.{1}.{2}", obdV1, obdV2, obdV3);
+                obdV1 = (int)bytes[31];
+                obdV2 = (int)bytes[32];
+                obdV3 = (int)bytes[33];
+                if (obdV1 < 0)
+                {
+                    obdV1 += 256;
+                }
+                if (obdV2 < 0)
+                {
+                    obdV2 += 256;
+                }
+                if (obdV3 < 0)
+                {
+                    obdV3 += 256;
+                }
+                String obdDataVersion = String.Format("V{0}.{1}.{2}", obdV1, obdV2, obdV3);
+                String obdHardware = String.Format("{0}.{1}", (bytes[34] & 0xf0) >> 4, bytes[34] & 0xf);
+                SignInMessage signInMessage = new SignInMessage();
+                signInMessage.SerialNo = serialNo;
+                signInMessage.Imei = imei;
+                signInMessage.Software = software;
+                signInMessage.Firmware = firmware;
+                signInMessage.Platform = platform;
+                signInMessage.Hareware = hardware;
+                signInMessage.OrignBytes = bytes;
+                signInMessage.ObdHareware = obdHardware;
+                signInMessage.ObdSoftware = obdSoftware;
+                signInMessage.ObdDataVersion = obdDataVersion;
+                signInMessage.ObdBootVersion = obdBootVersion;
+                return signInMessage;
             }
-            SignInMessage signInMessage = new SignInMessage();
-            String obdSoftware = String.Format("V{0}.{1}.{2}", obdV1, obdV2, obdV3);
-            String obdHardware = String.Format("{0}.{1}", strChars[18], strChars[19]);
-            signInMessage.SerialNo = serialNo;
-            //signInMessage.IsNeedResp = isNeedResp;
-            signInMessage.Imei = imei;
-            signInMessage.Software = software;
-            signInMessage.Firmware = firmware;
-            signInMessage.Platform = platform;
-            signInMessage.Hareware = hardware;
-            signInMessage.OrignBytes = bytes;
-            signInMessage.ObdHareware = obdHardware;
-            signInMessage.ObdSoftware = obdSoftware;
-            return signInMessage;
+            else
+            {
+                return null;
+            }
         }
 
 
@@ -1657,9 +1842,7 @@ namespace TopflytechCodec
                 return "U" + (int)(data[0] - 12);
             }
         }
-
-
-
+         
 
         private GpsDriverBehaviorMessage parseGpsDriverBehavorMessage(byte[] bytes)
         {
@@ -1836,7 +2019,7 @@ namespace TopflytechCodec
             }
             if (is_4g_lbs)
             {
-                mcc_4g = BytesUtils.Bytes2Short(bytes, curParseIndex + 12);
+                mcc_4g = BytesUtils.Bytes2Short(bytes, curParseIndex + 12) & 0x7FFF;
                 mnc_4g = BytesUtils.Bytes2Short(bytes, curParseIndex + 14);
                 ci_4g = BytesUtils.Byte2Int(bytes, curParseIndex + 16);
                 earfcn_4g_1 = BytesUtils.Bytes2Short(bytes, curParseIndex + 20);
@@ -1933,7 +2116,7 @@ namespace TopflytechCodec
             bool isSendSmsAlarmToManagerPhone = (data[19] & 0x20) == 0x20;
             bool isSendSmsAlarmWhenDigitalInput2Change = (data[19] & 0x10) == 0x10;
             int jammerDetectionStatus = (data[19] & 0xC);
-            int mileageSource = (data[19] & 0x01) == 0x01 ? 0 : 1;
+            int mileageSource = (data[19] & 0x02) == 0x02 ? 0 : 1;
             bool isAlarmData = command[2] == 0x04 || command[2] == 0x18;
             long mileage = BytesUtils.Byte2Int(data, 20);
             byte[] batteryBytes = new byte[] { data[24] };
@@ -1991,7 +2174,7 @@ namespace TopflytechCodec
             }
             if (is_4g_lbs)
             {
-                mcc_4g = BytesUtils.Bytes2Short(data, 31);
+                mcc_4g = BytesUtils.Bytes2Short(data, 31) & 0x7FFF;
                 mnc_4g = BytesUtils.Bytes2Short(data, 33);
                 ci_4g = BytesUtils.Byte2Int(data, 35);
                 earfcn_4g_1 = BytesUtils.Bytes2Short(data, 39);

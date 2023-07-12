@@ -36,6 +36,17 @@ public class Encoder {
         return encrypt(data,messageEncryptType,aesKey);
     }
 
+    public static byte[] getRs485MsgReply(String imei, boolean needSerialNo, int serialNo,byte[] command,int messageEncryptType,String aesKey) throws IOException {
+        String content = "";
+        byte[] data = encode(imei,needSerialNo,serialNo, command, content.getBytes(),0x0F);
+        return encrypt(data,messageEncryptType,aesKey);
+    }
+    public static byte[] getOneWireMsgReply(String imei, boolean needSerialNo, int serialNo,byte[] command,int messageEncryptType,String aesKey) throws IOException {
+        String content = "";
+        byte[] data = encode(imei,needSerialNo,serialNo, command, content.getBytes(),0x0F);
+        return encrypt(data,messageEncryptType,aesKey);
+    }
+
     /**
      * Get heartbeat msg reply byte [ ].
      *
@@ -277,13 +288,19 @@ public class Encoder {
         return encrypt(data,messageEncryptType,aesKey);
     }
 
+    public static byte[] getNormalMsgReply(String imei, int serialNo, byte[] command, byte[] content, int messageEncryptType, String aesKey)throws IOException {
+
+        byte[] data = encode(imei, true, serialNo, command, content, 15 + content.length);
+        return encrypt(data,messageEncryptType,aesKey);
+    }
+
     private static byte[] encode(String imei, boolean useSerialNo, Integer serialNo, byte[] command, byte protocol, byte[] content,int length) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try {
             outputStream.write(command);
-            outputStream.write(new byte[]{0x00,  (byte)length});
+            outputStream.write(BytesUtils.short2Bytes(length),0,2);
             if (useSerialNo) {
-                outputStream.write(BytesUtils.short2Bytes(serialNo));
+                outputStream.write(BytesUtils.short2Bytes(serialNo),0,2);
             } else {
                 outputStream.write(new byte[]{0x00, 0x01});
             }
@@ -301,9 +318,9 @@ public class Encoder {
         try {
             outputStream.write(command);
             int packageSize = Math.min(0x10, Short.MAX_VALUE);
-            outputStream.write(new byte[]{0x00, (byte) packageSize});
+            outputStream.write(BytesUtils.short2Bytes(packageSize),0,2);
             if (useSerialNo) {
-                outputStream.write(BytesUtils.short2Bytes(serialNo));
+                outputStream.write(BytesUtils.short2Bytes(serialNo),0,2);
             } else {
                 outputStream.write(new byte[]{0x00, 0x01});
             }
@@ -326,9 +343,9 @@ public class Encoder {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try {
             outputStream.write(command);
-            outputStream.write(new byte[]{0x00,  (byte)length});
+            outputStream.write(BytesUtils.short2Bytes(length),0,2);
             if (useSerialNo) {
-                outputStream.write(BytesUtils.short2Bytes(serialNo));
+                outputStream.write(BytesUtils.short2Bytes(serialNo),0,2);
             } else {
                 outputStream.write(new byte[]{0x00, 0x01});
             }

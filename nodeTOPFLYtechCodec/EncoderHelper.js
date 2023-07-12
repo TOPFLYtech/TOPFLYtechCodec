@@ -12,8 +12,10 @@ var EncoderHelper = {
         for(var i = 0;i < command.length;i++){
             result.push(command[i])
         }
-        result.push(0x00)
-        result.push(length)
+        var lenByte = ByteUtils.short2Bytes(length)
+        for(var i = 0;i < lenByte.length;i++){
+            result.push(lenByte[i])
+        }
         if(needSerialNo){
             var serialNoByte = ByteUtils.short2Bytes(serialNo)
             for(var i = 0;i < serialNoByte.length;i++){
@@ -63,8 +65,10 @@ var EncoderHelper = {
         for(var i = 0;i < command.length;i++){
             result.push(command[i])
         }
-        result.push(0x00)
-        result.push(length)
+        var lenByte = ByteUtils.short2Bytes(length)
+        for(var i = 0;i < lenByte.length;i++){
+            result.push(lenByte[i])
+        }
         if(needSerialNo){
             var serialNoByte = ByteUtils.short2Bytes(serialNo)
             for(var i = 0;i < serialNoByte.length;i++){
@@ -89,6 +93,14 @@ var EncoderHelper = {
         return CryptoTool.encrypt(data,messageEncryptType,aesKey);
     },
     getWifiMsgReply:function (imei,needSerialNo,serialNo,command,messageEncryptType,aesKey){
+        var data = this.encode(imei,needSerialNo,serialNo, command, [],0x0F);
+        return CryptoTool.encrypt(data,messageEncryptType,aesKey);
+    },
+    getRs485MsgReply:function (imei,needSerialNo,serialNo,command,messageEncryptType,aesKey){
+        var data = this.encode(imei,needSerialNo,serialNo, command, [],0x0F);
+        return CryptoTool.encrypt(data,messageEncryptType,aesKey);
+    },
+    getOneWireMsgReply:function (imei,needSerialNo,serialNo,command,messageEncryptType,aesKey){
         var data = this.encode(imei,needSerialNo,serialNo, command, [],0x0F);
         return CryptoTool.encrypt(data,messageEncryptType,aesKey);
     },
@@ -164,6 +176,10 @@ var EncoderHelper = {
     },
     getNetworkMsgReply:function (imei,serialNo,command,messageEncryptType,aesKey){
         var data = this.encode(imei,true,serialNo, command, [],0x0F);
+        return CryptoTool.encrypt(data,messageEncryptType,aesKey);
+    },
+    getNormalMsgReply:function (imei,serialNo,command,content,messageEncryptType,aesKey){
+        var data = this.encode(imei,true,serialNo, command, content,15 + content.length);
         return CryptoTool.encrypt(data,messageEncryptType,aesKey);
     },
     getLockMsgReply:function (imei,needSerialNo,serialNo,command,messageEncryptType,aesKey){

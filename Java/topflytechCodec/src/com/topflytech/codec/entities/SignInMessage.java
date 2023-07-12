@@ -131,4 +131,31 @@ public class SignInMessage extends Message{
 
     private String obdSoftware;
     private String obdHardware;
+    private String obdBootVersion;
+    private String obdDataVersion;
+    private int model;
+
+    public int getModel() {
+        return model;
+    }
+
+    public void setModel(int model) {
+        this.model = model;
+    }
+
+    public String getObdBootVersion() {
+        return obdBootVersion;
+    }
+
+    public void setObdBootVersion(String obdBootVersion) {
+        this.obdBootVersion = obdBootVersion;
+    }
+
+    public String getObdDataVersion() {
+        return obdDataVersion;
+    }
+
+    public void setObdDataVersion(String obdDataVersion) {
+        this.obdDataVersion = obdDataVersion;
+    }
 }

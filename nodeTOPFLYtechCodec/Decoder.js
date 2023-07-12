@@ -33,6 +33,11 @@ var Decoder = {
     rs232FingerprintHead:[0x00,0x02,0x6C,0x62,0x63],
     rs232CapacitorFuelHead:[0x00,0x04],
     rs232UltrasonicFuelHead:[0x00,0x05],
+    WIFI_DATA: [0x25, 0x25, 0x15],
+    RS485_DATA: [0x25, 0x25, 0x21],
+    OBD_DATA: [0x25, 0x25, 0x22],
+    ONE_WIRE_DATA: [0x25, 0x25, 0x23],
+    obdHead : [0x55,0xAA],
     encryptType:0,
     aesKey:"",
     MASK_IGNITION : 0x4000,
@@ -65,6 +70,10 @@ var Decoder = {
             || ByteUtils.arrayEquals(this.ALARM_SECOND_DATA, bytes)
             || ByteUtils.arrayEquals(this.RS232,bytes)
             || ByteUtils.arrayEquals(this.LOCATION_DATA_WITH_SENSOR,bytes)
+            || ByteUtils.arrayEquals(this.WIFI_DATA,bytes)
+            || ByteUtils.arrayEquals(this.RS485_DATA,bytes)
+            || ByteUtils.arrayEquals(this.OBD_DATA,bytes)
+            || ByteUtils.arrayEquals(this.ONE_WIRE_DATA,bytes)
             || ByteUtils.arrayEquals(this.LOCATION_ALARM_WITH_SENSOR,bytes)
     },
 
@@ -158,6 +167,18 @@ var Decoder = {
                 case 0x14:
                     var locationSecondMessage = this.parseSecondDataMessage(bytes);
                     return locationSecondMessage;
+                case 0x15:
+                    var  wifiMessage = this.parseWifiMessage(bytes);
+                    return wifiMessage;
+                case 0x21:
+                    var rs485Message = this.parseRs485Message(bytes);
+                    return rs485Message;
+                case 0x22:
+                    var obdMessage = this.parseObdMessage(bytes);
+                    return obdMessage;
+                case 0x23:
+                    var oneWireMessage = this.parseOneWireMessage(bytes);
+                    return oneWireMessage;
                 case 0x81:
                     var message =  this.parseInteractMessage(bytes);
                     return message;
@@ -165,6 +186,160 @@ var Decoder = {
                     return null;
             }
         }
+    },
+    parseObdMessage:function(bytes){
+        var serialNo = ByteUtils.byteToShort(bytes,5);
+        var imei = ByteUtils.IMEI.decode(bytes,7)
+        var date = ByteUtils.getGTM0Date(bytes, 15);
+        var obdData = {
+            serialNo:serialNo,
+            imei:imei,
+            srcBytes:bytes,
+            messageType:"obdData",
+            date:date,
+        }
+        var obdBytes = ByteUtils.arrayOfRange(bytes,21,bytes.length);
+
+        var head = [2]
+        head[0] = obdBytes[0];
+        head[1] = obdBytes[1];
+        if(ByteUtils.arrayEquals(head,this.obdHead)){
+            obdBytes[2] = obdBytes[2] & 0x0F
+            var length = ByteUtils.byteToShort(obdBytes,2);
+            if(length > 0){
+                try{
+                    var data = ByteUtils.arrayOfRange(obdBytes,4,4+length);
+                    if((data[0] & 0x41) == 0x41 && data[1] == 0x04 && data.length > 3){
+                        obdData.obdMessageType = "clear_error_code"
+                        obdData.clearErrorCodeSuccess = data[2] == 0x01
+                    }else if((data[0] & 0x41) == 0x41 && data[1] == 0x05 && data.length > 2){
+                        var vinData = ByteUtils.arrayOfRange(data,2,data.length - 1);
+                        var dataValid = false;
+                        for(var item in vinData){
+                            if((item & 0xFF) != 0xFF){
+                                dataValid = true;
+                            }
+                        }
+                        if(vinData.length > 0 && dataValid){
+                            obdData.obdMessageType = "vin"
+                            obdData.vin = ByteUtils.bin2String(vinData);
+                        }
+                    }else if((data[0] & 0x41) == 0x41 && (data[1] == 0x03 || data[1] == 0x0A)){
+                        var errorCode = data[2];
+                        var errorDataByte = ByteUtils.arrayOfRange(data,3,data.length - 1);
+                        var errorDataStr = ByteUtils.bytes2HexString(errorDataByte,0);
+                        if(errorDataStr != null){
+                            var errorDataSum = "";
+                            for(var i = 0 ;i+6 <= errorDataStr.length;i+=6){
+                                var errorDataItem = errorDataStr.substring(i,i+6);
+                                var srcFlag = errorDataItem.substring(0,1);
+                                var errorDataCode =  this.getObdErrorFlag(srcFlag) + errorDataItem.substring(1,4);
+                                if(!errorDataSum.contains(errorDataCode)){
+                                    if(i != 0){
+                                        errorDataSum += ";";
+                                    }
+                                    errorDataSum += errorDataCode;
+                                }
+                                if(i+6 >= errorDataStr.length){
+                                    break;
+                                }
+                            }
+                            obdData.obdMessageType = "error_code"
+                            obdData.errorCode = this.getObdErrorCode(errorCode)
+                            obdData.errorData = errorDataSum
+                        }
+                    }
+                }catch (e){
+                    console.log(e)
+                }
+            }
+        }
+        return obdData;
+    },
+    getObdErrorCode:function(errorCode){
+        if(errorCode == 0){
+            return "J1979";
+        }else if(errorCode == 1){
+            return "J1939";
+        }
+        return "";
+    },
+    getObdErrorFlag:function (srcFlag){
+        var data = ByteUtils.hexStringToByte(srcFlag);
+        if(data[0] >= 0 && data[0] < 4){
+            return "P" + data[0]
+        }else if(data[0] >= 4 && data[0] < 8){
+            return "C" + (data[0] - 4)
+        }else if(data[0] >= 8 && data[0] < 12){
+            return "B" + (data[0] - 8)
+        }else{
+            return "U" + data[0] - 12
+        }
+    },
+    parseOneWireMessage:function (bytes){
+        var serialNo = ByteUtils.byteToShort(bytes,5);
+        var imei = ByteUtils.IMEI.decode(bytes,7)
+        var date = ByteUtils.getGTM0Date(bytes, 15);
+        var oneWireMessage = {
+            serialNo:serialNo,
+            imei:imei,
+            srcBytes:bytes,
+            messageType:"oneWire",
+            date:date,
+        }
+        var isIgnition = (bytes[21] & 0x01) == 0x01
+        var deviceId = ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes,22,30),0)
+        var oneWireData = ByteUtils.arrayOfRange(bytes,30,bytes.length)
+        oneWireMessage.deviceId = deviceId
+        oneWireMessage.oneWireData = oneWireData
+        oneWireMessage.isIgnition = isIgnition
+        return oneWireMessage
+    },
+    parseRs485Message:function(bytes){
+        var serialNo = ByteUtils.byteToShort(bytes,5);
+        var imei = ByteUtils.IMEI.decode(bytes,7)
+        var date = ByteUtils.getGTM0Date(bytes, 15);
+        var rs485Message = {
+            serialNo:serialNo,
+            imei:imei,
+            srcBytes:bytes,
+            messageType:"rs485",
+            date:date,
+        }
+        var isIgnition = (bytes[21] & 0x01) == 0x01
+        var deviceId = bytes[22]
+        var rs485Data = ByteUtils.arrayOfRange(bytes,23,bytes.length)
+        rs485Message.deviceId = deviceId
+        rs485Message.rs485Data = rs485Data
+        rs485Message.isIgnition = isIgnition
+        return rs485Message
+    },
+    parseWifiMessage:function(bytes){
+        var serialNo = ByteUtils.byteToShort(bytes,5);
+        var imei = ByteUtils.IMEI.decode(bytes,7)
+        var wifiMessage = {
+            serialNo:serialNo,
+            imei:imei,
+            srcBytes:bytes,
+            messageType:"wifi",
+        }
+        var date = ByteUtils.getGTM0Date(bytes, 15);
+        var selfMac =  ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes, 21, 27), 0);
+        var ap1Mac =  ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes, 27, 33), 0);
+        var ap1Rssi = bytes[33];
+        var ap2Mac =  ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes,34,40),0);
+        var ap2Rssi = bytes[40];
+        var ap3Mac =  ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes,41,47),0);
+        var ap3Rssi = bytes[47];
+        wifiMessage.setDate = date
+        wifiMessage.selfMac = selfMac.toUpperCase()
+        wifiMessage.ap1Mac = ap1Mac.toUpperCase()
+        wifiMessage.ap1Rssi = ap1Rssi
+        wifiMessage.ap2Mac = ap2Mac.toUpperCase()
+        wifiMessage.ap2Rssi = ap2Rssi
+        wifiMessage.ap3Mac = ap3Mac.toUpperCase()
+        wifiMessage.ap3Rssi = ap3Rssi
+        return wifiMessage;
     },
     parseLoginMessage:function (bytes){
         var serialNo = ByteUtils.byteToShort(bytes,5);
@@ -275,7 +450,7 @@ var Decoder = {
         var accdetSettingStatus = (iop & 0x1) ==  0x1  ? 1 : 0;
         var str = ByteUtils.bytes2HexString(data, 18);
         var analoginput = 0;
-        if (!str.toLowerCase() == "ffff"){
+        if (!str.toLowerCase().startsWith("ffff")){
             try {
                 analoginput  = parseFloat(str.substring(0, 2) + "." + str.substring(2, 4));
             } catch (e){
@@ -287,7 +462,7 @@ var Decoder = {
 
         str = ByteUtils.bytes2HexString(data, 20);
         var analoginput2 = 0;
-        if (!str.toLowerCase() == "ffff"){
+        if (!str.toLowerCase().startsWith("ffff")){
             try {
                 analoginput2 = parseFloat(str.substring(0, 2) + "." + str.substring(2, 4));
             }catch (e){
@@ -354,7 +529,7 @@ var Decoder = {
         if (!latlngValid){
             var lbsByte = data[35];
             if ((lbsByte & 0x80) == 0x80){
-                is_4g_lbs = true; 
+                is_4g_lbs = true;
             }else{
                 is_2g_lbs = true;
             }
@@ -370,7 +545,7 @@ var Decoder = {
             ci_2g_3 = ByteUtils.byteToShort(data,49);
         }
         if (is_4g_lbs){
-            mcc_4g = ByteUtils.byteToShort(data,35);
+            mcc_4g = ByteUtils.byteToShort(data,35) & 0x7FFF;
             mnc_4g = ByteUtils.byteToShort(data,37);
             ci_4g = ByteUtils.byteToLong(data, 39);
             earfcn_4g_1 = ByteUtils.byteToShort(data, 43);
@@ -638,7 +813,7 @@ var Decoder = {
         if (!latlngValid){
             var lbsByte = bytes[curParseIndex + 12];
             if ((lbsByte & 0x80) == 0x80){
-                is_4g_lbs = true; 
+                is_4g_lbs = true;
             }else{
                 is_2g_lbs = true;
             }
@@ -654,7 +829,7 @@ var Decoder = {
             ci_2g_3 = ByteUtils.byteToShort(bytes,curParseIndex + 26);
         }
         if (is_4g_lbs){
-            mcc_4g = ByteUtils.byteToShort(bytes,curParseIndex + 12);
+            mcc_4g = ByteUtils.byteToShort(bytes,curParseIndex + 12) & 0x7FFF;
             mnc_4g = ByteUtils.byteToShort(bytes,curParseIndex + 14);
             ci_4g = ByteUtils.byteToLong(bytes, curParseIndex + 16);
             earfcn_4g_1 = ByteUtils.byteToShort(bytes, curParseIndex + 20);
@@ -779,7 +954,7 @@ var Decoder = {
         if (!latlngValid){
             var lbsByte = bytes[curParseIndex + 12];
             if ((lbsByte & 0x80) == 0x80){
-                is_4g_lbs = true; 
+                is_4g_lbs = true;
             }else{
                 is_2g_lbs = true;
             }
@@ -795,7 +970,7 @@ var Decoder = {
             ci_2g_3 = ByteUtils.byteToShort(bytes,curParseIndex + 26);
         }
         if (is_4g_lbs){
-            mcc_4g = ByteUtils.byteToShort(bytes,curParseIndex + 12);
+            mcc_4g = ByteUtils.byteToShort(bytes,curParseIndex + 12) & 0x7FFF;
             mnc_4g = ByteUtils.byteToShort(bytes,curParseIndex + 14);
             ci_4g = ByteUtils.byteToLong(bytes, curParseIndex + 16);
             earfcn_4g_1 = ByteUtils.byteToShort(bytes, curParseIndex + 20);
@@ -1151,7 +1326,7 @@ var Decoder = {
             if (!latlngValid){
                 var lbsByte = bleData[11];
                 if ((lbsByte & 0x80) == 0x80){
-                    is_4g_lbs = true; 
+                    is_4g_lbs = true;
                 }else{
                     is_2g_lbs = true;
                 }
@@ -1167,7 +1342,7 @@ var Decoder = {
                 ci_2g_3 = ByteUtils.byteToShort(bleData,25);
             }
             if (is_4g_lbs){
-                mcc_4g = ByteUtils.byteToShort(bleData,11);
+                mcc_4g = ByteUtils.byteToShort(bleData,11) & 0x7FFF;
                 mnc_4g = ByteUtils.byteToShort(bleData,13);
                 ci_4g = ByteUtils.byteToLong(bleData, 15);
                 earfcn_4g_1 = ByteUtils.byteToShort(bleData, 19);
@@ -1250,7 +1425,7 @@ var Decoder = {
             if (!latlngValid){
                 var lbsByte = bleData[11];
                 if ((lbsByte & 0x80) == 0x80){
-                    is_4g_lbs = true; 
+                    is_4g_lbs = true;
                 }else{
                     is_2g_lbs = true;
                 }
@@ -1266,7 +1441,7 @@ var Decoder = {
                 ci_2g_3 = ByteUtils.byteToShort(bleData,25);
             }
             if (is_4g_lbs){
-                mcc_4g = ByteUtils.byteToShort(bleData,11);
+                mcc_4g = ByteUtils.byteToShort(bleData,11) & 0x7FFF;
                 mnc_4g = ByteUtils.byteToShort(bleData,13);
                 ci_4g = ByteUtils.byteToLong(bleData, 15);
                 earfcn_4g_1 = ByteUtils.byteToShort(bleData, 19);
@@ -1642,7 +1817,7 @@ var Decoder = {
         if (!latlngValid){
             var lbsByte = bytes[23];
             if ((lbsByte & 0x80) == 0x80){
-                is_4g_lbs = true; 
+                is_4g_lbs = true;
             }else{
                 is_2g_lbs = true;
             }
@@ -1658,7 +1833,7 @@ var Decoder = {
             ci_2g_3 = ByteUtils.byteToShort(bytes,37);
         }
         if (is_4g_lbs){
-            mcc_4g = ByteUtils.byteToShort(bytes,23);
+            mcc_4g = ByteUtils.byteToShort(bytes,23) & 0x7FFF;
             mnc_4g = ByteUtils.byteToShort(bytes,25);
             ci_4g = ByteUtils.byteToLong(bytes, 27);
             earfcn_4g_1 = ByteUtils.byteToShort(bytes, 31);
@@ -2074,6 +2249,8 @@ var Decoder = {
         var input4 = (iop & 0x800) == 0x800 ? 1 : 0;
         var input5 = (iop & 0x400) == 0x400 ? 1 : 0;
         var input6 = (iop & 0x200) == 0x200 ? 1 : 0;
+        var isHadFmsData = (iop & 0x80) == 0x80;
+        var isMileageSrcIsFms = (iop & 0x40) == 0x40;
         var output1 = (data[18] & 0x20) == 0x20 ? 1 : 0;
         var output2 = (data[18] & 0x10) == 0x10 ? 1 : 0;
         var output3 = (data[18] & 0x8) == 0x8 ? 1 : 0;
@@ -2082,7 +2259,7 @@ var Decoder = {
         var accdetSettingStatus = (iop & 0x1) ==  0x1  ? 1 : 0;
         var str = ByteUtils.bytes2HexString(data, 20);
         var analoginput = 0;
-        if (!str.toLowerCase() == "ffff"){
+        if (!str.toLowerCase().startsWith("ffff")){
             try {
                 analoginput  = parseFloat( str.substring(0, 2) + "." + str.substring(2, 4))
             } catch (e){
@@ -2094,7 +2271,7 @@ var Decoder = {
 
         str = ByteUtils.bytes2HexString(data, 22);
         var analoginput2 = 0;
-        if (!str.toLowerCase() == "ffff"){
+        if (!str.toLowerCase().startsWith("ffff")){
             try {
                 analoginput2  = parseFloat( str.substring(0, 2) + "." + str.substring(2, 4))
             }catch (e){
@@ -2106,7 +2283,7 @@ var Decoder = {
 
         str = ByteUtils.bytes2HexString(data, 24);
         var analoginput3 = 0;
-        if (!str.toLowerCase() == "ffff"){
+        if (!str.toLowerCase().startsWith("ffff")){
             try {
                 analoginput3  = parseFloat( str.substring(0, 2) + "." + str.substring(2, 4))
             }catch (e){
@@ -2118,7 +2295,7 @@ var Decoder = {
 
         str = ByteUtils.bytes2HexString(data, 26);
         var analoginput4 = 0;
-        if (!str.toLowerCase() == "ffff"){
+        if (!str.toLowerCase().startsWith("ffff")){
             try {
                 analoginput4  = parseFloat( str.substring(0, 2) + "." + str.substring(2, 4))
             }catch (e){
@@ -2130,7 +2307,7 @@ var Decoder = {
 
         str = ByteUtils.bytes2HexString(data, 28);
         var analoginput5 = 0;
-        if (!str.toLowerCase() == "ffff"){
+        if (!str.toLowerCase().startsWith("ffff")){
             try {
                 analoginput5  = parseFloat( str.substring(0, 2) + "." + str.substring(2, 4))
             }catch (e){
@@ -2196,7 +2373,7 @@ var Decoder = {
         if (!latlngValid){
             var lbsByte = data[43];
             if ((lbsByte & 0x80) == 0x80){
-                is_4g_lbs = true; 
+                is_4g_lbs = true;
             }else{
                 is_2g_lbs = true;
             }
@@ -2212,7 +2389,7 @@ var Decoder = {
             ci_2g_3 = ByteUtils.byteToShort(data,57);
         }
         if (is_4g_lbs){
-            mcc_4g = ByteUtils.byteToShort(data,43);
+            mcc_4g = ByteUtils.byteToShort(data,43) & 0x7FFF;
             mnc_4g = ByteUtils.byteToShort(data,45);
             ci_4g = ByteUtils.byteToLong(data, 47);
             earfcn_4g_1 = ByteUtils.byteToShort(data, 51);
@@ -2232,7 +2409,7 @@ var Decoder = {
         var rpmBytes = ByteUtils.arrayOfRange(data, 63, 65);
         rpm = ByteUtils.byteToShort(rpmBytes,0);
         rpm = ByteUtils.byteToShort(rpmBytes,0);
-        if (rpm == 32768){
+        if (rpm == 32768 || rpm == 65535){
             rpm = -999;
         }
         var isSmartUploadSupport = (data[65] & 0x8) == 0x8;
@@ -2240,6 +2417,52 @@ var Decoder = {
         var deviceTemp = -999;
         if (data.length >= 69 && data[68] != 0xff){
             deviceTemp = (data[68] & 0x7F) * ((data[68] & 0x80) == 0x80 ? -1 : 1);
+        }
+        var fmsSpeed = data[66];
+        message.isHadFmsData = isHadFmsData;
+        if(data.length >= 74){
+            var hdop = ByteUtils.byteToShort(data,69);
+            message.hdop = hdop
+            if(isHadFmsData){
+                analoginput4 = -999;
+                analoginput5 = -999;
+                var fmsEngineHours = ByteUtils.byteToLong(data,26);
+                if(fmsEngineHours == 4294967295){
+                    fmsEngineHours = -999;
+                }
+                var coolingFluidTemp = data[71] < 0 ? data[71] + 256 : data[71];
+                if(coolingFluidTemp == 255){
+                    coolingFluidTemp = -999;
+                }else{
+                    coolingFluidTemp = coolingFluidTemp - 40;
+                }
+                var remainFuel = data[72];
+                if(remainFuel == 255){
+                    remainFuel = -999;
+                }
+                var engineLoad = data[73];
+                if(engineLoad == 255){
+                    engineLoad = -999;
+                }
+                message.fmsEngineHours = fmsEngineHours;
+                message.remainFuelRate = remainFuel
+                message.engineLoad = engineLoad
+                message.coolingFluidTemp = coolingFluidTemp
+                message.fmsSpeed = fmsSpeed
+                if(data.length >= 78){
+                    var fmsAccumulatingFuelConsumption =  ByteUtils.byteToLong(data, 74);
+                    if(fmsAccumulatingFuelConsumption == 4294967295){
+                        fmsAccumulatingFuelConsumption = -999;
+                    }else{
+                        fmsAccumulatingFuelConsumption = fmsAccumulatingFuelConsumption * 1000;
+                    }
+                    message.fmsAccumulatingFuelConsumption = fmsAccumulatingFuelConsumption;
+                }
+                supportChangeBattery = false;
+            }
+        }
+        if(isMileageSrcIsFms){
+            message.mileageSource = 2;
         }
         message.isAlarmData = isAlarmData
         message.protocolHeadType = bytes[2]

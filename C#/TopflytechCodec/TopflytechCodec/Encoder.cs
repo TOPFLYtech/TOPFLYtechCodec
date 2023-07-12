@@ -48,6 +48,18 @@ namespace TopflytechCodec
             byte[] data = Encode(imei, needSerialNo, serialNo, command, System.Text.Encoding.Default.GetBytes(content), 0x0F);
             return Encrypt(data, messageEncryptType, aesKey);
         }
+        public static byte[] getRs485MsgReply(String imei, bool needSerialNo, int serialNo, byte[] command, int messageEncryptType, String aesKey)
+        {
+            String content = "";
+            byte[] data = Encode(imei, needSerialNo, serialNo, command, System.Text.Encoding.Default.GetBytes(content), 0x0F);
+            return Encrypt(data, messageEncryptType, aesKey);
+        }
+        public static byte[] getOneWireMsgReply(String imei, bool needSerialNo, int serialNo, byte[] command, int messageEncryptType, String aesKey)
+        {
+            String content = "";
+            byte[] data = Encode(imei, needSerialNo, serialNo, command, System.Text.Encoding.Default.GetBytes(content), 0x0F);
+            return Encrypt(data, messageEncryptType, aesKey);
+        }
 
         public static byte[] getNetworkMsgReply(String imei, int serialNo, byte[] command, int messageEncryptType, String aesKey)
         {
@@ -55,7 +67,11 @@ namespace TopflytechCodec
             byte[] data = Encode(imei, true, serialNo, command, System.Text.Encoding.Default.GetBytes(content), 0x0F);
             return Encrypt(data, messageEncryptType, aesKey);
         }
-
+        public static byte[] getNormalMsgReply(String imei, int serialNo, byte[] command, byte[] content,int messageEncryptType, String aesKey)
+        {
+            byte[] data = Encode(imei, true, serialNo, command, content, 15 + content.Length);
+            return Encrypt(data, messageEncryptType, aesKey);
+        }
         /// <summary>
         /// Get location msg reply byte [ ].
         /// </summary>
@@ -272,7 +288,7 @@ namespace TopflytechCodec
             {
                 memoryStream.Write(command, 0, command.Length);
                 int packageSize = Math.Min(0x10, 32767);
-                memoryStream.Write(new byte[] { 0x00, (byte)packageSize }, 0, 2);
+                memoryStream.Write(BytesUtils.Short2Bytes(packageSize), 0, 2);
                 if (useSerialNo)
                 {
                     memoryStream.Write(BytesUtils.Short2Bytes(serialNo), 0, 2);
@@ -299,7 +315,7 @@ namespace TopflytechCodec
             try
             {
                 memoryStream.Write(command, 0, command.Length);
-                memoryStream.Write(new byte[] { 0x00, (byte)lenth }, 0, 2);
+                memoryStream.Write(BytesUtils.Short2Bytes(lenth), 0, 2);
                 if (useSerialNo)
                 {
                     memoryStream.Write(BytesUtils.Short2Bytes(serialNo), 0, 2);
@@ -326,7 +342,7 @@ namespace TopflytechCodec
             try
             {
                 memoryStream.Write(command, 0, command.Length);
-                memoryStream.Write(new byte[] { 0x00, (byte)lenth }, 0, 2);
+                memoryStream.Write(BytesUtils.Short2Bytes(lenth), 0, 2);
                 if (useSerialNo)
                 {
                     memoryStream.Write(BytesUtils.Short2Bytes(serialNo), 0, 2);

@@ -74,6 +74,10 @@ var ObdEncoder = {
         var content = [0x55,0xAA,0x00,0x03,0x01,0x05,0x07,0x0D,0x0A]
         var command = [0x26, 0x26, 0x82]
         return EncoderHelper.getObdConfigSettingMsg(imei,content,command,encryptType,aesKey)
-    }
+    },
+    getWifiMsgReply:function (imei,serialNo,encryptType,aesKey){
+        var command = [0x26, 0x26, 0x15]
+        return EncoderHelper.getWifiMsgReply(imei,true,serialNo,command,encryptType,aesKey);
+    },
 }
 module.exports = ObdEncoder;

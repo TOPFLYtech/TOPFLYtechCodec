@@ -91,6 +91,13 @@ def dealObdDeviceMessage(message,socketClient):
         #     socketClient.send(reply)
         reply = t880xdEncoder.getObdMsgReply(message.imei,True,message.serialNo)
         socketClient.send(reply)
+    elif isinstance(message,WifiMessage):
+        print ("receive WIFI Message: " + message.imei)
+        # if message.isNeedResp:
+        #     reply = t880xdEncoder.getObdMsgReply(message.imei,True,message.serialNo)
+        #     socketClient.send(reply)
+        reply = t880xdEncoder.getWifiMsgReply(message.imei,True,message.serialNo)
+        socketClient.send(reply)
     elif isinstance(message,BluetoothPeripheralDataMessage):
         print ("receive blue Message: " + message.imei)
         # if message.isNeedResp:
@@ -195,6 +202,22 @@ def dealNoObdDeviceMessage(message,socketClient):
         #     socketClient.send(reply)
         reply = t880xPlusEncoder.getNetworkMsgReply(message.imei,True,message.serialNo)
         socketClient.send(reply)
+    elif isinstance(message,WifiMessage):
+        print ("receive wifi Message: " + message.imei)
+        reply = t880xPlusEncoder.getWifiMsgReply(message.imei,True,message.serialNo)
+        socketClient.send(reply)
+    elif isinstance(message,OneWireMessage):
+        print ("receive one wire Message: " + message.imei)
+        reply = t880xPlusEncoder.getOneWireMsgReply(message.imei,True,message.serialNo)
+        socketClient.send(reply)
+    elif isinstance(message,RS485Message):
+        print ("receive rs485 Message: " + message.imei)
+        reply = t880xPlusEncoder.getRs485MsgReply(message.imei,True,message.serialNo)
+        socketClient.send(reply)
+    elif isinstance(message,ObdMessage):
+        print ("receive DTC(OBD) Message: " + message.imei)
+        reply = t880xPlusEncoder.getObdMsgReply(message.imei,True,message.serialNo)
+        socketClient.send(reply)
 
 def dealPersonalDeviceMessage(message,socketClient):
     """
@@ -242,11 +265,19 @@ def dealPersonalDeviceMessage(message,socketClient):
         # if message.isNeedResp:
         #     reply = personalEncoder.getBluetoothPeripheralMsgReply(message.imei,True,message.serialNo)
         #     socketClient.send(reply)
-        reply = personalEncoder.getBluetoothPeripheralMsgReply(message.imei,True,message.serialNo)
+        reply = personalEncoder.getBluetoothPeripheralMsgReply(message.imei,True,message.serialNo,message.protocolHeadType)
         socketClient.send(reply)
     elif isinstance(message,WifiMessage):
         print ("receive wifi location Message: " + message.imei)
         reply = personalEncoder.getWifiMsgReply(message.imei,True,message.serialNo)
+        socketClient.send(reply)
+    elif isinstance(message,InnerGeoDataMessage):
+        print ("receive inner geo data Message: " + message.imei)
+        reply = personalEncoder.getInnerGeoDataMsgReply(message.imei,message.serialNo,message.protocolHeadType)
+        socketClient.send(reply)
+    elif isinstance(message,WifiWithDeviceInfoMessage):
+        print ("receive wifi with device info Message: " + message.imei)
+        reply = personalEncoder.getWifiWithDeviceInfoMsgReply(message.imei,message.serialNo,message.originalAlarmCode)
         socketClient.send(reply)
     elif isinstance(message,LockMessage):
         print ("receive lock Message: " + message.imei)
@@ -275,16 +306,20 @@ if __name__ == "__main__":
         # decoder = ObdDecoder(MessageEncryptType.NONE,"")
         # decoder = PersonalAssetMsgDecoder(MessageEncryptType.NONE,"")
         while True:
-            data = c.recv(2048)
-            if not data:
-                print("End of file from client. Resetting")
-                break
+            try:
+                data = c.recv(2048)
+                if not data:
+                    print("End of file from client. Resetting")
+                    break
 
-            messageList = decoder.decode(data)
-            for message in messageList:
-                dealNoObdDeviceMessage(message,c)
-                # dealObdDeviceMessage(message,c)
-                # dealPersonalDeviceMessage(message,c)
+                messageList = decoder.decode(data)
+                for message in messageList:
+                    dealNoObdDeviceMessage(message,c)
+                    # dealObdDeviceMessage(message,c)
+                    # dealPersonalDeviceMessage(message,c)
+            except Exception as e:
+                print(repr(e))
+                break
 
         c.close()
 

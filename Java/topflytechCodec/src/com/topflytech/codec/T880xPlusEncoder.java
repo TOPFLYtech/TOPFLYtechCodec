@@ -158,7 +158,7 @@ public class T880xPlusEncoder {
      */
     public  byte[] getConfigSettingMsg(String imei,String content) throws IOException {
         byte[] command = {0x25, 0x25, (byte)0x81};
-        return Encoder.getConfigSettingMsg(imei, content, command, encryptType, aesKey);
+        return Encoder.getConfigSettingMsg(imei, content.trim(), command, encryptType, aesKey);
     }
 
     /**
@@ -171,7 +171,7 @@ public class T880xPlusEncoder {
      */
     public  byte[] getBrocastSmsMsg(String imei,String content) throws IOException {
         byte[] command = {0x25, 0x25, (byte)0x81};
-        return Encoder.getBrocastSmsMsg(imei, content, command, encryptType, aesKey);
+        return Encoder.getBrocastSmsMsg(imei, content.trim(), command, encryptType, aesKey);
     }
 
 
@@ -185,7 +185,7 @@ public class T880xPlusEncoder {
      */
     public  byte[] getForwardMsg(String imei,String phoneNumb,String content) throws IOException{
         byte[] command = {0x25, 0x25, (byte)0x81};
-        return Encoder.getForwardSmsMsg(imei, phoneNumb, content, command, encryptType, aesKey);
+        return Encoder.getForwardSmsMsg(imei, phoneNumb, content.trim(), command, encryptType, aesKey);
     }
 
 
@@ -199,7 +199,7 @@ public class T880xPlusEncoder {
      */
     public  byte[] getUSSDMsg(String imei,String content) throws IOException {
         byte[] command = {0x25, 0x25, (byte)0x81};
-        return Encoder.getUSSDMsg(imei, content, command, encryptType, aesKey);
+        return Encoder.getUSSDMsg(imei, content.trim(), command, encryptType, aesKey);
     }
 
 
@@ -214,7 +214,7 @@ public class T880xPlusEncoder {
      */
     public  byte[] getRS232ConfigSettingMsg(String imei,String content) throws IOException {
         byte[] command = {0x25, 0x25, (byte)0x82};
-        return Encoder.getConfigSettingMsg(imei, content, command, encryptType, aesKey);
+        return Encoder.getConfigSettingMsg(imei, content.trim(), command, encryptType, aesKey);
     }
 
     public byte[] getRS232ConfigSettingMsg(String imei,byte[] content,int protocolType) throws IOException {
@@ -222,5 +222,22 @@ public class T880xPlusEncoder {
         return Encoder.get82ConfigSettingMsg(imei, content, command, protocolType, encryptType, aesKey);
     }
 
+    public  byte[] getWifiMsgReply(String imei,boolean needSerialNo,int serialNo) throws IOException {
+        byte[] command = {0x25, 0x25, 0x15};
+        return Encoder.getWifiMsgReply(imei, needSerialNo, serialNo, command, encryptType, aesKey);
+    }
 
+    public  byte[] getRs485MsgReply(String imei,boolean needSerialNo,int serialNo) throws IOException {
+        byte[] command = {0x25, 0x25, 0x21};
+        return Encoder.getRs485MsgReply(imei, needSerialNo, serialNo, command, encryptType, aesKey);
+    }
+    public  byte[] getOneWireMsgReply(String imei,boolean needSerialNo,int serialNo) throws IOException {
+        byte[] command = {0x25, 0x25, 0x23};
+        return Encoder.getOneWireMsgReply(imei, needSerialNo, serialNo, command, encryptType, aesKey);
+    }
+
+    public  byte[] getObdMsgReply(String imei,int serialNo) throws IOException {
+        byte[] command = {0x25, 0x25, 0x22};
+        return Encoder.getObdMsgReply(imei,  serialNo, command, encryptType, aesKey);
+    }
 }

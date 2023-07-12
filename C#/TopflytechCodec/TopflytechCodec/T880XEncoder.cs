@@ -69,7 +69,7 @@ namespace TopflytechCodec
     /// <returns>The config setting msg byte [ ].</returns> 
     public static byte[] getConfigSettingMsg(String imei,String content)  {
         byte[] command = {0x23, 0x23, (byte)0x81};
-        return Encoder.getConfigSettingMsg(imei, content, command, MessageEncryptType.NONE, null);
+        return Encoder.getConfigSettingMsg(imei, content.Trim(), command, MessageEncryptType.NONE, null);
     }
 
     /// <summary>
@@ -80,7 +80,7 @@ namespace TopflytechCodec
     /// <returns>The brocast setting msg byte [ ].</returns> 
     public static byte[] getBrocastSmsMsg(String imei,String content)  {
         byte[] command = {0x23, 0x23, (byte)0x81};
-        return Encoder.getBrocastSmsMsg(imei, content, command, MessageEncryptType.NONE, null);
+        return Encoder.getBrocastSmsMsg(imei, content.Trim(), command, MessageEncryptType.NONE, null);
     }
     }
 }

@@ -10,8 +10,8 @@ var PersonalAssetEncoder = require("./PersonalAssetEncoder")
 var moment = require("moment")
 //创建TCP服务器
 Decoder.encryptType = CryptoTool.MessageEncryptType.NONE
-var curDecoder = PersonalAssetDecoder
-var curEncoder = PersonalAssetEncoder
+var curDecoder = Decoder
+var curEncoder = Encoder
 var socketClient = []
 const server = net.createServer(function (socket) {
     //监听data事件
@@ -67,15 +67,31 @@ const server = net.createServer(function (socket) {
                 socket.write(Buffer.from(resp))
             }else if(message.messageType == "wifi"){
                 console.log("receive wifi message,imei:" + message.imei)
-                var resp = PersonalAssetEncoder.getWifiMsgReply(message.imei,true,message.serialNo,CryptoTool.MessageEncryptType.NONE,null)
+                var resp = curEncoder.getWifiMsgReply(message.imei,message.serialNo,CryptoTool.MessageEncryptType.NONE,null)
                 socket.write(Buffer.from(resp))
             }else if(message.messageType == "lock"){
                 console.log("receive lock message,imei:" + message.imei)
                 var resp = PersonalAssetEncoder.getLockMsgReply(message.imei,true,message.serialNo,CryptoTool.MessageEncryptType.NONE,null)
                 socket.write(Buffer.from(resp))
             }else if(message.messageType == "obdData"){
-                console.log("receive lock message,imei:" + message.imei)
-                var resp = ObdEncoder.getObdMsgReply(message.imei,true,message.serialNo,CryptoTool.MessageEncryptType.NONE,null)
+                console.log("receive obd message,imei:" + message.imei)
+                var resp = curEncoder.getObdMsgReply(message.imei,true,message.serialNo,CryptoTool.MessageEncryptType.NONE,null)
+                socket.write(Buffer.from(resp))
+            }else if(message.messageType == "innerGeoData"){
+                console.log("receive inner geo message,imei:" + message.imei)
+                var resp = PersonalAssetEncoder.getInnerGeoDataMsgReply(message.imei,message.serialNo,CryptoTool.MessageEncryptType.NONE,null)
+                socket.write(Buffer.from(resp))
+            }else if(message.messageType == "wifiWithDeviceInfo"){
+                console.log("receive wifi with device information message,imei:" + message.imei)
+                var resp = PersonalAssetEncoder.getWifiWithDeviceInfoMsgReply(message.imei,message.serialNo,message.originalAlarmCode,CryptoTool.MessageEncryptType.NONE,null)
+                socket.write(Buffer.from(resp))
+            }else if(message.messageType == "rs485"){
+                console.log("receive rs485 message,imei:" + message.imei)
+                var resp = Encoder.getRs485MsgReply(message.imei,message.serialNo,CryptoTool.MessageEncryptType.NONE,null)
+                socket.write(Buffer.from(resp))
+            }else if(message.messageType == "oneWire"){
+                console.log("receive oneWire message,imei:" + message.imei)
+                var resp = Encoder.getOneWireMsgReply(message.imei,message.serialNo,CryptoTool.MessageEncryptType.NONE,null)
                 socket.write(Buffer.from(resp))
             }
         }

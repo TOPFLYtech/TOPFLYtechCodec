@@ -2,6 +2,7 @@ package com.topflytech.codec;
 
 import com.topflytech.codec.entities.*;
 
+import java.lang.reflect.Array;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
@@ -50,7 +51,10 @@ public class Decoder {
     private static final byte[] RS232 = {0x25, 0x25, (byte)0x09};
     private static final byte[] LOCATION_DATA_WITH_SENSOR =  {0x25, 0x25, (byte)0x16};
     private static final byte[] LOCATION_ALARM_WITH_SENSOR =  {0x25, 0x25, (byte)0x18};
-
+    private static final byte[] WIFI_DATA =  {0x25, 0x25, (byte)0x15};
+    private static final byte[] RS485_DATA =  {0x25, 0x25, (byte)0x21};
+    private static final byte[] OBD_DATA =       {0x25, 0x25, (byte)0x22};
+    private static final byte[] ONE_WIRE_DATA =       {0x25, 0x25, (byte)0x23};
     private static final byte[] latlngInvalidData = {(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,
                                                      (byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF};
 
@@ -62,7 +66,7 @@ public class Decoder {
 
     private int encryptType = 0;
     private String aesKey;
-
+    private static final byte[] obdHead = {0x55,(byte)0xAA};
 
     private static final long MASK_IGNITION =   0x4000;
     private static final long MASK_POWER_CUT =  0x8000;
@@ -104,6 +108,10 @@ public class Decoder {
                 || Arrays.equals(ALARM_SECOND_DATA, bytes)
                 || Arrays.equals(RS232,bytes)
                 || Arrays.equals(LOCATION_DATA_WITH_SENSOR,bytes)
+                || Arrays.equals(WIFI_DATA,bytes)
+                || Arrays.equals(RS485_DATA,bytes)
+                || Arrays.equals(OBD_DATA,bytes)
+                || Arrays.equals(ONE_WIRE_DATA,bytes)
                 || Arrays.equals(LOCATION_ALARM_WITH_SENSOR,bytes);
     }
 
@@ -266,6 +274,18 @@ public class Decoder {
                 case 0x14:
                     LocationMessage locationSecondMessage = parseSecondDataMessage(bytes);
                     return locationSecondMessage;
+                case 0x15:
+                    WifiMessage  wifiMessage = parseWifiMessage(bytes);
+                    return wifiMessage;
+                case 0x21:
+                    RS485Message rs485Message = parseRs485Message(bytes);
+                    return rs485Message;
+                case 0x22:
+                    ObdMessage obdMessage = parseObdMessage(bytes);
+                    return obdMessage;
+                case 0x23:
+                    OneWireMessage oneWireMessage = parseOneWireMessage(bytes);
+                    return oneWireMessage;
                 case (byte)0x81:
                     Message message =  parseInteractMessage(bytes);
                     return message;
@@ -274,6 +294,98 @@ public class Decoder {
             }
         }
         return null;
+    }
+    private ObdMessage parseObdMessage(byte[] bytes) {
+        int serialNo = BytesUtils.bytes2Short(bytes, 5);
+        String imei = BytesUtils.IMEI.decode(bytes, 7);
+        Date date = TimeUtils.getGTM0Date(bytes, 15);
+
+        ObdMessage obdData = new ObdMessage();
+        obdData.setImei(imei);
+        obdData.setOrignBytes(bytes);
+//        boolean isNeedResp = (serialNo & 0x8000) != 0x8000;
+        obdData.setSerialNo(serialNo);
+//        obdData.setIsNeedResp(isNeedResp);
+        obdData.setDate(date);
+        byte[] obdBytes = Arrays.copyOfRange(bytes,21,bytes.length);
+
+        byte[] head = new byte[2];
+        head[0] = obdBytes[0];
+        head[1] = obdBytes[1];
+        if(Arrays.equals(head,obdHead)){
+            obdBytes[2] = (byte)(obdBytes[2] & 0x0F);//去除高位
+            int length = BytesUtils.bytes2Short(obdBytes,2);
+            if(length > 0){
+                try{
+                    byte[] data = Arrays.copyOfRange(obdBytes,4,4+length);
+                    if((data[0] & 0x41) == 0x41 && data[1] == 0x04 && data.length > 3){
+                        obdData.setMessageType(ObdMessage.CLEAR_ERROR_CODE_MESSAGE);
+                        obdData.setClearErrorCodeSuccess(data[2] == 0x01);
+                    }else if((data[0] & 0x41) == 0x41 && data[1] == 0x05 && data.length > 2){
+                        byte[] vinData = Arrays.copyOfRange(data,2,data.length - 1);
+                        boolean dataValid = false;
+                        for(byte item : vinData){
+                            if((item & 0xFF) != 0xFF){
+                                dataValid = true;
+                            }
+                        }
+                        if(vinData.length > 0 && dataValid){
+                            obdData.setMessageType(ObdMessage.VIN_MESSAGE);
+                            obdData.setVin(new String(vinData));
+                        }
+                    }else if((data[0] & 0x41) == 0x41 && (data[1] == 0x03 || data[1] == 0x0A)){
+                        int errorCode = data[2];
+                        byte[] errorDataByte = Arrays.copyOfRange(data,3,data.length - 1);
+                        String errorDataStr = BytesUtils.bytes2HexString(errorDataByte,0);
+                        if(errorDataStr != null){
+                            String errorDataSum = "";
+                            for(int i = 0 ;i+6 <= errorDataStr.length();i+=6){
+                                String errorDataItem = errorDataStr.substring(i,i+6);
+                                String srcFlag = errorDataItem.substring(0,1);
+                                String errorDataCode =  getObdErrorFlag(srcFlag) + errorDataItem.substring(1,4);
+                                if(!errorDataSum.contains(errorDataCode)){
+                                    if(i != 0){
+                                        errorDataSum += ";";
+                                    }
+                                    errorDataSum += errorDataCode;
+                                }
+                                if(i+6 >= errorDataStr.length()){
+                                    break;
+                                }
+                            }
+                            obdData.setMessageType(ObdMessage.ERROR_CODE_MESSAGE);
+                            obdData.setErrorCode(getObdErrorCode(errorCode));
+                            obdData.setErrorData(errorDataSum);
+                        }
+                    }
+                }catch (Exception e){
+                    System.out.println("OBD Data error :" + BytesUtils.bytes2HexString(bytes,0));
+                    e.printStackTrace();
+                }
+            }
+        }
+        return obdData;
+    }
+    private String getObdErrorCode(int errorCode){
+        if(errorCode == 0){
+            return "J1979";
+        }else if(errorCode == 1){
+            return "J1939";
+        }
+        return "";
+    }
+
+    private String getObdErrorFlag(String srcFlag){
+        byte[] data = BytesUtils.hexString2Bytes(srcFlag);
+        if(data[0] >= 0 && data[0] < 4){
+            return "P" + String.valueOf(data[0]);
+        }else if(data[0] >= 4 && data[0] < 8){
+            return "C" + String.valueOf(data[0] - 4);
+        }else if(data[0] >= 8 && data[0] < 12){
+            return "B" + String.valueOf(data[0] - 8);
+        }else{
+            return "U" + String.valueOf(data[0] - 12);
+        }
     }
     public void build(byte[] bytes,Callback callback) throws ParseException {
         if (bytes != null && bytes.length > HEADER_LENGTH
@@ -335,6 +447,18 @@ public class Decoder {
                     NetworkInfoMessage networkInfoMessage = parseNetworkInfoMessage(bytes);
                     callback.receiveNetworkInfoMessage(networkInfoMessage);
                     break;
+                case 0x15:
+                    WifiMessage wifiMessage = parseWifiMessage(bytes);
+                    callback.receiveWifiMessage(wifiMessage);
+                case 0x21:
+                    RS485Message rs485Message = parseRs485Message(bytes);
+                    callback.receiveRs485Message(rs485Message);
+                case 0x22:
+                    ObdMessage obdMessage = parseObdMessage(bytes);
+                    callback.receiveObdMessage(obdMessage);
+                case 0x23:
+                    OneWireMessage oneWireMessage = parseOneWireMessage(bytes);
+                    callback.receiveOneWireMessage(oneWireMessage);
                 case (byte)0x81:
                     Message message =  parseInteractMessage(bytes);
                     if (message instanceof ConfigMessage) {
@@ -351,7 +475,67 @@ public class Decoder {
         }
 
     }
+    private OneWireMessage parseOneWireMessage(byte[] bytes) {
+        OneWireMessage oneWireMessage = new OneWireMessage();
+        int serialNo = BytesUtils.bytes2Short(bytes, 5);
+        String imei = BytesUtils.IMEI.decode(bytes, 7);
+        Date date = TimeUtils.getGTM0Date(bytes, 15);
+        boolean isIgnition = (bytes[21] & 0x01) == 0x01;
+        String deviceId = BytesUtils.bytes2HexString(Arrays.copyOfRange(bytes,22,30),0);
+        byte[] oneWireData = Arrays.copyOfRange(bytes,30,bytes.length);
+        oneWireMessage.setOrignBytes(bytes);
+        oneWireMessage.setImei(imei);
+        oneWireMessage.setDate(date);
+        oneWireMessage.setSerialNo(serialNo);
+        oneWireMessage.setDeviceId(deviceId);
+        oneWireMessage.setIsIgnition(isIgnition);
+        oneWireMessage.setOneWireData(oneWireData);
+        return oneWireMessage;
+    }
 
+    private RS485Message parseRs485Message(byte[] bytes) {
+        RS485Message rs485Message = new RS485Message();
+        int serialNo = BytesUtils.bytes2Short(bytes, 5);
+        String imei = BytesUtils.IMEI.decode(bytes, 7);
+        Date date = TimeUtils.getGTM0Date(bytes, 15);
+        boolean isIgnition = (bytes[21] & 0x01) == 0x01;
+        int deviceId = bytes[22];
+        byte[] rs485Data = Arrays.copyOfRange(bytes,23,bytes.length);
+        rs485Message.setOrignBytes(bytes);
+        rs485Message.setImei(imei);
+        rs485Message.setDate(date);
+        rs485Message.setSerialNo(serialNo);
+        rs485Message.setDeviceId(deviceId);
+        rs485Message.setIsIgnition(isIgnition);
+        rs485Message.setRs485Data(rs485Data);
+        return rs485Message;
+    }
+
+    private WifiMessage parseWifiMessage(byte[] bytes) {
+        WifiMessage wifiMessage = new WifiMessage();
+        int serialNo = BytesUtils.bytes2Short(bytes, 5);
+        String imei = BytesUtils.IMEI.decode(bytes, 7);
+        Date date = TimeUtils.getGTM0Date(bytes, 15);
+        String selfMac =  BytesUtils.bytes2HexString(Arrays.copyOfRange(bytes, 21, 27), 0);
+        String ap1Mac =  BytesUtils.bytes2HexString(Arrays.copyOfRange(bytes, 27, 33), 0);
+        int ap1Rssi = (int)bytes[33];
+        String ap2Mac =  BytesUtils.bytes2HexString(Arrays.copyOfRange(bytes,34,40),0);
+        int ap2Rssi = (int)bytes[40];
+        String ap3Mac =  BytesUtils.bytes2HexString(Arrays.copyOfRange(bytes,41,47),0);
+        int ap3Rssi = (int)bytes[47];
+        wifiMessage.setOrignBytes(bytes);
+        wifiMessage.setImei(imei);
+        wifiMessage.setDate(date);
+        wifiMessage.setSerialNo(serialNo);
+        wifiMessage.setSelfMac(selfMac.toUpperCase());
+        wifiMessage.setAp1Mac(ap1Mac.toUpperCase());
+        wifiMessage.setAp1RSSI(ap1Rssi);
+        wifiMessage.setAp2Mac(ap2Mac.toUpperCase());
+        wifiMessage.setAp2RSSI(ap2Rssi);
+        wifiMessage.setAp3Mac(ap3Mac.toUpperCase());
+        wifiMessage.setAp3RSSI(ap3Rssi);
+        return wifiMessage;
+    }
     private BluetoothPeripheralDataMessage parseBluetoothDataMessage(byte[] bytes) {
         BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = new BluetoothPeripheralDataMessage();
         int serialNo = BytesUtils.bytes2Short(bytes, 5);
@@ -487,7 +671,7 @@ public class Decoder {
                 ci_2g_3 = BytesUtils.bytes2Short(bleData,25);
             }
             if (is_4g_lbs){
-                mcc_4g = BytesUtils.bytes2Short(bleData,11);
+                mcc_4g = BytesUtils.bytes2Short(bleData,11) & 0x7FFF;
                 mnc_4g = BytesUtils.bytes2Short(bleData,13);
                 ci_4g = BytesUtils.unsigned4BytesToInt(bleData, 15);
                 earfcn_4g_1 = BytesUtils.bytes2Short(bleData, 19);
@@ -596,7 +780,7 @@ public class Decoder {
                 ci_2g_3 = BytesUtils.bytes2Short(bleData,25);
             }
             if (is_4g_lbs){
-                mcc_4g = BytesUtils.bytes2Short(bleData,11);
+                mcc_4g = BytesUtils.bytes2Short(bleData,11) & 0x7FFF;
                 mnc_4g = BytesUtils.bytes2Short(bleData,13);
                 ci_4g = BytesUtils.unsigned4BytesToInt(bleData, 15);
                 earfcn_4g_1 = BytesUtils.bytes2Short(bleData, 19);
@@ -959,7 +1143,7 @@ public class Decoder {
             ci_2g_3 = BytesUtils.bytes2Short(bytes,37);
         }
         if (is_4g_lbs){
-            mcc_4g = BytesUtils.bytes2Short(bytes,23);
+            mcc_4g = BytesUtils.bytes2Short(bytes,23) & 0x7FFF;
             mnc_4g = BytesUtils.bytes2Short(bytes,25);
             ci_4g = BytesUtils.unsigned4BytesToInt(bytes, 27);
             earfcn_4g_1 = BytesUtils.bytes2Short(bytes, 31);
@@ -1723,7 +1907,11 @@ public class Decoder {
         speedf = 0f;
         strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
         if (!strSp.toLowerCase().equals("ffff")){
-            speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+           try {
+               speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+           }catch (Exception e){
+               System.out.println("gps driver message error," + imei + "," + BytesUtils.bytes2HexString(bytes,0));
+           }
         }
         gpsDriverBehaviorMessage.setEndSpeed(speedf);
         azimuth = BytesUtils.bytes2Short(bytes, 58);
@@ -1878,7 +2066,7 @@ public class Decoder {
             ci_2g_3 = BytesUtils.bytes2Short(bytes,curParseIndex + 26);
         }
         if (is_4g_lbs){
-            mcc_4g = BytesUtils.bytes2Short(bytes,curParseIndex + 12);
+            mcc_4g = BytesUtils.bytes2Short(bytes,curParseIndex + 12) & 0x7FFF;
             mnc_4g = BytesUtils.bytes2Short(bytes,curParseIndex + 14);
             ci_4g = BytesUtils.unsigned4BytesToInt(bytes, curParseIndex + 16);
             earfcn_4g_1 = BytesUtils.bytes2Short(bytes, curParseIndex + 20);
@@ -2006,7 +2194,7 @@ public class Decoder {
             ci_2g_3 = BytesUtils.bytes2Short(bytes,curParseIndex + 26);
         }
         if (is_4g_lbs){
-            mcc_4g = BytesUtils.bytes2Short(bytes,curParseIndex + 12);
+            mcc_4g = BytesUtils.bytes2Short(bytes,curParseIndex + 12) & 0x7FFF;
             mnc_4g = BytesUtils.bytes2Short(bytes,curParseIndex + 14);
             ci_4g = BytesUtils.unsigned4BytesToInt(bytes, curParseIndex + 16);
             earfcn_4g_1 = BytesUtils.bytes2Short(bytes, curParseIndex + 20);
@@ -2248,7 +2436,7 @@ public class Decoder {
             ci_2g_3 = BytesUtils.bytes2Short(data,49);
         }
         if (is_4g_lbs){
-            mcc_4g = BytesUtils.bytes2Short(data,35);
+            mcc_4g = BytesUtils.bytes2Short(data,35) & 0x7FFF;
             mnc_4g = BytesUtils.bytes2Short(data,37);
             ci_4g = BytesUtils.unsigned4BytesToInt(data, 39);
             earfcn_4g_1 = BytesUtils.bytes2Short(data, 43);
@@ -2303,6 +2491,7 @@ public class Decoder {
             message.setGyroscopeAxisZ(gyroscopeAxisZ);
 
         }
+
         message.setProtocolHeadType(protocolHead);
         message.setOrignBytes(bytes);
 //        boolean isNeedResp = (serialNo & 0x8000) != 0x8000;
@@ -2439,15 +2628,18 @@ public class Decoder {
         int input4 = (iop & 0x800) == 0x800 ? 1 : 0;
         int input5 = (iop & 0x400) == 0x400 ? 1 : 0;
         int input6 = (iop & 0x200) == 0x200 ? 1 : 0;
+        boolean isHadFmsData = (iop & 0x80) == 0x80;
+        boolean isMileageSrcIsFms = (iop & 0x40) == 0x40;
         int output1 = (data[18] & 0x20) == 0x20 ? 1 : 0;
         int output2 = (data[18] & 0x10) == 0x10 ? 1 : 0;
         int output3 = (data[18] & 0x8) == 0x8 ? 1 : 0;
+
         boolean output12V = (data[18] & 0x20) == 0x20 ;
         boolean outputVout = (data[18] & 0x40) == 0x40;
         int accdetSettingStatus = (iop & 0x1) ==  0x1  ? 1 : 0;
         String str = BytesUtils.bytes2HexString(data, 20);
         float analoginput = 0;
-        if (!str.toLowerCase().equals("ffff")){
+        if (!str.toLowerCase().startsWith("ffff")){
             try {
                 analoginput  = Float.parseFloat(String.format("%d.%s", Integer.parseInt(str.substring(0, 2)),str.substring(2, 4)));
             } catch (Exception e){
@@ -2459,7 +2651,7 @@ public class Decoder {
 
         str = BytesUtils.bytes2HexString(data, 22);
         float analoginput2 = 0;
-        if (!str.toLowerCase().equals("ffff")){
+        if (!str.toLowerCase().startsWith("ffff")){
             try {
                 analoginput2 = Float.parseFloat(String.format("%d.%s", Integer.parseInt(str.substring(0, 2)),str.substring(2, 4)));
             }catch (Exception e){
@@ -2471,7 +2663,7 @@ public class Decoder {
 
         str = BytesUtils.bytes2HexString(data, 24);
         float analoginput3 = 0;
-        if (!str.toLowerCase().equals("ffff")){
+        if (!str.toLowerCase().startsWith("ffff")){
             try {
                 analoginput3 = Float.parseFloat(String.format("%d.%s", Integer.parseInt(str.substring(0, 2)),str.substring(2, 4)));
             }catch (Exception e){
@@ -2483,7 +2675,7 @@ public class Decoder {
 
         str = BytesUtils.bytes2HexString(data, 26);
         float analoginput4 = 0;
-        if (!str.toLowerCase().equals("ffff")){
+        if (!str.toLowerCase().startsWith("ffff")){
             try {
                 analoginput4 = Float.parseFloat(String.format("%d.%s", Integer.parseInt(str.substring(0, 2)),str.substring(2, 4)));
             }catch (Exception e){
@@ -2495,7 +2687,7 @@ public class Decoder {
 
         str = BytesUtils.bytes2HexString(data, 28);
         float analoginput5 = 0;
-        if (!str.toLowerCase().equals("ffff")){
+        if (!str.toLowerCase().startsWith("ffff")){
             try {
                 analoginput5 = Float.parseFloat(String.format("%d.%s", Integer.parseInt(str.substring(0, 2)),str.substring(2, 4)));
             }catch (Exception e){
@@ -2583,7 +2775,7 @@ public class Decoder {
             ci_2g_3 = BytesUtils.bytes2Short(data,57);
         }
         if (is_4g_lbs){
-            mcc_4g = BytesUtils.bytes2Short(data,43);
+            mcc_4g = BytesUtils.bytes2Short(data,43) & 0x7FFF;
             mnc_4g = BytesUtils.bytes2Short(data,45);
             ci_4g = BytesUtils.unsigned4BytesToInt(data, 47);
             earfcn_4g_1 = BytesUtils.bytes2Short(data, 51);
@@ -2610,8 +2802,7 @@ public class Decoder {
         int rpm = 0;
         byte[] rpmBytes = Arrays.copyOfRange(data, 63, 65);
         rpm = BytesUtils.bytes2Short(rpmBytes,0);
-        rpm = BytesUtils.bytes2Short(rpmBytes,0);
-        if (rpm == 32768){
+        if (rpm == 32768 || rpm == 65535){
             rpm = -999;
         }
         boolean isSmartUploadSupport = (data[65] & 0x8) == 0x8;
@@ -2620,6 +2811,7 @@ public class Decoder {
         if (data.length >= 69 && data[68] != 0xff){
             deviceTemp = (data[68] & 0x7F) * ((data[68] & 0x80) == 0x80 ? -1 : 1);
         }
+        int fmsSpeed = data[66];
         LocationMessage message;
         if (isAlarmData){
             message = new LocationAlarmMessage();
@@ -2627,6 +2819,51 @@ public class Decoder {
         }else {
             message = new LocationInfoMessage();
             message.setProtocolHeadType(0x13);
+        }
+        message.setHadFmsData(isHadFmsData);
+        if(data.length >= 74){
+            int hdop = BytesUtils.bytes2Short(data,69);
+            message.setHdop(hdop);
+            if(isHadFmsData){
+                analoginput4 = -999;
+                analoginput5 = -999;
+                long engineHours = BytesUtils.unsigned4BytesToInt(data,26);
+                if(engineHours == 4294967295l){
+                    engineHours = -999;
+                }
+                int coolingFluidTemp = (int)data[71] < 0 ? (int)data[71] + 256 : (int)data[71];
+                if(coolingFluidTemp == 255){
+                    coolingFluidTemp = -999;
+                }else{
+                    coolingFluidTemp = coolingFluidTemp - 40;
+                }
+                int remainFuel = (int)data[72] < 0 ? (int)data[72] + 256 : (int)data[72];
+                if(remainFuel == 255){
+                    remainFuel = -999;
+                }
+                int engineLoad = (int)data[73] < 0 ? (int)data[73] + 256 : (int)data[73];
+                if(engineLoad == 255){
+                    engineLoad = -999;
+                }
+                message.setFmsEngineHours(engineHours);
+                message.setRemainFuelRate(remainFuel);
+                message.setEngineLoad(engineLoad);
+                message.setCoolingFluidTemp(coolingFluidTemp);
+                message.setFmsSpeed(fmsSpeed);
+                if(data.length >= 78){
+                    long fmsAccumulatingFuelConsumption =  BytesUtils.unsigned4BytesToInt(data, 74);
+                    if(fmsAccumulatingFuelConsumption == 4294967295l){
+                        fmsAccumulatingFuelConsumption = -999;
+                    }else{
+                        fmsAccumulatingFuelConsumption = fmsAccumulatingFuelConsumption * 1000;
+                    }
+                    message.setFmsAccumulatingFuelConsumption(fmsAccumulatingFuelConsumption);
+                }
+                supportChangeBattery = false;
+            }
+        }
+        if(isMileageSrcIsFms){
+            message.setMileageSource(2);
         }
         message.setOrignBytes(bytes);
 //        boolean isNeedResp = (serialNo & 0x8000) != 0x8000;
@@ -2821,5 +3058,9 @@ public class Decoder {
          */
         void receiveErrorMessage(String msg);
         void receiveDebugMessage(DebugMessage debugMessage);
+        void receiveWifiMessage(WifiMessage wifiMessage);
+        void receiveRs485Message(RS485Message rs485Message);
+        void receiveObdMessage(ObdMessage obdMessage);
+        void receiveOneWireMessage(OneWireMessage oneWireMessage);
     }
 }

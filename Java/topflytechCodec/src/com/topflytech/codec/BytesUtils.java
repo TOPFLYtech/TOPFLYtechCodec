@@ -159,13 +159,11 @@ class BytesUtils {
          * @return imei
          */
         public static String decode(byte[] bytes, int index) {
-
             if (bytes != null && index > 0 && (bytes.length - index) >= 8) {
                 String str = BytesUtils.bytes2HexString(bytes, index);
 
                 return str.substring(1, 16);
             }
-
             throw new IllegalArgumentException("invalid bytes length & index!");
         }
 
@@ -174,9 +172,7 @@ class BytesUtils {
          * @return byte
          */
         public static byte[] encode(String imei) {
-
             assert imei != null && 15 == imei.length() : "invalid imei length!";
-
             return BytesUtils.hexString2Bytes("0" + imei);
         }
     }

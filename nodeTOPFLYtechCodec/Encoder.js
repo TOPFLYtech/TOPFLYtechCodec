@@ -69,5 +69,21 @@ var Encoder = {
         var command = [0x25, 0x25, 0x82]
         return EncoderHelper.get82ConfigSettingMsg(imei,contentByte,command,protocolType,encryptType,aesKey);
     },
+    getWifiMsgReply:function (imei,serialNo,encryptType,aesKey){
+        var command = [0x25, 0x25, 0x15]
+        return EncoderHelper.getWifiMsgReply(imei,true,serialNo,command,encryptType,aesKey);
+    },
+    getRs485MsgReply:function (imei,serialNo,encryptType,aesKey){
+        var command = [0x25, 0x25, 0x21]
+        return EncoderHelper.getRs485MsgReply(imei,true,serialNo,command,encryptType,aesKey);
+    },
+    getOneWireMsgReply:function (imei,serialNo,encryptType,aesKey){
+        var command = [0x25, 0x25, 0x23]
+        return EncoderHelper.getOneWireMsgReply(imei,true,serialNo,command,encryptType,aesKey);
+    },
+    getObdMsgReply:function (imei,serialNo,encryptType,aesKey){
+        var command = [0x25, 0x25, 0x22]
+        return EncoderHelper.getObdMsgReply(imei,serialNo,command,encryptType,aesKey);
+    },
 }
 module.exports = Encoder;

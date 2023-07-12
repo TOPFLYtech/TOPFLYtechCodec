@@ -313,6 +313,34 @@ namespace _880XServerDemo
                 byte[] reply = t880xPlusEncoder.getNetworkMsgReply(networkInfoMessage.Imei, networkInfoMessage.SerialNo);
                 dict[strClientKey].Send(reply);
             }
+            else if (message is WifiMessage)
+            {
+                WifiMessage wifiMessage = (WifiMessage)message;
+                ShowMsg("receive wifi location message :" + wifiMessage.Imei);
+                byte[] reply = t880xPlusEncoder.getWifiMsgReply(wifiMessage.Imei, true, wifiMessage.SerialNo);
+                dict[strClientKey].Send(reply);
+            }
+            else if (message is OneWireMessage)
+            {
+                OneWireMessage oneWire = (OneWireMessage)message;
+                ShowMsg("receive one wire message :" + oneWire.Imei);
+                byte[] reply = t880xPlusEncoder.getOneWireMsgReply(oneWire.Imei, true, oneWire.SerialNo);
+                dict[strClientKey].Send(reply);
+            }
+            else if (message is RS485Message)
+            {
+                RS485Message rs485 = (RS485Message)message;
+                ShowMsg("receive RS485 message :" + rs485.Imei);
+                byte[] reply = t880xPlusEncoder.getRs485MsgReply(rs485.Imei, true, rs485.SerialNo);
+                dict[strClientKey].Send(reply);
+            }
+            else if (message is ObdMessage)
+            {
+                ObdMessage obdMessage = (ObdMessage)message;
+                ShowMsg("receive DTC(OBD) message :" + obdMessage.Imei);
+                byte[] reply = t880xPlusEncoder.getObdMsgReply(obdMessage.Imei,  obdMessage.SerialNo);
+                dict[strClientKey].Send(reply);
+            }
             else if (message is ForwardMessage)
             {
                 ForwardMessage forwardMessage = (ForwardMessage)message;
@@ -457,7 +485,7 @@ namespace _880XServerDemo
                 //    byte[] reply = t880xdEncoder.getBluetoothPeripheralMsgReply(bluetoothPeripheralDataMessage.Imei, bluetoothPeripheralDataMessage.SerialNo);
                 //    dict[strClientKey].Send(reply);
                 //}
-                byte[] reply = t880xdEncoder.getBluetoothPeripheralMsgReply(bluetoothPeripheralDataMessage.Imei, bluetoothPeripheralDataMessage.SerialNo);
+                byte[] reply = t880xdEncoder.getBluetoothPeripheralMsgReply(bluetoothPeripheralDataMessage.Imei, bluetoothPeripheralDataMessage.SerialNo,bluetoothPeripheralDataMessage.ProtocolHeadType);
                 dict[strClientKey].Send(reply);
             }
             else if (message is NetworkInfoMessage)
@@ -470,6 +498,13 @@ namespace _880XServerDemo
                 //    dict[strClientKey].Send(reply);
                 //}
                 byte[] reply = t880xdEncoder.getNetworkMsgReply(networkInfoMessage.Imei, networkInfoMessage.SerialNo);
+                dict[strClientKey].Send(reply);
+            }
+            else if (message is WifiMessage)
+            {
+                WifiMessage wifiMessage = (WifiMessage)message;
+                ShowMsg("receive wifi location message :" + wifiMessage.Imei);
+                byte[] reply = t880xdEncoder.getWifiMsgReply(wifiMessage.Imei, true,wifiMessage.SerialNo);
                 dict[strClientKey].Send(reply);
             }
             else if (message is ForwardMessage)
@@ -570,6 +605,13 @@ namespace _880XServerDemo
                 byte[] reply = personalEncoder.getLockMsgReply(lockMessage.Imei, lockMessage.SerialNo);
                 dict[strClientKey].Send(reply);
             }
+            else if (message is InnerGeoDataMessage)
+            {
+                InnerGeoDataMessage innerGeoDataMessage = (InnerGeoDataMessage)message;
+                ShowMsg("receive inner geo message :" + innerGeoDataMessage.Imei ) ;
+                byte[] reply = personalEncoder.getInnerGeoDataMsgReply(innerGeoDataMessage.Imei,true, innerGeoDataMessage.SerialNo);
+                dict[strClientKey].Send(reply);
+            }
             else if (message is ForwardMessage)
             {
                 ForwardMessage forwardMessage = (ForwardMessage)message;
@@ -589,7 +631,14 @@ namespace _880XServerDemo
                 //    byte[] reply = personalEncoder.getBluetoothPeripheralMsgReply(bluetoothPeripheralDataMessage.Imei, bluetoothPeripheralDataMessage.SerialNo);
                 //    dict[strClientKey].Send(reply);
                 //}
-                byte[] reply = personalEncoder.getBluetoothPeripheralMsgReply(bluetoothPeripheralDataMessage.Imei, bluetoothPeripheralDataMessage.SerialNo);
+                byte[] reply = personalEncoder.getBluetoothPeripheralMsgReply(bluetoothPeripheralDataMessage.Imei, bluetoothPeripheralDataMessage.SerialNo, bluetoothPeripheralDataMessage.ProtocolHeadType);
+                dict[strClientKey].Send(reply);
+            }
+            else if (message is WifiWithDeviceInfoMessage)
+            {
+                WifiWithDeviceInfoMessage wifiWithDeviceInfoMessage = (WifiWithDeviceInfoMessage)message;
+                ShowMsg("receive wifi with device infomation message:" + wifiWithDeviceInfoMessage.Imei); 
+                byte[] reply = personalEncoder.getWifiWithDeviceInfoReply(wifiWithDeviceInfoMessage.Imei, wifiWithDeviceInfoMessage.SerialNo, wifiWithDeviceInfoMessage.OriginalAlarmCode);
                 dict[strClientKey].Send(reply);
             }
         }

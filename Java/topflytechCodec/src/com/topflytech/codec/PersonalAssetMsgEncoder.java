@@ -103,7 +103,7 @@ public class PersonalAssetMsgEncoder {
      */
     public  byte[] getBrocastSmsMsg(String imei,String content) throws IOException {
         byte[] command = {0x27, 0x27, (byte)0x81};
-        return Encoder.getBrocastSmsMsg(imei, content, command, encryptType, aesKey);
+        return Encoder.getBrocastSmsMsg(imei, content.trim(), command, encryptType, aesKey);
     }
 
     /**
@@ -116,7 +116,7 @@ public class PersonalAssetMsgEncoder {
      */
     public  byte[] getUSSDMsg(String imei,String content) throws IOException {
         byte[] command = {0x27, 0x27, (byte)0x81};
-        return Encoder.getUSSDMsg(imei, content, command, encryptType, aesKey);
+        return Encoder.getUSSDMsg(imei, content.trim(), command, encryptType, aesKey);
     }
 
     public byte[] getNetworkMsgReply(String imei,int serialNo)throws IOException {
@@ -133,7 +133,7 @@ public class PersonalAssetMsgEncoder {
      */
     public  byte[] getConfigSettingMsg(String imei,String content) throws IOException {
         byte[] command = {0x27, 0x27, (byte)0x81};
-        return Encoder.getConfigSettingMsg(imei, content, command, encryptType, aesKey);
+        return Encoder.getConfigSettingMsg(imei, content.trim(), command, encryptType, aesKey);
     }
 
 
@@ -150,4 +150,13 @@ public class PersonalAssetMsgEncoder {
         return Encoder.getBluetoothPeripheralDataMsgReply(imei, serialNo, command, encryptType, aesKey);
     }
 
+
+    public  byte[] getInnerGeoDataMsgReply(String imei,int serialNo) throws IOException {
+        byte[] command = {0x27, 0x27, (byte)0x20};
+        return Encoder.getNormalMsgReply(imei, serialNo, command,new byte[]{} ,encryptType, aesKey);
+    }
+    public  byte[] getWifiWithDeviceInfoReply(String imei,int serialNo,int alarmCode) throws IOException {
+        byte[] command = {0x27, 0x27, (byte)0x24};
+        return Encoder.getNormalMsgReply(imei, serialNo, command,new byte[]{(byte)alarmCode} ,encryptType, aesKey);
+    }
 }

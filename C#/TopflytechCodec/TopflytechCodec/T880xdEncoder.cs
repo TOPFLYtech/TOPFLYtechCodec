@@ -63,15 +63,14 @@ namespace TopflytechCodec
             return Encoder.getAccelerationAlarmMsgReply(imei, serialNo, command, encryptType, aesKey);
         }
 
-
-        public byte[] getBluetoothPeripheralMsgReply(String imei, int serialNo)
+         
+        public byte[] getBluetoothPeripheralMsgReply(String imei, int serialNo, int protocolHeadType)  
         {
-            byte[] command = { 0x26, 0x26, 0x10 };
+            byte[] command = { 0x26, 0x26, (byte)protocolHeadType };
             return Encoder.getBluetoothPeripheralDataMsgReply(imei, serialNo, command, encryptType, aesKey);
         }
 
-
-        public byte[] getObdMsgReply(String imei, int serialNo)
+    public byte[] getObdMsgReply(String imei, int serialNo)
         {
             byte[] command = { 0x26, 0x26, 0x09 };
             return Encoder.getObdMsgReply(imei, serialNo, command, encryptType, aesKey);
@@ -135,6 +134,12 @@ namespace TopflytechCodec
             return Encoder.getNetworkMsgReply(imei, serialNo, command, encryptType, aesKey);
         }
 
-    }
+        public byte[] getWifiMsgReply(String imei, bool needSerialNo, int serialNo)  
+        {
+            byte[] command = { 0x26, 0x26, 0x15 };
+            return Encoder.getWifiMsgReply(imei, needSerialNo, serialNo, command, encryptType, aesKey);
+        }
+
+}
 
 }
