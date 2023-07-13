@@ -245,14 +245,14 @@ def dealPersonalDeviceMessage(message,socketClient):
         # if message.isNeedResp:
         #     reply = personalEncoder.getLocationMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode)
         #     socketClient.send(reply)
-        reply = personalEncoder.getLocationMsgReply(message.imei,True,message.serialNo)
+        reply = personalEncoder.getLocationMsgReply(message.imei,True,message.serialNo,message.protocolHeadType)
         socketClient.send(reply)
     elif isinstance(message,LocationAlarmMessage):
         print ("receive locationAlarmMessage" + message.imei + " Alarm is : " + str(message.originalAlarmCode))
         # if message.isNeedResp:
         #     reply = personalEncoder.getLocationAlarmMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode)
         #     socketClient.send(reply)
-        reply = personalEncoder.getLocationAlarmMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode)
+        reply = personalEncoder.getLocationAlarmMsgReply(message.imei,True,message.serialNo,message.originalAlarmCode,message.protocolHeadType)
         socketClient.send(reply)
     elif isinstance(message,ConfigMessage):
         print ("receive configMessage: " + message.imei + " : " + message.configContent)
@@ -277,7 +277,7 @@ def dealPersonalDeviceMessage(message,socketClient):
         socketClient.send(reply)
     elif isinstance(message,WifiWithDeviceInfoMessage):
         print ("receive wifi with device info Message: " + message.imei)
-        reply = personalEncoder.getWifiWithDeviceInfoMsgReply(message.imei,message.serialNo,message.originalAlarmCode)
+        reply = personalEncoder.getWifiWithDeviceInfoMsgReply(message.imei,message.serialNo,message.originalAlarmCode,message.protocolHeadType)
         socketClient.send(reply)
     elif isinstance(message,LockMessage):
         print ("receive lock Message: " + message.imei)
@@ -302,9 +302,9 @@ if __name__ == "__main__":
     while True:
         c, addr = s.accept()
         print("\nConnection received from %s" % str(addr))
-        decoder = Decoder(MessageEncryptType.NONE,"")
+        # decoder = Decoder(MessageEncryptType.NONE,"")
         # decoder = ObdDecoder(MessageEncryptType.NONE,"")
-        # decoder = PersonalAssetMsgDecoder(MessageEncryptType.NONE,"")
+        decoder = PersonalAssetMsgDecoder(MessageEncryptType.NONE,"")
         while True:
             try:
                 data = c.recv(2048)
@@ -314,9 +314,9 @@ if __name__ == "__main__":
 
                 messageList = decoder.decode(data)
                 for message in messageList:
-                    dealNoObdDeviceMessage(message,c)
+                    # dealNoObdDeviceMessage(message,c)
                     # dealObdDeviceMessage(message,c)
-                    # dealPersonalDeviceMessage(message,c)
+                    dealPersonalDeviceMessage(message,c)
             except Exception as e:
                 print(repr(e))
                 break

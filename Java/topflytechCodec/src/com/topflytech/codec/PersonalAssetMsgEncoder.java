@@ -73,8 +73,8 @@ public class PersonalAssetMsgEncoder {
      * @return the byte [ ]
      * @throws IOException the io exception
      */
-    public  byte[] getLocationMsgReply(String imei,boolean needSerialNo,int serialNo) throws IOException{
-        byte[] command = {0x27, 0x27, 0x02};
+    public  byte[] getLocationMsgReply(String imei,boolean needSerialNo,int serialNo,int protocolHeadType) throws IOException{
+        byte[] command = {0x27, 0x27, (byte)protocolHeadType};
         return Encoder.getLocationMsgReply(imei, needSerialNo, serialNo, command, encryptType, aesKey);
     }
 
@@ -88,8 +88,8 @@ public class PersonalAssetMsgEncoder {
      * @return the byte [ ]
      * @throws IOException the io exception
      */
-    public  byte[] getLocationAlarmMsgReply(String imei,boolean needSerialNo,int serialNo,int sourceAlarmCode) throws IOException {
-        byte[] command = {0x27, 0x27, 0x04};
+    public  byte[] getLocationAlarmMsgReply(String imei,boolean needSerialNo,int serialNo,int sourceAlarmCode,int protocolHeadType) throws IOException {
+        byte[] command = {0x27, 0x27, (byte)protocolHeadType};
         return Encoder.getLocationAlarmMsgReply(imei, needSerialNo, serialNo, sourceAlarmCode, command, encryptType, aesKey);
     }
 
@@ -155,8 +155,14 @@ public class PersonalAssetMsgEncoder {
         byte[] command = {0x27, 0x27, (byte)0x20};
         return Encoder.getNormalMsgReply(imei, serialNo, command,new byte[]{} ,encryptType, aesKey);
     }
-    public  byte[] getWifiWithDeviceInfoReply(String imei,int serialNo,int alarmCode) throws IOException {
-        byte[] command = {0x27, 0x27, (byte)0x24};
-        return Encoder.getNormalMsgReply(imei, serialNo, command,new byte[]{(byte)alarmCode} ,encryptType, aesKey);
+    public  byte[] getWifiWithDeviceInfoReply(String imei,int serialNo,int alarmCode,int protocolHeadType) throws IOException {
+        byte[] command = {0x27, 0x27, (byte)protocolHeadType};
+        byte[] content;
+        if(alarmCode != 0){
+            content = new byte[]{(byte)alarmCode};
+        }else{
+            content = new byte[]{};
+        }
+        return Encoder.getNormalMsgReply(imei, serialNo, command,content ,encryptType, aesKey);
     }
 }

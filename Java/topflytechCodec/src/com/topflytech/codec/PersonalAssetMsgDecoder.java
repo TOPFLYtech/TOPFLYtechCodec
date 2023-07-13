@@ -30,6 +30,7 @@ public class PersonalAssetMsgDecoder {
     private static final byte[] LOCK_DATA =  {0x27, 0x27, (byte)0x17};
     private static final byte[] GEO_DATA = {0x27, 0x27, (byte)0x20};
     private static final byte[] WIFI_WITH_DEVICE_INFO_DATA =  {0x27, 0x27, (byte)0x24};
+    private static final byte[] WIFI_ALARM_WITH_DEVICE_INFO_DATA =  {0x27, 0x27, (byte)0x25};
     private static final byte[] latlngInvalidData = {(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,
             (byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF};
     private static final byte[] BLUETOOTH_SECOND_DATA =  {0x27, 0x27, (byte)0x12};
@@ -54,6 +55,7 @@ public class PersonalAssetMsgDecoder {
                 || Arrays.equals(GEO_DATA,bytes)
                 || Arrays.equals(BLUETOOTH_SECOND_DATA,bytes)
                 || Arrays.equals(WIFI_WITH_DEVICE_INFO_DATA,bytes)
+                || Arrays.equals(WIFI_ALARM_WITH_DEVICE_INFO_DATA,bytes)
                 || Arrays.equals(NETWORK_INFO_DATA,bytes);
     }
 
@@ -202,7 +204,8 @@ public class PersonalAssetMsgDecoder {
                     InnerGeoDataMessage innerGeoDataMessage = parseInnerGeoMessage(bytes);
                     return innerGeoDataMessage;
                 case 0x24:
-                    WifiWithDeviceInfoMessage wifiWithDeviceInfoMessage = parseWifiWithDeviceInfoMessage(bytes);
+                case 0x25:
+                    Message wifiWithDeviceInfoMessage = parseWifiWithDeviceInfoMessage(bytes);
                     return wifiWithDeviceInfoMessage;
                 case 0x12:
                     BluetoothPeripheralDataMessage bluetoothPeripheralDataSecondMessage = parseSecondBluetoothDataMessage(bytes);
@@ -217,13 +220,85 @@ public class PersonalAssetMsgDecoder {
         return null;
     }
 
-    private WifiWithDeviceInfoMessage parseWifiWithDeviceInfoMessage(byte[] bytes) {
-        WifiWithDeviceInfoMessage wifiWithDeviceInfoMessage = new WifiWithDeviceInfoMessage();
+    private Message parseWifiWithDeviceInfoMessage(byte[] bytes) {
+        boolean isWifiMsg = (bytes[15] & 0x20) == 0x20;
+
         int serialNo = BytesUtils.bytes2Short(bytes, 5);
         String imei = BytesUtils.IMEI.decode(bytes, 7);
         boolean isHisData = (bytes[15] & 0x80) == 0x80;
-
+        boolean isGpsWorking =  (bytes[15] & 0x8) == 0x8;
         Date date = TimeUtils.getGTM0Date(bytes, 17);
+
+
+        boolean latlngValid = (bytes[15] & 0x40) == 0x40;
+        double altitude = latlngValid ? BytesUtils.bytes2Float(bytes, 23) : 0;
+        double longitude = latlngValid ? BytesUtils.bytes2Float(bytes,27) : 0;
+        double latitude = latlngValid ? BytesUtils.bytes2Float(bytes,31) : 0;
+        Float speedf = 0.0f;
+        if (latlngValid){
+            try{
+                if (latlngValid) {
+                    byte[] bytesSpeed = Arrays.copyOfRange(bytes, 35, 37);
+                    String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
+                    if(!strSp.toLowerCase().equals("ffff")){
+                        speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+                    }
+                }
+            }catch (Exception e){
+//                e.printStackTrace();
+            }
+
+
+        }
+        int azimuth = latlngValid ? BytesUtils.bytes2Short(bytes, 37) : 0;
+        int satelliteNumber = latlngValid ? (int)bytes[39] : -999;
+        int hdop = latlngValid ? BytesUtils.bytes2Short(bytes, 40) : 0;
+        Boolean is_4g_lbs = false;
+        Integer mcc_4g = null;
+        Integer mnc_4g = null;
+        Long bci_4g = null;
+        Integer tac = null;
+        Integer pcid_4g_1 = null;
+        Integer pcid_4g_2 = null;
+        Integer pcid_4g_3 = null;
+        Boolean is_2g_lbs = false;
+        Integer mcc_2g = null;
+        Integer mnc_2g = null;
+        Integer lac_2g_1 = null;
+        Integer ci_2g_1 = null;
+        Integer lac_2g_2 = null;
+        Integer ci_2g_2 = null;
+        Integer lac_2g_3 = null;
+        Integer ci_2g_3 = null;
+        if (!latlngValid){
+            byte lbsByte = bytes[23];
+            if ((lbsByte & 0x80) == 0x80){
+                is_4g_lbs = true;
+            }else{
+                is_2g_lbs = true;
+            }
+        }
+        if (is_2g_lbs){
+            mcc_2g = BytesUtils.bytes2Short(bytes,23);
+            mnc_2g = BytesUtils.bytes2Short(bytes,25);
+            lac_2g_1 = BytesUtils.bytes2Short(bytes,27);
+            ci_2g_1 = BytesUtils.bytes2Short(bytes,29);
+            lac_2g_2 = BytesUtils.bytes2Short(bytes,31);
+            ci_2g_2 = BytesUtils.bytes2Short(bytes,33);
+            lac_2g_3 = BytesUtils.bytes2Short(bytes,35);
+            ci_2g_3 = BytesUtils.bytes2Short(bytes,37);
+        }
+        if (is_4g_lbs){
+            mcc_4g = BytesUtils.bytes2Short(bytes,23) & 0x7FFF;
+            mnc_4g = BytesUtils.bytes2Short(bytes,25);
+            bci_4g = BytesUtils.unsigned4BytesToInt(bytes, 27);
+            tac = BytesUtils.bytes2Short(bytes, 31);
+            pcid_4g_1 = BytesUtils.bytes2Short(bytes, 33);
+            pcid_4g_2 = BytesUtils.bytes2Short(bytes, 35);
+            pcid_4g_3 = BytesUtils.bytes2Short(bytes,37);
+        }
+
+
         String selfMac =  BytesUtils.bytes2HexString(Arrays.copyOfRange(bytes, 23, 29), 0);
         String ap1Mac =  BytesUtils.bytes2HexString(Arrays.copyOfRange(bytes, 29, 35), 0);
         int ap1Rssi = (int)bytes[35];
@@ -341,49 +416,132 @@ public class PersonalAssetMsgDecoder {
         if (bytes.length >= 82){
             lockType = (int)bytes[81];
         }
-        wifiWithDeviceInfoMessage.setHistoryData(isHisData);
-        wifiWithDeviceInfoMessage.setOriginalAlarmCode(originalAlarmCode);
-        wifiWithDeviceInfoMessage.setOrignBytes(bytes);
-        wifiWithDeviceInfoMessage.setImei(imei);
-        wifiWithDeviceInfoMessage.setDate(date);
-        wifiWithDeviceInfoMessage.setSerialNo(serialNo);
-        wifiWithDeviceInfoMessage.setSelfMac(selfMac.toUpperCase());
-        wifiWithDeviceInfoMessage.setAp1Mac(ap1Mac.toUpperCase());
-        wifiWithDeviceInfoMessage.setAp1RSSI(ap1Rssi);
-        wifiWithDeviceInfoMessage.setAp2Mac(ap2Mac.toUpperCase());
-        wifiWithDeviceInfoMessage.setAp2RSSI(ap2Rssi);
-        wifiWithDeviceInfoMessage.setAp3Mac(ap3Mac.toUpperCase());
-        wifiWithDeviceInfoMessage.setAp3RSSI(ap3Rssi);
-        wifiWithDeviceInfoMessage.setAxisX(axisX);
-        wifiWithDeviceInfoMessage.setAxisY(axisY);
-        wifiWithDeviceInfoMessage.setAxisZ(axisZ);
-        wifiWithDeviceInfoMessage.setDeviceTemp(deviceTemp);
-        wifiWithDeviceInfoMessage.setLightSensor(lightSensor);
-        wifiWithDeviceInfoMessage.setBatteryVoltage(batteryVoltage);
-        wifiWithDeviceInfoMessage.setSolarVoltage(solarVoltage);
-        wifiWithDeviceInfoMessage.setSmartPowerSettingStatus(smartPowerSettingStatus);
-        wifiWithDeviceInfoMessage.setSmartPowerOpenStatus(smartPowerOpenStatus);
-        wifiWithDeviceInfoMessage.setLockType(lockType);
-        wifiWithDeviceInfoMessage.setBatteryCharge(batteryPercent);
-        wifiWithDeviceInfoMessage.setIsLockSim(isLockSim);
-        wifiWithDeviceInfoMessage.setIsLockDevice(isLockDevice);
-        wifiWithDeviceInfoMessage.setAGPSEphemerisDataDownloadSettingStatus(AGPSEphemerisDataDownloadSettingStatus);
-        wifiWithDeviceInfoMessage.setgSensorSettingStatus(gSensorSettingStatus);
-        wifiWithDeviceInfoMessage.setFrontSensorSettingStatus(frontSensorSettingStatus);
-        wifiWithDeviceInfoMessage.setDeviceRemoveAlarmSettingStatus(deviceRemoveAlarmSettingStatus);
-        wifiWithDeviceInfoMessage.setOpenCaseAlarmSettingStatus(openCaseAlarmSettingStatus);
-        wifiWithDeviceInfoMessage.setDeviceInternalTempReadingANdUploadingSettingStatus(deviceInternalTempReadingANdUploadingSettingStatus);
-        wifiWithDeviceInfoMessage.setMileage(mileage);
-        wifiWithDeviceInfoMessage.setIopIgnition(iopIgnition);
-        wifiWithDeviceInfoMessage.setNetworkSignal(network);
-        wifiWithDeviceInfoMessage.setSamplingIntervalAccOn(accOnInterval);
-        wifiWithDeviceInfoMessage.setSamplingIntervalAccOff(accOffInterval);
-        wifiWithDeviceInfoMessage.setAngleCompensation(angleCompensation);
-        wifiWithDeviceInfoMessage.setDistanceCompensation(distanceCompensation);
-        wifiWithDeviceInfoMessage.setHeartbeatInterval(heartbeatInterval);
-        wifiWithDeviceInfoMessage.setIsSolarCharging(isSolarCharging);
-        wifiWithDeviceInfoMessage.setUsbCharging(isUsbCharging);
-        return wifiWithDeviceInfoMessage;
+        if(isWifiMsg){
+            WifiWithDeviceInfoMessage wifiWithDeviceInfoMessage = new WifiWithDeviceInfoMessage();
+            wifiWithDeviceInfoMessage.setHistoryData(isHisData);
+            wifiWithDeviceInfoMessage.setOriginalAlarmCode(originalAlarmCode);
+            wifiWithDeviceInfoMessage.setProtocolHeadType(bytes[2]);
+            wifiWithDeviceInfoMessage.setOrignBytes(bytes);
+            wifiWithDeviceInfoMessage.setImei(imei);
+            wifiWithDeviceInfoMessage.setDate(date);
+            wifiWithDeviceInfoMessage.setSerialNo(serialNo);
+            wifiWithDeviceInfoMessage.setSelfMac(selfMac.toUpperCase());
+            wifiWithDeviceInfoMessage.setAp1Mac(ap1Mac.toUpperCase());
+            wifiWithDeviceInfoMessage.setAp1RSSI(ap1Rssi);
+            wifiWithDeviceInfoMessage.setAp2Mac(ap2Mac.toUpperCase());
+            wifiWithDeviceInfoMessage.setAp2RSSI(ap2Rssi);
+            wifiWithDeviceInfoMessage.setAp3Mac(ap3Mac.toUpperCase());
+            wifiWithDeviceInfoMessage.setAp3RSSI(ap3Rssi);
+            wifiWithDeviceInfoMessage.setAxisX(axisX);
+            wifiWithDeviceInfoMessage.setAxisY(axisY);
+            wifiWithDeviceInfoMessage.setAxisZ(axisZ);
+            wifiWithDeviceInfoMessage.setDeviceTemp(deviceTemp);
+            wifiWithDeviceInfoMessage.setLightSensor(lightSensor);
+            wifiWithDeviceInfoMessage.setBatteryVoltage(batteryVoltage);
+            wifiWithDeviceInfoMessage.setSolarVoltage(solarVoltage);
+            wifiWithDeviceInfoMessage.setSmartPowerSettingStatus(smartPowerSettingStatus);
+            wifiWithDeviceInfoMessage.setSmartPowerOpenStatus(smartPowerOpenStatus);
+            wifiWithDeviceInfoMessage.setLockType(lockType);
+            wifiWithDeviceInfoMessage.setBatteryCharge(batteryPercent);
+            wifiWithDeviceInfoMessage.setIsLockSim(isLockSim);
+            wifiWithDeviceInfoMessage.setIsLockDevice(isLockDevice);
+            wifiWithDeviceInfoMessage.setAGPSEphemerisDataDownloadSettingStatus(AGPSEphemerisDataDownloadSettingStatus);
+            wifiWithDeviceInfoMessage.setgSensorSettingStatus(gSensorSettingStatus);
+            wifiWithDeviceInfoMessage.setFrontSensorSettingStatus(frontSensorSettingStatus);
+            wifiWithDeviceInfoMessage.setDeviceRemoveAlarmSettingStatus(deviceRemoveAlarmSettingStatus);
+            wifiWithDeviceInfoMessage.setOpenCaseAlarmSettingStatus(openCaseAlarmSettingStatus);
+            wifiWithDeviceInfoMessage.setDeviceInternalTempReadingANdUploadingSettingStatus(deviceInternalTempReadingANdUploadingSettingStatus);
+            wifiWithDeviceInfoMessage.setMileage(mileage);
+            wifiWithDeviceInfoMessage.setIopIgnition(iopIgnition);
+            wifiWithDeviceInfoMessage.setNetworkSignal(network);
+            wifiWithDeviceInfoMessage.setSamplingIntervalAccOn(accOnInterval);
+            wifiWithDeviceInfoMessage.setSamplingIntervalAccOff(accOffInterval);
+            wifiWithDeviceInfoMessage.setAngleCompensation(angleCompensation);
+            wifiWithDeviceInfoMessage.setDistanceCompensation(distanceCompensation);
+            wifiWithDeviceInfoMessage.setHeartbeatInterval(heartbeatInterval);
+            wifiWithDeviceInfoMessage.setIsSolarCharging(isSolarCharging);
+            wifiWithDeviceInfoMessage.setUsbCharging(isUsbCharging);
+            return wifiWithDeviceInfoMessage;
+        }else{
+            LocationMessage locationMessage;
+            if (originalAlarmCode != 0){
+                locationMessage = new LocationAlarmMessage();
+                locationMessage.setProtocolHeadType(bytes[2]);
+            }else {
+                locationMessage = new LocationInfoMessage();
+                locationMessage.setProtocolHeadType(bytes[2]);
+            }
+            locationMessage.setOrignBytes(bytes);
+//        boolean isNeedResp = (serialNo & 0x8000) != 0x8000;
+            locationMessage.setSerialNo(serialNo);
+//        locationMessage.setIsNeedResp(isNeedResp);
+            locationMessage.setNetworkSignal(network);
+            locationMessage.setImei(imei);
+            locationMessage.setIsSolarCharging(isSolarCharging);
+            locationMessage.setIsUsbCharging(isUsbCharging);
+            locationMessage.setSamplingIntervalAccOn(accOnInterval);
+            locationMessage.setSamplingIntervalAccOff(accOffInterval);
+            locationMessage.setAngleCompensation(angleCompensation);
+            locationMessage.setDistanceCompensation(distanceCompensation);
+            locationMessage.setGpsWorking(isGpsWorking);
+            locationMessage.setIsHistoryData(isHisData);
+            locationMessage.setHdop(hdop);
+            locationMessage.setSatelliteNumber(satelliteNumber);
+            locationMessage.setHeartbeatInterval(heartbeatInterval);
+            locationMessage.setOriginalAlarmCode(originalAlarmCode);
+            locationMessage.setMileage(mileage);
+            locationMessage.setIopIgnition(iopIgnition);
+            locationMessage.setIOP(locationMessage.isIopIgnition() ? 0x4000l : 0x0000l);
+            locationMessage.setBatteryCharge(batteryPercent);
+            locationMessage.setDate(date);
+            locationMessage.setLatlngValid(latlngValid);
+            locationMessage.setAltitude(altitude);
+            locationMessage.setLatitude(latitude);
+            locationMessage.setLongitude(longitude);
+            locationMessage.setIsLockSim(isLockSim);
+            locationMessage.setIsLockDevice(isLockDevice);
+            locationMessage.setAGPSEphemerisDataDownloadSettingStatus(AGPSEphemerisDataDownloadSettingStatus);
+            locationMessage.setgSensorSettingStatus(gSensorSettingStatus);
+            locationMessage.setFrontSensorSettingStatus(frontSensorSettingStatus);
+            locationMessage.setDeviceRemoveAlarmSettingStatus(deviceRemoveAlarmSettingStatus);
+            locationMessage.setOpenCaseAlarmSettingStatus(openCaseAlarmSettingStatus);
+            locationMessage.setDeviceInternalTempReadingANdUploadingSettingStatus(deviceInternalTempReadingANdUploadingSettingStatus);
+            if(locationMessage.isLatlngValid()) {
+                locationMessage.setSpeed(speedf);
+            } else {
+                locationMessage.setSpeed(0.0f);
+            }
+            locationMessage.setAzimuth(azimuth);
+            locationMessage.setAxisX(axisX);
+            locationMessage.setAxisY(axisY);
+            locationMessage.setAxisZ(axisZ);
+            locationMessage.setDeviceTemp(deviceTemp);
+            locationMessage.setLightSensor(lightSensor);
+            locationMessage.setBatteryVoltage(batteryVoltage);
+            locationMessage.setSolarVoltage(solarVoltage);
+            locationMessage.setSmartPowerSettingStatus(smartPowerSettingStatus);
+            locationMessage.setSmartPowerOpenStatus(smartPowerOpenStatus);
+            locationMessage.setIs_4g_lbs(is_4g_lbs);
+            locationMessage.setIs_2g_lbs(is_2g_lbs);
+            locationMessage.setMcc_2g(mcc_2g);
+            locationMessage.setMnc_2g(mnc_2g);
+            locationMessage.setLac_2g_1(lac_2g_1);
+            locationMessage.setCi_2g_1(ci_2g_1);
+            locationMessage.setLac_2g_2(lac_2g_2);
+            locationMessage.setCi_2g_2(ci_2g_2);
+            locationMessage.setLac_2g_3(lac_2g_3);
+            locationMessage.setCi_2g_3(ci_2g_3);
+            locationMessage.setMcc_4g(mcc_4g);
+            locationMessage.setMnc_4g(mnc_4g);
+            locationMessage.setBci_4g(bci_4g);
+            locationMessage.setPcid_4g_1(pcid_4g_1);
+            locationMessage.setPcid_4g_2(pcid_4g_2);
+            locationMessage.setPcid_4g_3(pcid_4g_3);
+            locationMessage.setLockType(lockType);
+
+            return locationMessage;
+        }
+
     }
 
     private BluetoothPeripheralDataMessage parseSecondBluetoothDataMessage(byte[] bytes) {
@@ -1732,6 +1890,17 @@ public class PersonalAssetMsgDecoder {
                     InnerGeoDataMessage innerGeoDataMessage = parseInnerGeoMessage(bytes);
                     callback.receiveInnerGeoMessage(innerGeoDataMessage);
                     break;
+                case 0x24:
+                case 0x25:
+                    Message wifiWithDeviceInfoMessage = parseWifiWithDeviceInfoMessage(bytes);
+                    if (wifiWithDeviceInfoMessage instanceof LocationAlarmMessage){
+                        callback.receiveAlarmMessage((LocationAlarmMessage)wifiWithDeviceInfoMessage);
+                    }else if (wifiWithDeviceInfoMessage instanceof LocationInfoMessage) {
+                        callback.receiveLocationInfoMessage((LocationInfoMessage) wifiWithDeviceInfoMessage);
+                    }else if (wifiWithDeviceInfoMessage instanceof WifiWithDeviceInfoMessage) {
+                        callback.receiveWifiWithDeviceInfoMessage((WifiWithDeviceInfoMessage) wifiWithDeviceInfoMessage);
+                    }
+                    break;
                 case 0x12:
                     BluetoothPeripheralDataMessage bluetoothPeripheralDataSecondMessage = parseSecondBluetoothDataMessage(bytes);
                     callback.receiveBluetoothDataMessage(bluetoothPeripheralDataSecondMessage);
@@ -2103,6 +2272,7 @@ public class PersonalAssetMsgDecoder {
         void receiveNetworkInfoMessage(NetworkInfoMessage networkInfoMessage);
 
         void receiveWifiMessage(WifiMessage wifiMessage);
+        void receiveWifiWithDeviceInfoMessage(WifiWithDeviceInfoMessage wifiMessage);
 
         void receiveLockMessage(LockMessage lockMessage);
         /**

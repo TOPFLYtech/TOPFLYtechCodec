@@ -36,7 +36,7 @@ namespace TopflytechCodec
 
         private static byte[] WIFI_WITH_DEVICE_INFO_DATA = { 0x27, 0x27, (byte)0x24 };
 
-
+        private static byte[] WIFI_ALARM_WITH_DEVICE_INFO_DATA = { 0x27, 0x27, (byte)0x25 };
         private int encryptType = 0;
         private String aesKey;
         public PersonalAssetMsgDecoder(int messageEncryptType, String aesKey)
@@ -58,6 +58,7 @@ namespace TopflytechCodec
                     || Utils.ArrayEquals(GEO_DATA, bytes)
                     || Utils.ArrayEquals(BLUETOOTH_SECOND_DATA, bytes)
                     || Utils.ArrayEquals(WIFI_WITH_DEVICE_INFO_DATA, bytes)
+                    || Utils.ArrayEquals(WIFI_ALARM_WITH_DEVICE_INFO_DATA, bytes)
                     || Utils.ArrayEquals(LOCK_DATA, bytes);
         }
         private TopflytechByteBuf decoderBuf = new TopflytechByteBuf();
@@ -151,7 +152,8 @@ namespace TopflytechCodec
                         BluetoothPeripheralDataMessage bluetoothPeripheralDataSecondMessage = parseSecondBluetoothDataMessage(bytes);
                         return bluetoothPeripheralDataSecondMessage;
                     case 0x24:
-                        WifiWithDeviceInfoMessage wifiWithDeviceInfoMessage = parseWifiWithDeviceInfoMessage(bytes);
+                    case 0x25:
+                        Message wifiWithDeviceInfoMessage = parseWifiWithDeviceInfoMessage(bytes);
                         return wifiWithDeviceInfoMessage;
                     case (byte)0x81:
                         Message message =  parseInteractMessage(bytes);
@@ -1773,6 +1775,7 @@ namespace TopflytechCodec
         //locationMessage.IsNeedResp = isNeedResp;
         locationMessage.NetworkSignal=network;
         locationMessage.Imei=imei;
+        locationMessage.ProtocolHeadType = data[2];
         locationMessage.IsSolarCharging=isSolarCharging;
         locationMessage.IsUsbCharging=isUsbCharging;
         locationMessage.SamplingIntervalAccOn=accOnInterval;
@@ -1882,9 +1885,10 @@ namespace TopflytechCodec
         return heartbeatMessage;
     }
 
-    private WifiWithDeviceInfoMessage parseWifiWithDeviceInfoMessage(byte[] bytes)
+    private Message parseWifiWithDeviceInfoMessage(byte[] bytes)
     {
-        WifiWithDeviceInfoMessage wifiWithDeviceInfoMessage = new WifiWithDeviceInfoMessage();
+            bool isWifiMsg = (bytes[15] & 0x20) == 0x20;
+            bool isGpsWorking = (bytes[15] & 0x8) == 0x8;
             int serialNo = BytesUtils.Bytes2Short(bytes, 5);
             String imei = BytesUtils.IMEI.Decode(bytes, 7); 
             bool isHisData = (bytes[15] & 0x80) == 0x80;
@@ -1896,6 +1900,75 @@ namespace TopflytechCodec
             int ap2Rssi = (int)bytes[42];
             String ap3Mac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 43, 49), 0);
             int ap3Rssi = (int)bytes[49];
+             
+            bool latlngValid = (bytes[15] & 0x40) == 0x40; 
+            double altitude = latlngValid ? BytesUtils.Bytes2Float(bytes, 23) : 0;
+            double longitude = latlngValid ? BytesUtils.Bytes2Float(bytes, 27) : 0;
+            double latitude = latlngValid ? BytesUtils.Bytes2Float(bytes, 31) : 0;
+            float speedf = 0.0f;
+            if (latlngValid)
+            {
+                byte[] bytesSpeed = Utils.ArrayCopyOfRange(bytes, 35, 37);
+                String strSp = BytesUtils.Bytes2HexString(bytesSpeed, 0);
+                try
+                {
+                    speedf = (float)Convert.ToDouble(String.Format("{0}.{1}", Convert.ToInt32(strSp.Substring(0, 3)), Convert.ToInt32(strSp.Substring(3, strSp.Length - 3))));
+                }catch(Exception) { 
+                }
+            }
+            int azimuth = latlngValid ? BytesUtils.Bytes2Short(bytes, 37) : 0;
+            int satelliteNumber = latlngValid ? (int)bytes[39] : -999;
+            int hdop = latlngValid ? BytesUtils.Bytes2Short(bytes, 40) : 0;
+            Boolean is_4g_lbs = false;
+            Int32 mcc_4g = -1;
+            Int32 mnc_4g = -1; 
+            Int64 bci_4g = -1;
+            Int32 tac = -1; 
+            Int32 pcid_4g_1 = -1; 
+            Int32 pcid_4g_2 = -1;
+            Int32 pcid_4g_3 = -1;
+            Boolean is_2g_lbs = false;
+            Int32 mcc_2g = -1;
+            Int32 mnc_2g = -1;
+            Int32 lac_2g_1 = -1;
+            Int32 ci_2g_1 = -1;
+            Int32 lac_2g_2 = -1;
+            Int32 ci_2g_2 = -1;
+            Int32 lac_2g_3 = -1;
+            Int32 ci_2g_3 = -1;
+            if (!latlngValid)
+            {
+                byte lbsByte = bytes[23];
+                if ((lbsByte & 0x80) == 0x80)
+                {
+                    is_4g_lbs = true;
+                }
+                else
+                {
+                    is_2g_lbs = true;
+                }
+            }
+            if (is_2g_lbs)
+            {
+                mcc_2g = BytesUtils.Bytes2Short(bytes, 23);
+                mnc_2g = BytesUtils.Bytes2Short(bytes, 25);
+                lac_2g_1 = BytesUtils.Bytes2Short(bytes, 27);
+                ci_2g_1 = BytesUtils.Bytes2Short(bytes, 29);
+                lac_2g_2 = BytesUtils.Bytes2Short(bytes, 31);
+                ci_2g_2 = BytesUtils.Bytes2Short(bytes, 33);
+                lac_2g_3 = BytesUtils.Bytes2Short(bytes, 35);
+                ci_2g_3 = BytesUtils.Bytes2Short(bytes, 37);
+            }
+            if (is_4g_lbs)
+            {
+                mcc_4g = BytesUtils.Bytes2Short(bytes, 23) & 0x7FFF;
+                mnc_4g = BytesUtils.Bytes2Short(bytes, 25);
+                bci_4g = BytesUtils.Byte2Int(bytes, 27);
+                tac = BytesUtils.Bytes2Short(bytes, 31);
+                pcid_4g_1 = BytesUtils.Bytes2Short(bytes, 33);
+                pcid_4g_2 = BytesUtils.Bytes2Short(bytes, 35);
+                pcid_4g_3 = BytesUtils.Bytes2Short(bytes, 37);
+            }
 
             int axisXDirect = (bytes[50] & 0x80) == 0x80 ? 1 : -1;
             float axisX = ((bytes[50] & 0x7F & 0xff) + (((bytes[51] & 0xf0) >> 4) & 0xff) / 10.0f) * axisXDirect;
@@ -2037,49 +2110,139 @@ namespace TopflytechCodec
             {
                 lockType = (int)bytes[81];
             }
-            wifiWithDeviceInfoMessage.IsHistoryData  = isHisData;
-            wifiWithDeviceInfoMessage.OriginalAlarmCode = originalAlarmCode;
-            wifiWithDeviceInfoMessage.OrignBytes = bytes;
-            wifiWithDeviceInfoMessage.Imei = imei;
-            wifiWithDeviceInfoMessage.Date = gmt0;
-            wifiWithDeviceInfoMessage.SerialNo = serialNo;
-            wifiWithDeviceInfoMessage.SelfMac = selfMac.ToUpper();
-            wifiWithDeviceInfoMessage.Ap1Mac = ap1Mac.ToUpper();
-            wifiWithDeviceInfoMessage.Ap1RSSI = ap1Rssi;
-            wifiWithDeviceInfoMessage.Ap2Mac = ap2Mac.ToUpper();
-            wifiWithDeviceInfoMessage.Ap2RSSI = ap2Rssi;
-            wifiWithDeviceInfoMessage.Ap3Mac = ap3Mac.ToUpper();
-            wifiWithDeviceInfoMessage.Ap3RSSI = ap3Rssi;
-            wifiWithDeviceInfoMessage.AxisX = axisX;
-            wifiWithDeviceInfoMessage.AxisY = axisY;
-            wifiWithDeviceInfoMessage.AxisZ = axisZ;
-            wifiWithDeviceInfoMessage.DeviceTemp = deviceTemp;
-            wifiWithDeviceInfoMessage.LightSensor = lightSensor;
-            wifiWithDeviceInfoMessage.BatteryVoltage = batteryVoltage;
-            wifiWithDeviceInfoMessage.SolarVoltage = solarVoltage;
-            wifiWithDeviceInfoMessage.SmartPowerSettingStatus = smartPowerSettingStatus;
-            wifiWithDeviceInfoMessage.SmartPowerOpenStatus = smartPowerOpenStatus;
-            wifiWithDeviceInfoMessage.LockType = lockType;
-            wifiWithDeviceInfoMessage.BatteryCharge = batteryPercent;
-            wifiWithDeviceInfoMessage.IsLockSim = isLockSim;
-            wifiWithDeviceInfoMessage.IsLockDevice = isLockDevice;
-            wifiWithDeviceInfoMessage.IsAGPSEphemerisDataDownloadSettingStatus = AGPSEphemerisDataDownloadSettingStatus;
-            wifiWithDeviceInfoMessage.IsGSensorSettingStatus = gSensorSettingStatus;
-            wifiWithDeviceInfoMessage.IsFrontSensorSettingStatus = frontSensorSettingStatus;
-            wifiWithDeviceInfoMessage.IsDeviceRemoveAlarmSettingStatus = deviceRemoveAlarmSettingStatus;
-            wifiWithDeviceInfoMessage.IsOpenCaseAlarmSettingStatus = openCaseAlarmSettingStatus;
-            wifiWithDeviceInfoMessage.IsDeviceInternalTempReadingANdUploadingSettingStatus = deviceInternalTempReadingANdUploadingSettingStatus;
-            wifiWithDeviceInfoMessage.Mileage = mileage;
-            wifiWithDeviceInfoMessage.IopIgnition = iopIgnition;
-            wifiWithDeviceInfoMessage.NetworkSignal = network;
-            wifiWithDeviceInfoMessage.SamplingIntervalAccOn = accOnInterval;
-            wifiWithDeviceInfoMessage.SamplingIntervalAccOff = accOffInterval;
-            wifiWithDeviceInfoMessage.AngleCompensation = angleCompensation;
-            wifiWithDeviceInfoMessage.DistanceCompensation = distanceCompensation;
-            wifiWithDeviceInfoMessage.HeartbeatInterval = heartbeatInterval;
-            wifiWithDeviceInfoMessage.IsSolarCharging = isSolarCharging;
-            wifiWithDeviceInfoMessage.IsUsbCharging = isUsbCharging;
-            return wifiWithDeviceInfoMessage; 
+            if (isWifiMsg)
+            {
+                WifiWithDeviceInfoMessage wifiWithDeviceInfoMessage = new WifiWithDeviceInfoMessage();
+                wifiWithDeviceInfoMessage.IsHistoryData = isHisData;
+                wifiWithDeviceInfoMessage.OriginalAlarmCode = originalAlarmCode;
+                wifiWithDeviceInfoMessage.OrignBytes = bytes;
+                wifiWithDeviceInfoMessage.Imei = imei;
+                wifiWithDeviceInfoMessage.Date = gmt0;
+                wifiWithDeviceInfoMessage.SerialNo = serialNo;
+                wifiWithDeviceInfoMessage.SelfMac = selfMac.ToUpper();
+                wifiWithDeviceInfoMessage.Ap1Mac = ap1Mac.ToUpper();
+                wifiWithDeviceInfoMessage.Ap1RSSI = ap1Rssi;
+                wifiWithDeviceInfoMessage.Ap2Mac = ap2Mac.ToUpper();
+                wifiWithDeviceInfoMessage.Ap2RSSI = ap2Rssi;
+                wifiWithDeviceInfoMessage.Ap3Mac = ap3Mac.ToUpper();
+                wifiWithDeviceInfoMessage.Ap3RSSI = ap3Rssi;
+                wifiWithDeviceInfoMessage.AxisX = axisX;
+                wifiWithDeviceInfoMessage.AxisY = axisY;
+                wifiWithDeviceInfoMessage.AxisZ = axisZ;
+                wifiWithDeviceInfoMessage.DeviceTemp = deviceTemp;
+                wifiWithDeviceInfoMessage.LightSensor = lightSensor;
+                wifiWithDeviceInfoMessage.BatteryVoltage = batteryVoltage;
+                wifiWithDeviceInfoMessage.SolarVoltage = solarVoltage;
+                wifiWithDeviceInfoMessage.SmartPowerSettingStatus = smartPowerSettingStatus;
+                wifiWithDeviceInfoMessage.SmartPowerOpenStatus = smartPowerOpenStatus;
+                wifiWithDeviceInfoMessage.LockType = lockType;
+                wifiWithDeviceInfoMessage.BatteryCharge = batteryPercent;
+                wifiWithDeviceInfoMessage.IsLockSim = isLockSim;
+                wifiWithDeviceInfoMessage.IsLockDevice = isLockDevice;
+                wifiWithDeviceInfoMessage.IsAGPSEphemerisDataDownloadSettingStatus = AGPSEphemerisDataDownloadSettingStatus;
+                wifiWithDeviceInfoMessage.IsGSensorSettingStatus = gSensorSettingStatus;
+                wifiWithDeviceInfoMessage.IsFrontSensorSettingStatus = frontSensorSettingStatus;
+                wifiWithDeviceInfoMessage.IsDeviceRemoveAlarmSettingStatus = deviceRemoveAlarmSettingStatus;
+                wifiWithDeviceInfoMessage.IsOpenCaseAlarmSettingStatus = openCaseAlarmSettingStatus;
+                wifiWithDeviceInfoMessage.IsDeviceInternalTempReadingANdUploadingSettingStatus = deviceInternalTempReadingANdUploadingSettingStatus;
+                wifiWithDeviceInfoMessage.Mileage = mileage;
+                wifiWithDeviceInfoMessage.IopIgnition = iopIgnition;
+                wifiWithDeviceInfoMessage.NetworkSignal = network;
+                wifiWithDeviceInfoMessage.ProtocolHeadType = bytes[2];
+                wifiWithDeviceInfoMessage.SamplingIntervalAccOn = accOnInterval;
+                wifiWithDeviceInfoMessage.SamplingIntervalAccOff = accOffInterval;
+                wifiWithDeviceInfoMessage.AngleCompensation = angleCompensation;
+                wifiWithDeviceInfoMessage.DistanceCompensation = distanceCompensation;
+                wifiWithDeviceInfoMessage.HeartbeatInterval = heartbeatInterval;
+                wifiWithDeviceInfoMessage.IsSolarCharging = isSolarCharging;
+                wifiWithDeviceInfoMessage.IsUsbCharging = isUsbCharging;
+                return wifiWithDeviceInfoMessage;
+            }
+            else
+            {
+                LocationMessage locationMessage;
+                if (originalAlarmCode != 0)
+                {
+                    locationMessage = new LocationAlarmMessage();
+                }
+                else
+                {
+                    locationMessage = new LocationInfoMessage();
+                }
+                locationMessage.ProtocolHeadType = bytes[2];
+                locationMessage.OrignBytes = bytes;
+                locationMessage.SerialNo = serialNo;
+                //locationMessage.IsNeedResp = isNeedResp;
+                locationMessage.NetworkSignal = network;
+                locationMessage.Imei = imei;
+                locationMessage.Hdop = hdop; 
+                locationMessage.IsSolarCharging = isSolarCharging;
+                locationMessage.IsUsbCharging = isUsbCharging;
+                locationMessage.SamplingIntervalAccOn = accOnInterval;
+                locationMessage.SamplingIntervalAccOff = accOffInterval;
+                locationMessage.AngleCompensation = angleCompensation;
+                locationMessage.DistanceCompensation = distanceCompensation;
+                locationMessage.GpsWorking = isGpsWorking;
+                locationMessage.IsHistoryData = isHisData;
+                locationMessage.SatelliteNumber = satelliteNumber;
+                locationMessage.HeartbeatInterval = heartbeatInterval;
+                locationMessage.OriginalAlarmCode = originalAlarmCode;
+                locationMessage.Mileage = mileage;
+                locationMessage.IopIgnition = iopIgnition;
+                locationMessage.IOP = iopIgnition ? 0x4000L : 0x0000L;
+                locationMessage.BatteryCharge = batteryPercent;
+                locationMessage.Date = gmt0;
+                locationMessage.LatlngValid = latlngValid;
+                locationMessage.Altitude = altitude;
+                locationMessage.Latitude = latitude;
+                locationMessage.IsLockSim = isLockSim;
+                locationMessage.IsLockDevice = isLockDevice;
+                locationMessage.AGPSEphemerisDataDownloadSettingStatus = AGPSEphemerisDataDownloadSettingStatus;
+                locationMessage.GSensorSettingStatus = gSensorSettingStatus;
+                locationMessage.FrontSensorSettingStatus = frontSensorSettingStatus;
+                locationMessage.DeviceRemoveAlarmSettingStatus = deviceRemoveAlarmSettingStatus;
+                locationMessage.OpenCaseAlarmSettingStatus = openCaseAlarmSettingStatus;
+                locationMessage.DeviceInternalTempReadingANdUploadingSettingStatus = deviceInternalTempReadingANdUploadingSettingStatus;
+                locationMessage.Longitude = longitude;
+                if (locationMessage.LatlngValid)
+                {
+                    locationMessage.Speed = speedf;
+                }
+                else
+                {
+                    locationMessage.Speed = 0.0f;
+                }
+                locationMessage.Azimuth = azimuth;
+                locationMessage.AxisX = axisX;
+                locationMessage.AxisY = axisY;
+                locationMessage.AxisZ = axisZ;
+                locationMessage.DeviceTemp = deviceTemp;
+                locationMessage.LightSensor = lightSensor;
+                locationMessage.BatteryVoltage = batteryVoltage;
+                locationMessage.SolarVoltage = solarVoltage;
+                locationMessage.SmartPowerOpenStatus = smartPowerOpenStatus;
+                locationMessage.SmartPowerSettingStatus = smartPowerSettingStatus;
+                locationMessage.Is_2g_lbs = is_2g_lbs;
+                locationMessage.Is_4g_lbs = is_4g_lbs;
+                locationMessage.Mcc_4g = mcc_4g;
+                locationMessage.Mnc_4g = mnc_4g;
+                locationMessage.Bci_4g = bci_4g;
+                locationMessage.Tac = tac;
+                locationMessage.Pcid_4g_1 = pcid_4g_1; 
+                locationMessage.Pcid_4g_2 = pcid_4g_2;
+                locationMessage.Pcid_4g_3 = pcid_4g_3;
+                locationMessage.Mcc_2g = mcc_2g;
+                locationMessage.Mnc_2g = mnc_2g;
+                locationMessage.Lac_2g_1 = lac_2g_1;
+                locationMessage.Ci_2g_1 = ci_2g_1;
+                locationMessage.Lac_2g_2 = lac_2g_2;
+                locationMessage.Ci_2g_2 = ci_2g_2;
+                locationMessage.Lac_2g_3 = lac_2g_3;
+                locationMessage.Ci_2g_3 = ci_2g_3;
+                locationMessage.LockType = lockType;
+                return locationMessage;
+            }
+            
     }
 
     private WifiMessage parseWifiMessage(byte[] bytes)

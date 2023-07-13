@@ -10,8 +10,8 @@ var PersonalAssetEncoder = require("./PersonalAssetEncoder")
 var moment = require("moment")
 //创建TCP服务器
 Decoder.encryptType = CryptoTool.MessageEncryptType.NONE
-var curDecoder = Decoder
-var curEncoder = Encoder
+var curDecoder = PersonalAssetDecoder
+var curEncoder = PersonalAssetEncoder
 var socketClient = []
 const server = net.createServer(function (socket) {
     //监听data事件
@@ -83,7 +83,7 @@ const server = net.createServer(function (socket) {
                 socket.write(Buffer.from(resp))
             }else if(message.messageType == "wifiWithDeviceInfo"){
                 console.log("receive wifi with device information message,imei:" + message.imei)
-                var resp = PersonalAssetEncoder.getWifiWithDeviceInfoMsgReply(message.imei,message.serialNo,message.originalAlarmCode,CryptoTool.MessageEncryptType.NONE,null)
+                var resp = PersonalAssetEncoder.getWifiWithDeviceInfoMsgReply(message.imei,message.serialNo,message.originalAlarmCode,message.protocolHeadType,CryptoTool.MessageEncryptType.NONE,null)
                 socket.write(Buffer.from(resp))
             }else if(message.messageType == "rs485"){
                 console.log("receive rs485 message,imei:" + message.imei)

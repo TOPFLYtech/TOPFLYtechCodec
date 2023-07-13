@@ -607,6 +607,27 @@ namespace TopflytechCodec.Entities
             set { pcid_4g_2 = value; }
         }
 
+        private Int64 bci_4g;
+        public Int64 Bci_4g
+        {
+            get { return bci_4g; }
+            set { bci_4g = value; }
+        }
+
+        private Int32 tac;
+        public Int32 Tac
+        {
+            get { return tac; }
+            set { tac = value; }
+        }
+
+        private Int32 pcid_4g_3;
+        public Int32 Pcid_4g_3
+        {
+            get { return pcid_4g_3; }
+            set { pcid_4g_3 = value; }
+        }
+
 
         private Boolean is_2g_lbs = false;
         public Boolean Is_2g_lbs

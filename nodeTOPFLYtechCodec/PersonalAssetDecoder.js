@@ -15,6 +15,7 @@ var PersonalAssetDecoder = {
     GEO_DATA :[0x27, 0x27, 0x20],
     BLUETOOTH_SECOND_DATA:[0x27, 0x27, 0x12],
     WIFI_WITH_DEVICE_INFO_DATA : [0x27, 0x27, 0x24 ],
+    WIFI_ALAARM_WITH_DEVICE_INFO_DATA : [0x27, 0x27, 0x25 ],
     latlngInvalidData:[0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF],
     encryptType:0,
@@ -34,6 +35,7 @@ var PersonalAssetDecoder = {
             || ByteUtils.arrayEquals(this.GEO_DATA,bytes)
             || ByteUtils.arrayEquals(this.BLUETOOTH_SECOND_DATA,bytes)
             || ByteUtils.arrayEquals(this.WIFI_WITH_DEVICE_INFO_DATA,bytes)
+            || ByteUtils.arrayEquals(this.WIFI_ALAARM_WITH_DEVICE_INFO_DATA,bytes)
             || ByteUtils.arrayEquals(this.NETWORK_INFO_DATA,bytes);
     },
     decode(buf){
@@ -118,6 +120,7 @@ var PersonalAssetDecoder = {
                     var bluetoothPeripheralDataSecondMessage = this.parseSecondBluetoothDataMessage(bytes);
                     return bluetoothPeripheralDataSecondMessage;
                 case 0x24:
+                case 0x25:
                     var  wifiWithDeviceInfoMessage = this.parseWifiWithDeviceInfoMessage(bytes);
                     return wifiWithDeviceInfoMessage;
                 case 0x81:
@@ -1327,16 +1330,12 @@ var PersonalAssetDecoder = {
         return lockMessage;
     },
     parseWifiWithDeviceInfoMessage:function(bytes){
+        var isWifiMsg = (bytes[15] & 0x20) == 0x20;
         var serialNo = ByteUtils.byteToShort(bytes,5);
         var imei = ByteUtils.IMEI.decode(bytes,7)
-        var wifiWithDeviceInfoMessage = {
-            serialNo:serialNo,
-            imei:imei,
-            srcBytes:bytes,
-            messageType:"wifiWithDeviceInfo",
-        }
         var date = ByteUtils.getGTM0Date(bytes, 17);
         var isHisData = (bytes[15] & 0x80) == 0x80
+        var isGpsWorking = (bytes[15] & 0x8) == 0x8
         var originalAlarmCode = bytes[16]
         if(originalAlarmCode < 0){
             originalAlarmCode += 256
@@ -1348,6 +1347,66 @@ var PersonalAssetDecoder = {
         var ap2Rssi = bytes[42];
         var ap3Mac =  ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes,43,49),0);
         var ap3Rssi = bytes[49];
+
+        var latlngValid = (bytes[15] & 0x40) == 0x40;
+        var altitude = latlngValid ? ByteUtils.bytes2Float(bytes, 23) : 0;
+        var longitude = latlngValid ? ByteUtils.bytes2Float(bytes,27) : 0;
+        var latitude = latlngValid ? ByteUtils.bytes2Float(bytes,31) : 0;
+        var speedf = 0.0;
+        if (latlngValid) {
+            var bytesSpeed = ByteUtils.arrayOfRange(bytes, 35, 37);
+            var strSp = ByteUtils.bytes2HexString(bytesSpeed, 0);
+            if(strSp.toLowerCase() !== "ffff"){
+                speedf = parseFloat(strSp.substring(0, 3) + "." +  strSp.substring(3, strSp.length));
+            }
+        }
+        var azimuth = latlngValid ? ByteUtils.byteToShort(bytes, 37) : 0;
+        var satelliteCount = latlngValid ? bytes[39] : 0;
+        var hdop = latlngValid ? ByteUtils.byteToShort(bytes, 40) : 0;
+        var is_4g_lbs = false;
+        var mcc_4g = null;
+        var mnc_4g = null;
+        var bci_4g = null;
+        var tac = null;
+        var pcid_4g_1 = null;
+        var pcid_4g_2 = null;
+        var pcid_4g_3 = null;
+        var is_2g_lbs = false;
+        var mcc_2g = null;
+        var mnc_2g = null;
+        var lac_2g_1 = null;
+        var ci_2g_1 = null;
+        var lac_2g_2 = null;
+        var ci_2g_2 = null;
+        var lac_2g_3 = null;
+        var ci_2g_3 = null;
+        if (!latlngValid){
+            var lbsByte = bytes[23];
+            if ((lbsByte & 0x80) == 0x80){
+                is_4g_lbs = true;
+            }else{
+                is_2g_lbs = true;
+            }
+        }
+        if (is_2g_lbs){
+            mcc_2g = ByteUtils.byteToShort(bytes,23);
+            mnc_2g = ByteUtils.byteToShort(bytes,25);
+            lac_2g_1 = ByteUtils.byteToShort(bytes,27);
+            ci_2g_1 = ByteUtils.byteToShort(bytes,29);
+            lac_2g_2 = ByteUtils.byteToShort(bytes,31);
+            ci_2g_2 = ByteUtils.byteToShort(bytes,33);
+            lac_2g_3 = ByteUtils.byteToShort(bytes,35);
+            ci_2g_3 = ByteUtils.byteToShort(bytes,37);
+        }
+        if (is_4g_lbs){
+            mcc_4g = ByteUtils.byteToShort(bytes,23) & 0x7FFF;
+            mnc_4g = ByteUtils.byteToShort(bytes,25);
+            bci_4g = ByteUtils.byteToLong(bytes, 27);
+            tac = ByteUtils.byteToShort(bytes, 31);
+            pcid_4g_1 = ByteUtils.byteToShort(bytes, 33);
+            pcid_4g_2 = ByteUtils.byteToShort(bytes, 35);
+            pcid_4g_3 = ByteUtils.byteToShort(bytes,37);
+        }
 
         var axisXDirect = (bytes[50] & 0x80) == 0x80 ? 1 : -1;
         var axisX = ((bytes[50] & 0x7F & 0xff) + (((bytes[51] & 0xf0) >> 4) & 0xff) /10.0) * axisXDirect;
@@ -1438,46 +1497,129 @@ var PersonalAssetDecoder = {
         if (bytes.length >= 82){
             lockType = bytes[81];
         }
-        wifiWithDeviceInfoMessage.setDate = date
-        wifiWithDeviceInfoMessage.selfMac = selfMac.toUpperCase()
-        wifiWithDeviceInfoMessage.ap1Mac = ap1Mac.toUpperCase()
-        wifiWithDeviceInfoMessage.ap1Rssi = ap1Rssi
-        wifiWithDeviceInfoMessage.ap2Mac = ap2Mac.toUpperCase()
-        wifiWithDeviceInfoMessage.ap2Rssi = ap2Rssi
-        wifiWithDeviceInfoMessage.ap3Mac = ap3Mac.toUpperCase()
-        wifiWithDeviceInfoMessage.ap3Rssi = ap3Rssi
-        wifiWithDeviceInfoMessage.isHisData = isHisData
-        wifiWithDeviceInfoMessage.originalAlarmCode = originalAlarmCode
-        wifiWithDeviceInfoMessage.axisX = axisX
-        wifiWithDeviceInfoMessage.axisY = axisY
-        wifiWithDeviceInfoMessage.axisZ = axisZ
-        wifiWithDeviceInfoMessage.mileage = mileage
-        wifiWithDeviceInfoMessage.networkSignal = network
-        wifiWithDeviceInfoMessage.accOnInterval = accOnInterval
-        wifiWithDeviceInfoMessage.accOffInterval = accOffInterval
-        wifiWithDeviceInfoMessage.angleCompensation = angleCompensation
-        wifiWithDeviceInfoMessage.distanceCompensation = distanceCompensation
-        wifiWithDeviceInfoMessage.heartbeatInterval = heartbeatInterval
-        wifiWithDeviceInfoMessage.isUsbCharging = isUsbCharging
-        wifiWithDeviceInfoMessage.isSolarCharging = isSolarCharging
-        wifiWithDeviceInfoMessage.iopIgnition = iopIgnition
-        wifiWithDeviceInfoMessage.iop = wifiWithDeviceInfoMessage.isIopIgnition ? 0x4000 : 0x0000
-        wifiWithDeviceInfoMessage.batteryCharge =batteryCharge
-        wifiWithDeviceInfoMessage.isLockSim =isLockSim
-        wifiWithDeviceInfoMessage.isLockDevice = isLockDevice
-        wifiWithDeviceInfoMessage.AGPSEphemerisDataDownloadSettingStatus =AGPSEphemerisDataDownloadSettingStatus
-        wifiWithDeviceInfoMessage.gSensorSettingStatus =gSensorSettingStatus
-        wifiWithDeviceInfoMessage.frontSensorSettingStatus =frontSensorSettingStatus
-        wifiWithDeviceInfoMessage.deviceRemoveAlarmSettingStatus =deviceRemoveAlarmSettingStatus
-        wifiWithDeviceInfoMessage.openCaseAlarmSettingStatus =openCaseAlarmSettingStatus
-        wifiWithDeviceInfoMessage.deviceInternalTempReadingANdUploadingSettingStatus =deviceInternalTempReadingANdUploadingSettingStatus
-		 wifiWithDeviceInfoMessage.deviceTemp =deviceTemp
-        wifiWithDeviceInfoMessage.lightSensor =lightSensor
-        wifiWithDeviceInfoMessage.batteryVoltage =batteryVoltage
-        wifiWithDeviceInfoMessage.solarVoltage =solarVoltage
-        wifiWithDeviceInfoMessage.smartPowerSettingStatus =smartPowerSettingStatus
-        wifiWithDeviceInfoMessage.smartPowerOpenStatus =smartPowerOpenStatus
-        return wifiWithDeviceInfoMessage;
+        if(isWifiMsg){
+            var wifiWithDeviceInfoMessage = {
+                serialNo:serialNo,
+                imei:imei,
+                srcBytes:bytes,
+                messageType:"wifiWithDeviceInfo",
+            }
+            wifiWithDeviceInfoMessage.setDate = date
+            wifiWithDeviceInfoMessage.selfMac = selfMac.toUpperCase()
+            wifiWithDeviceInfoMessage.ap1Mac = ap1Mac.toUpperCase()
+            wifiWithDeviceInfoMessage.ap1Rssi = ap1Rssi
+            wifiWithDeviceInfoMessage.ap2Mac = ap2Mac.toUpperCase()
+            wifiWithDeviceInfoMessage.ap2Rssi = ap2Rssi
+            wifiWithDeviceInfoMessage.ap3Mac = ap3Mac.toUpperCase()
+            wifiWithDeviceInfoMessage.ap3Rssi = ap3Rssi
+            wifiWithDeviceInfoMessage.isHisData = isHisData
+            wifiWithDeviceInfoMessage.originalAlarmCode = originalAlarmCode
+            wifiWithDeviceInfoMessage.axisX = axisX
+            wifiWithDeviceInfoMessage.axisY = axisY
+            wifiWithDeviceInfoMessage.axisZ = axisZ
+            wifiWithDeviceInfoMessage.mileage = mileage
+            wifiWithDeviceInfoMessage.networkSignal = network
+            wifiWithDeviceInfoMessage.accOnInterval = accOnInterval
+            wifiWithDeviceInfoMessage.accOffInterval = accOffInterval
+            wifiWithDeviceInfoMessage.angleCompensation = angleCompensation
+            wifiWithDeviceInfoMessage.distanceCompensation = distanceCompensation
+            wifiWithDeviceInfoMessage.heartbeatInterval = heartbeatInterval
+            wifiWithDeviceInfoMessage.isUsbCharging = isUsbCharging
+            wifiWithDeviceInfoMessage.isSolarCharging = isSolarCharging
+            wifiWithDeviceInfoMessage.iopIgnition = iopIgnition
+            wifiWithDeviceInfoMessage.protocolHeadType = bytes[2]
+            wifiWithDeviceInfoMessage.iop = wifiWithDeviceInfoMessage.isIopIgnition ? 0x4000 : 0x0000
+            wifiWithDeviceInfoMessage.batteryCharge =batteryCharge
+            wifiWithDeviceInfoMessage.isLockSim =isLockSim
+            wifiWithDeviceInfoMessage.isLockDevice = isLockDevice
+            wifiWithDeviceInfoMessage.AGPSEphemerisDataDownloadSettingStatus =AGPSEphemerisDataDownloadSettingStatus
+            wifiWithDeviceInfoMessage.gSensorSettingStatus =gSensorSettingStatus
+            wifiWithDeviceInfoMessage.frontSensorSettingStatus =frontSensorSettingStatus
+            wifiWithDeviceInfoMessage.deviceRemoveAlarmSettingStatus =deviceRemoveAlarmSettingStatus
+            wifiWithDeviceInfoMessage.openCaseAlarmSettingStatus =openCaseAlarmSettingStatus
+            wifiWithDeviceInfoMessage.deviceInternalTempReadingANdUploadingSettingStatus =deviceInternalTempReadingANdUploadingSettingStatus
+             wifiWithDeviceInfoMessage.deviceTemp =deviceTemp
+            wifiWithDeviceInfoMessage.lightSensor =lightSensor
+            wifiWithDeviceInfoMessage.batteryVoltage =batteryVoltage
+            wifiWithDeviceInfoMessage.solarVoltage =solarVoltage
+            wifiWithDeviceInfoMessage.smartPowerSettingStatus =smartPowerSettingStatus
+            wifiWithDeviceInfoMessage.smartPowerOpenStatus =smartPowerOpenStatus
+            return wifiWithDeviceInfoMessage;
+        }else{
+            var locationMessage = {
+                serialNo:serialNo,
+                imei:imei,
+                srcBytes:bytes,
+                messageType:"location",
+            }
+            locationMessage.protocolHeadType = bytes[2]
+            locationMessage.isAlarmData = originalAlarmCode != 0
+            locationMessage.networkSignal = network
+            locationMessage.isSolarCharging = isSolarCharging
+            locationMessage.isUsbCharging = isUsbCharging
+            locationMessage.samplingIntervalAccOn = accOnInterval
+            locationMessage.samplingIntervalAccOff = accOffInterval
+            locationMessage.angleCompensation =angleCompensation
+            locationMessage.distanceCompensation =distanceCompensation
+            locationMessage.isGpsWorking =isGpsWorking
+            locationMessage.isHistoryData =isHisData
+            locationMessage.satelliteCount = satelliteCount
+            locationMessage.hdop = hdop
+            locationMessage.heartbeatInterval =heartbeatInterval
+            locationMessage.originalAlarmCode =originalAlarmCode
+            locationMessage.mileage =mileage
+            locationMessage.iopIgnition =iopIgnition
+            locationMessage.iop = locationMessage.isIopIgnition ? 0x4000 : 0x0000
+            locationMessage.batteryCharge =batteryCharge
+            locationMessage.date =date
+            locationMessage.latlngValid =latlngValid
+            locationMessage.altitude =altitude
+            locationMessage.latitude =latitude
+            locationMessage.longitude =longitude
+            locationMessage.isLockSim =isLockSim
+            locationMessage.isLockDevice =isLockDevice
+            locationMessage.AGPSEphemerisDataDownloadSettingStatus =AGPSEphemerisDataDownloadSettingStatus
+            locationMessage.gSensorSettingStatus =gSensorSettingStatus
+            locationMessage.frontSensorSettingStatus =frontSensorSettingStatus
+            locationMessage.deviceRemoveAlarmSettingStatus =deviceRemoveAlarmSettingStatus
+            locationMessage.openCaseAlarmSettingStatus =openCaseAlarmSettingStatus
+            locationMessage.deviceInternalTempReadingANdUploadingSettingStatus =deviceInternalTempReadingANdUploadingSettingStatus
+            if(locationMessage.latlngValid) {
+                locationMessage.speed = speedf
+            } else {
+                locationMessage.speed = 0
+            }
+            locationMessage.azimuth =azimuth
+            locationMessage.axisX =axisX
+            locationMessage.axisY =axisY
+            locationMessage.axisZ =axisZ
+            locationMessage.deviceTemp =deviceTemp
+            locationMessage.lightSensor =lightSensor
+            locationMessage.batteryVoltage =batteryVoltage
+            locationMessage.solarVoltage =solarVoltage
+            locationMessage.smartPowerSettingStatus =smartPowerSettingStatus
+            locationMessage.smartPowerOpenStatus =smartPowerOpenStatus
+            locationMessage.is_4g_lbs =is_4g_lbs
+            locationMessage.is_2g_lbs =is_2g_lbs
+            locationMessage.mcc_2g =mcc_2g
+            locationMessage.mnc_2g =mnc_2g
+            locationMessage.lac_2g_1 =lac_2g_1
+            locationMessage.ci_2g_1 =ci_2g_1
+            locationMessage.lac_2g_2 =lac_2g_2
+            locationMessage.ci_2g_2 =ci_2g_2
+            locationMessage.lac_2g_3 =lac_2g_3
+            locationMessage.ci_2g_3 =ci_2g_3
+            locationMessage.mcc_4g =mcc_4g
+            locationMessage.mnc_4g =mnc_4g
+            locationMessage.bci_4g =bci_4g
+            locationMessage.tac =tac
+            locationMessage.pcid_4g_1 =pcid_4g_1
+            locationMessage.pcid_4g_2 =pcid_4g_2
+            locationMessage.pcid_4g_3 =pcid_4g_3
+            locationMessage.lockType =lockType
+            return locationMessage;
+        }
+
     },
     parseWifiMessage:function(bytes){
         var serialNo = ByteUtils.byteToShort(bytes,5);

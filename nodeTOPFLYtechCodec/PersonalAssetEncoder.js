@@ -53,9 +53,15 @@ var PersonalAssetEncoder = {
         var command = [0x27, 0x27, 0x20]
         return EncoderHelper.getNormalMsgReply(imei,serialNo,command,[],encryptType,aesKey);
     },
-    getWifiWithDeviceInfoMsgReply:function (imei,serialNo,sourceAlarmCode,encryptType,aesKey){
-        var command = [0x27, 0x27, 0x24]
-        return EncoderHelper.getNormalMsgReply(imei,serialNo,command,[sourceAlarmCode],encryptType,aesKey);
+    getWifiWithDeviceInfoMsgReply:function (imei,serialNo,sourceAlarmCode,protocolHeadType,encryptType,aesKey){
+        var command = [0x27, 0x27, protocolHeadType]
+        var content;
+        if(sourceAlarmCode != 0){
+            content = [sourceAlarmCode]
+        }else{
+            content = []
+        }
+        return EncoderHelper.getNormalMsgReply(imei,serialNo,command,content,encryptType,aesKey);
     },
 }
 

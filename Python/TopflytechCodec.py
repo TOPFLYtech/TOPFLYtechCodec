@@ -479,6 +479,9 @@ class LocationMessage(Message):
     pcid_4g_1 = 0
     earfcn_4g_2 = 0
     pcid_4g_2 = 0
+    bci_4g = 0
+    tac = 0
+    pcid_4g_3 = 0
     is_2g_lbs = False
     mcc_2g = 0
     mnc_2g = 0
@@ -5867,6 +5870,7 @@ class PersonalAssetMsgDecoder:
     GEO_DATA = [0x27, 0x27, 0x20]
     BLUETOOTH_SECOND_DATA = [0x27, 0x27, 0x12]
     WIFI_WITH_DEVICE_INFO_DATA = [0x27, 0x27, 0x24]
+    WIFI_ALARM_WITH_DEVICE_INFO_DATA = [0x27, 0x27, 0x25]
     CONFIG = [0x27, 0x27, 0x81]
     encryptType = 0
     esKey = ""
@@ -5884,7 +5888,8 @@ class PersonalAssetMsgDecoder:
         return byteArray == self.SIGNUP or byteArray == self.DATA or byteArray == self.HEARTBEAT \
                or byteArray == self.ALARM or byteArray == self.NETWORK_INFO_DATA or byteArray == self.BLUETOOTH_DATA \
                or byteArray == self.CONFIG or byteArray == self.WIFI_DATA or byteArray == self.LOCK_DATA  \
-               or byteArray == self.GEO_DATA or byteArray == self.BLUETOOTH_SECOND_DATA or byteArray == self.WIFI_WITH_DEVICE_INFO_DATA
+               or byteArray == self.GEO_DATA or byteArray == self.BLUETOOTH_SECOND_DATA or byteArray == self.WIFI_WITH_DEVICE_INFO_DATA  \
+               or byteArray == self.WIFI_ALARM_WITH_DEVICE_INFO_DATA
 
 
     decoderBuf = TopflytechByteBuf()
@@ -5951,7 +5956,7 @@ class PersonalAssetMsgDecoder:
                 return self.parseSecondBluetoothDataMessage(byteArray)
             elif byteArray[2] == 0x20:
                 return self.parseInnerGeoMessage(byteArray)
-            elif byteArray[2] == 0x24:
+            elif byteArray[2] == 0x24 or byteArray[2] == 0x25:
                 return self.parseWifiWithDeviceInfoMessage(byteArray)
             else:
                 return None
@@ -7115,10 +7120,12 @@ class PersonalAssetMsgDecoder:
         return heartbeatMessage
 
     def parseWifiWithDeviceInfoMessage(self,byteArray):
-        wifiWithDeviceInfoMessage = WifiWithDeviceInfoMessage();
+        isWifiMsg = (byteArray[15] & 0x20) == 0x20
+
         serialNo = bytes2Short(byteArray,5)
         imei = decodeImei(byteArray,7)
         isHisData = (byteArray[15] & 0x80) == 0x80
+        isGpsWorking = (byteArray[15] & 0x8) == 0x8
         dateStr = "20" + byte2HexString(byteArray[17:23],0)
         gtm0 = GTM0(dateStr)
         selfMacByte = byteArray[23:29]
@@ -7153,6 +7160,63 @@ class PersonalAssetMsgDecoder:
             ap3RSSI = -999
         else:
             ap3RSSI = rssiTemp - 256
+
+        latlngValid = (byteArray[15] & 0x40) == 0x40
+        altitude = 0
+        latitude = 0
+        longitude = 0
+        speed = 0
+        azimuth = 0
+        satelliteCount = 0
+        hdop = 0
+        is_4g_lbs = False
+        mcc_4g = 0
+        mnc_4g = 0
+        bci_4g = 0
+        tac = 0
+        pcid_4g_1 = 0
+        pcid_4g_2 = 0
+        pcid_4g_3 = 0
+        is_2g_lbs = False
+        mcc_2g = 0
+        mnc_2g = 0
+        lac_2g_1 = 0
+        ci_2g_1 = 0
+        lac_2g_2 = 0
+        ci_2g_2 = 0
+        lac_2g_3 = 0
+        ci_2g_3 = 0
+        if latlngValid:
+            altitude = bytes2Float(byteArray, 23)
+            latitude = bytes2Float(byteArray, 31)
+            longitude = bytes2Float(byteArray, 27)
+            azimuth = bytes2Short(byteArray, 37)
+            speedStr = byte2HexString(byteArray[35:37], 0)
+            speed = (float)("{0}.{1}".format(speedStr[0:3], speedStr[3:]))
+            satelliteCount = byteArray[39]
+            hdop = bytes2Short(byteArray, 40)
+        else:
+            if (byteArray[23] & 0x80) == 0x80:
+                is_4g_lbs = True
+            else:
+                is_2g_lbs = True
+        if is_2g_lbs:
+            mcc_2g = bytes2Short(byteArray, 23)
+            mnc_2g = bytes2Short(byteArray, 25)
+            lac_2g_1 = bytes2Short(byteArray, 27)
+            ci_2g_1 = bytes2Short(byteArray, 29)
+            lac_2g_2 = bytes2Short(byteArray, 31)
+            ci_2g_2 = bytes2Short(byteArray, 33)
+            lac_2g_3 = bytes2Short(byteArray, 35)
+            ci_2g_3 = bytes2Short(byteArray, 37)
+        if is_4g_lbs:
+            mcc_4g = bytes2Short(byteArray, 23) & 0x7FFF
+            mnc_4g = bytes2Short(byteArray, 25)
+            bci_4g = bytes2Integer(byteArray, 27)
+            tac = bytes2Short(byteArray, 31)
+            pcid_4g_1 = bytes2Short(byteArray, 33)
+            pcid_4g_2 = bytes2Short(byteArray, 35)
+            pcid_4g_3 = bytes2Short(byteArray, 37)
 
         axisXDirect = -1
         if (byteArray[50] & 0x80) == 0x80:
@@ -7238,52 +7302,121 @@ class PersonalAssetMsgDecoder:
         lockType = 0xff
         if len(byteArray) >= 82:
             lockType = byteArray[81]
-        wifiWithDeviceInfoMessage.serialNo = serialNo
-        wifiWithDeviceInfoMessage.imei= imei
-        wifiWithDeviceInfoMessage.orignBytes = bytes
-        wifiWithDeviceInfoMessage.date = gtm0
-        wifiWithDeviceInfoMessage.selfMac = selfMac
-        wifiWithDeviceInfoMessage.ap1Mac = ap1Mac
-        wifiWithDeviceInfoMessage.ap1RSSI = ap1RSSI
-        wifiWithDeviceInfoMessage.ap2Mac = ap2Mac
-        wifiWithDeviceInfoMessage.ap2RSSI = ap2RSSI
-        wifiWithDeviceInfoMessage.ap3Mac = ap3Mac
-        wifiWithDeviceInfoMessage.ap3RSSI = ap3RSSI
-        wifiWithDeviceInfoMessage.isHisData = isHisData
-        wifiWithDeviceInfoMessage.originalAlarmCode = originalAlarmCode
-        wifiWithDeviceInfoMessage.axisX = axisX
-        wifiWithDeviceInfoMessage.axisY = axisY
-        wifiWithDeviceInfoMessage.axisZ = axisZ
-        wifiWithDeviceInfoMessage.mileage = mileage
-        wifiWithDeviceInfoMessage.networkSignal = network
-        wifiWithDeviceInfoMessage.accOnInterval = accOnInterval
-        wifiWithDeviceInfoMessage.accOffInterval = accOffInterval
-        wifiWithDeviceInfoMessage.angleCompensation = angleCompensation
-        wifiWithDeviceInfoMessage.distanceCompensation = distanceCompensation
-        wifiWithDeviceInfoMessage.heartbeatInterval = heartbeatInterval
-        wifiWithDeviceInfoMessage.isUsbCharging = isUsbCharging
-        wifiWithDeviceInfoMessage.isSolarCharging = isSolarCharging
-        wifiWithDeviceInfoMessage.iopIgnition = iopIgnition
-        if iopIgnition:
-            wifiWithDeviceInfoMessage.iop = 0x4000
+        if isWifiMsg:
+            wifiWithDeviceInfoMessage = WifiWithDeviceInfoMessage()
+            wifiWithDeviceInfoMessage.protocolHeadType = byteArray[2]
+            wifiWithDeviceInfoMessage.serialNo = serialNo
+            wifiWithDeviceInfoMessage.imei= imei
+            wifiWithDeviceInfoMessage.orignBytes = byteArray
+            wifiWithDeviceInfoMessage.date = gtm0
+            wifiWithDeviceInfoMessage.selfMac = selfMac
+            wifiWithDeviceInfoMessage.ap1Mac = ap1Mac
+            wifiWithDeviceInfoMessage.ap1RSSI = ap1RSSI
+            wifiWithDeviceInfoMessage.ap2Mac = ap2Mac
+            wifiWithDeviceInfoMessage.ap2RSSI = ap2RSSI
+            wifiWithDeviceInfoMessage.ap3Mac = ap3Mac
+            wifiWithDeviceInfoMessage.ap3RSSI = ap3RSSI
+            wifiWithDeviceInfoMessage.isHisData = isHisData
+            wifiWithDeviceInfoMessage.originalAlarmCode = originalAlarmCode
+            wifiWithDeviceInfoMessage.axisX = axisX
+            wifiWithDeviceInfoMessage.axisY = axisY
+            wifiWithDeviceInfoMessage.axisZ = axisZ
+            wifiWithDeviceInfoMessage.mileage = mileage
+            wifiWithDeviceInfoMessage.networkSignal = network
+            wifiWithDeviceInfoMessage.accOnInterval = accOnInterval
+            wifiWithDeviceInfoMessage.accOffInterval = accOffInterval
+            wifiWithDeviceInfoMessage.angleCompensation = angleCompensation
+            wifiWithDeviceInfoMessage.distanceCompensation = distanceCompensation
+            wifiWithDeviceInfoMessage.heartbeatInterval = heartbeatInterval
+            wifiWithDeviceInfoMessage.isUsbCharging = isUsbCharging
+            wifiWithDeviceInfoMessage.isSolarCharging = isSolarCharging
+            wifiWithDeviceInfoMessage.iopIgnition = iopIgnition
+            if iopIgnition:
+                wifiWithDeviceInfoMessage.iop = 0x4000
+            else:
+                wifiWithDeviceInfoMessage.iop = 0x0000
+            wifiWithDeviceInfoMessage.batteryCharge = batteryPercent
+            wifiWithDeviceInfoMessage.isLockSim = isLockSim
+            wifiWithDeviceInfoMessage.isLockDevice = isLockDevice
+            wifiWithDeviceInfoMessage.AGPSEphemerisDataDownloadSettingStatus = AGPSEphemerisDataDownloadSettingStatus
+            wifiWithDeviceInfoMessage.gSensorSettingStatus = gSensorSettingStatus
+            wifiWithDeviceInfoMessage.frontSensorSettingStatus = frontSensorSettingStatus
+            wifiWithDeviceInfoMessage.deviceRemoveAlarmSettingStatus = deviceRemoveAlarmSettingStatus
+            wifiWithDeviceInfoMessage.openCaseAlarmSettingStatus = openCaseAlarmSettingStatus
+            wifiWithDeviceInfoMessage.deviceInternalTempReadingANdUploadingSettingStatus = deviceInternalTempReadingANdUploadingSettingStatus
+            wifiWithDeviceInfoMessage.deviceTemp = deviceTemp
+            wifiWithDeviceInfoMessage.lightSensor = lightSensor
+            wifiWithDeviceInfoMessage.batteryVoltage = batteryVoltage
+            wifiWithDeviceInfoMessage.solarVoltage = solarVoltage
+            wifiWithDeviceInfoMessage.smartPowerSettingStatus = smartPowerSettingStatus
+            wifiWithDeviceInfoMessage.smartPowerOpenStatus = smartPowerOpenStatus
+            return wifiWithDeviceInfoMessage
         else:
-            wifiWithDeviceInfoMessage.iop = 0x0000
-        wifiWithDeviceInfoMessage.batteryCharge = batteryPercent
-        wifiWithDeviceInfoMessage.isLockSim = isLockSim
-        wifiWithDeviceInfoMessage.isLockDevice = isLockDevice
-        wifiWithDeviceInfoMessage.AGPSEphemerisDataDownloadSettingStatus = AGPSEphemerisDataDownloadSettingStatus
-        wifiWithDeviceInfoMessage.gSensorSettingStatus = gSensorSettingStatus
-        wifiWithDeviceInfoMessage.frontSensorSettingStatus = frontSensorSettingStatus
-        wifiWithDeviceInfoMessage.deviceRemoveAlarmSettingStatus = deviceRemoveAlarmSettingStatus
-        wifiWithDeviceInfoMessage.openCaseAlarmSettingStatus = openCaseAlarmSettingStatus
-        wifiWithDeviceInfoMessage.deviceInternalTempReadingANdUploadingSettingStatus = deviceInternalTempReadingANdUploadingSettingStatus
-        wifiWithDeviceInfoMessage.deviceTemp = deviceTemp
-        wifiWithDeviceInfoMessage.lightSensor = lightSensor
-        wifiWithDeviceInfoMessage.batteryVoltage = batteryVoltage
-        wifiWithDeviceInfoMessage.solarVoltage = solarVoltage
-        wifiWithDeviceInfoMessage.smartPowerSettingStatus = smartPowerSettingStatus
-        wifiWithDeviceInfoMessage.smartPowerOpenStatus = smartPowerOpenStatus
-        return wifiWithDeviceInfoMessage
+            locationMessage = LocationInfoMessage()
+            if originalAlarmCode != 0:
+                locationMessage = LocationAlarmMessage()
+            locationMessage.orignBytes = byteArray
+            locationMessage.serialNo = serialNo
+            locationMessage.imei = imei
+            locationMessage.protocolHeadType = byteArray[2]
+            locationMessage.networkSignal = network
+            locationMessage.isSolarCharging = isSolarCharging
+            locationMessage.isUsbCharging = isUsbCharging
+            locationMessage.samplingIntervalAccOn = accOnInterval
+            locationMessage.samplingIntervalAccOff = accOffInterval
+            locationMessage.angleCompensation = angleCompensation
+            locationMessage.distanceCompensation = distanceCompensation
+            locationMessage.gpsWorking = isGpsWorking
+            locationMessage.isHistoryData = isHisData
+            locationMessage.satelliteNumber = satelliteCount
+            locationMessage.hdop = hdop
+            locationMessage.heartbeatInterval = heartbeatInterval
+            locationMessage.originalAlarmCode = originalAlarmCode
+            locationMessage.mileage = mileage
+            locationMessage.batteryPercent = batteryPercent
+            locationMessage.date = gtm0
+            locationMessage.latlngValid = latlngValid
+            locationMessage.is_4g_lbs = is_4g_lbs
+            locationMessage.is_2g_lbs = is_2g_lbs
+            locationMessage.mcc_4g = mcc_4g
+            locationMessage.mnc_4g = mnc_4g
+            locationMessage.bci_4g = bci_4g
+            locationMessage.tac = tac
+            locationMessage.pcid_4g_1 = pcid_4g_1
+            locationMessage.pcid_4g_2 = pcid_4g_2
+            locationMessage.pcid_4g_3 = pcid_4g_3
+            locationMessage.mcc_2g = mcc_2g
+            locationMessage.mnc_2g = mnc_2g
+            locationMessage.lac_2g_1 = lac_2g_1
+            locationMessage.ci_2g_1 = ci_2g_1
+            locationMessage.lac_2g_2 = lac_2g_2
+            locationMessage.ci_2g_2 = ci_2g_2
+            locationMessage.lac_2g_3 = lac_2g_3
+            locationMessage.ci_2g_3 = ci_2g_3
+            locationMessage.altitude = altitude
+            locationMessage.latitude = latitude
+            locationMessage.longitude = longitude
+            locationMessage.speed = speed
+            locationMessage.azimuth = azimuth
+            locationMessage.axisX = axisX
+            locationMessage.axisY = axisY
+            locationMessage.axisZ = axisZ
+            locationMessage.deviceTemp = deviceTemp
+            locationMessage.lightSensor = lightSensor
+            locationMessage.batteryVoltage = batteryVoltage
+            locationMessage.solarVoltage = solarVoltage
+            locationMessage.smartPowerOpenStatus = smartPowerOpenStatus
+            locationMessage.smartPowerSettingStatus = smartPowerSettingStatus
+            locationMessage.isLockSim = isLockSim
+            locationMessage.isLockDevice = isLockDevice
+            locationMessage.AGPSEphemerisDataDownloadSettingStatus = AGPSEphemerisDataDownloadSettingStatus
+            locationMessage.gSensorSettingStatus = gSensorSettingStatus
+            locationMessage.frontSensorSettingStatus = frontSensorSettingStatus
+            locationMessage.deviceRemoveAlarmSettingStatus = deviceRemoveAlarmSettingStatus
+            locationMessage.openCaseAlarmSettingStatus = openCaseAlarmSettingStatus
+            locationMessage.deviceInternalTempReadingANdUploadingSettingStatus = deviceInternalTempReadingANdUploadingSettingStatus
+            locationMessage.lockType = lockType
+            return locationMessage
 
     def parseWifiMessage(self,bytes):
         wifiMessage = WifiMessage();
@@ -7567,6 +7700,7 @@ class PersonalAssetMsgDecoder:
             locationMessage = LocationAlarmMessage()
         locationMessage.orignBytes = byteArray
         locationMessage.serialNo = serialNo
+        locationMessage.protocolHeadType = byteArray[2]
         # locationMessage.isNeedResp = isNeedResp
         locationMessage.imei = imei
         locationMessage.networkSignal = network
@@ -7666,7 +7800,7 @@ class PersonalAssetMsgEncoder:
         return Encoder.getCommonMsgReply(imei,needSerialNo,serialNo,command,self.encryptType,self.aesKey)
 
 
-    def getLocationMsgReply(self,imei,needSerialNo,serialNo):
+    def getLocationMsgReply(self,imei,needSerialNo,serialNo,protocolHeadType):
         """
         Get location message reply
         :param imei:The imei,the type is string
@@ -7674,11 +7808,11 @@ class PersonalAssetMsgEncoder:
         :param serialNo:The serial No.The type is int.
         :return:The message reply.The type is bytearray
         """
-        command = [0x27,0x27,0x02]
+        command = [0x27,0x27,protocolHeadType]
         return Encoder.getCommonMsgReply(imei,needSerialNo,serialNo,command,self.encryptType,self.aesKey)
 
 
-    def getLocationAlarmMsgReply(self,imei,needSerialNo,serialNo,sourceAlarmCode):
+    def getLocationAlarmMsgReply(self,imei,needSerialNo,serialNo,sourceAlarmCode,protocolHeadType):
         """
         Get location alarm message reply
         :param imei:The imei,the type is string
@@ -7687,7 +7821,7 @@ class PersonalAssetMsgEncoder:
         :param sourceAlarmCode: the source alarm code from the source message.The type is int.
         :return:The message reply.The type is bytearray
         """
-        command = [0x27,0x27,0x04]
+        command = [0x27,0x27,protocolHeadType]
         return Encoder.getLocationAlarmMsgReply(imei,needSerialNo,serialNo,sourceAlarmCode,command,self.encryptType,self.aesKey)
 
     def getLockMsgReply(self,imei,needSerialNo,serialNo):
@@ -7715,9 +7849,12 @@ class PersonalAssetMsgEncoder:
     def getInnerGeoDataMsgReply(self,imei,serialNo,protocolHeadType):
         command = [0x27, 0x27, 0x20]
         return Encoder.getCommonMsgReply(imei,  True,serialNo, command, self.encryptType, self.aesKey)
-    def getWifiWithDeviceInfoMsgReply(self,imei,serialNo,sourceAlarmCode):
-        command = [0x27, 0x27, 0x24]
-        return Encoder.getNormalMsgReply(imei,serialNo,command,[sourceAlarmCode],self.encryptType,self.aesKey)
+    def getWifiWithDeviceInfoMsgReply(self,imei,serialNo,sourceAlarmCode,protocolHeadType):
+        command = [0x27, 0x27, protocolHeadType]
+        content = []
+        if sourceAlarmCode != 0:
+            content = [sourceAlarmCode]
+        return Encoder.getNormalMsgReply(imei,serialNo,command,content,self.encryptType,self.aesKey)
 
     def getBrocastSettingMsg(self,imei,content):
         """

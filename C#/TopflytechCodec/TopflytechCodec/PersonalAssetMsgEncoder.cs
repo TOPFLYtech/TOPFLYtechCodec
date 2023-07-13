@@ -37,15 +37,15 @@ namespace TopflytechCodec
             return Encoder.getWifiMsgReply(imei, true, serialNo, command, encryptType, aesKey);
         }
 
-        public byte[] getLocationMsgReply(String imei, bool needSerialNo, int serialNo)
+        public byte[] getLocationMsgReply(String imei, bool needSerialNo, int serialNo, int protocolHeadType)
         {
-            byte[] command = { 0x27, 0x27, 0x02 };
+            byte[] command = { 0x27, 0x27, (byte)protocolHeadType };
             return Encoder.getLocationMsgReply(imei, needSerialNo, serialNo, command, encryptType, aesKey);
         }
 
-        public byte[] getLocationAlarmMsgReply(String imei, bool needSerialNo, int serialNo, int sourceAlarmCode)
+        public byte[] getLocationAlarmMsgReply(String imei, bool needSerialNo, int serialNo, int sourceAlarmCode, int protocolHeadType)
         {
-            byte[] command = { 0x27, 0x27, 0x04 };
+            byte[] command = { 0x27, 0x27, (byte)protocolHeadType };
             return Encoder.getLocationAlarmMsgReply(imei, needSerialNo, serialNo, sourceAlarmCode, command, encryptType, aesKey);
         }
         public byte[] getBluetoothPeripheralMsgReply(String imei, int serialNo, int protocolHeadType)
@@ -84,10 +84,19 @@ namespace TopflytechCodec
             return Encoder.getNormalMsgReply(imei, serialNo, command, new byte[] {},encryptType, aesKey);
         }
 
-        public byte[] getWifiWithDeviceInfoReply(String imei, int serialNo, int alarmCode)
+        public byte[] getWifiWithDeviceInfoReply(String imei, int serialNo, int alarmCode,int protocolHeadType)
         {
-            byte[] command = { 0x27, 0x27, (byte)0x24 };
-            return Encoder.getNormalMsgReply(imei, serialNo, command,new byte[]{(byte) alarmCode} ,encryptType, aesKey);
+            byte[] command = { 0x27, 0x27, (byte)protocolHeadType };
+            byte[] content;
+            if (alarmCode != 0)
+            {
+                content = new byte[] { (byte)alarmCode };
+            }
+            else
+            {
+                content = new byte[] { };
+            }
+            return Encoder.getNormalMsgReply(imei, serialNo, command, content, encryptType, aesKey);
         }
     }
 }

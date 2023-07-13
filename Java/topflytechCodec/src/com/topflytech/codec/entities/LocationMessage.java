@@ -1130,7 +1130,9 @@ public class LocationMessage extends Message{
     private Integer pcid_4g_1;
     private Integer earfcn_4g_2;
     private Integer pcid_4g_2;
-
+    private Long bci_4g;
+    private Integer tac;
+    private Integer pcid_4g_3;
 
 
     private Boolean is_2g_lbs = false;
@@ -1174,7 +1176,29 @@ public class LocationMessage extends Message{
     private Integer hdop;
     private Integer fmsSpeed;// km/h
     private Long fmsAccumulatingFuelConsumption;
+    public Long getBci_4g() {
+        return bci_4g;
+    }
 
+    public void setBci_4g(Long bci_4g) {
+        this.bci_4g = bci_4g;
+    }
+
+    public Integer getTac() {
+        return tac;
+    }
+
+    public void setTac(Integer tac) {
+        this.tac = tac;
+    }
+
+    public Integer getPcid_4g_3() {
+        return pcid_4g_3;
+    }
+
+    public void setPcid_4g_3(Integer pcid_4g_3) {
+        this.pcid_4g_3 = pcid_4g_3;
+    }
     public Long getFmsAccumulatingFuelConsumption() {
         return fmsAccumulatingFuelConsumption;
     }
