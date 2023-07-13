@@ -1,5 +1,5 @@
 package com.topflytech.codec;
-
+ 
 import com.topflytech.codec.entities.MessageEncryptType;
 
 import javax.crypto.Cipher;

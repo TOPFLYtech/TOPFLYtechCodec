@@ -1,5 +1,5 @@
 package com.topflytech.codec.entities;
-
+ 
 import java.util.ArrayList;
 
 public class InnerGeofence {

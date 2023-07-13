@@ -1,5 +1,5 @@
 package com.topflytech.codec.entities;
-
+ 
 public class MessageEncryptType {
 
     public static final int NONE = 0;

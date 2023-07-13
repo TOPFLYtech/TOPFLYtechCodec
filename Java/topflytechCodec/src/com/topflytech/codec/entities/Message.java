@@ -1,5 +1,5 @@
 package com.topflytech.codec.entities;
-
+ 
 
 /**
  * Message is the base class for all decoded messages

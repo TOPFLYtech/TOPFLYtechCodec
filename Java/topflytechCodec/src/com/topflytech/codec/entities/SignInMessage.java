@@ -1,5 +1,5 @@
 package com.topflytech.codec.entities;
-
+ 
 
 /**
  * The type Sign in message.Protocol number is 25 25 01.

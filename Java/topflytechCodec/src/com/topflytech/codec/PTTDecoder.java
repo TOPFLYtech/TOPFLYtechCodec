@@ -1,5 +1,5 @@
 package com.topflytech.codec;
-
+ 
 import com.topflytech.codec.entities.*;
 import com.topflytech.codec.entities.PTT.TalkEndMessage;
 import com.topflytech.codec.entities.PTT.TalkStartMessage;

@@ -1,5 +1,5 @@
 package com.topflytech.codec.entities;
-
+  
 /**
  * .Driver Behavior Via Acceleration (AST Command Control, Default Disable the feature).Protocol number is 25 25 06.
  */

@@ -1,5 +1,5 @@
 package com.topflytech.codec.entities;
-
+ 
 
 /**
  * The type Config message.When the server sends a configuration command to the device,

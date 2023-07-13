@@ -1,5 +1,5 @@
 package com.topflytech.codec.entities;
-
+ 
 import java.util.Date;
 
 public class RS485Message extends Message{

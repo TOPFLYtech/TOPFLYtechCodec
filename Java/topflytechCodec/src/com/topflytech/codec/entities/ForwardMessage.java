@@ -1,5 +1,5 @@
 package com.topflytech.codec.entities;
-
+ 
 
 /**
  * The type Forward message.New devices like 8806+ support this message.Old device like 8806,8803Pro does not support this message.

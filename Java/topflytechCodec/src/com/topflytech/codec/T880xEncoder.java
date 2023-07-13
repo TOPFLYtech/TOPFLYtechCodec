@@ -2,7 +2,7 @@ package com.topflytech.codec;
 import com.topflytech.codec.entities.MessageEncryptType;
 
 import java.io.IOException;
-
+ 
 /**
  * Old Device Encoder like 8806,8803PRO
  */
