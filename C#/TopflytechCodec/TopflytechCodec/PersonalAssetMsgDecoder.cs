@@ -1922,7 +1922,7 @@ namespace TopflytechCodec
             Boolean is_4g_lbs = false;
             Int32 mcc_4g = -1;
             Int32 mnc_4g = -1; 
-            Int64 bci_4g = -1;
+            Int64 ci_4g = -1;
             Int32 tac = -1; 
             Int32 pcid_4g_1 = -1; 
             Int32 pcid_4g_2 = -1;
@@ -1963,7 +1963,7 @@ namespace TopflytechCodec
             {
                 mcc_4g = BytesUtils.Bytes2Short(bytes, 23) & 0x7FFF;
                 mnc_4g = BytesUtils.Bytes2Short(bytes, 25);
-                bci_4g = BytesUtils.Byte2Int(bytes, 27);
+                ci_4g = BytesUtils.Byte2Int(bytes, 27);
                 tac = BytesUtils.Bytes2Short(bytes, 31);
                 pcid_4g_1 = BytesUtils.Bytes2Short(bytes, 33);
                 pcid_4g_2 = BytesUtils.Bytes2Short(bytes, 35);
@@ -2226,7 +2226,7 @@ namespace TopflytechCodec
                 locationMessage.Is_4g_lbs = is_4g_lbs;
                 locationMessage.Mcc_4g = mcc_4g;
                 locationMessage.Mnc_4g = mnc_4g;
-                locationMessage.Bci_4g = bci_4g;
+                locationMessage.Ci_4g = ci_4g;
                 locationMessage.Tac = tac;
                 locationMessage.Pcid_4g_1 = pcid_4g_1; 
                 locationMessage.Pcid_4g_2 = pcid_4g_2;

@@ -1,5 +1,5 @@
 package com.topflytech.codec;
- 
+
 import com.topflytech.codec.entities.*;
 
 import java.nio.charset.Charset;
@@ -256,7 +256,7 @@ public class PersonalAssetMsgDecoder {
         Boolean is_4g_lbs = false;
         Integer mcc_4g = null;
         Integer mnc_4g = null;
-        Long bci_4g = null;
+        Long ci_4g = null;
         Integer tac = null;
         Integer pcid_4g_1 = null;
         Integer pcid_4g_2 = null;
@@ -291,7 +291,7 @@ public class PersonalAssetMsgDecoder {
         if (is_4g_lbs){
             mcc_4g = BytesUtils.bytes2Short(bytes,23) & 0x7FFF;
             mnc_4g = BytesUtils.bytes2Short(bytes,25);
-            bci_4g = BytesUtils.unsigned4BytesToInt(bytes, 27);
+            ci_4g = BytesUtils.unsigned4BytesToInt(bytes, 27);
             tac = BytesUtils.bytes2Short(bytes, 31);
             pcid_4g_1 = BytesUtils.bytes2Short(bytes, 33);
             pcid_4g_2 = BytesUtils.bytes2Short(bytes, 35);
@@ -533,7 +533,8 @@ public class PersonalAssetMsgDecoder {
             locationMessage.setCi_2g_3(ci_2g_3);
             locationMessage.setMcc_4g(mcc_4g);
             locationMessage.setMnc_4g(mnc_4g);
-            locationMessage.setBci_4g(bci_4g);
+            locationMessage.setTac(tac);
+            locationMessage.setCi_4g(ci_4g);
             locationMessage.setPcid_4g_1(pcid_4g_1);
             locationMessage.setPcid_4g_2(pcid_4g_2);
             locationMessage.setPcid_4g_3(pcid_4g_3);

@@ -607,12 +607,7 @@ namespace TopflytechCodec.Entities
             set { pcid_4g_2 = value; }
         }
 
-        private Int64 bci_4g;
-        public Int64 Bci_4g
-        {
-            get { return bci_4g; }
-            set { bci_4g = value; }
-        }
+        
 
         private Int32 tac;
         public Int32 Tac

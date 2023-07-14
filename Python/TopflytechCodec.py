@@ -7172,7 +7172,7 @@ class PersonalAssetMsgDecoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        bci_4g = 0
+        ci_4g = 0
         tac = 0
         pcid_4g_1 = 0
         pcid_4g_2 = 0
@@ -7212,7 +7212,7 @@ class PersonalAssetMsgDecoder:
         if is_4g_lbs:
             mcc_4g = bytes2Short(byteArray, 23) & 0x7FFF
             mnc_4g = bytes2Short(byteArray, 25)
-            bci_4g = bytes2Integer(byteArray, 27)
+            ci_4g = bytes2Integer(byteArray, 27)
             tac = bytes2Short(byteArray, 31)
             pcid_4g_1 = bytes2Short(byteArray, 33)
             pcid_4g_2 = bytes2Short(byteArray, 35)
@@ -7380,7 +7380,7 @@ class PersonalAssetMsgDecoder:
             locationMessage.is_2g_lbs = is_2g_lbs
             locationMessage.mcc_4g = mcc_4g
             locationMessage.mnc_4g = mnc_4g
-            locationMessage.bci_4g = bci_4g
+            locationMessage.ci_4g = ci_4g
             locationMessage.tac = tac
             locationMessage.pcid_4g_1 = pcid_4g_1
             locationMessage.pcid_4g_2 = pcid_4g_2

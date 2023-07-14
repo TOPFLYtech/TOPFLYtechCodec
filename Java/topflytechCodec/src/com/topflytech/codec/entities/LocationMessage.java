@@ -1,5 +1,5 @@
 package com.topflytech.codec.entities;
- 
+
 import java.util.Date;
 
 
@@ -1130,7 +1130,6 @@ public class LocationMessage extends Message{
     private Integer pcid_4g_1;
     private Integer earfcn_4g_2;
     private Integer pcid_4g_2;
-    private Long bci_4g;
     private Integer tac;
     private Integer pcid_4g_3;
 
@@ -1176,13 +1175,7 @@ public class LocationMessage extends Message{
     private Integer hdop;
     private Integer fmsSpeed;// km/h
     private Long fmsAccumulatingFuelConsumption;
-    public Long getBci_4g() {
-        return bci_4g;
-    }
 
-    public void setBci_4g(Long bci_4g) {
-        this.bci_4g = bci_4g;
-    }
 
     public Integer getTac() {
         return tac;
