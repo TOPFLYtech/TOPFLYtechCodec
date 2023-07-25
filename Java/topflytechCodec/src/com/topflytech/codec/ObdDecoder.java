@@ -1,5 +1,5 @@
 package com.topflytech.codec;
- 
+
 import com.topflytech.codec.entities.*;
 
 import java.math.BigInteger;
@@ -1581,10 +1581,10 @@ public class ObdDecoder {
             if(length > 0){
                 try{
                     byte[] data = Arrays.copyOfRange(obdBytes,4,4+length);
-                    if((data[0] & 0x41) == 0x41 && data[1] == 0x04 && data.length > 3){
+                    if(data[0] == 0x41 && data[1] == 0x04 && data.length > 3){
                         obdData.setMessageType(ObdMessage.CLEAR_ERROR_CODE_MESSAGE);
                         obdData.setClearErrorCodeSuccess(data[2] == 0x01);
-                    }else if((data[0] & 0x41) == 0x41 && data[1] == 0x05 && data.length > 2){
+                    }else if(data[0] == 0x41 && data[1] == 0x05 && data.length > 2){
                         byte[] vinData = Arrays.copyOfRange(data,2,data.length - 1);
                         boolean dataValid = false;
                         for(byte item : vinData){
@@ -1596,7 +1596,7 @@ public class ObdDecoder {
                             obdData.setMessageType(ObdMessage.VIN_MESSAGE);
                             obdData.setVin(new String(vinData));
                         }
-                    }else if((data[0] & 0x41) == 0x41 && (data[1] == 0x03 || data[1] == 0x0A)){
+                    }else if(data[0] == 0x41 && (data[1] == 0x03 || data[1] == 0x0A)){
                         int errorCode = data[2];
                         byte[] errorDataByte = Arrays.copyOfRange(data,3,data.length - 1);
                         String errorDataStr = BytesUtils.bytes2HexString(errorDataByte,0);

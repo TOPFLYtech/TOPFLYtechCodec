@@ -912,21 +912,7 @@ public class LocationMessage extends Message{
         this.input6 = input6;
     }
 
-    public Float getAnalogInput4() {
-        return analogInput4;
-    }
 
-    public void setAnalogInput4(Float analogInput4) {
-        this.analogInput4 = analogInput4;
-    }
-
-    public Float getAnalogInput5() {
-        return analogInput5;
-    }
-
-    public void setAnalogInput5(Float analogInput5) {
-        this.analogInput5 = analogInput5;
-    }
 
     public Boolean isSmartUploadSupport() {
         return isSmartUploadSupport;
@@ -1114,8 +1100,6 @@ public class LocationMessage extends Message{
 
     private int input5 = 0;
     private int input6 = 0;
-    private Float analogInput4 = 0f;
-    private Float analogInput5 = 0f;
 
     private Boolean output12V;
     private Boolean outputVout;
@@ -1176,6 +1160,15 @@ public class LocationMessage extends Message{
     private Integer fmsSpeed;// km/h
     private Long fmsAccumulatingFuelConsumption;
 
+    private Long lastMileageDiff = 0l;
+
+    public Long getLastMileageDiff() {
+        return lastMileageDiff;
+    }
+
+    public void setLastMileageDiff(Long lastMileageDiff) {
+        this.lastMileageDiff = lastMileageDiff;
+    }
 
     public Integer getTac() {
         return tac;

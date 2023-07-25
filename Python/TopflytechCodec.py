@@ -465,8 +465,7 @@ class LocationMessage(Message):
     input4 = False
     input5 = False
     input6 = False
-    analogInput4 = 0
-    analogInput5 = 0
+    lastMileageDiff = 0
     output1 = False
     isSmartUploadSupport = False
     supportChangeBattery = False
@@ -1169,10 +1168,10 @@ class Decoder:
             if length > 0:
                 try:
                     data = obdBytes[4:4+length]
-                    if (data[0] & 0x41) == 0x41 and data[1] == 0x04 and len(data) > 3:
+                    if data[0] == 0x41 and data[1] == 0x04 and len(data) > 3:
                         obdData.messageType = ObdMessage.CLEAR_ERROR_CODE_MESSAGE
                         obdData.clearErrorCodeSuccess = data[2] == 0x01
-                    elif (data[0] & 0x41) == 0x41 and data[1] == 0x05 and len(data) > 2:
+                    elif data[0] == 0x41 and data[1] == 0x05 and len(data) > 2:
                         vinData = data[2:len(data) - 1]
                         dataValid = False
                         for i in range(len(vinData)):
@@ -1182,7 +1181,7 @@ class Decoder:
                         if len(vinData) and dataValid:
                             obdData.messageType = ObdMessage.VIN_MESSAGE
                             obdData.vin = ''.join(chr(i) for i in vinData).encode().decode("UTF-8")
-                    elif (data[0] & 0x41) == 0x41 and (data[1] == 0x03 or data[1] == 0x0A):
+                    elif data[0] == 0x41 and (data[1] == 0x03 or data[1] == 0x0A):
                         errorCode = data[2]
                         errorDataByte = data[3:len(data) - 1]
                         errorDataStr = byte2HexString(errorDataByte,0);
@@ -2906,24 +2905,7 @@ class Decoder:
                 print ("alalog3 error")
         else:
             analoginput3 = -999
-        analoginput4 = 0
-        str = byte2HexString(data, 26)
-        if str.lower().startswith("ffff"):
-            try:
-                analoginput4 = (float)("{0}.{1}".format(str[0:2],str[2:4]))
-            except:
-                print ("alalog4 error")
-        else:
-            analoginput4 = -999
-        analoginput5 = 0
-        str = byte2HexString(data, 28)
-        if str.lower().startswith("ffff"):
-            try:
-                analoginput5 = (float)("{0}.{1}".format(str[0:2],str[2:4]))
-            except:
-                print ("alalog5 error")
-        else:
-            analoginput5 = -999
+        lastMileageDiff = bytes2Integer(data, 26)
         originalAlarmCode = (int) (data[30])
         isAlarmData = command[2] == 0x14
         isSendSmsAlarmToManagerPhone = (data[31] & 0x20) == 0x20
@@ -3015,8 +2997,7 @@ class Decoder:
             hdop = bytes2Short(data,69)
             locationMessage.hdop = hdop
             if isHadFmsData:
-                analoginput4 = -999
-                analoginput5 = -999
+                lastMileageDiff = -999
                 engineHours = bytes2Integer(data, 26)
                 if engineHours == 4294967295l:
                     engineHours = -999
@@ -3092,8 +3073,7 @@ class Decoder:
         locationMessage.input4 = input4
         locationMessage.input5 = input5
         locationMessage.input6 = input6
-        locationMessage.analogInput4 = analoginput4
-        locationMessage.analogInput5 = analoginput5
+        locationMessage.lastMileageDiff = lastMileageDiff
         locationMessage.output1 = output1
         locationMessage.isSmartUploadSupport = isSmartUploadSupport
         locationMessage.supportChangeBattery = supportChangeBattery
@@ -4117,10 +4097,10 @@ class ObdDecoder:
             if length > 0:
                 try:
                     data = obdBytes[4:4+length]
-                    if (data[0] & 0x41) == 0x41 and data[1] == 0x04 and len(data) > 3:
+                    if data[0] == 0x41 and data[1] == 0x04 and len(data) > 3:
                         obdData.messageType = ObdMessage.CLEAR_ERROR_CODE_MESSAGE
                         obdData.clearErrorCodeSuccess = data[2] == 0x01
-                    elif (data[0] & 0x41) == 0x41 and data[1] == 0x05 and len(data) > 2:
+                    elif data[0] == 0x41 and data[1] == 0x05 and len(data) > 2:
                         vinData = data[2:len(data) - 1]
                         dataValid = False
                         for i in range(len(vinData)):
@@ -4130,7 +4110,7 @@ class ObdDecoder:
                         if len(vinData) and dataValid:
                             obdData.messageType = ObdMessage.VIN_MESSAGE
                             obdData.vin = ''.join(chr(i) for i in vinData).encode().decode("UTF-8")
-                    elif (data[0] & 0x41) == 0x41 and (data[1] == 0x03 or data[1] == 0x0A):
+                    elif data[0] == 0x41 and (data[1] == 0x03 or data[1] == 0x0A):
                         errorCode = data[2]
                         errorDataByte = data[3:len(data) - 1]
                         errorDataStr = byte2HexString(errorDataByte,0);

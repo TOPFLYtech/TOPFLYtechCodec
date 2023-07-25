@@ -1746,12 +1746,12 @@ namespace TopflytechCodec
                     try
                     {
                         byte[] data = Utils.ArrayCopyOfRange(obdBytes, 4, 4 + length);
-                        if ((data[0] & 0x41) == 0x41 && data[1] == 0x04 && data.Length > 3)
+                        if (data[0] == 0x41 && data[1] == 0x04 && data.Length > 3)
                         {
                             obdData.MessageType = ObdMessage.CLEAR_ERROR_CODE_MESSAGE;
                             obdData.ClearErrorCodeSuccess = data[2] == 0x01;
                         }
-                        else if ((data[0] & 0x41) == 0x41 && data[1] == 0x05 && data.Length > 2)
+                        else if (data[0] == 0x41 && data[1] == 0x05 && data.Length > 2)
                         {
                             byte[] vinData = Utils.ArrayCopyOfRange(data, 2, data.Length - 1);
                             bool dataValid = false;
@@ -1768,7 +1768,7 @@ namespace TopflytechCodec
                                 obdData.Vin = System.Text.Encoding.UTF8.GetString(vinData);
                             }
                         }
-                        else if ((data[0] & 0x41) == 0x41 && (data[1] == 0x03 || data[1] == 0x0A))
+                        else if (data[0] == 0x41 && (data[1] == 0x03 || data[1] == 0x0A))
                         {
                             int errorCode = data[2];
                             byte[] errorDataByte = Utils.ArrayCopyOfRange(data, 3, data.Length - 1);

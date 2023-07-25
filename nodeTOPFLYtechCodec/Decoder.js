@@ -209,10 +209,10 @@ var Decoder = {
             if(length > 0){
                 try{
                     var data = ByteUtils.arrayOfRange(obdBytes,4,4+length);
-                    if((data[0] & 0x41) == 0x41 && data[1] == 0x04 && data.length > 3){
+                    if(data[0] == 0x41 && data[1] == 0x04 && data.length > 3){
                         obdData.obdMessageType = "clear_error_code"
                         obdData.clearErrorCodeSuccess = data[2] == 0x01
-                    }else if((data[0] & 0x41) == 0x41 && data[1] == 0x05 && data.length > 2){
+                    }else if(data[0] == 0x41 && data[1] == 0x05 && data.length > 2){
                         var vinData = ByteUtils.arrayOfRange(data,2,data.length - 1);
                         var dataValid = false;
                         for(var item in vinData){
@@ -224,7 +224,7 @@ var Decoder = {
                             obdData.obdMessageType = "vin"
                             obdData.vin = ByteUtils.bin2String(vinData);
                         }
-                    }else if((data[0] & 0x41) == 0x41 && (data[1] == 0x03 || data[1] == 0x0A)){
+                    }else if(data[0] == 0x41 && (data[1] == 0x03 || data[1] == 0x0A)){
                         var errorCode = data[2];
                         var errorDataByte = ByteUtils.arrayOfRange(data,3,data.length - 1);
                         var errorDataStr = ByteUtils.bytes2HexString(errorDataByte,0);
@@ -2293,29 +2293,7 @@ var Decoder = {
             analoginput3 = -999;
         }
 
-        str = ByteUtils.bytes2HexString(data, 26);
-        var analoginput4 = 0;
-        if (!str.toLowerCase().startsWith("ffff")){
-            try {
-                analoginput4  = parseFloat( str.substring(0, 2) + "." + str.substring(2, 4))
-            }catch (e){
-//            e.printStackTrace();
-            }
-        }else{
-            analoginput4 = -999;
-        }
-
-        str = ByteUtils.bytes2HexString(data, 28);
-        var analoginput5 = 0;
-        if (!str.toLowerCase().startsWith("ffff")){
-            try {
-                analoginput5  = parseFloat( str.substring(0, 2) + "." + str.substring(2, 4))
-            }catch (e){
-//            e.printStackTrace();
-            }
-        }else{
-            analoginput5 = -999;
-        }
+        var lastMileageDiff =  ByteUtils.byteToLong(data, 26);
 
         var alarmByte = data[30];
         var originalAlarmCode = alarmByte;
@@ -2424,8 +2402,7 @@ var Decoder = {
             var hdop = ByteUtils.byteToShort(data,69);
             message.hdop = hdop
             if(isHadFmsData){
-                analoginput4 = -999;
-                analoginput5 = -999;
+                lastMileageDiff = -999; 
                 var fmsEngineHours = ByteUtils.byteToLong(data,26);
                 if(fmsEngineHours == 4294967295){
                     fmsEngineHours = -999;
@@ -2524,8 +2501,7 @@ var Decoder = {
         message.batteryVoltage =batteryVoltage
         message.input5 =input5
         message.input6 =input6
-        message.analoginput4 =analoginput4
-        message.analoginput5 =analoginput5
+        message.lastMileageDiff =lastMileageDiff 
         message.isSmartUploadSupport =isSmartUploadSupport
         message.supportChangeBattery =supportChangeBattery
         message.is_4g_lbs =is_4g_lbs

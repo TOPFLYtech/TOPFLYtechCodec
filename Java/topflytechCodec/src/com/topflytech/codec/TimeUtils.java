@@ -1,5 +1,5 @@
 package com.topflytech.codec;
- 
+
 import com.google.common.primitives.Bytes;
 
 import java.text.SimpleDateFormat;

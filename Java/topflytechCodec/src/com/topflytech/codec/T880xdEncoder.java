@@ -1,6 +1,6 @@
 package com.topflytech.codec;
  
-import java.io.IOException; 
+import java.io.IOException;
 
 /**
  *  New Device Encoder like 8806+,8806+r

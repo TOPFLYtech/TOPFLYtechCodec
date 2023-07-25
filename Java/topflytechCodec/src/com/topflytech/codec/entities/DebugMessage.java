@@ -1,5 +1,5 @@
 package com.topflytech.codec.entities;
- 
+
 /**
  * Created by admin on 2018/10/11.
  */

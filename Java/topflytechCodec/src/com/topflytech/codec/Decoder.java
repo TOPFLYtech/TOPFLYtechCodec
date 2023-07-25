@@ -1,5 +1,5 @@
 package com.topflytech.codec;
- 
+
 import com.topflytech.codec.entities.*;
 
 import java.lang.reflect.Array;
@@ -318,10 +318,10 @@ public class Decoder {
             if(length > 0){
                 try{
                     byte[] data = Arrays.copyOfRange(obdBytes,4,4+length);
-                    if((data[0] & 0x41) == 0x41 && data[1] == 0x04 && data.length > 3){
+                    if(data[0] == 0x41 && data[1] == 0x04 && data.length > 3){
                         obdData.setMessageType(ObdMessage.CLEAR_ERROR_CODE_MESSAGE);
                         obdData.setClearErrorCodeSuccess(data[2] == 0x01);
-                    }else if((data[0] & 0x41) == 0x41 && data[1] == 0x05 && data.length > 2){
+                    }else if(data[0] == 0x41 && data[1] == 0x05 && data.length > 2){
                         byte[] vinData = Arrays.copyOfRange(data,2,data.length - 1);
                         boolean dataValid = false;
                         for(byte item : vinData){
@@ -333,7 +333,7 @@ public class Decoder {
                             obdData.setMessageType(ObdMessage.VIN_MESSAGE);
                             obdData.setVin(new String(vinData));
                         }
-                    }else if((data[0] & 0x41) == 0x41 && (data[1] == 0x03 || data[1] == 0x0A)){
+                    }else if(data[0] == 0x41 && (data[1] == 0x03 || data[1] == 0x0A)){
                         int errorCode = data[2];
                         byte[] errorDataByte = Arrays.copyOfRange(data,3,data.length - 1);
                         String errorDataStr = BytesUtils.bytes2HexString(errorDataByte,0);
@@ -2673,29 +2673,7 @@ public class Decoder {
             analoginput3 = -999;
         }
 
-        str = BytesUtils.bytes2HexString(data, 26);
-        float analoginput4 = 0;
-        if (!str.toLowerCase().startsWith("ffff")){
-            try {
-                analoginput4 = Float.parseFloat(String.format("%d.%s", Integer.parseInt(str.substring(0, 2)),str.substring(2, 4)));
-            }catch (Exception e){
-//            e.printStackTrace();
-            }
-        }else{
-            analoginput4 = -999;
-        }
-
-        str = BytesUtils.bytes2HexString(data, 28);
-        float analoginput5 = 0;
-        if (!str.toLowerCase().startsWith("ffff")){
-            try {
-                analoginput5 = Float.parseFloat(String.format("%d.%s", Integer.parseInt(str.substring(0, 2)),str.substring(2, 4)));
-            }catch (Exception e){
-//            e.printStackTrace();
-            }
-        }else{
-            analoginput5 = -999;
-        }
+        long lastMileageDiff = BytesUtils.unsigned4BytesToInt(data, 26);
 
         byte alarmByte = data[30];
         int originalAlarmCode = (int) alarmByte;
@@ -2825,8 +2803,7 @@ public class Decoder {
             int hdop = BytesUtils.bytes2Short(data,69);
             message.setHdop(hdop);
             if(isHadFmsData){
-                analoginput4 = -999;
-                analoginput5 = -999;
+                lastMileageDiff = -999;
                 long engineHours = BytesUtils.unsigned4BytesToInt(data,26);
                 if(engineHours == 4294967295l){
                     engineHours = -999;
@@ -2936,8 +2913,7 @@ public class Decoder {
         message.setBatteryVoltage(batteryVoltage);
         message.setInput5(input5);
         message.setInput6(input6);
-        message.setAnalogInput4(analoginput4);
-        message.setAnalogInput5(analoginput5);
+        message.setLastMileageDiff(lastMileageDiff);
         message.setIsSmartUploadSupport(isSmartUploadSupport);
         message.setSupportChangeBattery(supportChangeBattery);
         message.setIs_4g_lbs(is_4g_lbs);

@@ -533,18 +533,15 @@ namespace TopflytechCodec.Entities
             get { return input6; }
             set { input6 = value; }
         }
-        private float analogInput4 = 0f;
-        public float AnalogInput4
+
+        private long lastMileageDiff = 0;
+
+        public long LastMileageDiff
         {
-            get { return analogInput4; }
-            set { analogInput4 = value; }
+            get { return lastMileageDiff; }
+            set { lastMileageDiff = value; }
         }
-        private float analogInput5 = 0f;
-        public float AnalogInput5
-        {
-            get { return analogInput5; }
-            set { analogInput5 = value; }
-        }
+
         private Boolean isSmartUploadSupport;
         public Boolean IsSmartUploadSupport
         {

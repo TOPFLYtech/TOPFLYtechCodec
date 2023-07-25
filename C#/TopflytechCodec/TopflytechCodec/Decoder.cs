@@ -365,12 +365,12 @@ namespace TopflytechCodec
                     try
                     {
                         byte[] data = Utils.ArrayCopyOfRange(obdBytes, 4, 4 + length);
-                        if ((data[0] & 0x41) == 0x41 && data[1] == 0x04 && data.Length > 3)
+                        if (data[0] == 0x41 && data[1] == 0x04 && data.Length > 3)
                         {
                             obdData.MessageType = ObdMessage.CLEAR_ERROR_CODE_MESSAGE;
                             obdData.ClearErrorCodeSuccess = data[2] == 0x01;
                         }
-                        else if ((data[0] & 0x41) == 0x41 && data[1] == 0x05 && data.Length > 2)
+                        else if (data[0] == 0x41 && data[1] == 0x05 && data.Length > 2)
                         {
                             byte[] vinData = Utils.ArrayCopyOfRange(data, 2, data.Length - 1);
                             bool dataValid = false;
@@ -387,7 +387,7 @@ namespace TopflytechCodec
                                 obdData.Vin = System.Text.Encoding.UTF8.GetString(vinData);
                             }
                         }
-                        else if ((data[0] & 0x41) == 0x41 && (data[1] == 0x03 || data[1] == 0x0A))
+                        else if (data[0] == 0x41 && (data[1] == 0x03 || data[1] == 0x0A))
                         {
                             int errorCode = data[2];
                             byte[] errorDataByte = Utils.ArrayCopyOfRange(data, 3, data.Length - 1);
@@ -2567,43 +2567,8 @@ namespace TopflytechCodec
             {
                 analoginput3 = -999;
             }
-
-            str = BytesUtils.Bytes2HexString(data, 26);
-            float analoginput4 = 0;
-            if (!str.ToLower().StartsWith("ffff"))
-            {
-                try
-                {
-                    analoginput4 = (float)(Convert.ToDouble(String.Format("{0}.{1}", str.Substring(0, 2), str.Substring(2, 2))));
-                }
-                catch (Exception e)
-                {
-                    Console.Write(e.Message);
-                }
-            }
-            else
-            {
-                analoginput4 = -999;
-            }
-
-            str = BytesUtils.Bytes2HexString(data, 28);
-            float analoginput5 = 0;
-            if (!str.ToLower().StartsWith("ffff"))
-            {
-                try
-                {
-                    analoginput5 = (float)(Convert.ToDouble(String.Format("{0}.{1}", str.Substring(0, 2), str.Substring(2, 2))));
-                }
-                catch (Exception e)
-                {
-                    Console.Write(e.Message);
-                }
-            }
-            else
-            {
-                analoginput5 = -999;
-            }
-
+            long lastMileageDiff = (long)BytesUtils.Byte2Int(data, 26);
+ 
             byte alarmByte = data[30];
             int originalAlarmCode = (int)alarmByte;
             bool isAlarmData = command[2] == 0x14;
@@ -2748,8 +2713,7 @@ namespace TopflytechCodec
                 message.Hdop = hdop;
                 if (isHadFmsData)
                 {
-                    analoginput4 = -999;
-                    analoginput5 = -999;
+                    lastMileageDiff = -999; 
                     long engineHours = BytesUtils.Byte2Int(data, 26);
                     if (engineHours == 4294967295l)
                     {
@@ -2875,8 +2839,7 @@ namespace TopflytechCodec
             message.Input4 = input4;
             message.Input5 = input5;
             message.Input6 = input6;
-            message.AnalogInput4 = analoginput4;
-            message.AnalogInput5 = analoginput5;
+            message.LastMileageDiff = lastMileageDiff; 
             message.BatteryVoltage = batteryVoltage;
             message.IsSmartUploadSupport = isSmartUploadSupport;
             message.SupportChangeBattery = supportChangeBattery;

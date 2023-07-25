@@ -2,7 +2,7 @@ package com.topflytech.codec.entities;
 
 import java.util.List;
 
- 
+
 /**
  * The type Accident acceleration message.Accident Data (AST Command Control, Default Disable the feature,From Tracker)
  * Protocol number is 25 25 07.

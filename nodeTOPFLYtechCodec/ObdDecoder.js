@@ -1919,10 +1919,10 @@ var ObdDecoder = {
             if(length > 0){
                 try{
                     var data = ByteUtils.arrayOfRange(obdBytes,4,4+length);
-                    if((data[0] & 0x41) == 0x41 && data[1] == 0x04 && data.length > 3){
+                    if(data[0] == 0x41 && data[1] == 0x04 && data.length > 3){
                         obdData.obdMessageType = "clear_error_code"
                         obdData.clearErrorCodeSuccess = data[2] == 0x01
-                    }else if((data[0] & 0x41) == 0x41 && data[1] == 0x05 && data.length > 2){
+                    }else if(data[0] == 0x41 && data[1] == 0x05 && data.length > 2){
                         var vinData = ByteUtils.arrayOfRange(data,2,data.length - 1);
                         var dataValid = false;
                         for(var item in vinData){
@@ -1934,7 +1934,7 @@ var ObdDecoder = {
                             obdData.obdMessageType = "vin"
                             obdData.vin = ByteUtils.bin2String(vinData);
                         }
-                    }else if((data[0] & 0x41) == 0x41 && (data[1] == 0x03 || data[1] == 0x0A)){
+                    }else if(data[0] == 0x41 && (data[1] == 0x03 || data[1] == 0x0A)){
                         var errorCode = data[2];
                         var errorDataByte = ByteUtils.arrayOfRange(data,3,data.length - 1);
                         var errorDataStr = ByteUtils.bytes2HexString(errorDataByte,0);

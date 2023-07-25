@@ -1,6 +1,6 @@
 package com.topflytech.codec.entities;
 
- 
+
 /**
  * The type Gps driver behavior type.
  */
