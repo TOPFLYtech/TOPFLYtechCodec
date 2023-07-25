@@ -419,8 +419,8 @@ public class ObdDecoder {
         bluetoothPeripheralDataMessage.setLatlngValid(latlngValid);
         bluetoothPeripheralDataMessage.setIsHistoryData(isHisData);
         double altitude = latlngValid? BytesUtils.bytes2Float(bytes, 23) : 0.0;
-        double latitude = latlngValid ? BytesUtils.bytes2Float(bytes, 27) : 0.0;
-        double longitude = latlngValid ? BytesUtils.bytes2Float(bytes, 31) : 0.0;
+        double longitude = latlngValid ? BytesUtils.bytes2Float(bytes, 27) : 0.0;
+        double latitude = latlngValid ? BytesUtils.bytes2Float(bytes, 31) : 0.0;
         int azimuth = latlngValid ? BytesUtils.bytes2Short(bytes, 37) : 0;
         Float speedf = 0.0f;
         try{

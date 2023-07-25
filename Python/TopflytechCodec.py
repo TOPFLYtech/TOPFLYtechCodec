@@ -1522,8 +1522,8 @@ class Decoder:
         ci_2g_3 = 0
         if  latlngValid:
             altitude = bytes2Float(byteArray, 23)
-            latitude = bytes2Float(byteArray, 27)
-            longitude = bytes2Float(byteArray, 31)
+            longitude = bytes2Float(byteArray, 27)
+            latitude = bytes2Float(byteArray, 31)
             azimuth = bytes2Short(byteArray, 37)
         else:
             if (byteArray[23] & 0x80) == 0x80:
@@ -4653,8 +4653,8 @@ class ObdDecoder:
         ci_2g_3 = 0
         if  latlngValid:
             altitude = bytes2Float(byteArray, 23)
-            latitude = bytes2Float(byteArray, 27)
-            longitude = bytes2Float(byteArray, 31)
+            longitude = bytes2Float(byteArray, 27)
+            latitude = bytes2Float(byteArray, 31)
             azimuth = bytes2Short(byteArray, 37)
         else:
             if (byteArray[23] & 0x80) == 0x80:
@@ -6016,8 +6016,8 @@ class PersonalAssetMsgDecoder:
         ci_2g_3 = 0
         if  latlngValid:
             altitude = bytes2Float(byteArray, 23)
-            latitude = bytes2Float(byteArray, 27)
-            longitude = bytes2Float(byteArray, 31)
+            longitude = bytes2Float(byteArray, 27)
+            latitude = bytes2Float(byteArray, 31)
             azimuth = bytes2Short(byteArray, 37)
         else:
             if (byteArray[23] & 0x80) == 0x80:

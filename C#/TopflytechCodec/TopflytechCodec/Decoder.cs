@@ -1240,8 +1240,8 @@ namespace TopflytechCodec
             bluetoothPeripheralDataMessage.LatlngValid = latlngValid;
             bluetoothPeripheralDataMessage.IsHistoryData = isHisData;
             double altitude = latlngValid ? BytesUtils.Bytes2Short(bytes, 23) : 0.0;
-            double latitude = latlngValid ? BytesUtils.Bytes2Short(bytes, 27) : 0.0;
-            double longitude = latlngValid ? BytesUtils.Bytes2Short(bytes, 31) : 0.0;
+            double longitude = latlngValid ? BytesUtils.Bytes2Short(bytes, 27) : 0.0;
+            double latitude = latlngValid ? BytesUtils.Bytes2Short(bytes, 31) : 0.0;
             int azimuth = latlngValid ? BytesUtils.Bytes2Short(bytes, 37) : 0;
             float speedf = 0.0f;
             try
