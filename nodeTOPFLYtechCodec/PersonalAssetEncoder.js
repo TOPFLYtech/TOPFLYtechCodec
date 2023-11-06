@@ -53,6 +53,10 @@ var PersonalAssetEncoder = {
         var command = [0x27, 0x27, 0x20]
         return EncoderHelper.getNormalMsgReply(imei,serialNo,command,[],encryptType,aesKey);
     },
+    getDeviceTempCollectionMsgReply:function (imei,serialNo,encryptType,aesKey){
+        var command = [0x27, 0x27, 0x26]
+        return EncoderHelper.getNormalMsgReply(imei,serialNo,command,[],encryptType,aesKey);
+    },
     getWifiWithDeviceInfoMsgReply:function (imei,serialNo,sourceAlarmCode,protocolHeadType,encryptType,aesKey){
         var command = [0x27, 0x27, protocolHeadType]
         var content;

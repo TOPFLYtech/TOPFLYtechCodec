@@ -273,7 +273,11 @@ def dealPersonalDeviceMessage(message,socketClient):
         socketClient.send(reply)
     elif isinstance(message,InnerGeoDataMessage):
         print ("receive inner geo data Message: " + message.imei)
-        reply = personalEncoder.getInnerGeoDataMsgReply(message.imei,message.serialNo,message.protocolHeadType)
+        reply = personalEncoder.getInnerGeoDataMsgReply(message.imei,message.serialNo)
+        socketClient.send(reply)
+    elif isinstance(message, DeviceTempCollectionMessage):
+        print ("receive device extra temp data Message: " + message.imei)
+        reply = personalEncoder.getDeviceTempCollectionMsgReply(message.imei, message.serialNo)
         socketClient.send(reply)
     elif isinstance(message,WifiWithDeviceInfoMessage):
         print ("receive wifi with device info Message: " + message.imei)
@@ -292,7 +296,7 @@ def dealPersonalDeviceMessage(message,socketClient):
         socketClient.send(reply)
 
 if __name__ == "__main__":
-    HOST, PORT = "192.168.1.53", 1001
+    HOST, PORT = "192.168.1.32", 1001
     s = socket.socket()
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind((HOST, PORT))

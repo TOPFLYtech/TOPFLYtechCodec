@@ -110,11 +110,11 @@ public class BleAlertData  extends BleData{
     private Boolean is_4g_lbs = false;
     private Integer mcc_4g;
     private Integer mnc_4g;
-    private Long ci_4g;
-    private Integer earfcn_4g_1;
+    private Long eci_4g;
     private Integer pcid_4g_1;
-    private Integer earfcn_4g_2;
     private Integer pcid_4g_2;
+    private Integer tac;
+    private Integer pcid_4g_3;
 
     private Boolean is_2g_lbs = false;
     private Integer mcc_2g;
@@ -125,6 +125,22 @@ public class BleAlertData  extends BleData{
     private Integer ci_2g_2;
     private Integer lac_2g_3;
     private Integer ci_2g_3;
+
+    public Integer getTac() {
+        return tac;
+    }
+
+    public void setTac(Integer tac) {
+        this.tac = tac;
+    }
+
+    public Integer getPcid_4g_3() {
+        return pcid_4g_3;
+    }
+
+    public void setPcid_4g_3(Integer pcid_4g_3) {
+        this.pcid_4g_3 = pcid_4g_3;
+    }
 
     public Boolean is_4g_lbs() {
         return is_4g_lbs;
@@ -150,21 +166,14 @@ public class BleAlertData  extends BleData{
         this.mnc_4g = mnc_4g;
     }
 
-    public Long getCi_4g() {
-        return ci_4g;
+    public Long getEci_4g() {
+        return eci_4g;
     }
 
-    public void setCi_4g(Long ci_4g) {
-        this.ci_4g = ci_4g;
+    public void setEci_4g(Long eci_4g) {
+        this.eci_4g = eci_4g;
     }
 
-    public Integer getEarfcn_4g_1() {
-        return earfcn_4g_1;
-    }
-
-    public void setEarfcn_4g_1(Integer earfcn_4g_1) {
-        this.earfcn_4g_1 = earfcn_4g_1;
-    }
 
     public Integer getPcid_4g_1() {
         return pcid_4g_1;
@@ -174,13 +183,6 @@ public class BleAlertData  extends BleData{
         this.pcid_4g_1 = pcid_4g_1;
     }
 
-    public Integer getEarfcn_4g_2() {
-        return earfcn_4g_2;
-    }
-
-    public void setEarfcn_4g_2(Integer earfcn_4g_2) {
-        this.earfcn_4g_2 = earfcn_4g_2;
-    }
 
     public Integer getPcid_4g_2() {
         return pcid_4g_2;

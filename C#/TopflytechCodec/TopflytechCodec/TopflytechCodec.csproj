@@ -59,6 +59,7 @@
     <Compile Include="Entities\BluetoothPeripheralDataMessage.cs" />
     <Compile Include="Entities\ConfigMessage.cs" />
     <Compile Include="Entities\Crypto.cs" />
+    <Compile Include="Entities\DeviceTempCollectionMessage.cs" />
     <Compile Include="Entities\ForwardMessage.cs" />
     <Compile Include="Entities\GpsDriverBehaviorMessage.cs" />
     <Compile Include="Entities\GpsDriverBehaviorType.cs" />

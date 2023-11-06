@@ -16,6 +16,7 @@ var PersonalAssetDecoder = {
     BLUETOOTH_SECOND_DATA:[0x27, 0x27, 0x12],
     WIFI_WITH_DEVICE_INFO_DATA : [0x27, 0x27, 0x24 ],
     WIFI_ALAARM_WITH_DEVICE_INFO_DATA : [0x27, 0x27, 0x25 ],
+    DEVICE_TEMP_COLLECTION_DATA: [0x27, 0x27, 0x26 ],
     latlngInvalidData:[0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF],
     encryptType:0,
@@ -36,6 +37,7 @@ var PersonalAssetDecoder = {
             || ByteUtils.arrayEquals(this.BLUETOOTH_SECOND_DATA,bytes)
             || ByteUtils.arrayEquals(this.WIFI_WITH_DEVICE_INFO_DATA,bytes)
             || ByteUtils.arrayEquals(this.WIFI_ALAARM_WITH_DEVICE_INFO_DATA,bytes)
+            || ByteUtils.arrayEquals(this.DEVICE_TEMP_COLLECTION_DATA,bytes)
             || ByteUtils.arrayEquals(this.NETWORK_INFO_DATA,bytes);
     },
     decode(buf){
@@ -123,6 +125,9 @@ var PersonalAssetDecoder = {
                 case 0x25:
                     var  wifiWithDeviceInfoMessage = this.parseWifiWithDeviceInfoMessage(bytes);
                     return wifiWithDeviceInfoMessage;
+                case 0x26:
+                    var deviceTempCollectionMessage = this.parseDeviceTempCollectionMessage(bytes);
+                    return deviceTempCollectionMessage;
                 case 0x81:
                     var message =  this.parseInteractMessage(bytes);
                     return message;
@@ -228,11 +233,11 @@ var PersonalAssetDecoder = {
         var is_4g_lbs = false;
         var mcc_4g = null;
         var mnc_4g = null;
-        var ci_4g = null;
-        var earfcn_4g_1 = null;
+        var eci_4g = null;
+        var tac = null;
         var pcid_4g_1 = null;
-        var earfcn_4g_2 = null;
         var pcid_4g_2 = null;
+        var pcid_4g_3 = null;
         var is_2g_lbs = false;
         var mcc_2g = null;
         var mnc_2g = null;
@@ -263,11 +268,11 @@ var PersonalAssetDecoder = {
         if (is_4g_lbs){
             mcc_4g = ByteUtils.byteToShort(bytes,23) & 0x7FFF;
             mnc_4g = ByteUtils.byteToShort(bytes,25);
-            ci_4g = ByteUtils.byteToLong(bytes, 27);
-            earfcn_4g_1 = ByteUtils.byteToShort(bytes, 31);
+            eci_4g = ByteUtils.byteToLong(bytes, 27);
+            tac = ByteUtils.byteToShort(bytes, 31);
             pcid_4g_1 = ByteUtils.byteToShort(bytes, 33);
-            earfcn_4g_2 = ByteUtils.byteToShort(bytes, 35);
-            pcid_4g_2 = ByteUtils.byteToShort(bytes,37);
+            pcid_4g_2 = ByteUtils.byteToShort(bytes, 35);
+            pcid_4g_3 = ByteUtils.byteToShort(bytes,37);
         }
         bluetoothPeripheralDataMessage.latitude = latitude
         bluetoothPeripheralDataMessage.longitude = longitude
@@ -287,11 +292,11 @@ var PersonalAssetDecoder = {
         bluetoothPeripheralDataMessage.ci_2g_3 =ci_2g_3
         bluetoothPeripheralDataMessage.mcc_4g =mcc_4g
         bluetoothPeripheralDataMessage.mnc_4g =mnc_4g
-        bluetoothPeripheralDataMessage.ci_4g =ci_4g
-        bluetoothPeripheralDataMessage.earfcn_4g_1 =earfcn_4g_1
+        bluetoothPeripheralDataMessage.eci_4g =eci_4g
+        bluetoothPeripheralDataMessage.tac =tac
         bluetoothPeripheralDataMessage.pcid_4g_1 =pcid_4g_1
-        bluetoothPeripheralDataMessage.earfcn_4g_2 =earfcn_4g_2
         bluetoothPeripheralDataMessage.pcid_4g_2 =pcid_4g_2
+        bluetoothPeripheralDataMessage.pcid_4g_3 =pcid_4g_3
         var bleData = ByteUtils.arrayOfRange(bytes,39,bytes.length);
         if (bleData.length <= 0){
             return bluetoothPeripheralDataMessage;
@@ -368,11 +373,11 @@ var PersonalAssetDecoder = {
             bleAlertData.ci_2g_3 = ci_2g_3
             bleAlertData.mcc_4g = mcc_4g
             bleAlertData.mnc_4g = mnc_4g
-            bleAlertData.ci_4g = ci_4g
-            bleAlertData.earfcn_4g_1 = earfcn_4g_1
+            bleAlertData.eci_4g = eci_4g
+            bleAlertData.tac = tac
             bleAlertData.pcid_4g_1 = pcid_4g_1
-            bleAlertData.earfcn_4g_2 = earfcn_4g_2
             bleAlertData.pcid_4g_2 = pcid_4g_2
+            bleAlertData.pcid_4g_3 = pcid_4g_3
             bleDataList.push(bleAlertData);
         }else if (bleData[0] == 0x00 && bleData[1] == 0x03){
             bluetoothPeripheralDataMessage.bleMessageType = "driver"
@@ -407,11 +412,11 @@ var PersonalAssetDecoder = {
             bleDriverSignInData.ci_2g_3 =ci_2g_3
             bleDriverSignInData.mcc_4g =mcc_4g
             bleDriverSignInData.mnc_4g =mnc_4g
-            bleDriverSignInData.ci_4g =ci_4g
-            bleDriverSignInData.earfcn_4g_1 =earfcn_4g_1
+            bleDriverSignInData.eci_4g =eci_4g
+            bleDriverSignInData.tac =tac
             bleDriverSignInData.pcid_4g_1 =pcid_4g_1
-            bleDriverSignInData.earfcn_4g_2 =earfcn_4g_2
             bleDriverSignInData.pcid_4g_2 =pcid_4g_2
+            bleDriverSignInData.pcid_4g_3 =pcid_4g_3
             bleDataList.push(bleDriverSignInData);
         }else if (bleData[0] == 0x00 && bleData[1] == 0x04){
             bluetoothPeripheralDataMessage.bleMessageType = "temp"
@@ -771,11 +776,11 @@ var PersonalAssetDecoder = {
             var is_4g_lbs = false;
             var mcc_4g = null;
             var mnc_4g = null;
-            var ci_4g = null;
-            var earfcn_4g_1 = null;
+            var eci_4g = null;
+            var tac = null;
             var pcid_4g_1 = null;
-            var earfcn_4g_2 = null;
             var pcid_4g_2 = null;
+            var pcid_4g_3 = null;
             var is_2g_lbs = false;
             var mcc_2g = null;
             var mnc_2g = null;
@@ -806,11 +811,11 @@ var PersonalAssetDecoder = {
             if (is_4g_lbs){
                 mcc_4g = ByteUtils.byteToShort(bleData,11) & 0x7FFF;
                 mnc_4g = ByteUtils.byteToShort(bleData,13);
-                ci_4g = ByteUtils.byteToLong(bleData, 15);
-                earfcn_4g_1 = ByteUtils.byteToShort(bleData, 19);
+                eci_4g = ByteUtils.byteToLong(bleData, 15);
+                tac = ByteUtils.byteToShort(bleData, 19);
                 pcid_4g_1 = ByteUtils.byteToShort(bleData, 21);
-                earfcn_4g_2 = ByteUtils.byteToShort(bleData, 23);
-                pcid_4g_2 = ByteUtils.byteToShort(bleData,25);
+                pcid_4g_2 = ByteUtils.byteToShort(bleData, 23);
+                pcid_4g_3 = ByteUtils.byteToShort(bleData,25);
             }
             bleAlertData.alertType = alert
             bleAlertData.altitude = altitude
@@ -835,11 +840,11 @@ var PersonalAssetDecoder = {
             bleAlertData.ci_2g_3 = ci_2g_3
             bleAlertData.mcc_4g = mcc_4g
             bleAlertData.mnc_4g = mnc_4g
-            bleAlertData.ci_4g = ci_4g
-            bleAlertData.earfcn_4g_1 = earfcn_4g_1
+            bleAlertData.eci_4g = eci_4g
+            bleAlertData.tac = tac
             bleAlertData.pcid_4g_1 = pcid_4g_1
-            bleAlertData.earfcn_4g_2 = earfcn_4g_2
             bleAlertData.pcid_4g_2 = pcid_4g_2
+            bleAlertData.pcid_4g_3 = pcid_4g_3
             bleDataList.push(bleAlertData);
         }else if (bleData[0] == 0x00 && bleData[1] == 0x03){
             bluetoothPeripheralDataMessage.bleMessageType = "driver"
@@ -868,11 +873,11 @@ var PersonalAssetDecoder = {
             var is_4g_lbs = false;
             var mcc_4g = null;
             var mnc_4g = null;
-            var ci_4g = null;
-            var earfcn_4g_1 = null;
+            var eci_4g = null;
+            var tac = null;
             var pcid_4g_1 = null;
-            var earfcn_4g_2 = null;
             var pcid_4g_2 = null;
+            var pcid_4g_3 = null;
             var is_2g_lbs = false;
             var mcc_2g = null;
             var mnc_2g = null;
@@ -903,11 +908,11 @@ var PersonalAssetDecoder = {
             if (is_4g_lbs){
                 mcc_4g = ByteUtils.byteToShort(bleData,11) & 0x7FFF;
                 mnc_4g = ByteUtils.byteToShort(bleData,13);
-                ci_4g = ByteUtils.byteToLong(bleData, 15);
-                earfcn_4g_1 = ByteUtils.byteToShort(bleData, 19);
+                eci_4g = ByteUtils.byteToLong(bleData, 15);
+                tac = ByteUtils.byteToShort(bleData, 19);
                 pcid_4g_1 = ByteUtils.byteToShort(bleData, 21);
-                earfcn_4g_2 = ByteUtils.byteToShort(bleData, 23);
-                pcid_4g_2 = ByteUtils.byteToShort(bleData,25);
+                pcid_4g_2 = ByteUtils.byteToShort(bleData, 23);
+                pcid_4g_3 = ByteUtils.byteToShort(bleData,25);
             }
             bleDriverSignInData.alert = alert
             bleDriverSignInData.altitude = altitude
@@ -932,11 +937,11 @@ var PersonalAssetDecoder = {
             bleDriverSignInData.ci_2g_3 = ci_2g_3
             bleDriverSignInData.mcc_4g = mcc_4g
             bleDriverSignInData.mnc_4g = mnc_4g
-            bleDriverSignInData.ci_4g = ci_4g
-            bleDriverSignInData.earfcn_4g_1 = earfcn_4g_1
+            bleDriverSignInData.eci_4g = eci_4g
+            bleDriverSignInData.tac = tac
             bleDriverSignInData.pcid_4g_1 = pcid_4g_1
-            bleDriverSignInData.earfcn_4g_2 = earfcn_4g_2
             bleDriverSignInData.pcid_4g_2 = pcid_4g_2
+            bleDriverSignInData.pcid_4g_3 = pcid_4g_3
             bleDataList.push(bleDriverSignInData);
         }else if (bleData[0] == 0x00 && bleData[1] == 0x04){
             bluetoothPeripheralDataMessage.bleMessageType = "temp"
@@ -1242,11 +1247,11 @@ var PersonalAssetDecoder = {
         var is_4g_lbs = false;
         var mcc_4g = null;
         var mnc_4g = null;
-        var ci_4g = null;
-        var earfcn_4g_1 = null;
+        var eci_4g = null;
+        var tac = null;
         var pcid_4g_1 = null;
-        var earfcn_4g_2 = null;
         var pcid_4g_2 = null;
+        var pcid_4g_3 = null;
         var is_2g_lbs = false;
         var mcc_2g = null;
         var mnc_2g = null;
@@ -1277,11 +1282,11 @@ var PersonalAssetDecoder = {
         if (is_4g_lbs){
             mcc_4g = ByteUtils.byteToShort(bytes,22) & 0x7FFF;
             mnc_4g = ByteUtils.byteToShort(bytes,24);
-            ci_4g = ByteUtils.bin2String(bytes, 26);
-            earfcn_4g_1 = ByteUtils.byteToShort(bytes, 30);
+            eci_4g = ByteUtils.bin2String(bytes, 26);
+            tac = ByteUtils.byteToShort(bytes, 30);
             pcid_4g_1 = ByteUtils.byteToShort(bytes, 32);
-            earfcn_4g_2 = ByteUtils.byteToShort(bytes, 34);
-            pcid_4g_2 = ByteUtils.byteToShort(bytes,36);
+            pcid_4g_2 = ByteUtils.byteToShort(bytes, 34);
+            pcid_4g_3 = ByteUtils.byteToShort(bytes,36);
         }
         var lockType = bytes[38] & 0xff;
         if(lockType < 0){
@@ -1321,13 +1326,40 @@ var PersonalAssetDecoder = {
         lockMessage.ci_2g_3 = ci_2g_3
         lockMessage.mcc_4g = mcc_4g
         lockMessage.mnc_4g = mnc_4g
-        lockMessage.ci_4g = ci_4g
-        lockMessage.earfcn_4g_1 = earfcn_4g_1
+        lockMessage.eci_4g = eci_4g
+        lockMessage.tac = tac
         lockMessage.pcid_4g_1 = pcid_4g_1
-        lockMessage.earfcn_4g_2 = earfcn_4g_2
         lockMessage.pcid_4g_2 = pcid_4g_2
+        lockMessage.pcid_4g_3 = pcid_4g_3
 
         return lockMessage;
+    },
+    parseDeviceTempCollectionMessage:function(bytes){
+        var serialNo = ByteUtils.byteToShort(bytes,5);
+        var imei = ByteUtils.IMEI.decode(bytes,7);
+        var date = ByteUtils.getGTM0Date(bytes, 15);
+        var type = bytes[21];
+        var interval = ByteUtils.byteToShort(bytes,22);
+        var valueLen = bytes.length - 24;
+        var deviceTempCollectionMessage = {
+            serialNo:serialNo,
+            imei:imei,
+            srcBytes:bytes,
+            messageType:"deviceTempCollection",
+        }
+        deviceTempCollectionMessage.date = date;
+        deviceTempCollectionMessage.type = type;
+        deviceTempCollectionMessage.interval = interval;
+        if(valueLen > 0 && valueLen / 2 > 0){
+            var tempCount = valueLen / 2;
+            var tempList = [];
+            for(var i = 0;i < tempCount;i++){
+                var tempInt = ByteUtils.byteToShort(bytes,24 + i * 2);
+                tempList.push(tempInt * 0.01);
+            }
+            deviceTempCollectionMessage.tempList = tempList ;
+        }
+        return deviceTempCollectionMessage;
     },
     parseWifiWithDeviceInfoMessage:function(bytes){
         var isWifiMsg = (bytes[15] & 0x20) == 0x20;
@@ -1335,7 +1367,7 @@ var PersonalAssetDecoder = {
         var imei = ByteUtils.IMEI.decode(bytes,7)
         var date = ByteUtils.getGTM0Date(bytes, 17);
         var isHisData = (bytes[15] & 0x80) == 0x80
-        var isGpsWorking = (bytes[15] & 0x8) == 0x8
+        var isGpsWorking = (bytes[15] & 0x8) == 0x8  ? false : true
         var originalAlarmCode = bytes[16]
         if(originalAlarmCode < 0){
             originalAlarmCode += 256
@@ -1678,11 +1710,11 @@ var PersonalAssetDecoder = {
         var is_4g_lbs = false;
         var mcc_4g = null;
         var mnc_4g = null;
-        var ci_4g = null;
-        var earfcn_4g_1 = null;
+        var eci_4g = null;
+        var tac = null;
         var pcid_4g_1 = null;
-        var earfcn_4g_2 = null;
         var pcid_4g_2 = null;
+        var pcid_4g_3 = null;
         var is_2g_lbs = false;
         var mcc_2g = null;
         var mnc_2g = null;
@@ -1713,11 +1745,11 @@ var PersonalAssetDecoder = {
         if (is_4g_lbs){
             mcc_4g = ByteUtils.byteToShort(data,23) & 0x7FFF;
             mnc_4g = ByteUtils.byteToShort(data,25);
-            ci_4g = ByteUtils.byteToLong(data, 27);
-            earfcn_4g_1 = ByteUtils.byteToShort(data, 31);
+            eci_4g = ByteUtils.byteToLong(data, 27);
+            tac = ByteUtils.byteToShort(data, 31);
             pcid_4g_1 = ByteUtils.byteToShort(data, 33);
-            earfcn_4g_2 = ByteUtils.byteToShort(data, 35);
-            pcid_4g_2 = ByteUtils.byteToShort(data,37);
+            pcid_4g_2 = ByteUtils.byteToShort(data, 35);
+            pcid_4g_3 = ByteUtils.byteToShort(data,37);
         }
 
         var axisXDirect = (data[39] & 0x80) == 0x80 ? 1 : -1;
@@ -1869,11 +1901,11 @@ var PersonalAssetDecoder = {
         locationMessage.ci_2g_3 =ci_2g_3
         locationMessage.mcc_4g =mcc_4g
         locationMessage.mnc_4g =mnc_4g
-        locationMessage.ci_4g =ci_4g
-        locationMessage.earfcn_4g_1 =earfcn_4g_1
+        locationMessage.eci_4g =eci_4g
+        locationMessage.tac =tac
         locationMessage.pcid_4g_1 =pcid_4g_1
-        locationMessage.earfcn_4g_2 =earfcn_4g_2
         locationMessage.pcid_4g_2 =pcid_4g_2
+        locationMessage.pcid_4g_3 =pcid_4g_3
         locationMessage.lockType =lockType
         return locationMessage;
     }

@@ -64,6 +64,7 @@ public class PersonalAssetMsgEncoder {
         return Encoder.getHeartbeatMsgReply(imei, needSerialNo, serialNo, command, encryptType, aesKey);
     }
 
+
     /**
      * Get location msg reply byte [ ].
      *
@@ -165,4 +166,11 @@ public class PersonalAssetMsgEncoder {
         }
         return Encoder.getNormalMsgReply(imei, serialNo, command,content ,encryptType, aesKey);
     }
+
+    public  byte[] getDeviceTempCollectionMsgReply(String imei,int serialNo) throws IOException {
+        byte[] command = {0x27, 0x27, 0x26};
+        byte[] content = new byte[]{};
+        return Encoder.getNormalMsgReply(imei, serialNo, command,content ,encryptType, aesKey);
+    }
+
 }

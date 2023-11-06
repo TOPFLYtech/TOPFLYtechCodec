@@ -562,7 +562,7 @@ namespace _880XServerDemo
                 //    byte[] reply = personalEncoder.getLocationMsgReply(locationInfoMessage.Imei, true, locationInfoMessage.SerialNo);
                 //    dict[strClientKey].Send(reply);
                 //}
-                byte[] reply = personalEncoder.getLocationMsgReply(locationInfoMessage.Imei, true, locationInfoMessage.SerialNo);
+                byte[] reply = personalEncoder.getLocationMsgReply(locationInfoMessage.Imei, true, locationInfoMessage.SerialNo, locationInfoMessage.ProtocolHeadType);
                 dict[strClientKey].Send(reply);
             }
             else if (message is TopflytechCodec.Entities.LocationAlarmMessage)
@@ -576,7 +576,7 @@ namespace _880XServerDemo
                 //    byte[] reply = personalEncoder.getLocationAlarmMsgReply(locationAlarmMessage.Imei, true, locationAlarmMessage.SerialNo, locationAlarmMessage.OriginalAlarmCode);
                 //    dict[strClientKey].Send(reply);
                 //}
-                byte[] reply = personalEncoder.getLocationAlarmMsgReply(locationAlarmMessage.Imei, true, locationAlarmMessage.SerialNo, locationAlarmMessage.OriginalAlarmCode);
+                byte[] reply = personalEncoder.getLocationAlarmMsgReply(locationAlarmMessage.Imei, true, locationAlarmMessage.SerialNo, locationAlarmMessage.OriginalAlarmCode, locationAlarmMessage.ProtocolHeadType);
                 dict[strClientKey].Send(reply);
             }
             else if (message is NetworkInfoMessage)
@@ -612,6 +612,13 @@ namespace _880XServerDemo
                 byte[] reply = personalEncoder.getInnerGeoDataMsgReply(innerGeoDataMessage.Imei,true, innerGeoDataMessage.SerialNo);
                 dict[strClientKey].Send(reply);
             }
+            else if (message is DeviceTempCollectionMessage)
+            {
+                DeviceTempCollectionMessage deviceTempCollectionMessage = (DeviceTempCollectionMessage)message;
+                ShowMsg("receive external device data message :" + deviceTempCollectionMessage.Imei);
+                byte[] reply = personalEncoder.getDeviceTempCollectionMsgReply(deviceTempCollectionMessage.Imei, deviceTempCollectionMessage.SerialNo);
+                dict[strClientKey].Send(reply);
+            }
             else if (message is ForwardMessage)
             {
                 ForwardMessage forwardMessage = (ForwardMessage)message;
@@ -638,7 +645,8 @@ namespace _880XServerDemo
             {
                 WifiWithDeviceInfoMessage wifiWithDeviceInfoMessage = (WifiWithDeviceInfoMessage)message;
                 ShowMsg("receive wifi with device infomation message:" + wifiWithDeviceInfoMessage.Imei); 
-                byte[] reply = personalEncoder.getWifiWithDeviceInfoReply(wifiWithDeviceInfoMessage.Imei, wifiWithDeviceInfoMessage.SerialNo, wifiWithDeviceInfoMessage.OriginalAlarmCode);
+                byte[] reply = personalEncoder.getWifiWithDeviceInfoReply(wifiWithDeviceInfoMessage.Imei, 
+                    wifiWithDeviceInfoMessage.SerialNo, wifiWithDeviceInfoMessage.OriginalAlarmCode,wifiWithDeviceInfoMessage.ProtocolHeadType);
                 dict[strClientKey].Send(reply);
             }
         }

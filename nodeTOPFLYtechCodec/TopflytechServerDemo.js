@@ -93,6 +93,10 @@ const server = net.createServer(function (socket) {
                 console.log("receive oneWire message,imei:" + message.imei)
                 var resp = Encoder.getOneWireMsgReply(message.imei,message.serialNo,CryptoTool.MessageEncryptType.NONE,null)
                 socket.write(Buffer.from(resp))
+            }else if(message.messageType == "deviceTempCollection"){
+                console.log("receive device out temperature collection message,imei:" + message.imei)
+                var resp = PersonalAssetEncoder.getDeviceTempCollectionMsgReply(message.imei,message.serialNo,CryptoTool.MessageEncryptType.NONE,null)
+                socket.write(Buffer.from(resp))
             }
         }
     });

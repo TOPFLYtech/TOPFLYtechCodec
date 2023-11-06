@@ -34,6 +34,9 @@ public class PersonalAssetMsgDecoder {
     private static final byte[] latlngInvalidData = {(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,
             (byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF};
     private static final byte[] BLUETOOTH_SECOND_DATA =  {0x27, 0x27, (byte)0x12};
+
+    private static final byte[] DEVICE_TEMP_COLLECTION_DATA =  {0x27, 0x27, (byte)0x26};
+
     private int encryptType = 0;
     private String aesKey;
     public PersonalAssetMsgDecoder(int messageEncryptType,String aesKey){
@@ -56,6 +59,7 @@ public class PersonalAssetMsgDecoder {
                 || Arrays.equals(BLUETOOTH_SECOND_DATA,bytes)
                 || Arrays.equals(WIFI_WITH_DEVICE_INFO_DATA,bytes)
                 || Arrays.equals(WIFI_ALARM_WITH_DEVICE_INFO_DATA,bytes)
+                || Arrays.equals(DEVICE_TEMP_COLLECTION_DATA,bytes)
                 || Arrays.equals(NETWORK_INFO_DATA,bytes);
     }
 
@@ -210,6 +214,9 @@ public class PersonalAssetMsgDecoder {
                 case 0x12:
                     BluetoothPeripheralDataMessage bluetoothPeripheralDataSecondMessage = parseSecondBluetoothDataMessage(bytes);
                     return bluetoothPeripheralDataSecondMessage;
+                case 0x26:
+                    Message deviceTempCollectionMessage = parseDeviceTempCollectionMessage(bytes);
+                    return deviceTempCollectionMessage;
                 case (byte)0x81:
                     Message message =  parseInteractMessage(bytes);
                     return message;
@@ -220,13 +227,38 @@ public class PersonalAssetMsgDecoder {
         return null;
     }
 
+    private DeviceTempCollectionMessage parseDeviceTempCollectionMessage(byte[] bytes) {
+        int serialNo = BytesUtils.bytes2Short(bytes, 5);
+        String imei = BytesUtils.IMEI.decode(bytes, 7);
+        Date date = TimeUtils.getGTM0Date(bytes, 15);
+        DeviceTempCollectionMessage deviceTempCollectionMessage = new DeviceTempCollectionMessage();
+        deviceTempCollectionMessage.setType(bytes[21]);
+        int interval = BytesUtils.bytes2Short(bytes,22);
+        int valueLen = bytes.length - 24;
+        if(valueLen > 0 && valueLen / 2 > 0){
+            int tempCount = valueLen / 2;
+            List<Float> tempList = new ArrayList<>();
+            for(int i = 0;i < tempCount;i++){
+                int tempInt = BytesUtils.bytes2Short(bytes,24 + i * 2);
+                tempList.add(tempInt * 0.01f);
+            }
+            deviceTempCollectionMessage.setTempList(tempList);
+        }
+        deviceTempCollectionMessage.setImei(imei);
+        deviceTempCollectionMessage.setDate(date);
+        deviceTempCollectionMessage.setSerialNo(serialNo);
+        deviceTempCollectionMessage.setOrignBytes(bytes);
+        deviceTempCollectionMessage.setInterval(interval);
+        return deviceTempCollectionMessage;
+    }
+
     private Message parseWifiWithDeviceInfoMessage(byte[] bytes) {
         boolean isWifiMsg = (bytes[15] & 0x20) == 0x20;
 
         int serialNo = BytesUtils.bytes2Short(bytes, 5);
         String imei = BytesUtils.IMEI.decode(bytes, 7);
         boolean isHisData = (bytes[15] & 0x80) == 0x80;
-        boolean isGpsWorking =  (bytes[15] & 0x8) == 0x8;
+        boolean isGpsWorking =  (bytes[15] & 0x8) == 0x8 ? false : true;
         Date date = TimeUtils.getGTM0Date(bytes, 17);
 
 
@@ -534,7 +566,7 @@ public class PersonalAssetMsgDecoder {
             locationMessage.setMcc_4g(mcc_4g);
             locationMessage.setMnc_4g(mnc_4g);
             locationMessage.setTac(tac);
-            locationMessage.setCi_4g(ci_4g);
+            locationMessage.setEci_4g(ci_4g);
             locationMessage.setPcid_4g_1(pcid_4g_1);
             locationMessage.setPcid_4g_2(pcid_4g_2);
             locationMessage.setPcid_4g_3(pcid_4g_3);
@@ -587,11 +619,11 @@ public class PersonalAssetMsgDecoder {
         Boolean is_4g_lbs = false;
         Integer mcc_4g = null;
         Integer mnc_4g = null;
-        Long ci_4g = null;
-        Integer earfcn_4g_1 = null;
+        Long eci_4g = null;
+        Integer tac = null;
         Integer pcid_4g_1 = null;
-        Integer earfcn_4g_2 = null;
         Integer pcid_4g_2 = null;
+        Integer pcid_4g_3 = null;
         Boolean is_2g_lbs = false;
         Integer mcc_2g = null;
         Integer mnc_2g = null;
@@ -622,11 +654,11 @@ public class PersonalAssetMsgDecoder {
         if (is_4g_lbs){
             mcc_4g = BytesUtils.bytes2Short(bytes,23) & 0x7FFF;
             mnc_4g = BytesUtils.bytes2Short(bytes,25);
-            ci_4g = BytesUtils.unsigned4BytesToInt(bytes, 27);
-            earfcn_4g_1 = BytesUtils.bytes2Short(bytes, 31);
+            eci_4g = BytesUtils.unsigned4BytesToInt(bytes, 27);
+            tac = BytesUtils.bytes2Short(bytes, 31);
             pcid_4g_1 = BytesUtils.bytes2Short(bytes, 33);
-            earfcn_4g_2 = BytesUtils.bytes2Short(bytes, 35);
-            pcid_4g_2 = BytesUtils.bytes2Short(bytes,37);
+            pcid_4g_2 = BytesUtils.bytes2Short(bytes, 35);
+            pcid_4g_3 = BytesUtils.bytes2Short(bytes,37);
         }
         bluetoothPeripheralDataMessage.setLatitude(latitude);
         bluetoothPeripheralDataMessage.setLongitude(longitude);
@@ -646,11 +678,11 @@ public class PersonalAssetMsgDecoder {
         bluetoothPeripheralDataMessage.setCi_2g_3(ci_2g_3);
         bluetoothPeripheralDataMessage.setMcc_4g(mcc_4g);
         bluetoothPeripheralDataMessage.setMnc_4g(mnc_4g);
-        bluetoothPeripheralDataMessage.setCi_4g(ci_4g);
-        bluetoothPeripheralDataMessage.setEarfcn_4g_1(earfcn_4g_1);
+        bluetoothPeripheralDataMessage.setEci_4g(eci_4g);
+        bluetoothPeripheralDataMessage.setTac(tac);
         bluetoothPeripheralDataMessage.setPcid_4g_1(pcid_4g_1);
-        bluetoothPeripheralDataMessage.setEarfcn_4g_2(earfcn_4g_2);
         bluetoothPeripheralDataMessage.setPcid_4g_2(pcid_4g_2);
+        bluetoothPeripheralDataMessage.setPcid_4g_3(pcid_4g_3);
         byte[] bleData = Arrays.copyOfRange(bytes,39,bytes.length);
         if (bleData.length <= 0){
             System.out.println("Error len ble Data:" +BytesUtils.bytes2HexString(bytes,0));
@@ -734,11 +766,11 @@ public class PersonalAssetMsgDecoder {
             bleAlertData.setCi_2g_3(ci_2g_3);
             bleAlertData.setMcc_4g(mcc_4g);
             bleAlertData.setMnc_4g(mnc_4g);
-            bleAlertData.setCi_4g(ci_4g);
-            bleAlertData.setEarfcn_4g_1(earfcn_4g_1);
+            bleAlertData.setEci_4g(eci_4g);
+            bleAlertData.setTac(tac);
             bleAlertData.setPcid_4g_1(pcid_4g_1);
-            bleAlertData.setEarfcn_4g_2(earfcn_4g_2);
             bleAlertData.setPcid_4g_2(pcid_4g_2);
+            bleAlertData.setPcid_4g_3(pcid_4g_3);
             bleDataList.add(bleAlertData);
         }else if (bleData[0] == 0x00 && bleData[1] == 0x03){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_DRIVER);
@@ -777,11 +809,11 @@ public class PersonalAssetMsgDecoder {
             bleDriverSignInData.setCi_2g_3(ci_2g_3);
             bleDriverSignInData.setMcc_4g(mcc_4g);
             bleDriverSignInData.setMnc_4g(mnc_4g);
-            bleDriverSignInData.setCi_4g(ci_4g);
-            bleDriverSignInData.setEarfcn_4g_1(earfcn_4g_1);
+            bleDriverSignInData.setEci_4g(eci_4g);
+            bleDriverSignInData.setTac(tac);
             bleDriverSignInData.setPcid_4g_1(pcid_4g_1);
-            bleDriverSignInData.setEarfcn_4g_2(earfcn_4g_2);
             bleDriverSignInData.setPcid_4g_2(pcid_4g_2);
+            bleDriverSignInData.setPcid_4g_3(pcid_4g_3);
             bleDataList.add(bleDriverSignInData);
         }else if (bleData[0] == 0x00 && bleData[1] == 0x04){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_TEMP);
@@ -1159,11 +1191,11 @@ public class PersonalAssetMsgDecoder {
             Boolean is_4g_lbs = false;
             Integer mcc_4g = null;
             Integer mnc_4g = null;
-            Long ci_4g = null;
-            Integer earfcn_4g_1 = null;
+            Long eci_4g = null;
+            Integer tac = null;
             Integer pcid_4g_1 = null;
-            Integer earfcn_4g_2 = null;
             Integer pcid_4g_2 = null;
+            Integer pcid_4g_3 = null;
             Boolean is_2g_lbs = false;
             Integer mcc_2g = null;
             Integer mnc_2g = null;
@@ -1194,11 +1226,11 @@ public class PersonalAssetMsgDecoder {
             if (is_4g_lbs){
                 mcc_4g = BytesUtils.bytes2Short(bleData,11) & 0x7FFF;
                 mnc_4g = BytesUtils.bytes2Short(bleData,13);
-                ci_4g = BytesUtils.unsigned4BytesToInt(bleData, 15);
-                earfcn_4g_1 = BytesUtils.bytes2Short(bleData, 19);
+                eci_4g = BytesUtils.unsigned4BytesToInt(bleData, 15);
+                tac = BytesUtils.bytes2Short(bleData, 19);
                 pcid_4g_1 = BytesUtils.bytes2Short(bleData, 21);
-                earfcn_4g_2 = BytesUtils.bytes2Short(bleData, 23);
-                pcid_4g_2 = BytesUtils.bytes2Short(bleData,25);
+                pcid_4g_2 = BytesUtils.bytes2Short(bleData, 23);
+                pcid_4g_3 = BytesUtils.bytes2Short(bleData,25);
             }
             bleAlertData.setAlertType(alert);
             bleAlertData.setAltitude(altitude);
@@ -1223,11 +1255,11 @@ public class PersonalAssetMsgDecoder {
             bleAlertData.setCi_2g_3(ci_2g_3);
             bleAlertData.setMcc_4g(mcc_4g);
             bleAlertData.setMnc_4g(mnc_4g);
-            bleAlertData.setCi_4g(ci_4g);
-            bleAlertData.setEarfcn_4g_1(earfcn_4g_1);
+            bleAlertData.setEci_4g(eci_4g);
+            bleAlertData.setTac(tac);
             bleAlertData.setPcid_4g_1(pcid_4g_1);
-            bleAlertData.setEarfcn_4g_2(earfcn_4g_2);
             bleAlertData.setPcid_4g_2(pcid_4g_2);
+            bleAlertData.setPcid_4g_3(pcid_4g_3);
             bleDataList.add(bleAlertData);
         }else if (bleData[0] == 0x00 && bleData[1] == 0x03){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_DRIVER);
@@ -1268,11 +1300,11 @@ public class PersonalAssetMsgDecoder {
             Boolean is_4g_lbs = false;
             Integer mcc_4g = null;
             Integer mnc_4g = null;
-            Long ci_4g = null;
-            Integer earfcn_4g_1 = null;
+            Long eci_4g = null;
+            Integer tac = null;
             Integer pcid_4g_1 = null;
-            Integer earfcn_4g_2 = null;
             Integer pcid_4g_2 = null;
+            Integer pcid_4g_3 = null;
             Boolean is_2g_lbs = false;
             Integer mcc_2g = null;
             Integer mnc_2g = null;
@@ -1303,11 +1335,11 @@ public class PersonalAssetMsgDecoder {
             if (is_4g_lbs){
                 mcc_4g = BytesUtils.bytes2Short(bleData,11) & 0x7FFF;
                 mnc_4g = BytesUtils.bytes2Short(bleData,13);
-                ci_4g = BytesUtils.unsigned4BytesToInt(bleData, 15);
-                earfcn_4g_1 = BytesUtils.bytes2Short(bleData, 19);
+                eci_4g = BytesUtils.unsigned4BytesToInt(bleData, 15);
+                tac = BytesUtils.bytes2Short(bleData, 19);
                 pcid_4g_1 = BytesUtils.bytes2Short(bleData, 21);
-                earfcn_4g_2 = BytesUtils.bytes2Short(bleData, 23);
-                pcid_4g_2 = BytesUtils.bytes2Short(bleData,25);
+                pcid_4g_2 = BytesUtils.bytes2Short(bleData, 23);
+                pcid_4g_3 = BytesUtils.bytes2Short(bleData,25);
             }
             bleDriverSignInData.setAlert(alert);
             bleDriverSignInData.setAltitude(altitude);
@@ -1332,11 +1364,11 @@ public class PersonalAssetMsgDecoder {
             bleDriverSignInData.setCi_2g_3(ci_2g_3);
             bleDriverSignInData.setMcc_4g(mcc_4g);
             bleDriverSignInData.setMnc_4g(mnc_4g);
-            bleDriverSignInData.setCi_4g(ci_4g);
-            bleDriverSignInData.setEarfcn_4g_1(earfcn_4g_1);
+            bleDriverSignInData.setEci_4g(eci_4g);
+            bleDriverSignInData.setTac(tac);
             bleDriverSignInData.setPcid_4g_1(pcid_4g_1);
-            bleDriverSignInData.setEarfcn_4g_2(earfcn_4g_2);
             bleDriverSignInData.setPcid_4g_2(pcid_4g_2);
+            bleDriverSignInData.setPcid_4g_3(pcid_4g_3);
             bleDataList.add(bleDriverSignInData);
         }else if (bleData[0] == 0x00 && bleData[1] == 0x04){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_TEMP);
@@ -1619,11 +1651,11 @@ public class PersonalAssetMsgDecoder {
         Boolean is_4g_lbs = false;
         Integer mcc_4g = null;
         Integer mnc_4g = null;
-        Long ci_4g = null;
-        Integer earfcn_4g_1 = null;
+        Long eci_4g = null;
+        Integer tac = null;
         Integer pcid_4g_1 = null;
-        Integer earfcn_4g_2 = null;
         Integer pcid_4g_2 = null;
+        Integer pcid_4g_3 = null;
         Boolean is_2g_lbs = false;
         Integer mcc_2g = null;
         Integer mnc_2g = null;
@@ -1654,11 +1686,11 @@ public class PersonalAssetMsgDecoder {
         if (is_4g_lbs){
             mcc_4g = BytesUtils.bytes2Short(data,23) & 0x7FFF;
             mnc_4g = BytesUtils.bytes2Short(data,25);
-            ci_4g = BytesUtils.unsigned4BytesToInt(data, 27);
-            earfcn_4g_1 = BytesUtils.bytes2Short(data, 31);
+            eci_4g = BytesUtils.unsigned4BytesToInt(data, 27);
+            tac = BytesUtils.bytes2Short(data, 31);
             pcid_4g_1 = BytesUtils.bytes2Short(data, 33);
-            earfcn_4g_2 = BytesUtils.bytes2Short(data, 35);
-            pcid_4g_2 = BytesUtils.bytes2Short(data,37);
+            pcid_4g_2 = BytesUtils.bytes2Short(data, 35);
+            pcid_4g_3 = BytesUtils.bytes2Short(data,37);
         }
 
         int axisXDirect = (data[39] & 0x80) == 0x80 ? 1 : -1;
@@ -1841,11 +1873,11 @@ public class PersonalAssetMsgDecoder {
         locationMessage.setCi_2g_3(ci_2g_3);
         locationMessage.setMcc_4g(mcc_4g);
         locationMessage.setMnc_4g(mnc_4g);
-        locationMessage.setCi_4g(ci_4g);
-        locationMessage.setEarfcn_4g_1(earfcn_4g_1);
+        locationMessage.setEci_4g(eci_4g);
+        locationMessage.setTac(tac);
         locationMessage.setPcid_4g_1(pcid_4g_1);
-        locationMessage.setEarfcn_4g_2(earfcn_4g_2);
         locationMessage.setPcid_4g_2(pcid_4g_2);
+        locationMessage.setPcid_4g_3(pcid_4g_3);
         locationMessage.setLockType(lockType);
         return locationMessage;
     }
@@ -1902,6 +1934,9 @@ public class PersonalAssetMsgDecoder {
                         callback.receiveWifiWithDeviceInfoMessage((WifiWithDeviceInfoMessage) wifiWithDeviceInfoMessage);
                     }
                     break;
+                case  0x26:
+                    callback.receiveDeviceTempCollectionMessage(parseDeviceTempCollectionMessage(bytes));
+                    break;
                 case 0x12:
                     BluetoothPeripheralDataMessage bluetoothPeripheralDataSecondMessage = parseSecondBluetoothDataMessage(bytes);
                     callback.receiveBluetoothDataMessage(bluetoothPeripheralDataSecondMessage);
@@ -1957,11 +1992,11 @@ public class PersonalAssetMsgDecoder {
         Boolean is_4g_lbs = false;
         Integer mcc_4g = null;
         Integer mnc_4g = null;
-        Long ci_4g = null;
-        Integer earfcn_4g_1 = null;
+        Long eci_4g = null;
+        Integer tac = null;
         Integer pcid_4g_1 = null;
-        Integer earfcn_4g_2 = null;
         Integer pcid_4g_2 = null;
+        Integer pcid_4g_3 = null;
         Boolean is_2g_lbs = false;
         Integer mcc_2g = null;
         Integer mnc_2g = null;
@@ -1992,11 +2027,11 @@ public class PersonalAssetMsgDecoder {
         if (is_4g_lbs){
             mcc_4g = BytesUtils.bytes2Short(bytes,22) & 0x7FFF;
             mnc_4g = BytesUtils.bytes2Short(bytes,24);
-            ci_4g = BytesUtils.unsigned4BytesToInt(bytes, 26);
-            earfcn_4g_1 = BytesUtils.bytes2Short(bytes, 30);
+            eci_4g = BytesUtils.unsigned4BytesToInt(bytes, 26);
+            tac = BytesUtils.bytes2Short(bytes, 30);
             pcid_4g_1 = BytesUtils.bytes2Short(bytes, 32);
-            earfcn_4g_2 = BytesUtils.bytes2Short(bytes, 34);
-            pcid_4g_2 = BytesUtils.bytes2Short(bytes,36);
+            pcid_4g_2 = BytesUtils.bytes2Short(bytes, 34);
+            pcid_4g_3 = BytesUtils.bytes2Short(bytes,36);
         }
         int lockType = bytes[38] & 0xff;
         if(lockType < 0){
@@ -2039,11 +2074,11 @@ public class PersonalAssetMsgDecoder {
         lockMessage.setCi_2g_3(ci_2g_3);
         lockMessage.setMcc_4g(mcc_4g);
         lockMessage.setMnc_4g(mnc_4g);
-        lockMessage.setCi_4g(ci_4g);
-        lockMessage.setEarfcn_4g_1(earfcn_4g_1);
+        lockMessage.setEci_4g(eci_4g);
+        lockMessage.setTac(tac);
         lockMessage.setPcid_4g_1(pcid_4g_1);
-        lockMessage.setEarfcn_4g_2(earfcn_4g_2);
         lockMessage.setPcid_4g_2(pcid_4g_2);
+        lockMessage.setPcid_4g_3(pcid_4g_3);
 
         return lockMessage;
     }
@@ -2274,6 +2309,8 @@ public class PersonalAssetMsgDecoder {
 
         void receiveWifiMessage(WifiMessage wifiMessage);
         void receiveWifiWithDeviceInfoMessage(WifiWithDeviceInfoMessage wifiMessage);
+
+        void receiveDeviceTempCollectionMessage(DeviceTempCollectionMessage deviceTempCollectionMessage);
 
         void receiveLockMessage(LockMessage lockMessage);
         /**

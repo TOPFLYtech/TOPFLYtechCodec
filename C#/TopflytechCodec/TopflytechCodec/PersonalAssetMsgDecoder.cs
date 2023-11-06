@@ -37,6 +37,8 @@ namespace TopflytechCodec
         private static byte[] WIFI_WITH_DEVICE_INFO_DATA = { 0x27, 0x27, (byte)0x24 };
 
         private static byte[] WIFI_ALARM_WITH_DEVICE_INFO_DATA = { 0x27, 0x27, (byte)0x25 };
+
+        private static byte[] DEVICE_TEMP_COLLECTION_DATA = { 0x27, 0x27, (byte)0x26 };
         private int encryptType = 0;
         private String aesKey;
         public PersonalAssetMsgDecoder(int messageEncryptType, String aesKey)
@@ -59,6 +61,7 @@ namespace TopflytechCodec
                     || Utils.ArrayEquals(BLUETOOTH_SECOND_DATA, bytes)
                     || Utils.ArrayEquals(WIFI_WITH_DEVICE_INFO_DATA, bytes)
                     || Utils.ArrayEquals(WIFI_ALARM_WITH_DEVICE_INFO_DATA, bytes)
+                    || Utils.ArrayEquals(DEVICE_TEMP_COLLECTION_DATA, bytes)
                     || Utils.ArrayEquals(LOCK_DATA, bytes);
         }
         private TopflytechByteBuf decoderBuf = new TopflytechByteBuf();
@@ -155,6 +158,9 @@ namespace TopflytechCodec
                     case 0x25:
                         Message wifiWithDeviceInfoMessage = parseWifiWithDeviceInfoMessage(bytes);
                         return wifiWithDeviceInfoMessage;
+                    case 0x26:
+                        DeviceTempCollectionMessage deviceTempCollectionMessage  = parseDeviceTempCollectionMessage(bytes);
+                        return deviceTempCollectionMessage;
                     case (byte)0x81:
                         Message message =  parseInteractMessage(bytes);
                         return message;
@@ -271,11 +277,11 @@ namespace TopflytechCodec
             Boolean is_4g_lbs = false;
             Int32 mcc_4g = -1;
             Int32 mnc_4g = -1;
-            Int64 ci_4g = -1;
-            Int32 earfcn_4g_1 = -1;
+            Int64 eci_4g = -1;
+            Int32 tac = -1;
             Int32 pcid_4g_1 = -1;
-            Int32 earfcn_4g_2 = -1;
             Int32 pcid_4g_2 = -1;
+            Int32 pcid_4g_3 = -1;
             Boolean is_2g_lbs = false;
             Int32 mcc_2g = -1;
             Int32 mnc_2g = -1;
@@ -312,11 +318,11 @@ namespace TopflytechCodec
             {
                 mcc_4g = BytesUtils.Bytes2Short(bytes, 23) & 0x7FFF;
                 mnc_4g = BytesUtils.Bytes2Short(bytes, 25);
-                ci_4g = BytesUtils.Byte2Int(bytes, 27);
-                earfcn_4g_1 = BytesUtils.Bytes2Short(bytes, 31);
+                eci_4g = BytesUtils.Byte2Int(bytes, 27);
+                tac = BytesUtils.Bytes2Short(bytes, 31);
                 pcid_4g_1 = BytesUtils.Bytes2Short(bytes, 33);
-                earfcn_4g_2 = BytesUtils.Bytes2Short(bytes, 35);
-                pcid_4g_2 = BytesUtils.Bytes2Short(bytes, 37);
+                pcid_4g_2 = BytesUtils.Bytes2Short(bytes, 35);
+                pcid_4g_3 = BytesUtils.Bytes2Short(bytes, 37);
             }
             bluetoothPeripheralDataMessage.IsHadLocationInfo = true;
             bluetoothPeripheralDataMessage.Altitude = altitude;
@@ -328,11 +334,11 @@ namespace TopflytechCodec
             bluetoothPeripheralDataMessage.Is_4g_lbs = is_4g_lbs;
             bluetoothPeripheralDataMessage.Mcc_4g = mcc_4g;
             bluetoothPeripheralDataMessage.Mnc_4g = mnc_4g;
-            bluetoothPeripheralDataMessage.Ci_4g = ci_4g;
-            bluetoothPeripheralDataMessage.Earfcn_4g_1 = earfcn_4g_1;
+            bluetoothPeripheralDataMessage.Eci_4g = eci_4g;
+            bluetoothPeripheralDataMessage.TAC = tac;
             bluetoothPeripheralDataMessage.Pcid_4g_1 = pcid_4g_1;
-            bluetoothPeripheralDataMessage.Earfcn_4g_2 = earfcn_4g_2;
             bluetoothPeripheralDataMessage.Pcid_4g_2 = pcid_4g_2;
+            bluetoothPeripheralDataMessage.Pcid_4g_3 = pcid_4g_3;
             bluetoothPeripheralDataMessage.Mcc_2g = mcc_2g;
             bluetoothPeripheralDataMessage.Mnc_2g = mnc_2g;
             bluetoothPeripheralDataMessage.Lac_2g_1 = lac_2g_1;
@@ -433,11 +439,11 @@ namespace TopflytechCodec
                 bleAlertData.Is_4g_lbs = is_4g_lbs;
                 bleAlertData.Mcc_4g = mcc_4g;
                 bleAlertData.Mnc_4g = mnc_4g;
-                bleAlertData.Ci_4g = ci_4g;
-                bleAlertData.Earfcn_4g_1 = earfcn_4g_1;
+                bleAlertData.Eci_4g = eci_4g;
+                bleAlertData.TAC = tac;
                 bleAlertData.Pcid_4g_1 = pcid_4g_1;
-                bleAlertData.Earfcn_4g_2 = earfcn_4g_2;
                 bleAlertData.Pcid_4g_2 = pcid_4g_2;
+                bleAlertData.Pcid_4g_3 = pcid_4g_3;
                 bleAlertData.Mcc_2g = mcc_2g;
                 bleAlertData.Mnc_2g = mnc_2g;
                 bleAlertData.Lac_2g_1 = lac_2g_1;
@@ -481,11 +487,11 @@ namespace TopflytechCodec
                 bleDriverSignInData.Is_4g_lbs = is_4g_lbs;
                 bleDriverSignInData.Mcc_4g = mcc_4g;
                 bleDriverSignInData.Mnc_4g = mnc_4g;
-                bleDriverSignInData.Ci_4g = ci_4g;
-                bleDriverSignInData.Earfcn_4g_1 = earfcn_4g_1;
+                bleDriverSignInData.Eci_4g = eci_4g;
+                bleDriverSignInData.TAC = tac;
                 bleDriverSignInData.Pcid_4g_1 = pcid_4g_1;
-                bleDriverSignInData.Earfcn_4g_2 = earfcn_4g_2;
                 bleDriverSignInData.Pcid_4g_2 = pcid_4g_2;
+                bleDriverSignInData.Pcid_4g_3 = pcid_4g_3;
                 bleDriverSignInData.Mcc_2g = mcc_2g;
                 bleDriverSignInData.Mnc_2g = mnc_2g;
                 bleDriverSignInData.Lac_2g_1 = lac_2g_1;
@@ -838,11 +844,11 @@ namespace TopflytechCodec
             Boolean is_4g_lbs = false;
             Int32 mcc_4g = -1;
             Int32 mnc_4g = -1;
-            Int64 ci_4g = -1;
-            Int32 earfcn_4g_1 = -1;
+            Int64 eci_4g = -1;
+            Int32 tac = -1;
             Int32 pcid_4g_1 = -1;
-            Int32 earfcn_4g_2 = -1;
             Int32 pcid_4g_2 = -1;
+            Int32 pcid_4g_3 = -1;
             Boolean is_2g_lbs = false;
             Int32 mcc_2g = -1;
             Int32 mnc_2g = -1;
@@ -879,11 +885,11 @@ namespace TopflytechCodec
             {
                 mcc_4g = BytesUtils.Bytes2Short(bytes, 22) & 0x7FFF;
                 mnc_4g = BytesUtils.Bytes2Short(bytes, 24);
-                ci_4g = BytesUtils.Byte2Int(bytes, 26);
-                earfcn_4g_1 = BytesUtils.Bytes2Short(bytes, 30);
+                eci_4g = BytesUtils.Byte2Int(bytes, 26);
+                tac = BytesUtils.Bytes2Short(bytes, 30);
                 pcid_4g_1 = BytesUtils.Bytes2Short(bytes, 32);
-                earfcn_4g_2 = BytesUtils.Bytes2Short(bytes, 34);
-                pcid_4g_2 = BytesUtils.Bytes2Short(bytes, 36);
+                pcid_4g_2 = BytesUtils.Bytes2Short(bytes, 34);
+                pcid_4g_3 = BytesUtils.Bytes2Short(bytes, 36);
             }
 
             int lockType = bytes[38] & 0xff; 
@@ -914,11 +920,11 @@ namespace TopflytechCodec
             lockMessage.Is_4g_lbs = is_4g_lbs;
             lockMessage.Mcc_4g = mcc_4g;
             lockMessage.Mnc_4g = mnc_4g;
-            lockMessage.Ci_4g = ci_4g;
-            lockMessage.Earfcn_4g_1 = earfcn_4g_1;
+            lockMessage.Eci_4g = eci_4g;
+            lockMessage.TAC = tac;
             lockMessage.Pcid_4g_1 = pcid_4g_1;
-            lockMessage.Earfcn_4g_2 = earfcn_4g_2;
             lockMessage.Pcid_4g_2 = pcid_4g_2;
+            lockMessage.Pcid_4g_3 = pcid_4g_3;
             lockMessage.Mcc_2g = mcc_2g;
             lockMessage.Mnc_2g = mnc_2g;
             lockMessage.Lac_2g_1 = lac_2g_1;
@@ -1056,11 +1062,11 @@ namespace TopflytechCodec
                 Boolean is_4g_lbs = false;
                 Int32 mcc_4g = -1;
                 Int32 mnc_4g = -1;
-                Int64 ci_4g = -1;
-                Int32 earfcn_4g_1 = -1;
+                Int64 eci_4g = -1;
+                Int32 tac = -1;
                 Int32 pcid_4g_1 = -1;
-                Int32 earfcn_4g_2 = -1;
                 Int32 pcid_4g_2 = -1;
+                Int32 pcid_4g_3 = -1;
                 Boolean is_2g_lbs = false;
                 Int32 mcc_2g = -1;
                 Int32 mnc_2g = -1;
@@ -1097,11 +1103,11 @@ namespace TopflytechCodec
                 {
                     mcc_4g = BytesUtils.Bytes2Short(bleData, 11) & 0x7FFF;
                     mnc_4g = BytesUtils.Bytes2Short(bleData, 13);
-                    ci_4g = BytesUtils.Byte2Int(bleData, 15);
-                    earfcn_4g_1 = BytesUtils.Bytes2Short(bleData, 19);
+                    eci_4g = BytesUtils.Byte2Int(bleData, 15);
+                    tac = BytesUtils.Bytes2Short(bleData, 19);
                     pcid_4g_1 = BytesUtils.Bytes2Short(bleData, 21);
-                    earfcn_4g_2 = BytesUtils.Bytes2Short(bleData, 23);
-                    pcid_4g_2 = BytesUtils.Bytes2Short(bleData, 25);
+                    pcid_4g_2 = BytesUtils.Bytes2Short(bleData, 23);
+                    pcid_4g_3 = BytesUtils.Bytes2Short(bleData, 25);
                 }
                 bleAlertData.AlertType = alert;
                 bleAlertData.Altitude = altitude;
@@ -1118,11 +1124,11 @@ namespace TopflytechCodec
                 bleAlertData.Is_4g_lbs = is_4g_lbs;
                 bleAlertData.Mcc_4g = mcc_4g;
                 bleAlertData.Mnc_4g = mnc_4g;
-                bleAlertData.Ci_4g = ci_4g;
-                bleAlertData.Earfcn_4g_1 = earfcn_4g_1;
+                bleAlertData.Eci_4g = eci_4g;
+                bleAlertData.TAC = tac;
                 bleAlertData.Pcid_4g_1 = pcid_4g_1;
-                bleAlertData.Earfcn_4g_2 = earfcn_4g_2;
                 bleAlertData.Pcid_4g_2 = pcid_4g_2;
+                bleAlertData.Pcid_4g_3 = pcid_4g_3;
                 bleAlertData.Mcc_2g = mcc_2g;
                 bleAlertData.Mnc_2g = mnc_2g;
                 bleAlertData.Lac_2g_1 = lac_2g_1;
@@ -1179,11 +1185,11 @@ namespace TopflytechCodec
                 Boolean is_4g_lbs = false;
                 Int32 mcc_4g = -1;
                 Int32 mnc_4g = -1;
-                Int64 ci_4g = -1;
-                Int32 earfcn_4g_1 = -1;
+                Int64 eci_4g = -1;
+                Int32 tac = -1;
                 Int32 pcid_4g_1 = -1;
-                Int32 earfcn_4g_2 = -1;
                 Int32 pcid_4g_2 = -1;
+                Int32 pcid_4g_3 = -1;
                 Boolean is_2g_lbs = false;
                 Int32 mcc_2g = -1;
                 Int32 mnc_2g = -1;
@@ -1220,11 +1226,11 @@ namespace TopflytechCodec
                 {
                     mcc_4g = BytesUtils.Bytes2Short(bleData, 11) & 0x7FFF;
                     mnc_4g = BytesUtils.Bytes2Short(bleData, 13);
-                    ci_4g = BytesUtils.Byte2Int(bleData, 15);
-                    earfcn_4g_1 = BytesUtils.Bytes2Short(bleData, 19);
+                    eci_4g = BytesUtils.Byte2Int(bleData, 15);
+                    tac = BytesUtils.Bytes2Short(bleData, 19);
                     pcid_4g_1 = BytesUtils.Bytes2Short(bleData, 21);
-                    earfcn_4g_2 = BytesUtils.Bytes2Short(bleData, 23);
-                    pcid_4g_2 = BytesUtils.Bytes2Short(bleData, 25);
+                    pcid_4g_2 = BytesUtils.Bytes2Short(bleData, 23);
+                    pcid_4g_3 = BytesUtils.Bytes2Short(bleData, 25);
                 }
                 bleDriverSignInData.Alert = alert;
                 bleDriverSignInData.Altitude = altitude;
@@ -1241,11 +1247,11 @@ namespace TopflytechCodec
                 bleDriverSignInData.Is_4g_lbs = is_4g_lbs;
                 bleDriverSignInData.Mcc_4g = mcc_4g;
                 bleDriverSignInData.Mnc_4g = mnc_4g;
-                bleDriverSignInData.Ci_4g = ci_4g;
-                bleDriverSignInData.Earfcn_4g_1 = earfcn_4g_1;
+                bleDriverSignInData.Eci_4g = eci_4g;
+                bleDriverSignInData.TAC = tac;
                 bleDriverSignInData.Pcid_4g_1 = pcid_4g_1;
-                bleDriverSignInData.Earfcn_4g_2 = earfcn_4g_2;
                 bleDriverSignInData.Pcid_4g_2 = pcid_4g_2;
+                bleDriverSignInData.Pcid_4g_3 = pcid_4g_3;
                 bleDriverSignInData.Mcc_2g = mcc_2g;
                 bleDriverSignInData.Mnc_2g = mnc_2g;
                 bleDriverSignInData.Lac_2g_1 = lac_2g_1;
@@ -1618,11 +1624,11 @@ namespace TopflytechCodec
         Boolean is_4g_lbs = false;
         Int32 mcc_4g = -1;
         Int32 mnc_4g = -1;
-        Int64 ci_4g = -1;
-        Int32 earfcn_4g_1 = -1;
+        Int64 eci_4g = -1;
+        Int32 tac = -1;
         Int32 pcid_4g_1 = -1;
-        Int32 earfcn_4g_2 = -1;
         Int32 pcid_4g_2 = -1;
+        Int32 pcid_4g_3 = -1;
         Boolean is_2g_lbs = false;
         Int32 mcc_2g = -1;
         Int32 mnc_2g = -1;
@@ -1659,11 +1665,11 @@ namespace TopflytechCodec
         {
             mcc_4g = BytesUtils.Bytes2Short(data, 23) & 0x7FFF;
             mnc_4g = BytesUtils.Bytes2Short(data, 25);
-            ci_4g = BytesUtils.Byte2Int(data, 27);
-            earfcn_4g_1 = BytesUtils.Bytes2Short(data, 31);
+            eci_4g = BytesUtils.Byte2Int(data, 27);
+            tac = BytesUtils.Bytes2Short(data, 31);
             pcid_4g_1 = BytesUtils.Bytes2Short(data, 33);
-            earfcn_4g_2 = BytesUtils.Bytes2Short(data, 35);
-            pcid_4g_2 = BytesUtils.Bytes2Short(data, 37);
+            pcid_4g_2 = BytesUtils.Bytes2Short(data, 35);
+            pcid_4g_3 = BytesUtils.Bytes2Short(data, 37);
         }
         int axisXDirect = (data[39] & 0x80) == 0x80 ? 1 : -1;
         float axisX = ((data[39] & 0x7F & 0xff) + (((data[40] & 0xf0) >> 4) & 0xff) /10.0f) * axisXDirect;
@@ -1823,11 +1829,11 @@ namespace TopflytechCodec
         locationMessage.Is_4g_lbs = is_4g_lbs;
         locationMessage.Mcc_4g = mcc_4g;
         locationMessage.Mnc_4g = mnc_4g;
-        locationMessage.Ci_4g = ci_4g;
-        locationMessage.Earfcn_4g_1 = earfcn_4g_1;
+        locationMessage.Eci_4g = eci_4g;
+        locationMessage.TAC = tac;
         locationMessage.Pcid_4g_1 = pcid_4g_1;
-        locationMessage.Earfcn_4g_2 = earfcn_4g_2;
         locationMessage.Pcid_4g_2 = pcid_4g_2;
+        locationMessage.Pcid_4g_3 = pcid_4g_3;
         locationMessage.Mcc_2g = mcc_2g;
         locationMessage.Mnc_2g = mnc_2g;
         locationMessage.Lac_2g_1 = lac_2g_1;
@@ -1888,7 +1894,7 @@ namespace TopflytechCodec
     private Message parseWifiWithDeviceInfoMessage(byte[] bytes)
     {
             bool isWifiMsg = (bytes[15] & 0x20) == 0x20;
-            bool isGpsWorking = (bytes[15] & 0x8) == 0x8;
+            bool isGpsWorking = (bytes[15] & 0x8) == 0x8 ? false : true;
             int serialNo = BytesUtils.Bytes2Short(bytes, 5);
             String imei = BytesUtils.IMEI.Decode(bytes, 7); 
             bool isHisData = (bytes[15] & 0x80) == 0x80;
@@ -2225,9 +2231,7 @@ namespace TopflytechCodec
                 locationMessage.Is_2g_lbs = is_2g_lbs;
                 locationMessage.Is_4g_lbs = is_4g_lbs;
                 locationMessage.Mcc_4g = mcc_4g;
-                locationMessage.Mnc_4g = mnc_4g;
-                locationMessage.Ci_4g = ci_4g;
-                locationMessage.Tac = tac;
+                locationMessage.Mnc_4g = mnc_4g; 
                 locationMessage.Pcid_4g_1 = pcid_4g_1; 
                 locationMessage.Pcid_4g_2 = pcid_4g_2;
                 locationMessage.Pcid_4g_3 = pcid_4g_3;
@@ -2245,7 +2249,35 @@ namespace TopflytechCodec
             
     }
 
-    private WifiMessage parseWifiMessage(byte[] bytes)
+        private DeviceTempCollectionMessage parseDeviceTempCollectionMessage(byte[] bytes)
+        {
+            int serialNo = BytesUtils.Bytes2Short(bytes, 5);
+            String imei = BytesUtils.IMEI.Decode(bytes, 7);
+            DateTime date = Utils.getGTM0Date(bytes, 15);
+            DeviceTempCollectionMessage deviceTempCollectionMessage = new DeviceTempCollectionMessage();
+            deviceTempCollectionMessage.Type = bytes[21];
+            int interval = BytesUtils.Bytes2Short(bytes, 22);
+            int valueLen = bytes.Length - 24;
+            if (valueLen > 0 && valueLen / 2 > 0)
+            {
+                int tempCount = valueLen / 2;
+                List<float> tempList = new List<float>();
+                for (int i = 0; i < tempCount; i++)
+                {
+                    int tempInt = BytesUtils.Bytes2Short(bytes, 24 + i * 2);
+                    tempList.Add(tempInt * 0.01f);
+                }
+                deviceTempCollectionMessage.TempList = tempList;
+            }
+            deviceTempCollectionMessage.Imei = imei ;
+            deviceTempCollectionMessage.Date = date ;
+            deviceTempCollectionMessage.SerialNo=serialNo;
+            deviceTempCollectionMessage.OrignBytes=bytes;
+            deviceTempCollectionMessage.Interval=interval;
+            return deviceTempCollectionMessage;
+        }
+
+        private WifiMessage parseWifiMessage(byte[] bytes)
     {
         WifiMessage wifiMessage = new WifiMessage();
         int serialNo = BytesUtils.Bytes2Short(bytes, 5);

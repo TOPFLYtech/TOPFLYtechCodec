@@ -2,7 +2,6 @@ package com.topflytech.codec;
 
 import com.topflytech.codec.entities.*;
 
-import java.lang.reflect.Array;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
@@ -638,11 +637,11 @@ public class Decoder {
             Boolean is_4g_lbs = false;
             Integer mcc_4g = null;
             Integer mnc_4g = null;
-            Long ci_4g = null;
-            Integer earfcn_4g_1 = null;
+            Long eci_4g = null;
+            Integer tac = null;
             Integer pcid_4g_1 = null;
-            Integer earfcn_4g_2 = null;
             Integer pcid_4g_2 = null;
+            Integer pcid_4g_3 = null;
             Boolean is_2g_lbs = false;
             Integer mcc_2g = null;
             Integer mnc_2g = null;
@@ -673,11 +672,11 @@ public class Decoder {
             if (is_4g_lbs){
                 mcc_4g = BytesUtils.bytes2Short(bleData,11) & 0x7FFF;
                 mnc_4g = BytesUtils.bytes2Short(bleData,13);
-                ci_4g = BytesUtils.unsigned4BytesToInt(bleData, 15);
-                earfcn_4g_1 = BytesUtils.bytes2Short(bleData, 19);
-                pcid_4g_1 = BytesUtils.bytes2Short(bleData, 21);
-                earfcn_4g_2 = BytesUtils.bytes2Short(bleData, 23);
-                pcid_4g_2 = BytesUtils.bytes2Short(bleData,25);
+                eci_4g = BytesUtils.unsigned4BytesToInt(bleData, 15);
+                tac = BytesUtils.bytes2Short(bytes, 19);
+                pcid_4g_1 = BytesUtils.bytes2Short(bytes, 21);
+                pcid_4g_2 = BytesUtils.bytes2Short(bytes, 23);
+                pcid_4g_3 = BytesUtils.bytes2Short(bytes,25);
             }
             bleAlertData.setAlertType(alert);
             bleAlertData.setAltitude(altitude);
@@ -702,11 +701,11 @@ public class Decoder {
             bleAlertData.setCi_2g_3(ci_2g_3);
             bleAlertData.setMcc_4g(mcc_4g);
             bleAlertData.setMnc_4g(mnc_4g);
-            bleAlertData.setCi_4g(ci_4g);
-            bleAlertData.setEarfcn_4g_1(earfcn_4g_1);
+            bleAlertData.setEci_4g(eci_4g);
+            bleAlertData.setTac(tac);
             bleAlertData.setPcid_4g_1(pcid_4g_1);
-            bleAlertData.setEarfcn_4g_2(earfcn_4g_2);
             bleAlertData.setPcid_4g_2(pcid_4g_2);
+            bleAlertData.setPcid_4g_3(pcid_4g_3);
             bleDataList.add(bleAlertData);
         }else if (bleData[0] == 0x00 && bleData[1] == 0x03){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_DRIVER);
@@ -747,11 +746,11 @@ public class Decoder {
             Boolean is_4g_lbs = false;
             Integer mcc_4g = null;
             Integer mnc_4g = null;
-            Long ci_4g = null;
-            Integer earfcn_4g_1 = null;
+            Long eci_4g = null;
+            Integer tac = null;
             Integer pcid_4g_1 = null;
-            Integer earfcn_4g_2 = null;
             Integer pcid_4g_2 = null;
+            Integer pcid_4g_3 = null;
             Boolean is_2g_lbs = false;
             Integer mcc_2g = null;
             Integer mnc_2g = null;
@@ -782,11 +781,11 @@ public class Decoder {
             if (is_4g_lbs){
                 mcc_4g = BytesUtils.bytes2Short(bleData,11) & 0x7FFF;
                 mnc_4g = BytesUtils.bytes2Short(bleData,13);
-                ci_4g = BytesUtils.unsigned4BytesToInt(bleData, 15);
-                earfcn_4g_1 = BytesUtils.bytes2Short(bleData, 19);
-                pcid_4g_1 = BytesUtils.bytes2Short(bleData, 21);
-                earfcn_4g_2 = BytesUtils.bytes2Short(bleData, 23);
-                pcid_4g_2 = BytesUtils.bytes2Short(bleData,25);
+                eci_4g = BytesUtils.unsigned4BytesToInt(bleData, 15);
+                tac = BytesUtils.bytes2Short(bytes, 19);
+                pcid_4g_1 = BytesUtils.bytes2Short(bytes, 21);
+                pcid_4g_2 = BytesUtils.bytes2Short(bytes, 23);
+                pcid_4g_3 = BytesUtils.bytes2Short(bytes,25);
             }
             bleDriverSignInData.setAlert(alert);
             bleDriverSignInData.setAltitude(altitude);
@@ -811,11 +810,11 @@ public class Decoder {
             bleDriverSignInData.setCi_2g_3(ci_2g_3);
             bleDriverSignInData.setMcc_4g(mcc_4g);
             bleDriverSignInData.setMnc_4g(mnc_4g);
-            bleDriverSignInData.setCi_4g(ci_4g);
-            bleDriverSignInData.setEarfcn_4g_1(earfcn_4g_1);
+            bleDriverSignInData.setEci_4g(eci_4g);
+            bleDriverSignInData.setTac(tac);
             bleDriverSignInData.setPcid_4g_1(pcid_4g_1);
-            bleDriverSignInData.setEarfcn_4g_2(earfcn_4g_2);
             bleDriverSignInData.setPcid_4g_2(pcid_4g_2);
+            bleDriverSignInData.setPcid_4g_3(pcid_4g_3);
             bleDataList.add(bleDriverSignInData);
         }else if (bleData[0] == 0x00 && bleData[1] == 0x04){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_TEMP);
@@ -1110,11 +1109,11 @@ public class Decoder {
         Boolean is_4g_lbs = false;
         Integer mcc_4g = null;
         Integer mnc_4g = null;
-        Long ci_4g = null;
-        Integer earfcn_4g_1 = null;
+        Long eci_4g = null;
+        Integer tac = null;
         Integer pcid_4g_1 = null;
-        Integer earfcn_4g_2 = null;
         Integer pcid_4g_2 = null;
+        Integer pcid_4g_3 = null;
         Boolean is_2g_lbs = false;
         Integer mcc_2g = null;
         Integer mnc_2g = null;
@@ -1145,11 +1144,11 @@ public class Decoder {
         if (is_4g_lbs){
             mcc_4g = BytesUtils.bytes2Short(bytes,23) & 0x7FFF;
             mnc_4g = BytesUtils.bytes2Short(bytes,25);
-            ci_4g = BytesUtils.unsigned4BytesToInt(bytes, 27);
-            earfcn_4g_1 = BytesUtils.bytes2Short(bytes, 31);
+            eci_4g = BytesUtils.unsigned4BytesToInt(bytes, 27);
+            tac = BytesUtils.bytes2Short(bytes, 31);
             pcid_4g_1 = BytesUtils.bytes2Short(bytes, 33);
-            earfcn_4g_2 = BytesUtils.bytes2Short(bytes, 35);
-            pcid_4g_2 = BytesUtils.bytes2Short(bytes,37);
+            pcid_4g_2 = BytesUtils.bytes2Short(bytes, 35);
+            pcid_4g_3 = BytesUtils.bytes2Short(bytes,37);
         }
         bluetoothPeripheralDataMessage.setLatitude(latitude);
         bluetoothPeripheralDataMessage.setLongitude(longitude);
@@ -1169,11 +1168,11 @@ public class Decoder {
         bluetoothPeripheralDataMessage.setCi_2g_3(ci_2g_3);
         bluetoothPeripheralDataMessage.setMcc_4g(mcc_4g);
         bluetoothPeripheralDataMessage.setMnc_4g(mnc_4g);
-        bluetoothPeripheralDataMessage.setCi_4g(ci_4g);
-        bluetoothPeripheralDataMessage.setEarfcn_4g_1(earfcn_4g_1);
+        bluetoothPeripheralDataMessage.setEci_4g(eci_4g);
+        bluetoothPeripheralDataMessage.setTac(tac);
         bluetoothPeripheralDataMessage.setPcid_4g_1(pcid_4g_1);
-        bluetoothPeripheralDataMessage.setEarfcn_4g_2(earfcn_4g_2);
         bluetoothPeripheralDataMessage.setPcid_4g_2(pcid_4g_2);
+        bluetoothPeripheralDataMessage.setPcid_4g_3(pcid_4g_3);
         byte[] bleData = Arrays.copyOfRange(bytes,39,bytes.length);
         if (bleData.length <= 0){
             System.out.println("Error len ble Data:" +BytesUtils.bytes2HexString(bytes,0));
@@ -1257,11 +1256,11 @@ public class Decoder {
             bleAlertData.setCi_2g_3(ci_2g_3);
             bleAlertData.setMcc_4g(mcc_4g);
             bleAlertData.setMnc_4g(mnc_4g);
-            bleAlertData.setCi_4g(ci_4g);
-            bleAlertData.setEarfcn_4g_1(earfcn_4g_1);
+            bleAlertData.setEci_4g(eci_4g);
+            bleAlertData.setTac(tac);
             bleAlertData.setPcid_4g_1(pcid_4g_1);
-            bleAlertData.setEarfcn_4g_2(earfcn_4g_2);
             bleAlertData.setPcid_4g_2(pcid_4g_2);
+            bleAlertData.setPcid_4g_3(pcid_4g_3);
             bleDataList.add(bleAlertData);
         }else if (bleData[0] == 0x00 && bleData[1] == 0x03){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_DRIVER);
@@ -1300,11 +1299,11 @@ public class Decoder {
             bleDriverSignInData.setCi_2g_3(ci_2g_3);
             bleDriverSignInData.setMcc_4g(mcc_4g);
             bleDriverSignInData.setMnc_4g(mnc_4g);
-            bleDriverSignInData.setCi_4g(ci_4g);
-            bleDriverSignInData.setEarfcn_4g_1(earfcn_4g_1);
+            bleDriverSignInData.setEci_4g(eci_4g);
+            bleDriverSignInData.setTac(tac);
             bleDriverSignInData.setPcid_4g_1(pcid_4g_1);
-            bleDriverSignInData.setEarfcn_4g_2(earfcn_4g_2);
             bleDriverSignInData.setPcid_4g_2(pcid_4g_2);
+            bleDriverSignInData.setPcid_4g_3(pcid_4g_3);
             bleDataList.add(bleDriverSignInData);
         }else if (bleData[0] == 0x00 && bleData[1] == 0x04){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_TEMP);
@@ -1562,6 +1561,51 @@ public class Decoder {
             signInMessage.setHardware(hardware);
             signInMessage.setOrignBytes(bytes);
 //            signInMessage.setIsNeedResp(isNeedResp);
+            return signInMessage;
+        }else if(33 == bytes.length){
+            String software = String.format("V%d.%d.%d", bytes[15] & 0xf, (bytes[16] & 0xf0) >> 4, bytes[16] & 0xf);
+            String firmware = BytesUtils.bytes2HexString(Arrays.copyOfRange(bytes, 20, 22), 0);
+            firmware = String.format("V%s.%s.%s.%s", firmware.substring(0,1), firmware.substring(1, 2), firmware.substring(2,3),firmware.substring(3,4));
+            String hardware = BytesUtils.bytes2HexString(Arrays.copyOfRange(bytes, 22, 23), 0);
+            hardware = String.format("V%s.%s", hardware.substring(0,1), hardware.substring(1, 2));
+            String obdHardware = BytesUtils.bytes2HexString(Arrays.copyOfRange(bytes, 23, 24), 0);
+            obdHardware = String.format("V%s.%s", hardware.substring(0,1), hardware.substring(1, 2));
+            String obdSoftware = BytesUtils.bytes2HexString(Arrays.copyOfRange(bytes, 24, 27), 0);
+            if(!obdSoftware.toLowerCase().equals("ffffff")){
+                obdSoftware = String.format("V%d.%d.%d", Integer.valueOf(obdSoftware.substring(0,2)),Integer.valueOf(obdSoftware.substring(2, 4)), Integer.valueOf(obdSoftware.substring(4,6)));
+            }else{
+                obdSoftware = null;
+            }
+            String obdBootSoftware = BytesUtils.bytes2HexString(Arrays.copyOfRange(bytes, 27, 30), 0);
+            if(!obdBootSoftware.toLowerCase().equals("ffffff")){
+                obdBootSoftware = String.format("V%d.%d.%d", Integer.valueOf(obdBootSoftware.substring(0,2)),Integer.valueOf(obdBootSoftware.substring(2, 4)), Integer.valueOf(obdBootSoftware.substring(4,6)));
+            }else{
+                obdBootSoftware = null;
+            }
+            String obdDataSoftware = BytesUtils.bytes2HexString(Arrays.copyOfRange(bytes, 30, 33), 0);
+            if(!obdDataSoftware.toLowerCase().equals("ffffff")){
+                obdDataSoftware = String.format("V%d.%d.%d", Integer.valueOf(obdDataSoftware.substring(0,2)),Integer.valueOf(obdDataSoftware.substring(2, 4)), Integer.valueOf(obdDataSoftware.substring(4,6)));
+            }else{
+                obdDataSoftware = null;
+            }
+            SignInMessage signInMessage = new SignInMessage();
+            signInMessage.setSerialNo(serialNo);
+            signInMessage.setImei(imei);
+            signInMessage.setSoftware(software);
+            signInMessage.setFirmware(firmware);
+            signInMessage.setHardware(hardware);
+            signInMessage.setOrignBytes(bytes);
+//            signInMessage.setIsNeedResp(isNeedResp);
+            signInMessage.setObdHardware(obdHardware);
+            if(obdSoftware != null){
+                signInMessage.setObdSoftware(obdSoftware);
+            }
+            if(obdBootSoftware != null){
+                signInMessage.setObdBootVersion(obdBootSoftware);
+            }
+            if(obdDataSoftware != null){
+                signInMessage.setObdDataVersion(obdDataSoftware);
+            }
             return signInMessage;
         }else{
             throw new ParseException("Error login message",0);
@@ -1993,18 +2037,18 @@ public class Decoder {
         float axisZ = ((bytes[curParseIndex + 10] & 0x7F & 0xff) + (((bytes[curParseIndex + 11] & 0xf0) >> 4) & 0xff) /10.0f) * axisZDirect;
         acceleration.setAxisZ(axisZ);
 
-        float altitude = BytesUtils.bytes2Float(bytes, curParseIndex + 12);
+        float altitude = latlngValid ? BytesUtils.bytes2Float(bytes, curParseIndex + 12) : 0;
 
         if(Float.compare(altitude,Float.NaN) != 0){
             acceleration.setAltitude(altitude);
         }
 
-        float longitude = BytesUtils.bytes2Float(bytes, curParseIndex + 16);
+        float longitude = latlngValid ? BytesUtils.bytes2Float(bytes, curParseIndex + 16) : 0;
         if(Float.compare(longitude,Float.NaN) != 0){
             acceleration.setLongitude(longitude);
         }
 
-        float latitude = BytesUtils.bytes2Float(bytes, curParseIndex + 20);
+        float latitude = latlngValid ? BytesUtils.bytes2Float(bytes, curParseIndex + 20) : 0;
         if(Float.compare(latitude,Float.NaN) != 0){
             acceleration.setLatitude(latitude);
         }
@@ -2403,11 +2447,11 @@ public class Decoder {
         Boolean is_4g_lbs = false;
         Integer mcc_4g = null;
         Integer mnc_4g = null;
-        Long ci_4g = null;
-        Integer earfcn_4g_1 = null;
+        Long eci_4g = null;
+        Integer tac = null;
         Integer pcid_4g_1 = null;
-        Integer earfcn_4g_2 = null;
         Integer pcid_4g_2 = null;
+        Integer pcid_4g_3 = null;
         Boolean is_2g_lbs = false;
         Integer mcc_2g = null;
         Integer mnc_2g = null;
@@ -2438,11 +2482,11 @@ public class Decoder {
         if (is_4g_lbs){
             mcc_4g = BytesUtils.bytes2Short(data,35) & 0x7FFF;
             mnc_4g = BytesUtils.bytes2Short(data,37);
-            ci_4g = BytesUtils.unsigned4BytesToInt(data, 39);
-            earfcn_4g_1 = BytesUtils.bytes2Short(data, 43);
+            eci_4g = BytesUtils.unsigned4BytesToInt(data, 39);
+            tac = BytesUtils.bytes2Short(data, 43);
             pcid_4g_1 = BytesUtils.bytes2Short(data, 45);
-            earfcn_4g_2 = BytesUtils.bytes2Short(data, 47);
-            pcid_4g_2 = BytesUtils.bytes2Short(data,49);
+            pcid_4g_2 = BytesUtils.bytes2Short(data, 47);
+            pcid_4g_3 = BytesUtils.bytes2Short(data,49);
         }
         Float externalPowerVoltage = 0f;
         if (data.length >=53) {
@@ -2576,11 +2620,11 @@ public class Decoder {
         message.setCi_2g_3(ci_2g_3);
         message.setMcc_4g(mcc_4g);
         message.setMnc_4g(mnc_4g);
-        message.setCi_4g(ci_4g);
-        message.setEarfcn_4g_1(earfcn_4g_1);
+        message.setEci_4g(eci_4g);
+        message.setTac(tac);
         message.setPcid_4g_1(pcid_4g_1);
-        message.setEarfcn_4g_2(earfcn_4g_2);
         message.setPcid_4g_2(pcid_4g_2);
+        message.setPcid_4g_3(pcid_4g_3);
         message.setIsSendSmsAlarmWhenDigtalInput2Change(isSendSmsAlarmWhenDigitalInput2Change);
         message.setIsSendSmsAlarmToManagerPhone(isSendSmsAlarmToManagerPhone);
         message.setJammerDetectionStatus(jammerDetectionStatus);
@@ -2720,11 +2764,11 @@ public class Decoder {
         Boolean is_4g_lbs = false;
         Integer mcc_4g = null;
         Integer mnc_4g = null;
-        Long ci_4g = null;
-        Integer earfcn_4g_1 = null;
+        Long eci_4g = null;
+        Integer tac = null;
         Integer pcid_4g_1 = null;
-        Integer earfcn_4g_2 = null;
         Integer pcid_4g_2 = null;
+        Integer pcid_4g_3 = null;
         Boolean is_2g_lbs = false;
         Integer mcc_2g = null;
         Integer mnc_2g = null;
@@ -2755,11 +2799,11 @@ public class Decoder {
         if (is_4g_lbs){
             mcc_4g = BytesUtils.bytes2Short(data,43) & 0x7FFF;
             mnc_4g = BytesUtils.bytes2Short(data,45);
-            ci_4g = BytesUtils.unsigned4BytesToInt(data, 47);
-            earfcn_4g_1 = BytesUtils.bytes2Short(data, 51);
+            eci_4g = BytesUtils.unsigned4BytesToInt(data, 47);
+            tac = BytesUtils.bytes2Short(data, 51);
             pcid_4g_1 = BytesUtils.bytes2Short(data, 53);
-            earfcn_4g_2 = BytesUtils.bytes2Short(data, 55);
-            pcid_4g_2 = BytesUtils.bytes2Short(data,57);
+            pcid_4g_2 = BytesUtils.bytes2Short(data, 55);
+            pcid_4g_3 = BytesUtils.bytes2Short(data,57);
         }
         Float batteryVoltage = 0f;
         byte[] batteryVoltageBytes = Arrays.copyOfRange(data, 59, 61);
@@ -2928,11 +2972,11 @@ public class Decoder {
         message.setCi_2g_3(ci_2g_3);
         message.setMcc_4g(mcc_4g);
         message.setMnc_4g(mnc_4g);
-        message.setCi_4g(ci_4g);
-        message.setEarfcn_4g_1(earfcn_4g_1);
+        message.setEci_4g(eci_4g);
+        message.setTac(tac);
         message.setPcid_4g_1(pcid_4g_1);
-        message.setEarfcn_4g_2(earfcn_4g_2);
         message.setPcid_4g_2(pcid_4g_2);
+        message.setPcid_4g_3(pcid_4g_3);
         message.setExternalPowerReduceStatus(externalPowerReduceValue);
         message.setIsSendSmsAlarmWhenDigtalInput2Change(isSendSmsAlarmWhenDigitalInput2Change);
         message.setIsSendSmsAlarmToManagerPhone(isSendSmsAlarmToManagerPhone);

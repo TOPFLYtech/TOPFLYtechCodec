@@ -78,7 +78,14 @@ namespace TopflytechCodec
             return Encoder.getNetworkMsgReply(imei, serialNo, command, encryptType, aesKey);
         }
 
-        public byte[] getInnerGeoDataMsgReply(String imei, bool needSerialNo, int serialNo)
+        public byte[] getDeviceTempCollectionMsgReply(String imei, int serialNo) 
+        {
+            byte[] command = { 0x27, 0x27, 0x26 };
+            byte[] content = new byte[] { };
+            return Encoder.getNormalMsgReply(imei, serialNo, command, content, encryptType, aesKey);
+        }
+
+    public byte[] getInnerGeoDataMsgReply(String imei, bool needSerialNo, int serialNo)
         {
             byte[] command = { 0x27, 0x27, 0x20 };
             return Encoder.getNormalMsgReply(imei, serialNo, command, new byte[] {},encryptType, aesKey);

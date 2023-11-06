@@ -157,11 +157,11 @@ class LockMessage(Message):
     is_4g_lbs = False
     mcc_4g = 0
     mnc_4g = 0
-    ci_4g = 0
-    earfcn_4g_1 = 0
+    eci_4g = 0
+    tac = 0
     pcid_4g_1 = 0
-    earfcn_4g_2 = 0
     pcid_4g_2 = 0
+    pcid_4g_3 = 0
     is_2g_lbs = False
     mcc_2g = 0
     mnc_2g = 0
@@ -207,11 +207,11 @@ class BluetoothPeripheralDataMessage(Message):
     is_4g_lbs = False
     mcc_4g = 0
     mnc_4g = 0
-    ci_4g = 0
-    earfcn_4g_1 = 0
+    eci_4g = 0
+    tac = 0
     pcid_4g_1 = 0
-    earfcn_4g_2 = 0
     pcid_4g_2 = 0
+    pcid_4g_3 = 0
     is_2g_lbs = False
     mcc_2g = 0
     mnc_2g = 0
@@ -249,11 +249,11 @@ class BleAlertData(BleData):
     is_4g_lbs = False
     mcc_4g = 0
     mnc_4g = 0
-    ci_4g = 0
-    earfcn_4g_1 = 0
+    eci_4g = 0
+    tac = 0
     pcid_4g_1 = 0
-    earfcn_4g_2 = 0
     pcid_4g_2 = 0
+    pcid_4g_3 = 0
     is_2g_lbs = False
     mcc_2g = 0
     mnc_2g = 0
@@ -280,11 +280,11 @@ class BleDriverSignInData(BleData):
     is_4g_lbs = False
     mcc_4g = 0
     mnc_4g = 0
-    ci_4g = 0
-    earfcn_4g_1 = 0
+    eci_4g = 0
+    tac = 0
     pcid_4g_1 = 0
-    earfcn_4g_2 = 0
     pcid_4g_2 = 0
+    pcid_4g_3 = 0
     is_2g_lbs = False
     mcc_2g = 0
     mnc_2g = 0
@@ -359,11 +359,11 @@ class AccelerationData:
     is_4g_lbs = False
     mcc_4g = 0
     mnc_4g = 0
-    ci_4g = 0
-    earfcn_4g_1 = 0
+    eci_4g = 0
+    tac = 0
     pcid_4g_1 = 0
-    earfcn_4g_2 = 0
     pcid_4g_2 = 0
+    pcid_4g_3 = 0
     is_2g_lbs = False
     mcc_2g = 0
     mnc_2g = 0
@@ -473,13 +473,10 @@ class LocationMessage(Message):
     is_4g_lbs = False
     mcc_4g = 0
     mnc_4g = 0
-    ci_4g = 0
-    earfcn_4g_1 = 0
-    pcid_4g_1 = 0
-    earfcn_4g_2 = 0
-    pcid_4g_2 = 0
-    bci_4g = 0
+    eci_4g = 0
     tac = 0
+    pcid_4g_1 = 0
+    pcid_4g_2 = 0
     pcid_4g_3 = 0
     is_2g_lbs = False
     mcc_2g = 0
@@ -638,6 +635,45 @@ class InnerGeofence:
 
     def addPoint(self, lat, lng):
         self.points.append([lat, lng])
+
+class DeviceTempCollectionMessage(Message):
+    def __init__(self):
+        self.interval = 0
+        self.tempList = []
+        self.date = None
+        self.type = 1  # 1:temp
+
+    @property
+    def type(self):
+        return self.type
+
+    @type.setter
+    def type(self, value):
+        self.type = value
+
+    @property
+    def date(self):
+        return self.date
+
+    @date.setter
+    def date(self, value):
+        self.date = value
+
+    @property
+    def interval(self):
+        return self.interval
+
+    @interval.setter
+    def interval(self, value):
+        self.interval = value
+
+    @property
+    def tempList(self):
+        return self.tempList
+
+    @tempList.setter
+    def tempList(self, value):
+        self.tempList = value
 
 class OneWireMessage(Message):
     def __init__(self):
@@ -1291,6 +1327,39 @@ class Decoder:
             signInMessage.hardware = hardware
             signInMessage.orignBytes = byteArray
             return signInMessage
+        elif len(byteArray) == 33:
+            software = "V{0}.{1}.{2}.{3}".format((byteArray[15] & 0xf0) >> 4, byteArray[15] & 0xf, (byteArray[16] & 0xf0) >> 4, byteArray[16] & 0xf)
+            firmware = "V{0}.{1}.{2}.{3}".format((byteArray[20] & 0xf0) >> 4, byteArray[20] & 0xf, (byteArray[21] & 0xf0) >> 4, byteArray[21] & 0xf)
+            hardware = "V{0}.{1}".format( (byteArray[22] & 0xf0) >> 4, byteArray[22] & 0xf)
+            obdHardware = "V{0}.{1}".format((byteArray[23] & 0xf0) >> 4, byteArray[23] & 0xf)
+            obdSoftware = byte2HexString(byteArray[24:27],0)
+            if obdSoftware.lower() == "ffffff":
+                obdSoftware = "Invalid"
+            else:
+                obdSoftware = "V{0}.{1}.{2}".format((int)(byteArray[24]), (int)(byteArray[25]), (int)(byteArray[26]))
+            obdBootSoftware = byte2HexString(byteArray[27:30], 0)
+            if obdBootSoftware.lower() == "ffffff":
+                obdBootSoftware = "Invalid"
+            else:
+                obdBootSoftware = "V{0}.{1}.{2}".format((int)(byteArray[27]), (int)(byteArray[28]), (int)(byteArray[29]))
+            obdDataSoftware = byte2HexString(byteArray[30:33], 0)
+            if obdDataSoftware.lower() == "ffffff":
+                obdDataSoftware = "Invalid"
+            else:
+                obdDataSoftware = "V{0}.{1}.{2}".format((int)(byteArray[30]), (int)(byteArray[31]), (int)(byteArray[32]))
+            signInMessage = SignInMessage()
+            signInMessage.firmware = firmware
+            signInMessage.imei = imei
+            signInMessage.serialNo = serialNo
+            # signInMessage.isNeedResp = isNeedResp
+            signInMessage.software = software
+            signInMessage.hardware = hardware
+            signInMessage.obdHardware = obdHardware
+            signInMessage.obdSoftware = obdSoftware
+            signInMessage.obdBootVersion = obdBootSoftware
+            signInMessage.obdDataVersion = obdDataSoftware
+            signInMessage.orignBytes = byteArray
+            return signInMessage
         return None
 
 
@@ -1506,11 +1575,11 @@ class Decoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        ci_4g = 0
-        earfcn_4g_1 = 0
+        eci_4g = 0
+        tac = 0
         pcid_4g_1 = 0
-        earfcn_4g_2 = 0
         pcid_4g_2 = 0
+        pcid_4g_3 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -1542,11 +1611,11 @@ class Decoder:
         if is_4g_lbs:
             mcc_4g = bytes2Short(byteArray,23) & 0x7FFF
             mnc_4g = bytes2Short(byteArray,25)
-            ci_4g = bytes2Integer(byteArray, 27)
-            earfcn_4g_1 = bytes2Short(byteArray, 31)
+            eci_4g = bytes2Integer(byteArray, 27)
+            tac = bytes2Short(byteArray, 31)
             pcid_4g_1 = bytes2Short(byteArray, 33)
-            earfcn_4g_2 = bytes2Short(byteArray, 35)
-            pcid_4g_2 = bytes2Short(byteArray,37)
+            pcid_4g_2 = bytes2Short(byteArray, 35)
+            pcid_4g_3 = bytes2Short(byteArray,37)
         if strSp.find("f") == -1:
                 speed = -1
         else:
@@ -1574,11 +1643,11 @@ class Decoder:
         bluetoothPeripheralDataMessage.is_2g_lbs = is_2g_lbs
         bluetoothPeripheralDataMessage.mcc_4g = mcc_4g
         bluetoothPeripheralDataMessage.mnc_4g = mnc_4g
-        bluetoothPeripheralDataMessage.ci_4g = ci_4g
-        bluetoothPeripheralDataMessage.earfcn_4g_1 = earfcn_4g_1
+        bluetoothPeripheralDataMessage.eci_4g = eci_4g
+        bluetoothPeripheralDataMessage.tac = tac
         bluetoothPeripheralDataMessage.pcid_4g_1 = pcid_4g_1
-        bluetoothPeripheralDataMessage.earfcn_4g_2 = earfcn_4g_2
         bluetoothPeripheralDataMessage.pcid_4g_2 = pcid_4g_2
+        bluetoothPeripheralDataMessage.pcid_4g_3 = pcid_4g_3
         bluetoothPeripheralDataMessage.mcc_2g = mcc_2g
         bluetoothPeripheralDataMessage.mnc_2g = mnc_2g
         bluetoothPeripheralDataMessage.lac_2g_1 = lac_2g_1
@@ -1663,11 +1732,11 @@ class Decoder:
             bleAlertData.is_2g_lbs = is_2g_lbs
             bleAlertData.mcc_4g = mcc_4g
             bleAlertData.mnc_4g = mnc_4g
-            bleAlertData.ci_4g = ci_4g
-            bleAlertData.earfcn_4g_1 = earfcn_4g_1
+            bleAlertData.eci_4g = eci_4g
+            bleAlertData.tac = tac
             bleAlertData.pcid_4g_1 = pcid_4g_1
-            bleAlertData.earfcn_4g_2 = earfcn_4g_2
             bleAlertData.pcid_4g_2 = pcid_4g_2
+            bleAlertData.pcid_4g_3 = pcid_4g_3
             bleAlertData.mcc_2g = mcc_2g
             bleAlertData.mnc_2g = mnc_2g
             bleAlertData.lac_2g_1 = lac_2g_1
@@ -1708,11 +1777,11 @@ class Decoder:
             bleDriverSignInData.is_2g_lbs = is_2g_lbs
             bleDriverSignInData.mcc_4g = mcc_4g
             bleDriverSignInData.mnc_4g = mnc_4g
-            bleDriverSignInData.ci_4g = ci_4g
-            bleDriverSignInData.earfcn_4g_1 = earfcn_4g_1
+            bleDriverSignInData.eci_4g = eci_4g
+            bleDriverSignInData.tac = tac
             bleDriverSignInData.pcid_4g_1 = pcid_4g_1
-            bleDriverSignInData.earfcn_4g_2 = earfcn_4g_2
             bleDriverSignInData.pcid_4g_2 = pcid_4g_2
+            bleDriverSignInData.pcid_4g_3 = pcid_4g_3
             bleDriverSignInData.mcc_2g = mcc_2g
             bleDriverSignInData.mnc_2g = mnc_2g
             bleDriverSignInData.lac_2g_1 = lac_2g_1
@@ -2046,11 +2115,11 @@ class Decoder:
             is_4g_lbs = False
             mcc_4g = 0
             mnc_4g = 0
-            ci_4g = 0
-            earfcn_4g_1 = 0
+            eci_4g = 0
+            tac = 0
             pcid_4g_1 = 0
-            earfcn_4g_2 = 0
             pcid_4g_2 = 0
+            pcid_4g_3 = 0
             is_2g_lbs = False
             mcc_2g = 0
             mnc_2g = 0
@@ -2082,11 +2151,11 @@ class Decoder:
             if is_4g_lbs:
                 mcc_4g = bytes2Short(bleData,11) & 0x7FFF
                 mnc_4g = bytes2Short(bleData,13)
-                ci_4g = bytes2Integer(bleData, 15)
-                earfcn_4g_1 = bytes2Short(bleData, 19)
+                eci_4g = bytes2Integer(bleData, 15)
+                tac = bytes2Short(bleData, 19)
                 pcid_4g_1 = bytes2Short(bleData, 21)
-                earfcn_4g_2 = bytes2Short(bleData, 23)
-                pcid_4g_2 = bytes2Short(bleData,25)
+                pcid_4g_2 = bytes2Short(bleData, 23)
+                pcid_4g_3 = bytes2Short(bleData,25)
             if strSp.find("f") == -1:
                 speed = -1;
             else:
@@ -2106,11 +2175,11 @@ class Decoder:
             bleAlertData.is_2g_lbs = is_2g_lbs
             bleAlertData.mcc_4g = mcc_4g
             bleAlertData.mnc_4g = mnc_4g
-            bleAlertData.ci_4g = ci_4g
-            bleAlertData.earfcn_4g_1 = earfcn_4g_1
+            bleAlertData.eci_4g = eci_4g
+            bleAlertData.tac = tac
             bleAlertData.pcid_4g_1 = pcid_4g_1
-            bleAlertData.earfcn_4g_2 = earfcn_4g_2
             bleAlertData.pcid_4g_2 = pcid_4g_2
+            bleAlertData.pcid_4g_3 = pcid_4g_3
             bleAlertData.mcc_2g = mcc_2g
             bleAlertData.mnc_2g = mnc_2g
             bleAlertData.lac_2g_1 = lac_2g_1
@@ -2149,11 +2218,11 @@ class Decoder:
             is_4g_lbs = False
             mcc_4g = 0
             mnc_4g = 0
-            ci_4g = 0
-            earfcn_4g_1 = 0
+            eci_4g = 0
+            tac = 0
             pcid_4g_1 = 0
-            earfcn_4g_2 = 0
             pcid_4g_2 = 0
+            pcid_4g_3 = 0
             is_2g_lbs = False
             mcc_2g = 0
             mnc_2g = 0
@@ -2185,11 +2254,11 @@ class Decoder:
             if is_4g_lbs:
                 mcc_4g = bytes2Short(bleData,11) & 0x7FFF
                 mnc_4g = bytes2Short(bleData,13)
-                ci_4g = bytes2Integer(bleData, 15)
-                earfcn_4g_1 = bytes2Short(bleData, 19)
+                eci_4g = bytes2Integer(bleData, 15)
+                tac = bytes2Short(bleData, 19)
                 pcid_4g_1 = bytes2Short(bleData, 21)
-                earfcn_4g_2 = bytes2Short(bleData, 23)
-                pcid_4g_2 = bytes2Short(bleData,25)
+                pcid_4g_2 = bytes2Short(bleData, 23)
+                pcid_4g_3 = bytes2Short(bleData,25)
             if strSp.find("f") == -1:
                 speed = -1;
             else:
@@ -2209,11 +2278,11 @@ class Decoder:
             bleDriverSignInData.is_2g_lbs = is_2g_lbs
             bleDriverSignInData.mcc_4g = mcc_4g
             bleDriverSignInData.mnc_4g = mnc_4g
-            bleDriverSignInData.ci_4g = ci_4g
-            bleDriverSignInData.earfcn_4g_1 = earfcn_4g_1
+            bleDriverSignInData.eci_4g = eci_4g
+            bleDriverSignInData.tac = tac
             bleDriverSignInData.pcid_4g_1 = pcid_4g_1
-            bleDriverSignInData.earfcn_4g_2 = earfcn_4g_2
             bleDriverSignInData.pcid_4g_2 = pcid_4g_2
+            bleDriverSignInData.pcid_4g_3 = pcid_4g_3
             bleDriverSignInData.mcc_2g = mcc_2g
             bleDriverSignInData.mnc_2g = mnc_2g
             bleDriverSignInData.lac_2g_1 = lac_2g_1
@@ -2622,11 +2691,11 @@ class Decoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        ci_4g = 0
-        earfcn_4g_1 = 0
+        eci_4g = 0
+        tac = 0
         pcid_4g_1 = 0
-        earfcn_4g_2 = 0
         pcid_4g_2 = 0
+        pcid_4g_3 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -2660,20 +2729,20 @@ class Decoder:
         if is_4g_lbs:
             mcc_4g = bytes2Short(byteArray,curParseIndex + 12) & 0x7FFF
             mnc_4g = bytes2Short(byteArray,curParseIndex + 14)
-            ci_4g = bytes2Integer(byteArray, curParseIndex + 16)
-            earfcn_4g_1 = bytes2Short(byteArray, curParseIndex + 20)
+            eci_4g = bytes2Integer(byteArray, curParseIndex + 16)
+            tac = bytes2Short(byteArray, curParseIndex + 20)
             pcid_4g_1 = bytes2Short(byteArray, curParseIndex + 22)
-            earfcn_4g_2 = bytes2Short(byteArray, curParseIndex + 24)
-            pcid_4g_2 = bytes2Short(byteArray,curParseIndex + 26)
+            pcid_4g_2 = bytes2Short(byteArray, curParseIndex + 24)
+            pcid_4g_3 = bytes2Short(byteArray,curParseIndex + 26)
 
         acceleration.is_2g_lbs = is_2g_lbs
         acceleration.mcc_4g = mcc_4g
         acceleration.mnc_4g = mnc_4g
-        acceleration.ci_4g = ci_4g
-        acceleration.earfcn_4g_1 = earfcn_4g_1
+        acceleration.eci_4g = eci_4g
+        acceleration.tac = tac
         acceleration.pcid_4g_1 = pcid_4g_1
-        acceleration.earfcn_4g_2 = earfcn_4g_2
         acceleration.pcid_4g_2 = pcid_4g_2
+        acceleration.pcid_4g_3 = pcid_4g_3
         acceleration.mcc_2g = mcc_2g
         acceleration.mnc_2g = mnc_2g
         acceleration.lac_2g_1 = lac_2g_1
@@ -2724,11 +2793,11 @@ class Decoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        ci_4g = 0
-        earfcn_4g_1 = 0
+        eci_4g = 0
+        tac = 0
         pcid_4g_1 = 0
-        earfcn_4g_2 = 0
         pcid_4g_2 = 0
+        pcid_4g_3 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -2762,20 +2831,20 @@ class Decoder:
         if is_4g_lbs:
             mcc_4g = bytes2Short(byteArray,curParseIndex + 12) & 0x7FFF
             mnc_4g = bytes2Short(byteArray,curParseIndex + 14)
-            ci_4g = bytes2Integer(byteArray, curParseIndex + 16)
-            earfcn_4g_1 = bytes2Short(byteArray, curParseIndex + 20)
+            eci_4g = bytes2Integer(byteArray, curParseIndex + 16)
+            tac = bytes2Short(byteArray, curParseIndex + 20)
             pcid_4g_1 = bytes2Short(byteArray, curParseIndex + 22)
-            earfcn_4g_2 = bytes2Short(byteArray, curParseIndex + 24)
-            pcid_4g_2 = bytes2Short(byteArray,curParseIndex + 26)
+            pcid_4g_2 = bytes2Short(byteArray, curParseIndex + 24)
+            pcid_4g_3 = bytes2Short(byteArray,curParseIndex + 26)
         acceleration.is_4g_lbs = is_4g_lbs
         acceleration.is_2g_lbs = is_2g_lbs
         acceleration.mcc_4g = mcc_4g
         acceleration.mnc_4g = mnc_4g
-        acceleration.ci_4g = ci_4g
-        acceleration.earfcn_4g_1 = earfcn_4g_1
+        acceleration.eci_4g = eci_4g
+        acceleration.tac = tac
         acceleration.pcid_4g_1 = pcid_4g_1
-        acceleration.earfcn_4g_2 = earfcn_4g_2
         acceleration.pcid_4g_2 = pcid_4g_2
+        acceleration.pcid_4g_3 = pcid_4g_3
         acceleration.mcc_2g = mcc_2g
         acceleration.mnc_2g = mnc_2g
         acceleration.lac_2g_1 = lac_2g_1
@@ -2925,11 +2994,11 @@ class Decoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        ci_4g = 0
-        earfcn_4g_1 = 0
+        eci_4g = 0
+        tac = 0
         pcid_4g_1 = 0
-        earfcn_4g_2 = 0
         pcid_4g_2 = 0
+        pcid_4g_3 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -2963,11 +3032,11 @@ class Decoder:
         if is_4g_lbs:
             mcc_4g = bytes2Short(data,43) & 0x7FFF
             mnc_4g = bytes2Short(data,45)
-            ci_4g = bytes2Integer(data, 47)
-            earfcn_4g_1 = bytes2Short(data, 51)
+            eci_4g = bytes2Integer(data, 47)
+            tac = bytes2Short(data, 51)
             pcid_4g_1 = bytes2Short(data, 53)
-            earfcn_4g_2 = bytes2Short(data, 55)
-            pcid_4g_2 = bytes2Short(data,57)
+            pcid_4g_2 = bytes2Short(data, 55)
+            pcid_4g_3 = bytes2Short(data,57)
         batteryVoltageStr = byte2HexString(data[59:61],0)
         batteryVoltage = (float)(batteryVoltageStr) / 100
         externalPowerVoltage = 0
@@ -3083,11 +3152,11 @@ class Decoder:
         locationMessage.is_2g_lbs = is_2g_lbs
         locationMessage.mcc_4g = mcc_4g
         locationMessage.mnc_4g = mnc_4g
-        locationMessage.ci_4g = ci_4g
-        locationMessage.earfcn_4g_1 = earfcn_4g_1
+        locationMessage.eci_4g = eci_4g
+        locationMessage.tac = tac
         locationMessage.pcid_4g_1 = pcid_4g_1
-        locationMessage.earfcn_4g_2 = earfcn_4g_2
         locationMessage.pcid_4g_2 = pcid_4g_2
+        locationMessage.pcid_4g_3 = pcid_4g_3
         locationMessage.mcc_2g = mcc_2g
         locationMessage.mnc_2g = mnc_2g
         locationMessage.lac_2g_1 = lac_2g_1
@@ -3217,11 +3286,11 @@ class Decoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        ci_4g = 0
-        earfcn_4g_1 = 0
+        eci_4g = 0
+        tac = 0
         pcid_4g_1 = 0
-        earfcn_4g_2 = 0
         pcid_4g_2 = 0
+        pcid_4g_3 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -3256,11 +3325,11 @@ class Decoder:
         if is_4g_lbs:
             mcc_4g = bytes2Short(data,35) & 0x7FFF
             mnc_4g = bytes2Short(data,37)
-            ci_4g = bytes2Integer(data, 39)
-            earfcn_4g_1 = bytes2Short(data, 43)
+            eci_4g = bytes2Integer(data, 39)
+            tac = bytes2Short(data, 43)
             pcid_4g_1 = bytes2Short(data, 45)
-            earfcn_4g_2 = bytes2Short(data, 47)
-            pcid_4g_2 = bytes2Short(data,49)
+            pcid_4g_2 = bytes2Short(data, 47)
+            pcid_4g_3 = bytes2Short(data,49)
         externalPowerVoltage = 0
         if len(data) >= 53:
             externalPowerVoltageStr = byte2HexString(data[51:53], 0)
@@ -3319,11 +3388,11 @@ class Decoder:
         locationMessage.is_2g_lbs = is_2g_lbs
         locationMessage.mcc_4g = mcc_4g
         locationMessage.mnc_4g = mnc_4g
-        locationMessage.ci_4g = ci_4g
-        locationMessage.earfcn_4g_1 = earfcn_4g_1
+        locationMessage.eci_4g = eci_4g
+        locationMessage.tac = tac
         locationMessage.pcid_4g_1 = pcid_4g_1
-        locationMessage.earfcn_4g_2 = earfcn_4g_2
         locationMessage.pcid_4g_2 = pcid_4g_2
+        locationMessage.pcid_4g_3 = pcid_4g_3
         locationMessage.mcc_2g = mcc_2g
         locationMessage.mnc_2g = mnc_2g
         locationMessage.lac_2g_1 = lac_2g_1
@@ -4218,11 +4287,11 @@ class ObdDecoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        ci_4g = 0
-        earfcn_4g_1 = 0
+        eci_4g = 0
+        tac = 0
         pcid_4g_1 = 0
-        earfcn_4g_2 = 0
         pcid_4g_2 = 0
+        pcid_4g_3 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -4256,11 +4325,11 @@ class ObdDecoder:
         if is_4g_lbs:
             mcc_4g = bytes2Short(data,31) & 0x7FFF
             mnc_4g = bytes2Short(data,33)
-            ci_4g = bytes2Integer(data, 35)
-            earfcn_4g_1 = bytes2Short(data, 39)
+            eci_4g = bytes2Integer(data, 35)
+            tac = bytes2Short(data, 39)
             pcid_4g_1 = bytes2Short(data, 41)
-            earfcn_4g_2 = bytes2Short(data, 43)
-            pcid_4g_2 = bytes2Short(data,45)
+            pcid_4g_2 = bytes2Short(data, 43)
+            pcid_4g_3 = bytes2Short(data,45)
         externalPowerVoltageStr = byte2HexString(data[47:49], 0)
         externalPowerVoltage = (float(externalPowerVoltageStr) ) / 100
         accumulatingFuelConsumption = bytes2Integer(data, 51)
@@ -4373,11 +4442,11 @@ class ObdDecoder:
         locationMessage.is_2g_lbs = is_2g_lbs
         locationMessage.mcc_4g = mcc_4g
         locationMessage.mnc_4g = mnc_4g
-        locationMessage.ci_4g = ci_4g
-        locationMessage.earfcn_4g_1 = earfcn_4g_1
+        locationMessage.eci_4g = eci_4g
+        locationMessage.tac = tac
         locationMessage.pcid_4g_1 = pcid_4g_1
-        locationMessage.earfcn_4g_2 = earfcn_4g_2
         locationMessage.pcid_4g_2 = pcid_4g_2
+        locationMessage.pcid_4g_3 = pcid_4g_3
         locationMessage.mcc_2g = mcc_2g
         locationMessage.mnc_2g = mnc_2g
         locationMessage.lac_2g_1 = lac_2g_1
@@ -4483,11 +4552,11 @@ class ObdDecoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        ci_4g = 0
-        earfcn_4g_1 = 0
+        eci_4g = 0
+        tac = 0
         pcid_4g_1 = 0
-        earfcn_4g_2 = 0
         pcid_4g_2 = 0
+        pcid_4g_3 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -4521,21 +4590,21 @@ class ObdDecoder:
         if is_4g_lbs:
             mcc_4g = bytes2Short(byteArray,curParseIndex + 12) & 0x7FFF
             mnc_4g = bytes2Short(byteArray,curParseIndex + 14)
-            ci_4g = bytes2Integer(byteArray, curParseIndex + 16)
-            earfcn_4g_1 = bytes2Short(byteArray, curParseIndex + 20)
+            eci_4g = bytes2Integer(byteArray, curParseIndex + 16)
+            tac = bytes2Short(byteArray, curParseIndex + 20)
             pcid_4g_1 = bytes2Short(byteArray, curParseIndex + 22)
-            earfcn_4g_2 = bytes2Short(byteArray, curParseIndex + 24)
-            pcid_4g_2 = bytes2Short(byteArray,curParseIndex + 26)
+            pcid_4g_2 = bytes2Short(byteArray, curParseIndex + 24)
+            pcid_4g_3 = bytes2Short(byteArray,curParseIndex + 26)
 
         acceleration.is_4g_lbs = is_4g_lbs
         acceleration.is_2g_lbs = is_2g_lbs
         acceleration.mcc_4g = mcc_4g
         acceleration.mnc_4g = mnc_4g
-        acceleration.ci_4g = ci_4g
-        acceleration.earfcn_4g_1 = earfcn_4g_1
+        acceleration.eci_4g = eci_4g
+        acceleration.tac = tac
         acceleration.pcid_4g_1 = pcid_4g_1
-        acceleration.earfcn_4g_2 = earfcn_4g_2
         acceleration.pcid_4g_2 = pcid_4g_2
+        acceleration.pcid_4g_3 = pcid_4g_3
         acceleration.mcc_2g = mcc_2g
         acceleration.mnc_2g = mnc_2g
         acceleration.lac_2g_1 = lac_2g_1
@@ -4637,11 +4706,11 @@ class ObdDecoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        ci_4g = 0
-        earfcn_4g_1 = 0
+        eci_4g = 0
+        tac = 0
         pcid_4g_1 = 0
-        earfcn_4g_2 = 0
         pcid_4g_2 = 0
+        pcid_4g_3 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -4673,11 +4742,11 @@ class ObdDecoder:
         if is_4g_lbs:
             mcc_4g = bytes2Short(byteArray,23) & 0x7FFF
             mnc_4g = bytes2Short(byteArray,25)
-            ci_4g = bytes2Integer(byteArray, 27)
-            earfcn_4g_1 = bytes2Short(byteArray, 31)
+            eci_4g = bytes2Integer(byteArray, 27)
+            tac = bytes2Short(byteArray, 31)
             pcid_4g_1 = bytes2Short(byteArray, 33)
-            earfcn_4g_2 = bytes2Short(byteArray, 35)
-            pcid_4g_2 = bytes2Short(byteArray,37)
+            pcid_4g_2 = bytes2Short(byteArray, 35)
+            pcid_4g_3 = bytes2Short(byteArray,37)
         if strSp.find("f") == -1:
                 speed = -1
         else:
@@ -4705,11 +4774,11 @@ class ObdDecoder:
         bluetoothPeripheralDataMessage.is_2g_lbs = is_2g_lbs
         bluetoothPeripheralDataMessage.mcc_4g = mcc_4g
         bluetoothPeripheralDataMessage.mnc_4g = mnc_4g
-        bluetoothPeripheralDataMessage.ci_4g = ci_4g
-        bluetoothPeripheralDataMessage.earfcn_4g_1 = earfcn_4g_1
+        bluetoothPeripheralDataMessage.eci_4g = eci_4g
+        bluetoothPeripheralDataMessage.tac = tac
         bluetoothPeripheralDataMessage.pcid_4g_1 = pcid_4g_1
-        bluetoothPeripheralDataMessage.earfcn_4g_2 = earfcn_4g_2
         bluetoothPeripheralDataMessage.pcid_4g_2 = pcid_4g_2
+        bluetoothPeripheralDataMessage.pcid_4g_3 = pcid_4g_3
         bluetoothPeripheralDataMessage.mcc_2g = mcc_2g
         bluetoothPeripheralDataMessage.mnc_2g = mnc_2g
         bluetoothPeripheralDataMessage.lac_2g_1 = lac_2g_1
@@ -4794,11 +4863,11 @@ class ObdDecoder:
             bleAlertData.is_2g_lbs = is_2g_lbs
             bleAlertData.mcc_4g = mcc_4g
             bleAlertData.mnc_4g = mnc_4g
-            bleAlertData.ci_4g = ci_4g
-            bleAlertData.earfcn_4g_1 = earfcn_4g_1
+            bleAlertData.eci_4g = eci_4g
+            bleAlertData.tac = tac
             bleAlertData.pcid_4g_1 = pcid_4g_1
-            bleAlertData.earfcn_4g_2 = earfcn_4g_2
             bleAlertData.pcid_4g_2 = pcid_4g_2
+            bleAlertData.pcid_4g_3 = pcid_4g_3
             bleAlertData.mcc_2g = mcc_2g
             bleAlertData.mnc_2g = mnc_2g
             bleAlertData.lac_2g_1 = lac_2g_1
@@ -4839,11 +4908,11 @@ class ObdDecoder:
             bleDriverSignInData.is_2g_lbs = is_2g_lbs
             bleDriverSignInData.mcc_4g = mcc_4g
             bleDriverSignInData.mnc_4g = mnc_4g
-            bleDriverSignInData.ci_4g = ci_4g
-            bleDriverSignInData.earfcn_4g_1 = earfcn_4g_1
+            bleDriverSignInData.eci_4g = eci_4g
+            bleDriverSignInData.tac = tac
             bleDriverSignInData.pcid_4g_1 = pcid_4g_1
-            bleDriverSignInData.earfcn_4g_2 = earfcn_4g_2
             bleDriverSignInData.pcid_4g_2 = pcid_4g_2
+            bleDriverSignInData.pcid_4g_3 = pcid_4g_3
             bleDriverSignInData.mcc_2g = mcc_2g
             bleDriverSignInData.mnc_2g = mnc_2g
             bleDriverSignInData.lac_2g_1 = lac_2g_1
@@ -5176,11 +5245,11 @@ class ObdDecoder:
             is_4g_lbs = False
             mcc_4g = 0
             mnc_4g = 0
-            ci_4g = 0
-            earfcn_4g_1 = 0
+            eci_4g = 0
+            tac = 0
             pcid_4g_1 = 0
-            earfcn_4g_2 = 0
             pcid_4g_2 = 0
+            pcid_4g_3 = 0
             is_2g_lbs = False
             mcc_2g = 0
             mnc_2g = 0
@@ -5217,11 +5286,11 @@ class ObdDecoder:
             if is_4g_lbs:
                 mcc_4g = bytes2Short(bleData,11) & 0x7FFF
                 mnc_4g = bytes2Short(bleData,13)
-                ci_4g = bytes2Integer(bleData, 15)
-                earfcn_4g_1 = bytes2Short(bleData, 19)
+                eci_4g = bytes2Integer(bleData, 15)
+                tac = bytes2Short(bleData, 19)
                 pcid_4g_1 = bytes2Short(bleData, 21)
-                earfcn_4g_2 = bytes2Short(bleData, 23)
-                pcid_4g_2 = bytes2Short(bleData,25)
+                pcid_4g_2 = bytes2Short(bleData, 23)
+                pcid_4g_3 = bytes2Short(bleData,25)
 
             bleAlertData.alertType = alert
             bleAlertData.altitude = altitude
@@ -5238,11 +5307,11 @@ class ObdDecoder:
             bleAlertData.is_2g_lbs = is_2g_lbs
             bleAlertData.mcc_4g = mcc_4g
             bleAlertData.mnc_4g = mnc_4g
-            bleAlertData.ci_4g = ci_4g
-            bleAlertData.earfcn_4g_1 = earfcn_4g_1
+            bleAlertData.eci_4g = eci_4g
+            bleAlertData.tac = tac
             bleAlertData.pcid_4g_1 = pcid_4g_1
-            bleAlertData.earfcn_4g_2 = earfcn_4g_2
             bleAlertData.pcid_4g_2 = pcid_4g_2
+            bleAlertData.pcid_4g_3 = pcid_4g_3
             bleAlertData.mcc_2g = mcc_2g
             bleAlertData.mnc_2g = mnc_2g
             bleAlertData.lac_2g_1 = lac_2g_1
@@ -5280,11 +5349,11 @@ class ObdDecoder:
             is_4g_lbs = False
             mcc_4g = 0
             mnc_4g = 0
-            ci_4g = 0
-            earfcn_4g_1 = 0
+            eci_4g = 0
+            tac = 0
             pcid_4g_1 = 0
-            earfcn_4g_2 = 0
             pcid_4g_2 = 0
+            pcid_4g_3 = 0
             is_2g_lbs = False
             mcc_2g = 0
             mnc_2g = 0
@@ -5321,11 +5390,11 @@ class ObdDecoder:
             if is_4g_lbs:
                 mcc_4g = bytes2Short(bleData,11) & 0x7FFF
                 mnc_4g = bytes2Short(bleData,13)
-                ci_4g = bytes2Integer(bleData, 15)
-                earfcn_4g_1 = bytes2Short(bleData, 19)
+                eci_4g = bytes2Integer(bleData, 15)
+                tac = bytes2Short(bleData, 19)
                 pcid_4g_1 = bytes2Short(bleData, 21)
-                earfcn_4g_2 = bytes2Short(bleData, 23)
-                pcid_4g_2 = bytes2Short(bleData,25)
+                pcid_4g_2 = bytes2Short(bleData, 23)
+                pcid_4g_3 = bytes2Short(bleData,25)
             bleDriverSignInData.alert = alert
             bleDriverSignInData.altitude = altitude
             bleDriverSignInData.azimuth = azimuth
@@ -5341,11 +5410,11 @@ class ObdDecoder:
             bleDriverSignInData.is_2g_lbs = is_2g_lbs
             bleDriverSignInData.mcc_4g = mcc_4g
             bleDriverSignInData.mnc_4g = mnc_4g
-            bleDriverSignInData.ci_4g = ci_4g
-            bleDriverSignInData.earfcn_4g_1 = earfcn_4g_1
+            bleDriverSignInData.eci_4g = eci_4g
+            bleDriverSignInData.tac = tac
             bleDriverSignInData.pcid_4g_1 = pcid_4g_1
-            bleDriverSignInData.earfcn_4g_2 = earfcn_4g_2
             bleDriverSignInData.pcid_4g_2 = pcid_4g_2
+            bleDriverSignInData.pcid_4g_3 = pcid_4g_3
             bleDriverSignInData.mcc_2g = mcc_2g
             bleDriverSignInData.mnc_2g = mnc_2g
             bleDriverSignInData.lac_2g_1 = lac_2g_1
@@ -5851,6 +5920,7 @@ class PersonalAssetMsgDecoder:
     BLUETOOTH_SECOND_DATA = [0x27, 0x27, 0x12]
     WIFI_WITH_DEVICE_INFO_DATA = [0x27, 0x27, 0x24]
     WIFI_ALARM_WITH_DEVICE_INFO_DATA = [0x27, 0x27, 0x25]
+    DEVICE_TEMP_COLLECTION_DATA = [0x27, 0x27, 0x26]
     CONFIG = [0x27, 0x27, 0x81]
     encryptType = 0
     esKey = ""
@@ -5869,7 +5939,7 @@ class PersonalAssetMsgDecoder:
                or byteArray == self.ALARM or byteArray == self.NETWORK_INFO_DATA or byteArray == self.BLUETOOTH_DATA \
                or byteArray == self.CONFIG or byteArray == self.WIFI_DATA or byteArray == self.LOCK_DATA  \
                or byteArray == self.GEO_DATA or byteArray == self.BLUETOOTH_SECOND_DATA or byteArray == self.WIFI_WITH_DEVICE_INFO_DATA  \
-               or byteArray == self.WIFI_ALARM_WITH_DEVICE_INFO_DATA
+               or byteArray == self.WIFI_ALARM_WITH_DEVICE_INFO_DATA or byteArray == self.DEVICE_TEMP_COLLECTION_DATA
 
 
     decoderBuf = TopflytechByteBuf()
@@ -5936,11 +6006,36 @@ class PersonalAssetMsgDecoder:
                 return self.parseSecondBluetoothDataMessage(byteArray)
             elif byteArray[2] == 0x20:
                 return self.parseInnerGeoMessage(byteArray)
+            elif byteArray[2] == 0x26:
+                return self.parseDeviceTempCollectionMessage(byteArray)
             elif byteArray[2] == 0x24 or byteArray[2] == 0x25:
                 return self.parseWifiWithDeviceInfoMessage(byteArray)
             else:
                 return None
         return None
+
+    def parseDeviceTempCollectionMessage(self,byteArray):
+        deviceTempCollectionMessage = DeviceTempCollectionMessage()
+        serialNo = bytes2Short(byteArray, 5)
+        imei = decodeImei(byteArray, 7)
+        dateStr = "20" + byte2HexString(byteArray[15:21], 0)
+        gtm0 = GTM0(dateStr)
+        deviceTempCollectionMessage.serialNo = serialNo
+        deviceTempCollectionMessage.imei = imei
+        deviceTempCollectionMessage.orignBytes = bytes
+        deviceTempCollectionMessage.date = gtm0
+        deviceTempCollectionMessage.type = byteArray[21]
+        interval = bytes2Short(byteArray, 22)
+        deviceTempCollectionMessage.interval = interval
+        valueLen = len(byteArray) - 24
+        if valueLen > 0 and valueLen // 2 > 0:
+            tempCount = valueLen // 2
+            tempList = []
+            for i in range(tempCount):
+                tempInt = bytes2Short(byteArray, 24 + i * 2)
+                tempList.append(tempInt * 0.01)
+            deviceTempCollectionMessage.tempList = tempList
+        return deviceTempCollectionMessage
 
     def parseInnerGeoMessage(self,byteArray):
         innerGeoDataMessage = InnerGeoDataMessage()
@@ -6000,11 +6095,11 @@ class PersonalAssetMsgDecoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        ci_4g = 0
-        earfcn_4g_1 = 0
+        eci_4g = 0
+        tac = 0
         pcid_4g_1 = 0
-        earfcn_4g_2 = 0
         pcid_4g_2 = 0
+        pcid_4g_3 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -6036,11 +6131,11 @@ class PersonalAssetMsgDecoder:
         if is_4g_lbs:
             mcc_4g = bytes2Short(byteArray,23) & 0x7FFF
             mnc_4g = bytes2Short(byteArray,25)
-            ci_4g = bytes2Integer(byteArray, 27)
-            earfcn_4g_1 = bytes2Short(byteArray, 31)
+            eci_4g = bytes2Integer(byteArray, 27)
+            tac = bytes2Short(byteArray, 31)
             pcid_4g_1 = bytes2Short(byteArray, 33)
-            earfcn_4g_2 = bytes2Short(byteArray, 35)
-            pcid_4g_2 = bytes2Short(byteArray,37)
+            pcid_4g_2 = bytes2Short(byteArray, 35)
+            pcid_4g_3 = bytes2Short(byteArray,37)
         if strSp.find("f") == -1:
                 speed = -1
         else:
@@ -6068,11 +6163,11 @@ class PersonalAssetMsgDecoder:
         bluetoothPeripheralDataMessage.is_2g_lbs = is_2g_lbs
         bluetoothPeripheralDataMessage.mcc_4g = mcc_4g
         bluetoothPeripheralDataMessage.mnc_4g = mnc_4g
-        bluetoothPeripheralDataMessage.ci_4g = ci_4g
-        bluetoothPeripheralDataMessage.earfcn_4g_1 = earfcn_4g_1
+        bluetoothPeripheralDataMessage.eci_4g = eci_4g
+        bluetoothPeripheralDataMessage.tac = tac
         bluetoothPeripheralDataMessage.pcid_4g_1 = pcid_4g_1
-        bluetoothPeripheralDataMessage.earfcn_4g_2 = earfcn_4g_2
         bluetoothPeripheralDataMessage.pcid_4g_2 = pcid_4g_2
+        bluetoothPeripheralDataMessage.pcid_4g_3 = pcid_4g_3
         bluetoothPeripheralDataMessage.mcc_2g = mcc_2g
         bluetoothPeripheralDataMessage.mnc_2g = mnc_2g
         bluetoothPeripheralDataMessage.lac_2g_1 = lac_2g_1
@@ -6157,11 +6252,11 @@ class PersonalAssetMsgDecoder:
             bleAlertData.is_2g_lbs = is_2g_lbs
             bleAlertData.mcc_4g = mcc_4g
             bleAlertData.mnc_4g = mnc_4g
-            bleAlertData.ci_4g = ci_4g
-            bleAlertData.earfcn_4g_1 = earfcn_4g_1
+            bleAlertData.eci_4g = eci_4g
+            bleAlertData.tac = tac
             bleAlertData.pcid_4g_1 = pcid_4g_1
-            bleAlertData.earfcn_4g_2 = earfcn_4g_2
             bleAlertData.pcid_4g_2 = pcid_4g_2
+            bleAlertData.pcid_4g_3 = pcid_4g_3
             bleAlertData.mcc_2g = mcc_2g
             bleAlertData.mnc_2g = mnc_2g
             bleAlertData.lac_2g_1 = lac_2g_1
@@ -6202,11 +6297,11 @@ class PersonalAssetMsgDecoder:
             bleDriverSignInData.is_2g_lbs = is_2g_lbs
             bleDriverSignInData.mcc_4g = mcc_4g
             bleDriverSignInData.mnc_4g = mnc_4g
-            bleDriverSignInData.ci_4g = ci_4g
-            bleDriverSignInData.earfcn_4g_1 = earfcn_4g_1
+            bleDriverSignInData.eci_4g = eci_4g
+            bleDriverSignInData.tac = tac
             bleDriverSignInData.pcid_4g_1 = pcid_4g_1
-            bleDriverSignInData.earfcn_4g_2 = earfcn_4g_2
             bleDriverSignInData.pcid_4g_2 = pcid_4g_2
+            bleDriverSignInData.pcid_4g_3 = pcid_4g_3
             bleDriverSignInData.mcc_2g = mcc_2g
             bleDriverSignInData.mnc_2g = mnc_2g
             bleDriverSignInData.lac_2g_1 = lac_2g_1
@@ -6462,11 +6557,11 @@ class PersonalAssetMsgDecoder:
 
         mcc_4g = 0
         mnc_4g = 0
-        ci_4g = 0
-        earfcn_4g_1 = 0
+        eci_4g = 0
+        tac = 0
         pcid_4g_1 = 0
-        earfcn_4g_2 = 0
         pcid_4g_2 = 0
+        pcid_4g_3 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -6505,11 +6600,11 @@ class PersonalAssetMsgDecoder:
         if is_4g_lbs:
             mcc_4g = bytes2Short(byteArray, 22) & 0x7FFF
             mnc_4g = bytes2Short(byteArray, 24)
-            ci_4g = bytes2Integer(byteArray, 26)
-            earfcn_4g_1 = bytes2Short(byteArray, 30)
+            eci_4g = bytes2Integer(byteArray, 26)
+            tac = bytes2Short(byteArray, 30)
             pcid_4g_1 = bytes2Short(byteArray, 32)
-            earfcn_4g_2 = bytes2Short(byteArray, 34)
-            pcid_4g_2 = bytes2Short(byteArray, 36)
+            pcid_4g_2 = bytes2Short(byteArray, 34)
+            pcid_4g_3 = bytes2Short(byteArray, 36)
         lockType = byteArray[38] & 0xff
         idLen = (byteArray[39] & 0xff) * 2
         idStr = byte2HexString(byteArray[40:],0)
@@ -6536,11 +6631,11 @@ class PersonalAssetMsgDecoder:
         lockMessage.is_2g_lbs = is_2g_lbs
         lockMessage.mcc_4g = mcc_4g
         lockMessage.mnc_4g = mnc_4g
-        lockMessage.ci_4g = ci_4g
-        lockMessage.earfcn_4g_1 = earfcn_4g_1
+        lockMessage.eci_4g = eci_4g
+        lockMessage.tac = tac
         lockMessage.pcid_4g_1 = pcid_4g_1
-        lockMessage.earfcn_4g_2 = earfcn_4g_2
         lockMessage.pcid_4g_2 = pcid_4g_2
+        lockMessage.pcid_4g_3 = pcid_4g_3
         lockMessage.mcc_2g = mcc_2g
         lockMessage.mnc_2g = mnc_2g
         lockMessage.lac_2g_1 = lac_2g_1
@@ -6700,11 +6795,11 @@ class PersonalAssetMsgDecoder:
             is_4g_lbs = False
             mcc_4g = 0
             mnc_4g = 0
-            ci_4g = 0
-            earfcn_4g_1 = 0
+            eci_4g = 0
+            tac = 0
             pcid_4g_1 = 0
-            earfcn_4g_2 = 0
             pcid_4g_2 = 0
+            pcid_4g_3 = 0
             is_2g_lbs = False
             mcc_2g = 0
             mnc_2g = 0
@@ -6741,11 +6836,11 @@ class PersonalAssetMsgDecoder:
             if is_4g_lbs:
                 mcc_4g = bytes2Short(bleData,11) & 0x7FFF
                 mnc_4g = bytes2Short(bleData,13)
-                ci_4g = bytes2Integer(bleData, 15)
-                earfcn_4g_1 = bytes2Short(bleData, 19)
+                eci_4g = bytes2Integer(bleData, 15)
+                tac = bytes2Short(bleData, 19)
                 pcid_4g_1 = bytes2Short(bleData, 21)
-                earfcn_4g_2 = bytes2Short(bleData, 23)
-                pcid_4g_2 = bytes2Short(bleData,25)
+                pcid_4g_2 = bytes2Short(bleData, 23)
+                pcid_4g_3 = bytes2Short(bleData,25)
             bleAlertData.alertType = alert
             bleAlertData.altitude = altitude
             bleAlertData.azimuth = azimuth
@@ -6761,11 +6856,11 @@ class PersonalAssetMsgDecoder:
             bleAlertData.is_2g_lbs = is_2g_lbs
             bleAlertData.mcc_4g = mcc_4g
             bleAlertData.mnc_4g = mnc_4g
-            bleAlertData.ci_4g = ci_4g
-            bleAlertData.earfcn_4g_1 = earfcn_4g_1
+            bleAlertData.eci_4g = eci_4g
+            bleAlertData.tac = tac
             bleAlertData.pcid_4g_1 = pcid_4g_1
-            bleAlertData.earfcn_4g_2 = earfcn_4g_2
             bleAlertData.pcid_4g_2 = pcid_4g_2
+            bleAlertData.pcid_4g_3 = pcid_4g_3
             bleAlertData.mcc_2g = mcc_2g
             bleAlertData.mnc_2g = mnc_2g
             bleAlertData.lac_2g_1 = lac_2g_1
@@ -6803,11 +6898,11 @@ class PersonalAssetMsgDecoder:
             is_4g_lbs = False
             mcc_4g = 0
             mnc_4g = 0
-            ci_4g = 0
-            earfcn_4g_1 = 0
+            eci_4g = 0
+            tac = 0
             pcid_4g_1 = 0
-            earfcn_4g_2 = 0
             pcid_4g_2 = 0
+            pcid_4g_3 = 0
             is_2g_lbs = False
             mcc_2g = 0
             mnc_2g = 0
@@ -6844,11 +6939,11 @@ class PersonalAssetMsgDecoder:
             if is_4g_lbs:
                 mcc_4g = bytes2Short(bleData,11) & 0x7FFF
                 mnc_4g = bytes2Short(bleData,13)
-                ci_4g = bytes2Integer(bleData, 15)
-                earfcn_4g_1 = bytes2Short(bleData, 19)
+                eci_4g = bytes2Integer(bleData, 15)
+                tac = bytes2Short(bleData, 19)
                 pcid_4g_1 = bytes2Short(bleData, 21)
-                earfcn_4g_2 = bytes2Short(bleData, 23)
-                pcid_4g_2 = bytes2Short(bleData,25)
+                pcid_4g_2 = bytes2Short(bleData, 23)
+                pcid_4g_3 = bytes2Short(bleData,25)
             bleDriverSignInData.alert = alert
             bleDriverSignInData.altitude = altitude
             bleDriverSignInData.azimuth = azimuth
@@ -6864,11 +6959,11 @@ class PersonalAssetMsgDecoder:
             bleDriverSignInData.is_2g_lbs = is_2g_lbs
             bleDriverSignInData.mcc_4g = mcc_4g
             bleDriverSignInData.mnc_4g = mnc_4g
-            bleDriverSignInData.ci_4g = ci_4g
-            bleDriverSignInData.earfcn_4g_1 = earfcn_4g_1
+            bleDriverSignInData.eci_4g = eci_4g
+            bleDriverSignInData.tac = tac
             bleDriverSignInData.pcid_4g_1 = pcid_4g_1
-            bleDriverSignInData.earfcn_4g_2 = earfcn_4g_2
             bleDriverSignInData.pcid_4g_2 = pcid_4g_2
+            bleDriverSignInData.pcid_4g_3 = pcid_4g_3
             bleDriverSignInData.mcc_2g = mcc_2g
             bleDriverSignInData.mnc_2g = mnc_2g
             bleDriverSignInData.lac_2g_1 = lac_2g_1
@@ -7105,7 +7200,10 @@ class PersonalAssetMsgDecoder:
         serialNo = bytes2Short(byteArray,5)
         imei = decodeImei(byteArray,7)
         isHisData = (byteArray[15] & 0x80) == 0x80
-        isGpsWorking = (byteArray[15] & 0x8) == 0x8
+        isGpsSleeping = (byteArray[15] & 0x8) == 0x8
+        isGpsWorking = True
+        if isGpsSleeping:
+            isGpsWorking = False
         dateStr = "20" + byte2HexString(byteArray[17:23],0)
         gtm0 = GTM0(dateStr)
         selfMacByte = byteArray[23:29]
@@ -7549,11 +7647,11 @@ class PersonalAssetMsgDecoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        ci_4g = 0
-        earfcn_4g_1 = 0
+        eci_4g = 0
+        tac = 0
         pcid_4g_1 = 0
-        earfcn_4g_2 = 0
         pcid_4g_2 = 0
+        pcid_4g_3 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -7587,11 +7685,11 @@ class PersonalAssetMsgDecoder:
         if is_4g_lbs:
             mcc_4g = bytes2Short(byteArray,23) & 0x7FFF
             mnc_4g = bytes2Short(byteArray,25)
-            ci_4g = bytes2Integer(byteArray, 27)
-            earfcn_4g_1 = bytes2Short(byteArray, 31)
+            eci_4g = bytes2Integer(byteArray, 27)
+            tac = bytes2Short(byteArray, 31)
             pcid_4g_1 = bytes2Short(byteArray, 33)
-            earfcn_4g_2 = bytes2Short(byteArray, 35)
-            pcid_4g_2 = bytes2Short(byteArray,37)
+            pcid_4g_2 = bytes2Short(byteArray, 35)
+            pcid_4g_3 = bytes2Short(byteArray,37)
         axisXDirect = -1
         if (byteArray[39] & 0x80) == 0x80:
             axisXDirect = -1
@@ -7703,11 +7801,11 @@ class PersonalAssetMsgDecoder:
         locationMessage.is_2g_lbs = is_2g_lbs
         locationMessage.mcc_4g = mcc_4g
         locationMessage.mnc_4g = mnc_4g
-        locationMessage.ci_4g = ci_4g
-        locationMessage.earfcn_4g_1 = earfcn_4g_1
+        locationMessage.eci_4g = eci_4g
+        locationMessage.tac = tac
         locationMessage.pcid_4g_1 = pcid_4g_1
-        locationMessage.earfcn_4g_2 = earfcn_4g_2
         locationMessage.pcid_4g_2 = pcid_4g_2
+        locationMessage.pcid_4g_3 = pcid_4g_3
         locationMessage.mcc_2g = mcc_2g
         locationMessage.mnc_2g = mnc_2g
         locationMessage.lac_2g_1 = lac_2g_1
@@ -7826,9 +7924,14 @@ class PersonalAssetMsgEncoder:
         command = [0x27,0x27,0x81]
         return Encoder.getConfigSettingMsg(imei,content,command,self.encryptType,self.aesKey)
 
-    def getInnerGeoDataMsgReply(self,imei,serialNo,protocolHeadType):
+    def getInnerGeoDataMsgReply(self,imei,serialNo):
         command = [0x27, 0x27, 0x20]
         return Encoder.getCommonMsgReply(imei,  True,serialNo, command, self.encryptType, self.aesKey)
+
+    def getDeviceTempCollectionMsgReply(self,imei,serialNo):
+        command = [0x27, 0x27, 0x26]
+        return Encoder.getCommonMsgReply(imei,  True,serialNo, command, self.encryptType, self.aesKey)
+
     def getWifiWithDeviceInfoMsgReply(self,imei,serialNo,sourceAlarmCode,protocolHeadType):
         command = [0x27, 0x27, protocolHeadType]
         content = []
