@@ -12,10 +12,22 @@ import iOSDFULibrary
 import CoreBluetooth
 import swiftScan
 import QMUIKit
+import ActionSheetPicker_3_0  
 var KSize = UIScreen.main.bounds
 
+import ObjectiveC.runtime
+private var AssociatedObjectTagKey: UInt8 = 0
 
-
+extension UIAlertAction {
+    var tag: Int? {
+        get {
+            return objc_getAssociatedObject(self, &AssociatedObjectTagKey) as? Int
+        }
+        set {
+            objc_setAssociatedObject(self, &AssociatedObjectTagKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        }
+    }
+}
 extension String {
     
     //1, 截取规定下标之后的字符串
@@ -61,9 +73,9 @@ extension String {
 }
 
 class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDelegate,UITableViewDataSource,UITableViewDelegate,UISearchBarDelegate
-, LBXScanViewControllerDelegate
+, LBXScanViewControllerDelegate,DFUServiceDelegate, DFUProgressDelegate, LoggerDelegate
+,URLSessionDownloadDelegate
 {
-    
     
     func scanFinished(scanResult: LBXScanResult, error: String?) {
         print(scanResult)
@@ -72,7 +84,21 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         self.dataTableFuzzySearch()
     }
     
-    
+    private lazy var session:URLSession = {
+        //只执行一次
+        let config = URLSessionConfiguration.default
+        let currentSession = URLSession(configuration: config, delegate: self,
+                                        delegateQueue: nil)
+        return currentSession
+        
+    }()
+    private var dfuPeripheral:CBPeripheral!
+    private var isUpgrade = false
+    private var connectControl = ""
+    private var progressView:AEAlertView!
+    private var progressBar:MyProgress!
+    private var dfuDeviceItem:[String:String]!
+    private var upgradePackUrl:String!
     private var bleStateSucc = false
     private var centralManager   : CBCentralManager!
     private var waitingView:AEUIAlertView!
@@ -84,6 +110,8 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
     private var deviceInfoArray = [[String:String]]()
     private var allDeviceInfoArray = [[String:String]]()
     private var dataTable:UITableView!
+    private var modelList:[String] = ["TSTH1-B","TSDT1-B","TSR1-B","T-button","T-sense","T-hub","T-one"]
+    private var deviceTypeList:[String] = ["S02","S04","S05","S07","S08","S09","S10"]
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         let view = AEAlertView(style: .defaulted)
         let title = "Warning"
@@ -183,47 +211,104 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
     }
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
-        
+        if  advertisementData["kCBAdvDataLocalName"] != nil{
+            let name = advertisementData["kCBAdvDataLocalName"] as! String 
+            if name.lowercased().contains("dfu"){
+                if advertisementData["kCBAdvDataServiceUUIDs"] != nil {
+                    let dict = advertisementData["kCBAdvDataServiceUUIDs"] as! NSArray
+                    if(dict.contains(CBUUID(string:"FE59"))){
+                        let mac = peripheral.identifier.uuidString
+                        var rssi = -9999
+                        if RSSI != nil{
+                            rssi = Int(RSSI)
+                        }
+//                        print("find dfu device \(name)")
+                        var exist = false
+                        for item in self.discoveredPeripherals{
+                            if item.mac == mac{
+                                exist = true
+                                break
+                            }
+                        }
+                        if !exist {
+                            self.discoveredPeripherals.append((peripheral, mac))
+                        }
+                        parseDfuDevice(deviceName: name,  rssi: rssi, mac: mac)
+                    }
+                    
+                }
+            }
+        }
         if advertisementData["kCBAdvDataManufacturerData"]  != nil && advertisementData["kCBAdvDataServiceData"]  != nil{
+          
             //receive uid msg
             let factData = advertisementData["kCBAdvDataManufacturerData"] as! Data
             if factData.count > 3 && (factData[2] == 0x07 || factData[2] == 0x08 || factData[2] == 0x09 || factData[2] == 0x0a) {
-                
-            }else{
-                return
-            }
-            var i = 0
-            
-            let dict = advertisementData["kCBAdvDataServiceData"] as! NSDictionary
-            var key = CBUUID(string:"FEAA")
-            if dict[key] != nil && factData[0] == 0x00 && factData[1] == 0x10{
-                let data = dict[key] as! Data
                 var i = 0
                 
-                //                print(result)
-                let mac = peripheral.identifier.uuidString
-                //                        var data = self.hex2String(data: dict[key] as! NSData );
-                
-                let name = advertisementData["kCBAdvDataLocalName"] as! String
-                //                print(name)
-                var rssi = -9999
-                if RSSI != nil{
-                    rssi = Int(RSSI)
-                }
-                var exist = false
-                for item in self.discoveredPeripherals{
-                    if item.mac == mac{
-                        exist = true
-                        break
+                let dict = advertisementData["kCBAdvDataServiceData"] as! NSDictionary
+                var key = CBUUID(string:"FEAA")
+                if dict[key] != nil && factData[0] == 0x00 && factData[1] == 0x10{
+                    let data = dict[key] as! Data
+                    var i = 0
+                    
+                    //                print(result)
+                    let mac = peripheral.identifier.uuidString
+                    //                        var data = self.hex2String(data: dict[key] as! NSData );
+                    
+                    let name = advertisementData["kCBAdvDataLocalName"] as! String
+                    //                print(name)
+                    var rssi = -9999
+                    if RSSI != nil{
+                        rssi = Int(RSSI)
                     }
+                    var exist = false
+                    for item in self.discoveredPeripherals{
+                        if item.mac == mac{
+                            exist = true
+                            break
+                        }
+                    }
+                    if !exist {
+                        self.discoveredPeripherals.append((peripheral, mac))
+                    }
+                    //                print(advertisementData)
+                    //paseEddystoneUid(factResult,result)
+                    self.parseEddystoneUID(deviceName: name ?? "", bleData: factData,bleData1: data, rssi: rssi, mac: mac)
                 }
-                if !exist {
-                    self.discoveredPeripherals.append((peripheral, mac))
+            }else{
+                var key = CBUUID(string:"0807")
+                let dictData = advertisementData["kCBAdvDataServiceData"] as! NSDictionary
+                if dictData[key] != nil{
+                    let data = dictData[key] as! Data
+                    if data.count > 0 && (data[0] == 0x07 || data[0] == 0x08 || data[0] == 0x09 || data[0] == 0x0a) {
+                        
+                    }else{
+                        return
+                    }
+                    var i = 0
+                    let mac = peripheral.identifier.uuidString
+                    
+                    let name = advertisementData["kCBAdvDataLocalName"] as! String
+                    //                print(name)
+                    var rssi = -9999
+                    if RSSI != nil{
+                        rssi = Int(RSSI)
+                    }
+                    var exist = false
+                    for item in self.discoveredPeripherals{
+                        if item.mac == mac{
+                            exist = true
+                            break
+                        }
+                    }
+                    if !exist {
+                        self.discoveredPeripherals.append((peripheral, mac))
+                    }
+                    self.parseBeacon(deviceName: name ?? "", bleData: data, rssi: rssi, mac: mac)
                 }
-                //                print(advertisementData)
-                //paseEddystoneUid(factResult,result)
-                self.parseEddystoneUID(deviceName: name ?? "", bleData: factData,bleData1: data, rssi: rssi, mac: mac)
             }
+           
         }
         
         if advertisementData["kCBAdvDataManufacturerData"]  != nil {
@@ -267,7 +352,6 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 self.parseBleTireData(deviceName: name ?? "", bleData: result, rssi: rssi, mac: mac)
             }
         }
-        
         if advertisementData["kCBAdvDataServiceData"]  != nil {
             let dict = advertisementData["kCBAdvDataServiceData"] as! NSDictionary
             var key = CBUUID(string:"BFFF")
@@ -386,6 +470,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 //parseEddystone(result)
                 self.parseEddystone(deviceName: name, bleData: data, rssi: rssi, mac: mac)
             }
+             
         }
     }
     var discoveredPeripherals:[(peripheral: CBPeripheral, mac: String?)] = []
@@ -529,6 +614,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
     override func viewDidLoad() {
         print("viewDidLoad")
         super.viewDidLoad()
+        
         self.view.backgroundColor = UIColor.white
         self.view.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
         self.view.backgroundColor = UIColor.nordicLightGray
@@ -543,6 +629,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         dataTable.register(DeviceS08Cell.self,forCellReuseIdentifier:DeviceS08Cell.identifier)
         dataTable.register(DeviceS09Cell.self,forCellReuseIdentifier:DeviceS09Cell.identifier)
         dataTable.register(DeviceS10Cell.self,forCellReuseIdentifier:DeviceS10Cell.identifier)
+        dataTable.register(DeviceDfuCell.self,forCellReuseIdentifier:DeviceDfuCell.identifier)
         let titleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
         //        titleLabel.text = "Bluetooth sensor"
         titleLabel.text = NSLocalizedString("bluetooth_sensor", comment: "Bluetooth sensor")
@@ -552,7 +639,8 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         self.navigationItem.rightBarButtonItem = rightBarButtonItem
         self.navigationItem.leftBarButtonItem = leftBarButtonItem
         navigationController?.navigationBar.barTintColor = UIColor.colorPrimary
-        
+        initResetDfuMenu()
+        print("viewDidLoad")
         
         centralManager = CBCentralManager(delegate: self, queue: nil)
         self.searchBar = UISearchBar()
@@ -612,17 +700,17 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
             return
         }
         let hardware = Utils.parseHardwareVersion(hardware: String(format: "%02x", bleData[3]))
-        let all = Utils.data2Short(bytes: bleData, offset: 4)
-        let version1 = bleData[4] >> 5
-        let version2 = (all & 0x1FFF) >> 7
-        let version3 = all & 0x7f
-        let testByte = bleData[6]
-        var software = ""
-        if testByte != 0{
-            software = String(format: "%d.%d.%02d  %02x",version1,version2,version3, testByte)
-        }else{
-            software = String(format: "%d.%d.%02d",version1,version2,version3)
-        }
+//        let all = Utils.data2Short(bytes: bleData, offset: 4)
+//        let version1 = bleData[4] >> 5
+//        let version2 = (all & 0x1FFF) >> 7
+//        let version3 = all & 0x7f
+//        let testByte = bleData[6]
+        var software = Utils.parseS78910SoftwaeVersion(data: [UInt8](bleData), index: 4)
+//        if testByte != 0{
+//            software = String(format: "%d.%d.%02d  %@",version1,version2,version3, String(data: Data([bleData[6]]), encoding: .utf8)!)
+//        }else{
+//            software = String(format: "%d.%d.%02d",version1,version2,version3)
+//        }
         let broadcastType = "Eddystone UID"
         i = 7
         var id = ""
@@ -675,6 +763,113 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         
         updateDeviceInfo(deviceItem: deviceItem,mac:mac,deviceName:deviceName,id:id)
     }
+    func parseDfuDevice(deviceName:String,rssi:Int,mac:String){
+        var deviceItem = [String:String]()
+        if deviceName == ""{
+            return
+        }else{
+            deviceItem.updateValue(deviceName, forKey: "name")
+        }
+        var deviceType = "dfuDevice"
+        var model = "Upgrade error"
+        let date = self.currentDateString()
+        deviceItem.updateValue(date,forKey:"date")
+       
+        deviceItem.updateValue(mac, forKey: "id")
+        deviceItem.updateValue(mac, forKey: "mac")
+        if rssi != -9999{
+            let rssiStr = String.init(format: "%ddBm", rssi)
+            deviceItem.updateValue(rssiStr, forKey: "rssi")
+        }
+        deviceItem.updateValue(deviceType, forKey: "deviceType")
+        deviceItem.updateValue(model, forKey: "deviceTypeDesc")
+        updateDeviceInfo(deviceItem: deviceItem,mac:mac,deviceName:deviceName,id:mac)
+    }
+    
+    func parseBeacon(deviceName:String,bleData:Data,rssi:Int,mac:String){
+        //        print("parseEddystone")
+        var deviceItem = [String:String]()
+        if deviceName == ""{
+            return
+        }else{
+            deviceItem.updateValue(deviceName, forKey: "name")
+        }
+        var deviceType = "ErrorDevice"
+        var model = ""
+        if bleData[0] == 0x07{
+            deviceType = "S07"
+            model = "T-buton"
+        }else if bleData[0] == 0x08{
+            deviceType = "S08"
+            model="T-sense"
+        }else if bleData[0] == 0x09{
+            deviceType = "S09"
+            model="T-hub"
+        }else if bleData[0] == 0x0a{
+            deviceType = "S10"
+            model = "T-one"
+        }
+        if deviceType == "ErrorDevice"{
+            return
+        }
+        let hardware = Utils.parseHardwareVersion(hardware: String(format: "%02x", bleData[1]))
+//        let all = (Int(bleData[2]) << 8) + Int(bleData[2 + 1])
+//        let version1 = bleData[2] >> 5
+//        let version2 = (all & 0x1FFF) >> 7
+//        let version3 = all & 0x7f
+//        let testByte = bleData[4]
+        var software = Utils.parseS78910SoftwaeVersion(data: [UInt8](bleData), index: 2)
+//        if testByte != 0{
+//            software = String(format: "%d.%d.%02d  %@",version1,version2,version3, String(data: Data([bleData[4]]), encoding: .utf8)!)
+//        }else{
+//            software = String(format: "%d.%d.%02d",version1,version2,version3)
+//        }
+        var broadcastType = "Beacon"
+        var i = 5
+        var id = ""
+        while i < 11{
+            id.append(String(format: "%02x", bleData[i]))
+            i+=1;
+        }
+        //        print("parseEddystone,%@,%@,%@",deviceName,hardware,software)
+        var flag = "-"
+        var battery = "-"
+        var batteryPercent = "-"
+        var doorStatus = "-"
+        var move = "-"
+        var moveDetection = "-"
+        var stopDetection = "-"
+        var pitchAngle = "-"
+        var rollAngle = "-"
+        var deviceProp = "-"
+        var major = "-"
+        var minor = "-"
+        var nid = "-"
+        var bid = "-"
+        let date = self.currentDateString()
+        deviceItem.updateValue(date,forKey:"date")
+       
+       
+        deviceItem.updateValue(mac, forKey: "mac")
+        deviceItem.updateValue(id.uppercased(), forKey: "id")
+        if rssi != -9999{
+            let rssiStr = String.init(format: "%ddBm", rssi)
+            deviceItem.updateValue(rssiStr, forKey: "rssi")
+        }
+        deviceItem.updateValue(deviceType, forKey: "deviceType")
+        deviceItem.updateValue(model, forKey: "deviceTypeDesc")
+        deviceItem.updateValue(hardware, forKey: "hardware")
+        var softwareStr = "V" + software
+        var softwareInt = Int(software.replacingOccurrences(of: ".", with: "")) ?? 0
+        deviceItem.updateValue(software, forKey: "software")
+        deviceItem.updateValue(broadcastType, forKey: "broadcastType")
+        deviceItem.updateValue(String(softwareInt), forKey: "softwareInt")
+         
+        
+        updateDeviceInfo(deviceItem: deviceItem,mac:mac,deviceName:deviceName,id:id)
+        
+    }
+    
     func parseEddystone(deviceName:String,bleData:Data,rssi:Int,mac:String){
         //        print("parseEddystone")
         var deviceItem = [String:String]()
@@ -702,17 +897,17 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
             return
         }
         let hardware = Utils.parseHardwareVersion(hardware: String(format: "%02x", bleData[1]))
-        let all = (Int(bleData[2]) << 8) + Int(bleData[2 + 1])
-        let version1 = bleData[2] >> 5
-        let version2 = (all & 0x1FFF) >> 7
-        let version3 = all & 0x7f
-        let testByte = bleData[4]
-        var software = ""
-        if testByte != 0{
-            software = String(format: "%d.%d.%02d  %02x",version1,version2,version3, testByte)
-        }else{
-            software = String(format: "%d.%d.%02d",version1,version2,version3)
-        } 
+//        let all = (Int(bleData[2]) << 8) + Int(bleData[2 + 1])
+//        let version1 = bleData[2] >> 5
+//        let version2 = (all & 0x1FFF) >> 7
+//        let version3 = all & 0x7f
+//        let testByte = bleData[4]
+        var software = Utils.parseS78910SoftwaeVersion(data: [UInt8](bleData), index: 2)
+//        if testByte != 0{
+//            software = String(format: "%d.%d.%02d  %@",version1,version2,version3, String(data: Data([bleData[4]]), encoding: .utf8)!)
+//        }else{
+//            software = String(format: "%d.%d.%02d",version1,version2,version3)
+//        }
         var broadcastType = "Eddystone"
         var i = 5
         var id = ""
@@ -759,7 +954,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 broadcastType.append(" ")
                 broadcastType.append(model)
             }
-            battery = String(format: "%.3f V", Float(Utils.data2Short(bytes: bleData, offset: 12)) / 1000.0)
+            battery = String(format: "%.2f V", Float(Utils.data2Short(bytes: bleData, offset: 12)) / 1000.0)
             batteryPercent = String(format: "%d%%", bleData[14] & 0xff )
             var warn =	bleData[15]
             
@@ -787,7 +982,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
             }else if((bleData[11] & 0x04) == 0x04){
                 
             }
-            battery = String(format: "%.3f V", Float(Utils.data2Short(bytes: bleData, offset: 12)) / 1000.0)
+            battery = String(format: "%.2f V", Float(Utils.data2Short(bytes: bleData, offset: 12)) / 1000.0)
             batteryPercent = String(format: "%d%%", bleData[14] & 0xff )
             var tempSrc = Utils.data2Short(bytes: bleData, offset: 15)
             var temp = (tempSrc & 0x7fff) * ((tempSrc & 0x8000) == 0x8000 ? -1 : 1)
@@ -811,10 +1006,8 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 move = ""
                 if(moveStatus == 0){
                     move = NSLocalizedString("move_static", comment: "Static")
-                }else if(moveStatus == 1){
+                }else  {
                     move = NSLocalizedString("move_move", comment: "Move")
-                }else if(moveStatus == 2){
-                    move = NSLocalizedString("move_forbidden", comment: "Forbidden")
                 }
                 deviceItem.updateValue(String(moveStatus), forKey: "moveStatus")
                 var moveInt = Utils.data2Short(bytes: bleData, offset: 20)
@@ -861,10 +1054,15 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
             }else if((bleData[11] & 0x04) == 0x04){
                 
             }
-            var battery = String(format: "%.3f V", Float(Utils.data2Short(bytes: bleData, offset: 12)) / 1000.0)
+            var battery = String(format: "%.2f V", Float(Utils.data2Short(bytes: bleData, offset: 12)) / 1000.0)
             var batteryPercent = String(format: "%d%%", bleData[14] & 0xff )
             var tempSrc = Utils.data2Short(bytes: bleData, offset: 15)
-            var temp = (tempSrc & 0x7fff) * ((tempSrc & 0x8000) == 0x8000 ? -1 : 1)
+            var temp = -999
+            if tempSrc == 65535{
+                temp = -999
+            }else{
+                temp = (tempSrc & 0x7fff) * ((tempSrc & 0x8000) == 0x8000 ? -1 : 1)
+            }
             var deviceProp =  ""
             if(bleData[18] == 0x00){
                 deviceProp =  NSLocalizedString("normal", comment: "Normal")
@@ -872,6 +1070,9 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 deviceProp = NSLocalizedString("strong_light", comment: "Strong light")
             }
             var humidity = String(format: "%d%%",  bleData[17])
+            if bleData[17] == 0xff{
+                humidity = "- %"
+            }
             var warnStr = getWarnDesc(deviceType: deviceType, warnByte: bleData[19])
             deviceItem.updateValue(String(temp), forKey: "sourceTemp")
             deviceItem.updateValue(humidity, forKey: "humidity")
@@ -952,7 +1153,8 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         updateDeviceInfo(deviceItem: deviceItem,mac:mac,deviceName:deviceName,id:id)
     }
     
-    
+    var lastRecvDate:Date!
+    var dataNotifyDate:Date!
     func updateDeviceInfo(deviceItem:[String:String],mac:String,deviceName:String,id:String ){
         var exist = false
         var i = 0
@@ -970,15 +1172,15 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         if !exist
         {
             if fuzzyKey != ""{
-                let deviceRange = deviceName.range(of: fuzzyKey)
+                let deviceRange = deviceName.lowercased().range(of: fuzzyKey.lowercased())
                 var deviceNameLocation = -1
                 if deviceRange != nil{
                     deviceNameLocation = deviceName.distance(from: deviceName.startIndex, to: deviceRange!.lowerBound)
                 }
-                let idRange = id.range(of:fuzzyKey)
+                let idRange = id.lowercased().range(of:fuzzyKey.lowercased())
                 var idLocation = -1
                 if idRange != nil{
-                    idLocation = id.distance(from: id.startIndex, to: idRange!.lowerBound)
+                    idLocation = id.lowercased().distance(from: id.startIndex, to: idRange!.lowerBound)
                 }
                 if deviceNameLocation != -1 || idLocation != -1{
                     deviceInfoArray.append(deviceItem)
@@ -1008,8 +1210,27 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
             if self.waitingView != nil {
                 self.waitingView.dismiss()
             }
+        } 
+        lastRecvDate = Date()
+        if dataNotifyDate == nil{
+            dataNotifyDate = Date()
         }
-        dataTable.reloadData()
+        let calendar = Calendar.current
+      
+        let components = calendar.dateComponents([.nanosecond], from: dataNotifyDate, to: lastRecvDate)
+ 
+        if let nanoseconds = components.nanosecond {
+            let milliseconds = Double(nanoseconds) / 1_000_000
+            if milliseconds > 1000{
+                dataNotifyDate = lastRecvDate
+                dataTable.reloadData()
+            }
+        } else {
+            dataNotifyDate = lastRecvDate
+            print("无法计算毫秒差值")
+            dataTable.reloadData()
+        }
+      
     }
     
     
@@ -1287,6 +1508,8 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 return 460
             }else if deviceType == "errorType"{
                 return 230
+            }else if deviceType == "dfuDevice"{
+                return 210
             }else if deviceType == "tire"{
                 return 310
             }else if deviceType == "S07"{
@@ -1296,7 +1519,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 }else if broadcastType == "Long range"{
                     return 420
                 }else if broadcastType == "Beacon"{
-                    return 360
+                    return 300
                 }
                 return 420
             }else if deviceType == "S08"{
@@ -1309,13 +1532,9 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                     let move = deviceInfo["move"]
                     let moveStatus = deviceInfo["moveStatus"]
                     if move != "-"{
-                        if moveStatus != "2"{
-                            return 630
-                        }else{
-                            return 510
-                        }
+                        return 600
                     }else{
-                        return 480
+                        return 450
                     }
                 }
                 
@@ -1328,7 +1547,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 }else if broadcastType == "Long range"{
                     return 450
                 }else if broadcastType == "Beacon"{
-                    return 360
+                    return 300
                 }
                 return 480
             }else{
@@ -1339,6 +1558,8 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 return 420
             }else if deviceType == "errorType"{
                 return 230
+            }else if deviceType == "dfuDevice"{
+                return 210
             }else if deviceType == "tire"{
                 return 310
             }else if deviceType == "S07"{
@@ -1348,7 +1569,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 }else if broadcastType == "Long range"{
                     return 420
                 }else if broadcastType == "Beacon"{
-                    return 360
+                    return 300
                 }
                 return 420
             }else if deviceType == "S08"{
@@ -1361,13 +1582,9 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                     let move = deviceInfo["move"]
                     let moveStatus = deviceInfo["moveStatus"]
                     if move != "-"{
-                        if moveStatus != "2"{
-                            return 630
-                        }else{
-                            return 510
-                        }
+                        return 600
                     }else{
-                        return 480
+                        return 450
                     }
                 }
                 
@@ -1380,7 +1597,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 }else if broadcastType == "Long range"{
                     return 450
                 }else if broadcastType == "Beacon"{
-                    return 360
+                    return 300
                 }
                 return 480
             }else{
@@ -1400,6 +1617,8 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 return 460
             }else if deviceType == "errorType"{
                 return 230
+            }else if deviceType == "dfuDevice"{
+                return 210
             }else if deviceType == "tire"{
                 return 310
             }else if deviceType == "S07"{
@@ -1409,7 +1628,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 }else if broadcastType == "Long range"{
                     return 420
                 }else if broadcastType == "Beacon"{
-                    return 360
+                    return 300
                 }
                 return 420
             }else if deviceType == "S08"{
@@ -1422,13 +1641,9 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                     let move = deviceInfo["move"]
                     let moveStatus = deviceInfo["moveStatus"]
                     if move != "-"{
-                        if moveStatus != "2"{
-                            return 630
-                        }else{
-                            return 510
-                        }
+                        return 600
                     }else{
-                        return 480
+                        return 450
                     }
                 }
                 
@@ -1441,7 +1656,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 }else if broadcastType == "Long range"{
                     return 450
                 }else if broadcastType == "Beacon"{
-                    return 360
+                    return 300
                 }
                 return 480
             }else{
@@ -1454,6 +1669,8 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 return 230
             }else if deviceType == "tire"{
                 return 310
+            }else if deviceType == "dfuDevice"{
+                return 210
             }else if deviceType == "S07"{
                 let broadcastType = deviceInfo["broadcastType"] as! String ?? ""
                 if broadcastType == "Eddystone UID"{
@@ -1461,7 +1678,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 }else if broadcastType == "Long range"{
                     return 420
                 }else if broadcastType == "Beacon"{
-                    return 360
+                    return 300
                 }
                 return 420
             }else if deviceType == "S08"{
@@ -1474,13 +1691,9 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                     let move = deviceInfo["move"]
                     let moveStatus = deviceInfo["moveStatus"]
                     if move != "-"{
-                        if moveStatus != "2"{
-                            return 630
-                        }else{
-                            return 510
-                        }
+                        return 600
                     }else{
-                        return 480
+                        return 450
                     }
                 }
                 
@@ -1493,7 +1706,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 }else if broadcastType == "Long range"{
                     return 450
                 }else if broadcastType == "Beacon"{
-                    return 360
+                    return 300
                 }
                 return 480
             }else{
@@ -1542,7 +1755,10 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
             cell.rssiContentLabel.text = deviceInfo["rssi"]
             let temp = Float(deviceInfo["sourceTemp"] ?? "0") ?? 0
             let curTemp = Utils.getCurTemp(sourceTemp: temp)
-            let tempStr = String.init(format: "%.2f %@", curTemp,Utils.getCurTempUnit())
+            var tempStr = String.init(format: "%.2f %@", Float(curTemp) / 100.0,Utils.getCurTempUnit())
+            if curTemp == -999{
+                tempStr = String.init(format: "- %@", Utils.getCurTempUnit())
+            }
             cell.tempContentLabel.text = tempStr
             cell.warnContentLabel.text = deviceInfo["warn"]
             cell.configBtn.tag = indexPath.row
@@ -1571,7 +1787,10 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
             cell.rssiContentLabel.text = deviceInfo["rssi"]
             let temp = Float(deviceInfo["sourceTemp"] ?? "0") ?? 0
             let curTemp = Utils.getCurTemp(sourceTemp: temp)
-            let tempStr = String.init(format: "%.2f %@", curTemp,Utils.getCurTempUnit())
+            var tempStr = String.init(format: "%.2f %@", Float(curTemp) / 100.0,Utils.getCurTempUnit())
+            if curTemp == -999{
+                tempStr = String.init(format: "- %@", Utils.getCurTempUnit())
+            }
             cell.tempContentLabel.text = tempStr
             cell.warnContentLabel.text = deviceInfo["warn"]
             
@@ -1661,7 +1880,10 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
             cell.softwareContentLabel.text = deviceInfo["software"]
             let temp = Float(deviceInfo["sourceTemp"] ?? "0") ?? 0
             let curTemp = Utils.getCurTemp(sourceTemp: temp)
-            let tempStr = String.init(format: "%.2f %@", Float(curTemp) / 100.0,Utils.getCurTempUnit())
+            var tempStr = String.init(format: "%.2f %@", Float(curTemp) / 100.0,Utils.getCurTempUnit())
+            if curTemp == -999{
+                tempStr = String.init(format: "- %@", Utils.getCurTempUnit())
+            }
             cell.tempContentLabel.text = tempStr
             cell.modelContentLabel.text = deviceInfo["deviceTypeDesc"]
             cell.rssiContentLabel.text = deviceInfo["rssi"]
@@ -1676,7 +1898,6 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
             cell.pitchContentLabel.text = deviceInfo["pitchAngle"]
             cell.rollContentLabel.text = deviceInfo["rollAngle"]
             cell.doorContentLabel.text = deviceInfo["doorStatus"]
-            cell.ambientLightContentLabel.text = deviceInfo["deviceProp"]
             cell.batteryPercentContentLabel.text = deviceInfo["batteryPercent"]
             cell.warnContentLabel.text = deviceInfo["warn"]
             cell.configBtn.tag = indexPath.row
@@ -1718,7 +1939,10 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
             cell.softwareContentLabel.text = deviceInfo["software"]
             let temp = Float(deviceInfo["sourceTemp"] ?? "0") ?? 0
             let curTemp = Utils.getCurTemp(sourceTemp: temp)
-            let tempStr = String.init(format: "%.2f %@", Float(curTemp) / 100.0,Utils.getCurTempUnit())
+            var tempStr = String.init(format: "%.2f %@", Float(curTemp) / 100.0,Utils.getCurTempUnit())
+            if curTemp == -999{
+                tempStr = String.init(format: "- %@", Utils.getCurTempUnit())
+            }
             cell.tempContentLabel.text = tempStr
             cell.modelContentLabel.text = deviceInfo["deviceTypeDesc"]
             cell.rssiContentLabel.text = deviceInfo["rssi"]
@@ -1738,6 +1962,19 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
             cell.switchTempUnitBtn.setTitle(Utils.getNextTempUnit(), for: .normal)
             let switchTempUnitTap = UITapGestureRecognizer(target: self, action: #selector(switchTempUnitTap(tap:)))
             cell.switchTempUnitBtn.addGestureRecognizer(switchTempUnitTap)
+            return cell
+        }else if deviceType == "dfuDevice"{
+            let cell = (tableView.dequeueReusableCell(withIdentifier: DeviceDfuCell.identifier, for: indexPath)) as! DeviceDfuCell
+             
+            cell.deviceNameContentLabel.text = deviceInfo["name"]
+            cell.idContentLabel.text = deviceInfo["id"]
+            cell.dateContentLabel.text = deviceInfo["date"]
+            cell.modelContentLabel.text = "Upgrade error"
+            cell.rssiContentLabel.text = deviceInfo["rssi"]
+            cell.configBtn.tag = indexPath.row
+//            let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dfuUpgradeTap(tap:)))
+//            cell.configBtn.addGestureRecognizer(tapGesture)
+            cell.configBtn.addTarget(self, action: #selector(dfuUpgradeClick), for:.touchUpInside)
             return cell
         }else{
             let cell = (tableView.dequeueReusableCell(withIdentifier: DeviceS05Cell.identifier, for: indexPath)) as! DeviceS05Cell
@@ -1850,8 +2087,285 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
             
         }
     }
+    var dfuMenu:UIAlertController!
+    private func initResetDfuMenu(){
+        self.dfuMenu = UIAlertController(title: "", message: nil, preferredStyle: .actionSheet)
+        var index = 0
+        while index < self.modelList.count{
+            let deviceModel = self.modelList[index]
+            let action2 = UIAlertAction(title: deviceModel, style: .default) { action in
+                // 处理操作2被点击的逻辑
+                let selectIndex = action.tag ?? -1
+                if selectIndex == -1{
+                    return;
+                }
+                let deviceType = self.deviceTypeList[selectIndex]
+                let deviceModel = self.modelList[selectIndex]
+                let confirmView = AEAlertView(style: .defaulted)
+               confirmView.message = NSLocalizedString("upgrade_device_to", comment: "Upgrade device to") + " " + deviceModel
+               let upgradeCancel = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
+                   print("confirm cancel")
+                   confirmView.dismiss()
+               }
+               let upgradeConfirm = AEAlertAction(title: NSLocalizedString("confirm", comment: "Confirm"), style: .defaulted) { (action) in
+                   confirmView.dismiss()
+                   DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(500)) {
+                       self.showWaitingWin(title: NSLocalizedString("waiting", comment: "Waiting"))
+                       self.getServerData(deviceType: deviceType)
+                   }
+                   print("confirm click")
+                   
+                  
+               }
+               confirmView.addAction(action: upgradeCancel)
+               confirmView.addAction(action: upgradeConfirm)
+               confirmView.show()
+                
+            }
+            action2.tag = index
+            self.dfuMenu.addAction(action2)
+            index = index + 1
+        }
+        let cancelAction = UIAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { action in
+            // 处理取消按钮被点击的逻辑
+            print("取消按钮被点击")
+        }
+        self.dfuMenu.addAction(cancelAction)
+    }
+    private func showDfuMenu(){
+        present( self.dfuMenu, animated: true, completion: nil)
+    }
     
+    @objc func dfuUpgradeClick(sender:UIButton){
+        print("dfuUpgradeClick click tap")
+        let index = sender.tag
+        if index != nil {
+            let deviceInfo = deviceInfoArray[index ?? 0]
+            dfuDeviceItem = deviceInfo
+            let macStr = deviceInfo["mac"]
+            print(macStr)
+            for item in self.discoveredPeripherals{
+                if item.mac == macStr {
+                    print("dfuUpgradeClick click tap 2")
+                    dfuPeripheral = item.peripheral
+                
+                    ActionSheetStringPicker.show(withTitle: "", rows: self.modelList, initialSelection:0, doneBlock: {
+                                picker, index, value in
+                        let deviceType = self.deviceTypeList[index]
+                        let deviceModel = self.modelList[index]
+                        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(500)) {
+                            let confirmView = AEAlertView(style: .defaulted)
+                           confirmView.message = NSLocalizedString("upgrade_device_to", comment: "Upgrade device to") + " " + deviceModel
+                           let upgradeCancel = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
+                               print("confirm cancel")
+                               confirmView.dismiss()
+                           }
+                           let upgradeConfirm = AEAlertAction(title: NSLocalizedString("confirm", comment: "Confirm"), style: .defaulted) { (action) in
+                               confirmView.dismiss()
+                               DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(500)) {
+                                   self.showWaitingWin(title: NSLocalizedString("waiting", comment: "Waiting"))
+                                   self.getServerData(deviceType: deviceType)
+                               }
+                               print("confirm click")
+
+
+                           }
+                           confirmView.addAction(action: upgradeCancel)
+                           confirmView.addAction(action: upgradeConfirm)
+                           confirmView.show()
+
+                        }
+
+                            }, cancel: { ActionMultipleStringCancelBlock in return }, origin: sender)
+                }
+            }
+            
+        }
+    }
+   
+   
     
+    func getServerData(deviceType:String){
+        let url: NSURL = NSURL(string: "http://openapi.tftiot.com:8050/v1/sensor-upgrade-control-out?opr_type=getSensorVersion&device_type=\(deviceType)")!
+            let request: NSURLRequest = NSURLRequest(url: url as URL)
+            self.showWaitingWin(title: NSLocalizedString("waiting", comment: "Waiting"))
+            NSURLConnection.sendAsynchronousRequest(request as URLRequest, queue: OperationQueue.main, completionHandler:{
+                (response, data, error) -> Void in
+              
+                if (error != nil) {
+                    //Handle Error here
+                    print(error)
+                    self.waitingView.dismiss()
+                    Toast.hudBuilder.title(NSLocalizedString("downloadError", comment: "Download upgrade package error,please try again!")).show()
+                }else{
+                    //Handle data in NSData type
+                    var dict: NSDictionary? = nil
+                    do{
+                        dict =  try JSONSerialization.jsonObject(with: data!, options: JSONSerialization.ReadingOptions.mutableLeaves) as! NSDictionary
+                    }catch{
+                    }
+                    print("%@",dict)
+                    if dict != nil{
+                        var code:Int = dict?["code"] as! Int
+                        print(String(code))
+                        self.waitingView.dismiss()
+                        if code == 0{
+                            let jsonData:NSDictionary = dict?["data"] as! NSDictionary
+                            if jsonData != nil{
+                                var version = jsonData["version"] as! String
+                                var packageLink = jsonData["link"] as! String
+                                self.upgradePackUrl = NSHomeDirectory() + "/Documents/dfu_app_\(deviceType)_V\(version).zip"
+                                self.showProgressBar()
+                                print("try to update")
+                                self.isUpgrade = false 
+                                self.upgradePackUrl = NSHomeDirectory() + "/Documents/dfu_app_debug_upgrade.zip"
+                                if FileTool.fileExists(filePath: self.upgradePackUrl){
+                                    FileTool.removeFile(self.upgradePackUrl)
+                                }
+                                let downloadUrl = URL(string: packageLink)
+                                //请求
+                                let request = URLRequest(url: downloadUrl!)
+                                //下载任务
+                                let downloadTask = self.session.downloadTask(with: request)
+                                //使用resume方法启动任务
+                                downloadTask.resume()
+                            }else{
+                                 Toast.hudBuilder.title(NSLocalizedString("downloadError", comment: "Download upgrade package error,please try again!")).show()
+                            }
+                        }else{
+                             Toast.hudBuilder.title(NSLocalizedString("downloadError", comment: "Download upgrade package error,please try again!")).show()
+                        }
+                        
+                    }else{
+                         self.waitingView.dismiss()
+                         Toast.hudBuilder.title(NSLocalizedString("downloadError", comment: "Download upgrade package error,please try again!")).show()
+                    }
+                }
+            })
+    }
+    
+    func showProgressBar(){
+        if self.progressView != nil && !self.progressView.isDismiss{
+            self.progressView.show()
+            return
+        }
+        progressView = AEAlertView(style: .defaulted)
+        progressView.title = NSLocalizedString("upgrade", comment:"Upgrade")
+        progressView.message = ""
+        self.progressBar = MyProgress(frame:CGRect.init(x:30,y:20,width:180,height: 30))
+        self.progressBar.tintColor = UIColor.green
+        self.progressBar.minimumValue = 1
+        self.progressBar.maximumValue = 100
+        self.progressBar.thumbTintColor = UIColor.clear
+        self.progressBar.setValue(0,animated: true)
+        progressView.set(animation: self.progressBar, width: 300, height: 30)
+        progressView.show()
+    }
+    
+    func dfuStateDidChange(to state: DFUState) {
+        print("dfuStateDidChange")
+        print(state)
+        switch state {
+        case .completed:
+            self.progressView.message = NSLocalizedString("upgrade_success", comment: "Upgrade Success")
+            DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(5)) {
+                self.progressView.dismiss()
+                for i in 0..<self.allDeviceInfoArray.count {
+                    var item = self.allDeviceInfoArray[i]
+                    if(item["mac"] == self.dfuDeviceItem["mac"]){
+                        self.allDeviceInfoArray.remove(at: i)
+                        break;
+                    }
+                }
+                for i in 0..<self.deviceInfoArray.count {
+                    var item = self.deviceInfoArray[i]
+                    if(item["mac"] == self.dfuDeviceItem["mac"]){
+                        self.deviceInfoArray.remove(at: i)
+                        break;
+                    }
+                }
+            }
+            break
+        case .aborted:
+            self.progressView.message = NSLocalizedString("upgrade_aborted", comment: "Upgrade aborted")
+            DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(5)) {
+                self.progressView.dismiss()
+                
+            }
+            break
+        case .connecting:
+            self.progressView.message = NSLocalizedString("connecting_str", comment: "Connecting,please wait")
+            break
+        case .starting:
+            self.progressView.message = NSLocalizedString("start_upgrading", comment: "Start upgrading")
+            break
+        default:
+            
+            break
+        }
+    }
+    
+    func dfuError(_ error: DFUError, didOccurWithMessage message: String) {
+        print("dfuError")
+        print(error)
+        print(message)
+        self.progressView.message = "Error \(error.rawValue): \(message)"
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(5)) {
+            self.progressView.dismiss()
+      
+        }
+    }
+    
+    func dfuProgressDidChange(for part: Int, outOf totalParts: Int, to progress: Int, currentSpeedBytesPerSecond: Double, avgSpeedBytesPerSecond: Double) {
+        print("dfuProgressDidChange")
+        print(part)
+        print(progress)
+        self.progressBar.setValue(Float(progress),animated: true)
+    }
+    
+    func logWith(_ level: LogLevel, message: String) {
+        print("logWith")
+        print(message)
+    }
+    
+    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
+        print("下载结束")
+        //输出下载文件原来的存放目录
+        print("location:\(location)")
+        //location位置转换
+        let locationPath = location.path
+        //拷贝到用户目录
+        //创建文件管理器
+        let fileManager = FileManager.default
+        do {
+            try fileManager.moveItem(atPath: locationPath, toPath: self.upgradePackUrl)
+        } catch let error as NSError {
+            print("移动文件失败：\(error.localizedDescription)")
+        }
+        print("new location:\(self.upgradePackUrl)")
+      
+        self.upgradeDevice()
+    }
+    
+    func upgradeDevice(){
+        self.waitingView.dismiss()
+        var url = URL(string:self.upgradePackUrl)
+        
+        if url != nil{
+            let dfuFirmware = DFUFirmware(urlToZipFile: url!)!
+            let initiator = DFUServiceInitiator().with(firmware: dfuFirmware)
+           
+            // Optional:
+            // initiator.forceDfu = true/false // default false
+            // initiator.packetReceiptNotificationParameter = N // default is 12
+            initiator.logger = self // - to get log info
+            initiator.delegate = self // - to be informed about current state and errors
+            initiator.progressDelegate = self // - to show progress bar
+            // initiator.peripheralSelector = ... // the default selector is used
+            
+            let controller = initiator.start(target: self.dfuPeripheral)
+        }
+    }
     
     
     //选中cell触发的代理

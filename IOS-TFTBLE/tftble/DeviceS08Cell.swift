@@ -159,22 +159,7 @@ class DeviceS08Cell: UITableViewCell {
         label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
-    
-    lazy var ambientLightLabel: UILabel = {
-        let label = UILabel()
-        label.textColor = UIColor.black
-        label.text = NSLocalizedString("ambient_light_desc", comment: "Ambient Light:")
-        label.font = UIFont.systemFont(ofSize: fontSize)
-        return label
-    }()
-    lazy var ambientLightContentLabel: UILabel = {
-        let label = UILabel()
-        label.textColor = UIColor.black
-        label.font = UIFont.systemFont(ofSize: fontSize)
-        return label
-    }()
-    
-    
+  
     lazy var nidLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
@@ -397,8 +382,6 @@ class DeviceS08Cell: UITableViewCell {
         self.broadcastTypeContentLabel.isHidden = false
         self.doorLabel.isHidden = false
         self.doorContentLabel.isHidden = false
-        self.ambientLightLabel.isHidden = false
-        self.ambientLightContentLabel.isHidden = false
         self.tempLabel.isHidden = false
         self.tempContentLabel.isHidden = false
         self.switchTempUnitBtn.isHidden = false
@@ -409,8 +392,6 @@ class DeviceS08Cell: UITableViewCell {
         
         self.doorLabel.isHidden = true
         self.doorContentLabel.isHidden = true
-        self.ambientLightLabel.isHidden = true
-        self.ambientLightContentLabel.isHidden = true
         self.majorLabel.isHidden = true
         self.majorContentLabel.isHidden = true
         self.minorLabel.isHidden = true
@@ -460,7 +441,7 @@ class DeviceS08Cell: UITableViewCell {
         
         
         self.warnLabel.frame = CGRect(x: 8, y: 308, width: descWidth, height: 30)
-        marqueeView.frame = CGRect(x: contentX, y: 308, width: self.bounds.size.width - contentX, height: 30)
+        warnContentLabel.frame = CGRect(x: contentX, y: 308, width: self.bounds.size.width - contentX, height: 30)
         self.configLabel.frame = CGRect(x: 8, y: 338, width: descWidth, height: 30)
         self.configBtn.frame = CGRect(x: contentX, y: 338, width: 80, height: 24)
         self.backgroundColor = UIColor.nordicLightGray
@@ -494,15 +475,13 @@ class DeviceS08Cell: UITableViewCell {
         self.broadcastTypeContentLabel.isHidden = false
         self.doorLabel.isHidden = false
         self.doorContentLabel.isHidden = false
-        self.ambientLightLabel.isHidden = false
-        self.ambientLightContentLabel.isHidden = false
         self.tempLabel.isHidden = false
         self.tempContentLabel.isHidden = false
         self.switchTempUnitBtn.isHidden = false
-        self.majorLabel.isHidden = false
-        self.majorContentLabel.isHidden = false
-        self.minorLabel.isHidden = false
-        self.minorContentLabel.isHidden = false
+        self.majorLabel.isHidden = true
+        self.majorContentLabel.isHidden = true
+        self.minorLabel.isHidden = true
+        self.minorContentLabel.isHidden = true
         
         self.nidLabel.isHidden = true
         self.nidContentLabel.isHidden = true
@@ -526,8 +505,6 @@ class DeviceS08Cell: UITableViewCell {
         self.broadcastTypeContentLabel.isHidden = true
         self.doorLabel.isHidden = true
         self.doorContentLabel.isHidden = true
-        self.ambientLightLabel.isHidden = true
-        self.ambientLightContentLabel.isHidden = true
         self.tempLabel.isHidden = true
         self.tempContentLabel.isHidden = true
         self.switchTempUnitBtn.isHidden = true
@@ -560,14 +537,14 @@ class DeviceS08Cell: UITableViewCell {
         heightY += 30
         
         
-        self.majorLabel.frame = CGRect(x: 8, y: 428, width: descWidth, height: 30)
-        self.majorContentLabel.frame = CGRect(x: contentX, y: 428, width: self.bounds.size.width - contentX, height: 30)
-        self.minorLabel.frame = CGRect(x: 8, y: 458, width: descWidth, height: 30)
-        self.minorContentLabel.frame = CGRect(x: contentX, y: 458, width: self.bounds.size.width - contentX, height: 30)
+//        self.majorLabel.frame = CGRect(x: 8, y: 428, width: descWidth, height: 30)
+//        self.majorContentLabel.frame = CGRect(x: contentX, y: 428, width: self.bounds.size.width - contentX, height: 30)
+//        self.minorLabel.frame = CGRect(x: 8, y: 458, width: descWidth, height: 30)
+//        self.minorContentLabel.frame = CGRect(x: contentX, y: 458, width: self.bounds.size.width - contentX, height: 30)
         
         
         self.warnLabel.frame = CGRect(x: 8, y: heightY, width: Int(descWidth), height: 30)
-        marqueeView.frame = CGRect(x: contentX, y: CGFloat(heightY), width: self.bounds.size.width - contentX, height: 30)
+        warnContentLabel.frame = CGRect(x: contentX, y: CGFloat(heightY), width: self.bounds.size.width - contentX, height: 30)
         heightY += 30
         self.configLabel.frame = CGRect(x: 8, y: heightY, width: Int(descWidth), height: 30)
         self.configBtn.frame = CGRect(x: Int(contentX), y: heightY, width: 80, height: 24)
@@ -607,8 +584,6 @@ class DeviceS08Cell: UITableViewCell {
         self.broadcastTypeContentLabel.isHidden = false
         self.doorLabel.isHidden = false
         self.doorContentLabel.isHidden = false
-        self.ambientLightLabel.isHidden = false
-        self.ambientLightContentLabel.isHidden = false
         self.tempLabel.isHidden = false
         self.tempContentLabel.isHidden = false
         self.switchTempUnitBtn.isHidden = false
@@ -672,38 +647,24 @@ class DeviceS08Cell: UITableViewCell {
         self.doorLabel.frame = CGRect(x: 8, y: heightY, width: descWidth, height: 30)
         self.doorContentLabel.frame = CGRect(x: contentX, y:heightY, width:  Int(self.bounds.size.width)  - contentX, height: 30)
         heightY += 30
-        self.ambientLightLabel.frame = CGRect(x: 8, y: heightY, width: descWidth, height: 30)
-        self.ambientLightContentLabel.frame = CGRect(x: contentX, y:heightY, width:  Int(self.bounds.size.width)  - contentX, height: 30)
-        heightY += 30
         if move != "-"{
             self.moveLabel.frame = CGRect(x: 8, y: heightY, width: descWidth, height: 30)
             self.moveContentLabel.frame = CGRect(x: contentX, y: heightY, width: Int(self.bounds.size.width) - contentX, height: 30)
             heightY += 30
-            if moveStatus != "2"{
-                self.moveDetectionLabel.frame = CGRect(x: 8, y: heightY, width: descWidth, height: 30)
-                self.moveDetectionContentLabel.frame = CGRect(x: contentX, y: heightY, width: Int(self.bounds.size.width) - contentX, height: 30)
-                heightY += 30
-                
-                self.stopDetectionLabel.frame = CGRect(x: 8, y: heightY, width: descWidth, height: 30)
-                self.stopDetectionContentLabel.frame = CGRect(x: contentX, y: heightY, width: Int(self.bounds.size.width) - contentX, height: 30)
-                heightY += 30
-                
-                self.pitchLabel.frame = CGRect(x: 8, y: heightY, width: descWidth, height: 30)
-                self.pitchContentLabel.frame = CGRect(x: contentX, y: heightY, width: Int(self.bounds.size.width) - contentX, height: 30)
-                heightY += 30
-                self.rollLabel.frame = CGRect(x: 8, y: heightY, width: descWidth, height: 30)
-                self.rollContentLabel.frame = CGRect(x: contentX, y: heightY, width: Int(self.bounds.size.width) - contentX, height: 30)
-                heightY += 30
-            }else{
-                self.moveDetectionLabel.isHidden = true
-                self.moveDetectionContentLabel.isHidden = true
-                self.stopDetectionLabel.isHidden = true
-                self.stopDetectionContentLabel.isHidden = true
-                self.pitchLabel.isHidden = true
-                self.pitchContentLabel.isHidden = true
-                self.rollLabel.isHidden = true
-                self.rollContentLabel.isHidden = true
-            }
+            self.moveDetectionLabel.frame = CGRect(x: 8, y: heightY, width: descWidth, height: 30)
+            self.moveDetectionContentLabel.frame = CGRect(x: contentX, y: heightY, width: Int(self.bounds.size.width) - contentX, height: 30)
+            heightY += 30
+            
+            self.stopDetectionLabel.frame = CGRect(x: 8, y: heightY, width: descWidth, height: 30)
+            self.stopDetectionContentLabel.frame = CGRect(x: contentX, y: heightY, width: Int(self.bounds.size.width) - contentX, height: 30)
+            heightY += 30
+            
+            self.pitchLabel.frame = CGRect(x: 8, y: heightY, width: descWidth, height: 30)
+            self.pitchContentLabel.frame = CGRect(x: contentX, y: heightY, width: Int(self.bounds.size.width) - contentX, height: 30)
+            heightY += 30
+            self.rollLabel.frame = CGRect(x: 8, y: heightY, width: descWidth, height: 30)
+            self.rollContentLabel.frame = CGRect(x: contentX, y: heightY, width: Int(self.bounds.size.width) - contentX, height: 30)
+            heightY += 30
             
         }else{
             self.moveLabel.isHidden = true
@@ -720,7 +681,7 @@ class DeviceS08Cell: UITableViewCell {
         
         
         self.warnLabel.frame = CGRect(x: 8, y: heightY, width: descWidth, height: 30)
-        marqueeView.frame = CGRect(x: contentX, y: heightY, width: Int(self.bounds.size.width) - contentX, height: 30)
+        warnContentLabel.frame = CGRect(x: contentX, y: heightY, width: Int(self.bounds.size.width) - contentX, height: 30)
         heightY += 30
         self.configLabel.frame = CGRect(x: 8, y: heightY, width: descWidth, height: 30)
         self.configBtn.frame = CGRect(x: contentX, y: heightY, width: 80, height: 24)
@@ -762,35 +723,33 @@ class DeviceS08Cell: UITableViewCell {
         self.broadcastTypeContentLabel.frame = CGRect(x: contentX, y: 278, width: self.bounds.size.width - contentX, height: 30)
         self.doorLabel.frame = CGRect(x: 8, y: 308, width: descWidth, height: 30)
         self.doorContentLabel.frame = CGRect(x: contentX, y:308, width: self.bounds.size.width - contentX, height: 30)
-        self.ambientLightLabel.frame = CGRect(x: 8, y: 338, width: descWidth, height: 30)
-        self.ambientLightContentLabel.frame = CGRect(x: contentX, y:338, width: self.bounds.size.width - contentX, height: 30)
-        self.nidLabel.frame = CGRect(x: 8, y: 368, width: descWidth, height: 30)
-        self.nidContentLabel.frame = CGRect(x: contentX, y: 368, width: self.bounds.size.width - contentX, height: 30)
-        self.bidLabel.frame = CGRect(x: 8, y: 398, width: descWidth, height: 30)
-        self.bidContentLabel.frame = CGRect(x: contentX, y: 398, width: self.bounds.size.width - contentX, height: 30)
-        self.majorLabel.frame = CGRect(x: 8, y: 428, width: descWidth, height: 30)
-        self.majorContentLabel.frame = CGRect(x: contentX, y: 428, width: self.bounds.size.width - contentX, height: 30)
-        self.minorLabel.frame = CGRect(x: 8, y: 458, width: descWidth, height: 30)
-        self.minorContentLabel.frame = CGRect(x: contentX, y: 458, width: self.bounds.size.width - contentX, height: 30)
-        self.moveLabel.frame = CGRect(x: 8, y: 488, width: descWidth, height: 30)
-        self.moveContentLabel.frame = CGRect(x: contentX, y: 488, width: self.bounds.size.width - contentX, height: 30)
+        self.nidLabel.frame = CGRect(x: 8, y: 338, width: descWidth, height: 30)
+        self.nidContentLabel.frame = CGRect(x: contentX, y: 338, width: self.bounds.size.width - contentX, height: 30)
+        self.bidLabel.frame = CGRect(x: 8, y: 368, width: descWidth, height: 30)
+        self.bidContentLabel.frame = CGRect(x: contentX, y: 368, width: self.bounds.size.width - contentX, height: 30)
+        self.majorLabel.frame = CGRect(x: 8, y: 398, width: descWidth, height: 30)
+        self.majorContentLabel.frame = CGRect(x: contentX, y: 398, width: self.bounds.size.width - contentX, height: 30)
+        self.minorLabel.frame = CGRect(x: 8, y: 428, width: descWidth, height: 30)
+        self.minorContentLabel.frame = CGRect(x: contentX, y: 428, width: self.bounds.size.width - contentX, height: 30)
+        self.moveLabel.frame = CGRect(x: 8, y: 458, width: descWidth, height: 30)
+        self.moveContentLabel.frame = CGRect(x: contentX, y: 458, width: self.bounds.size.width - contentX, height: 30)
         
-        self.moveDetectionLabel.frame = CGRect(x: 8, y: 518, width: descWidth, height: 30)
-        self.moveDetectionContentLabel.frame = CGRect(x: contentX, y: 518, width: self.bounds.size.width - contentX, height: 30)
+        self.moveDetectionLabel.frame = CGRect(x: 8, y: 488, width: descWidth, height: 30)
+        self.moveDetectionContentLabel.frame = CGRect(x: contentX, y: 488, width: self.bounds.size.width - contentX, height: 30)
         
-        self.stopDetectionLabel.frame = CGRect(x: 8, y: 548, width: descWidth, height: 30)
-        self.stopDetectionContentLabel.frame = CGRect(x: contentX, y: 548, width: self.bounds.size.width - contentX, height: 30)
+        self.stopDetectionLabel.frame = CGRect(x: 8, y: 518, width: descWidth, height: 30)
+        self.stopDetectionContentLabel.frame = CGRect(x: contentX, y: 518, width: self.bounds.size.width - contentX, height: 30)
         
-        self.pitchLabel.frame = CGRect(x: 8, y: 578, width: descWidth, height: 30)
-        self.pitchContentLabel.frame = CGRect(x: contentX, y: 578, width: self.bounds.size.width - contentX, height: 30)
+        self.pitchLabel.frame = CGRect(x: 8, y: 548, width: descWidth, height: 30)
+        self.pitchContentLabel.frame = CGRect(x: contentX, y: 548, width: self.bounds.size.width - contentX, height: 30)
         
-        self.rollLabel.frame = CGRect(x: 8, y: 608, width: descWidth, height: 30)
-        self.rollContentLabel.frame = CGRect(x: contentX, y: 608, width: self.bounds.size.width - contentX, height: 30)
+        self.rollLabel.frame = CGRect(x: 8, y: 578, width: descWidth, height: 30)
+        self.rollContentLabel.frame = CGRect(x: contentX, y: 578, width: self.bounds.size.width - contentX, height: 30)
         
-        self.warnLabel.frame = CGRect(x: 8, y: 638, width: descWidth, height: 30)
-        marqueeView.frame = CGRect(x: contentX, y: 638, width: self.bounds.size.width - contentX, height: 30)
-        self.configLabel.frame = CGRect(x: 8, y: 668, width: descWidth, height: 30)
-        self.configBtn.frame = CGRect(x: contentX, y: 668, width: 80, height: 24)
+        self.warnLabel.frame = CGRect(x: 8, y: 608, width: descWidth, height: 30)
+        warnContentLabel.frame = CGRect(x: contentX, y: 608, width: self.bounds.size.width - contentX, height: 30)
+        self.configLabel.frame = CGRect(x: 8, y: 638, width: descWidth, height: 30)
+        self.configBtn.frame = CGRect(x: contentX, y: 638, width: 80, height: 24)
         self.backgroundColor = UIColor.nordicLightGray
         self.rootView.backgroundColor = UIColor.white
         self.rootView.layer.cornerRadius = 8
@@ -819,9 +778,7 @@ class DeviceS08Cell: UITableViewCell {
         self.rootView.addSubview(batteryPercentLabel)
         self.rootView.addSubview(batteryPercentContentLabel)
         self.rootView.addSubview(broadcastTypeLabel)
-        self.rootView.addSubview(broadcastTypeContentLabel)
-        self.rootView.addSubview(ambientLightLabel)
-        self.rootView.addSubview(ambientLightContentLabel)
+        self.rootView.addSubview(broadcastTypeContentLabel) 
         self.rootView.addSubview(nidLabel)
         self.rootView.addSubview(nidContentLabel)
         self.rootView.addSubview(bidLabel)
@@ -861,7 +818,7 @@ class DeviceS08Cell: UITableViewCell {
         marqueeView.contentView = self.warnContentLabel
         marqueeView.contentMargin = 50
         marqueeView.marqueeType = .left
-        self.rootView.addSubview(marqueeView)
+        self.rootView.addSubview(warnContentLabel)
         self.initLayoutPosition()
         
     }

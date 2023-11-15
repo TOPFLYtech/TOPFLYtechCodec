@@ -117,11 +117,12 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     private var connectControl = ""
     private var progressView:AEAlertView!
     private var progressBar:MyProgress!
-    private var transmittedPowerList:[String] = ["4","0","-4","-8","-12","-16","-20"]
+    private var transmittedPowerList:[String] = ["8","4","0","-4","-8","-12","-16","-20"]
     private var dinStatusEventList:[String] = [String]()
     private var saveIntervalList:[String] = [String]()
     private var oneWireWorkModeList:[String] = [String]()
     private var portList:[String] = [String]()
+    private var relayTypeList:[String] = [String]()
     private var rs485BaudRateList:[String] = ["1200", "2400", "4800", "9600", "14400", "19200", "28800", "31250", "38400", "56000", "57600", "76800", "115200", "230400", "250000"]
     private var broadcastTypeList:[String] = ["Eddystone","Beacon"]
     private let controlFunc:[String:[String:Int]] = [
@@ -204,6 +205,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     private var humidityAlarmDownOpen = false
     private var ledOpen = false
     private var relayStatus = false
+    private var relayFlashingStatus = false
     private var lightSensorOpen = false
     private var selfPeripheral:CBPeripheral!
     private var characteristic: CBCharacteristic?
@@ -331,6 +333,8 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     private var ledSwitch:UISwitch!
     private var relayLabel:UILabel!
     private var relaySwitch:UISwitch!
+    private var relayFlashingLabel:UILabel!
+    private var relayFlashingSwitch:UISwitch!
     private var relayStatusLabel:UILabel!
     private var lightSensorOpenLabel:UILabel!
     private var lightSensorOpenSwitch:UISwitch!
@@ -397,6 +401,9 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         self.portList.append(NSLocalizedString("port", comment: "Port") + " 0")
         self.portList.append(NSLocalizedString("port", comment: "Port") + " 1")
         self.portList.append(NSLocalizedString("port", comment: "Port") + " 2")
+        self.relayTypeList.append( NSLocalizedString("normal", comment: "Normal"))
+        self.relayTypeList.append( NSLocalizedString("relay_delay", comment: "Delay"))
+        self.relayTypeList.append( NSLocalizedString("relay_pulse", comment: "Pulse"))
         if deviceType == "S07"{
             broadcastTypeList[0] = "Eddystone T-button"
             broadcastTypeList.append("Eddystone UID")
@@ -431,77 +438,77 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             self.centralManager.cancelPeripheralConnection(self.selfPeripheral)
         }
         if self.selfPeripheral != nil{
+            self.showWaitingWin(title: NSLocalizedString("waiting", comment: "Waiting"))
             self.centralManager.connect(self.selfPeripheral)
         }
-      
+        
         self.notUpdateInit()
     }
     func checkBetaUpdate(){
-            var deviceType = self.deviceType
-            var curVersion = self.software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "")
-            curVersion = curVersion.replacingOccurrences(of: ".", with: "")
-            var curVerionInt = Int(curVersion) ?? 0
-            if (deviceType == "S02") && (curVerionInt <= 8){
-                deviceType = "S01"
-            }
-         var debugStr = "0"
-         if Utils.isDebug{
-            debugStr = "1"
-         }
-         let url: NSURL = NSURL(string: "http://openapi.tftiot.com:8050/v1/sensor-upgrade-control-out?opr_type=getSensorBetaVersion&device_type=\(deviceType)&mac=\(mac)&is_debug=\(debugStr)")!
-            let request: NSURLRequest = NSURLRequest(url: url as URL)
-            self.showWaitingWin(title: "Waiting")
-            NSURLConnection.sendAsynchronousRequest(request as URLRequest, queue: OperationQueue.main, completionHandler:{
-                (response, data, error) -> Void in
-                self.waitingView.dismiss()
-                if (error != nil) {
-                    //Handle Error here
-                    print(error)
-                    self.notUpdateInit()
-                }else{
-                    //Handle data in NSData type
-                    var dict: NSDictionary? = nil
-                    do{
-                        dict =  try JSONSerialization.jsonObject(with: data!, options: JSONSerialization.ReadingOptions.mutableLeaves) as! NSDictionary
-                    }catch{
-                    }
-                    print("%@",dict)
-                    if dict != nil{
-                        var code:Int = dict?["code"] as! Int
-                        print(String(code))
-                        if code == 0{
-                            let jsonData:NSDictionary = dict?["data"] as! NSDictionary
-                            if jsonData != nil{
-                                var version = jsonData["version"] as! String
-                                var packageLink = jsonData["link"] as! String
-                                self.betaUpgradePackUrl = NSHomeDirectory() + "/Documents/dfu_app_\(self.deviceType)_V\(self.betaNetSoftwareVersion).zip"
-                                if version != nil && packageLink != nil && version.count > 0 && packageLink.count > 0{
-                                    version = version.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "")
-                                    version = version.replacingOccurrences(of: ".", with: "")
-                                    var netVersionInt = Int(version) ?? 0
-                                    self.betaNetSoftwareVersion = version
-                                    self.betaUpgradePackageLink = packageLink
-                                   if netVersionInt > curVerionInt {
-                                        self.betaUpgradeBtn.isHidden = false
-                                   }else{
-                                       self.betaUpgradeBtn.isHidden = true
-                                   }
-                                }
-                            }
-                        }
-                        
-                    }
-                }
-            })
-        }
-    func checkUpdate(isEnterCheck:Bool){
         var deviceType = self.deviceType
-        var curVersion = self.software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "")
-        curVersion = curVersion.replacingOccurrences(of: ".", with: "")
+        let curVersion = self.software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "")
         var curVerionInt = Int(curVersion) ?? 0
         if (deviceType == "S02") && (curVerionInt <= 8){
             deviceType = "S01"
         }
+        var debugStr = "0"
+        if Utils.isDebug{
+            debugStr = "1"
+        }
+        let url: NSURL = NSURL(string: "http://openapi.tftiot.com:8050/v1/sensor-upgrade-control-out?opr_type=getSensorBetaVersion&device_type=\(deviceType)&mac=\(mac)&is_debug=\(debugStr)")!
+        let request: NSURLRequest = NSURLRequest(url: url as URL)
+        self.showWaitingWin(title: "Waiting")
+        NSURLConnection.sendAsynchronousRequest(request as URLRequest, queue: OperationQueue.main, completionHandler:{
+            (response, data, error) -> Void in
+            self.waitingView.dismiss()
+            if (error != nil) {
+                //Handle Error here
+                print(error)
+                self.notUpdateInit()
+            }else{
+                //Handle data in NSData type
+                var dict: NSDictionary? = nil
+                do{
+                    dict =  try JSONSerialization.jsonObject(with: data!, options: JSONSerialization.ReadingOptions.mutableLeaves) as! NSDictionary
+                }catch{
+                }
+                print("%@",dict)
+                if dict != nil{
+                    var code:Int = dict?["code"] as! Int
+                    print(String(code))
+                    if code == 0{
+                        let jsonData:NSDictionary = dict?["data"] as! NSDictionary
+                        if jsonData != nil{
+                            var version = jsonData["version"] as! String
+                            var packageLink = jsonData["link"] as! String
+                            self.betaUpgradePackUrl = NSHomeDirectory() + "/Documents/dfu_app_\(self.deviceType)_V\(self.betaNetSoftwareVersion).zip"
+                            if version != nil && packageLink != nil && version.count > 0 && packageLink.count > 0{
+                                version = version.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "")
+                                
+                                self.betaNetSoftwareVersion = version
+                                self.betaUpgradePackageLink = packageLink
+                                print("check beat update:\(self.betaNetSoftwareVersion),\(curVersion)")
+                                if  self.betaNetSoftwareVersion > curVersion {
+                                    self.betaUpgradeBtn.isHidden = false
+                                }else{
+                                    self.betaUpgradeBtn.isHidden = true
+                                }
+                            }
+                        }
+                    }
+                    
+                }
+            }
+        })
+    }
+    func checkUpdate(isEnterCheck:Bool){
+        var deviceType = self.deviceType
+        let curVersion = self.software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "")
+        var curVerionInt = Int(curVersion) ?? 0
+        if (deviceType == "S02") && (curVerionInt <= 8){
+            deviceType = "S01"
+        }
+        print("deviceType:\(deviceType)")
         let url: NSURL = NSURL(string: "http://openapi.tftiot.com:8050/v1/sensor-upgrade-control-out?opr_type=getSensorVersion&device_type=\(deviceType)")!
         let request: NSURLRequest = NSURLRequest(url: url as URL)
         self.showWaitingWin(title: "Waiting")
@@ -531,21 +538,22 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                             self.upgradePackUrl = NSHomeDirectory() + "/Documents/dfu_app_\(self.deviceType)_V\(self.netSoftwareVersion).zip"
                             if version != nil && packageLink != nil && version.count > 0 && packageLink.count > 0{
                                 version = version.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "")
-                                version = version.replacingOccurrences(of: ".", with: "")
-                                var netVersionInt = Int(version) ?? 0
                                 self.netSoftwareVersion = version
                                 self.upgradePackageLink = packageLink
-                                if !isEnterCheck{
-                                    if netVersionInt != curVerionInt && netVersionInt != 0 && curVerionInt != 0 {
-                                        //need update
-                                        self.editSoftwareBtn.isHidden = false
+                                print("check update:\(self.netSoftwareVersion),\(curVersion),\(self.software)")
+                                if curVersion != version && self.software != "" && self.software != "0"{
+                                    //need update
+                                    self.editSoftwareBtn.isHidden = false
+                                    if !isEnterCheck{
                                         self.showUpgradeWin()
                                     }else{
                                         self.notUpdateInit()
                                     }
                                 }else{
+                                    self.editSoftwareBtn.isHidden = true
                                     self.notUpdateInit()
                                 }
+                                
                             }else{
                                 self.notUpdateInit()
                             }
@@ -565,7 +573,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     
     func notUpdateInit(){
         if self.onView{
-//            self.showWaitingWin(title: NSLocalizedString("waiting", comment: "Waiting"))
+            //            self.showWaitingWin(title: NSLocalizedString("waiting", comment: "Waiting"))
             if self.confirmPwd == ""{
                 self.showPwdWin()
             }
@@ -646,6 +654,9 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         print("didUpdateValueFor")
         if !self.connected{
             return
+        }
+        if self.waitingView != nil {
+            self.waitingView.dismiss()
         }
         let data = characteristic.value
         if data != nil{
@@ -891,7 +902,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         }else if resp[2] == 1{
             dout1 = Int(resp[3])
         }
-        if dout0 != -1 && dout1 != -1{ 
+        if dout0 != -1 && dout1 != -1{
             let editForm = EditDoutOutputController()
             editForm.delegate = self
             editForm.connectStatusDelegate = self
@@ -1283,7 +1294,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         if(self.saveAlarmCount == 0){
             self.readAlarmReadBtn.isHidden = true
         }
-          
+        
         if(self.isSaveRecordStatus){
             self.startRecordBtn.isHidden = true
             self.stopRecordBtn.isHidden = false
@@ -1326,23 +1337,22 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             let hardware = Utils.parseHardwareVersion(hardware: Utils.uint8ToHexStr(value: resp[3]))
             self.hardwareContentLabel.text = hardware
             let software = Utils.parseS78910SoftwaeVersion(data: resp, index: 4)
-            self.software = software.replacingOccurrences(of: ".", with: "")
+            self.software = software
             self.softwareContentLabel.text = software
         }
         print("readVersionResp:\(self.netSoftwareVersion),\(self.software)")
-        if self.software != self.netSoftwareVersion && self.netSoftwareVersion != "0"{
+        let curVersion = self.software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "")
+        let netSoftware = self.netSoftwareVersion.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "")
+        if curVersion != netSoftware && netSoftware != "0" {
             self.editSoftwareBtn.isHidden = false
         }else{
             self.editSoftwareBtn.isHidden = true
         }
-        var netVersionInt = Int(self.betaNetSoftwareVersion) ?? 0
-        var curVersion = self.software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "")
-        curVersion = curVersion.replacingOccurrences(of: ".", with: "")
-        var curVerionInt = Int(curVersion) ?? 0
-        if netVersionInt > curVerionInt {
-           self.betaUpgradeBtn.isHidden = false
+        let beatSoftware = self.betaNetSoftwareVersion.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "")
+        if beatSoftware > curVersion && beatSoftware != "0" {
+            self.betaUpgradeBtn.isHidden = false
         }else{
-           self.betaUpgradeBtn.isHidden = true
+            self.betaUpgradeBtn.isHidden = true
         }
     }
     
@@ -1389,6 +1399,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         if tempAlarmUpTemp == 4095{
             self.tempAlarmUp = 0
             self.tempAlarmUpOpen = false
+            self.tempHighAlarmContentLabel.text = ""
             //            self.tempHighAlarmContentLabel.text = Utils.getCurTempUnit()
         }else{
             self.tempAlarmUpOpen = true
@@ -1404,6 +1415,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         if tempAlarmDownTemp == 4095{
             self.tempAlarmDown = 0
             self.tempAlarmDownOpen = false
+            self.tempLowAlarmContentLabel.text = ""
             //            self.tempLowAlarmContentLabel.text = Utils.getCurTempUnit()
         }else{
             if (tempAlarmDownTemp & 0x8000) == 0x8000{
@@ -1758,6 +1770,15 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             self.relaySwitch.isOn = true
             self.relayStatusLabel.text = "NO"
         }
+        if resp.count >= 5{
+            if resp[3] == 0{
+                self.relayFlashingStatus = false;
+                self.relayFlashingSwitch.isOn = false
+            }else{
+                self.relayFlashingStatus = true;
+                self.relayFlashingSwitch.isOn = true
+            }
+        }
     }
     
     func writeStrData(cmdHead:Int,dataStr:String){
@@ -1788,7 +1809,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             return
         }
         let now = Date()
-        let data = self.formatHex(intValue: Int(now.timeIntervalSince1970), len: 4)
+        let data = self.formatHex(intValue: Int(now.timeIntervalSince1970), len: 4) 
         self.writeArrayData(cmdHead: self.controlFunc["time"]?["write"] ?? 0, content: data)
     }
     
@@ -1836,7 +1857,12 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                     do{
                         var dataCorrect = Utils.checkOriginHisDataCrc(byteDataArray: byteDataArray)
                         if dataCorrect{
-                            var bleHisDataList = Utils.parseS02BleHisData(historyArray: byteDataArray)
+                            var bleHisDataList:[BleHisData]
+                            if deviceType == "S10"{
+                                bleHisDataList = Utils.parseS10BleHisData(historyArray: byteDataArray)
+                            }else{
+                                bleHisDataList = Utils.parseS02BleHisData(historyArray: byteDataArray)
+                            }
                             var j = 0
                             while j < bleHisDataList.count{
                                 self.allBleHisData.append(bleHisDataList[j])
@@ -2003,8 +2029,8 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     
     func startRecord(){
         let now = Date()
-        let data = self.formatHex(intValue: Int(now.timeIntervalSince1970), len: 4)
-        self.writeArrayData(cmdHead: self.controlFunc["startRecord"]?["write"] ?? 0, content: data)
+//        let data = self.formatHex(intValue: Int(now.timeIntervalSince1970), len: 4)
+        self.writeArrayData(cmdHead: self.controlFunc["startRecord"]?["write"] ?? 0, content: [])
     }
     func stopRecord(){
         self.writeArrayData(cmdHead: self.controlFunc["stopRecord"]?["write"] ?? 0, content: [])
@@ -2105,7 +2131,45 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         }
         self.writeArrayData(cmdHead: self.controlFunc["lightSensorOpen"]?["write"] ?? 0, content: data)
     }
+    func writeDelayRelayStatus(delayTime:Int){
+        var data = [UInt8]()
+        if self.relaySwitch.isOn {
+            data.append(UInt8(1))
+        }else{
+            data.append(UInt8(0))
+        }
+        data.append(UInt8(delayTime))
+        self.writeArrayData(cmdHead: self.controlFunc["relay"]?["write"] ?? 0, content: data)
+    }
     
+    func writeFlashingRelayStatus(){
+        var data = [UInt8]()
+        data.append(UInt8(2))
+        if self.relayFlashingStatus {
+            data.append(UInt8(0))
+        }else{
+            data.append(UInt8(1))
+        }
+        self.writeArrayData(cmdHead: self.controlFunc["relay"]?["write"] ?? 0, content: data)
+    }
+    func writePulseRelayStatus(cycleTime:Int,initEnableTime:Int,toggleTime:Int,recoverTime:Int){
+        var data = [UInt8]()
+        data.append(UInt8(3))
+        var cycleTimeData:[UInt8] = self.formatHex(intValue: cycleTime, len: 2)
+        for byte in cycleTimeData{
+            data.append(byte)
+        }
+        var initEnableTimeData:[UInt8] = self.formatHex(intValue: initEnableTime, len: 2)
+        for byte in initEnableTimeData{
+            data.append(byte)
+        }
+        var toggleTimeData:[UInt8] = self.formatHex(intValue: toggleTime, len: 2)
+        for byte in toggleTimeData{
+            data.append(byte)
+        }
+        data.append(UInt8(recoverTime))
+        self.writeArrayData(cmdHead: self.controlFunc["relay"]?["write"] ?? 0, content: data)
+    }
     func writeRelayStatus(){
         var data = [UInt8]()
         if self.relaySwitch.isOn {
@@ -2157,28 +2221,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             if self.confirmPwd != ""{
                 self.waitingView.dismiss()
                 if self.initStart == false{
-                    self.initStart = true
-                    self.readTransmittedPower()
-                    self.readBroadcastCycle()
-                    self.readDeviceName()
-                    self.readVersion()
-                    self.readHumidityAlarm()
-                    self.readTempAlarm()
-                    self.readLedOpenStatus()
-                    self.readRelayStatus()
-                    self.readSaveCount()
-                    self.readSaveInterval()
-                    self.readLightSensorOpenStatus()
-                    self.readRs485Enable()
-                    self.readOneWireWorkMode()
-                    self.readRs485BaudRate()
-                    self.readBroadcastType()
-                    self.readLongRangeEnable()
-                    self.readGSensorEnable()
-                    self.readDinStatusEvent()
-                    self.readDinVoltage( )
-                    self.readDoorEnableStatus()
-                    self.fixTime()
+                    self.doInitSucc()
                 }
             }else{
                 notUpdateInit()
@@ -2188,6 +2231,31 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         } else {
             print("取消订阅")
         }
+    }
+    
+    func doInitSucc(){
+        self.initStart = true
+        self.readTransmittedPower()
+        self.readBroadcastCycle()
+        self.readDeviceName()
+        self.readVersion()
+        self.readHumidityAlarm()
+        self.readTempAlarm()
+        self.readLedOpenStatus()
+        self.readRelayStatus()
+        self.readSaveCount()
+        self.readSaveInterval()
+        self.readLightSensorOpenStatus()
+        self.readRs485Enable()
+        self.readOneWireWorkMode()
+        self.readRs485BaudRate()
+        self.readBroadcastType()
+        self.readLongRangeEnable()
+        self.readGSensorEnable()
+        self.readDinStatusEvent()
+        self.readDinVoltage( )
+        self.readDoorEnableStatus()
+        self.fixTime()
     }
     
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
@@ -2326,8 +2394,6 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                         Toast.hudBuilder.title(NSLocalizedString("broadcast_cycle_value_length_error", comment: "Value is incorrect!It must between 5 and 1800")).show()
                     }
                 }
-                
-                
             }else{
                 Toast.hudBuilder.title(NSLocalizedString("broadcast_cycle_value_length_error", comment: "Value is incorrect!It must between 5 and 1800")).show()
             }
@@ -2751,7 +2817,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         let shutdownWarningView = AEAlertView(style: .defaulted)
         shutdownWarningView.message = NSLocalizedString("confirm_shutdown_warning", comment: "Confirm shutdown?")
         let upgradeCancel = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
-            self.relaySwitch.isOn = self.relayStatus
+            
             shutdownWarningView.dismiss()
         }
         let upgradeConfirm = AEAlertAction(title: NSLocalizedString("confirm", comment: "Confirm"), style: .defaulted) { (action) in
@@ -2787,30 +2853,104 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         self.writeLongRangeEnableStatus()
         
     }
-    @objc func doorSwitchAction(senger:UISwitch){
+    @objc func doorSwitchAction(sender:UISwitch){
         print("doorSwitchAction")
         self.writeDoorEnableStatus()
         
     }
-    
-    @objc func relaySwitchAction(senger:UISwitch){
+    @objc func  relayFlashingSwitchAction(sender:UISwitch){
         if(Utils.isDebug){
-            self.writeRelayStatus()
+            self.writeFlashingRelayStatus()
             return
         }
         let relayWarningView = AEAlertView(style: .defaulted)
-        relayWarningView.message = NSLocalizedString("confirm_relay_warning", comment: "Try to switch relay?")
-        let upgradeCancel = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
-            self.relaySwitch.isOn = self.relayStatus
+        relayWarningView.message = NSLocalizedString("confirm_regular_relay_warning", comment: "Try switching the relay on and off periodically?")
+        let relayCancel = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
+            self.relayFlashingSwitch.isOn = self.relayFlashingStatus
             relayWarningView.dismiss()
         }
-        let upgradeConfirm = AEAlertAction(title: NSLocalizedString("confirm", comment: "Confirm"), style: .defaulted) { (action) in
+        let relayConfirm = AEAlertAction(title: NSLocalizedString("confirm", comment: "Confirm"), style: .defaulted) { (action) in
             relayWarningView.dismiss()
-            self.writeRelayStatus()
+            self.writeFlashingRelayStatus()
         }
-        relayWarningView.addAction(action: upgradeCancel)
-        relayWarningView.addAction(action: upgradeConfirm)
+        relayWarningView.addAction(action: relayCancel)
+        relayWarningView.addAction(action: relayConfirm)
         relayWarningView.show()
+        
+        
+    }
+    @objc func relaySwitchAction(sender:UISwitch){
+        let alertController = UIAlertController(title: "", message: nil, preferredStyle: .actionSheet)
+
+        // 添加操作按钮
+        let action1 = UIAlertAction(title: NSLocalizedString("normal", comment: "Normal"), style: .default) { action in
+            if(Utils.isDebug){
+                self.writeRelayStatus()
+                return
+            }
+            let relayWarningView = AEAlertView(style: .defaulted)
+            relayWarningView.message = NSLocalizedString("confirm_relay_warning", comment: "Try to switch relay?")
+            let relayCancel = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
+                self.relaySwitch.isOn = self.relayStatus
+                relayWarningView.dismiss()
+            }
+            let relayConfirm = AEAlertAction(title: NSLocalizedString("confirm", comment: "Confirm"), style: .defaulted) { (action) in
+                relayWarningView.dismiss()
+                self.writeRelayStatus()
+            }
+            relayWarningView.addAction(action: relayCancel)
+            relayWarningView.addAction(action: relayConfirm)
+            relayWarningView.show()
+        }
+        alertController.addAction(action1)
+
+        let action2 = UIAlertAction(title: NSLocalizedString("relay_delay", comment: "Delay"), style: .default) { action in
+            let editDelayRelayAlert = AEUIAlertView(style: .number, title: NSLocalizedString("relay_delay", comment: "Delay"), message: nil)
+            editDelayRelayAlert.textField.placeholder = NSLocalizedString("relay_delay", comment: "Delay")
+
+            let action_one = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
+                self.relaySwitch.isOn = self.relayStatus
+                editDelayRelayAlert.dismiss()
+            }
+            let action_two = AEAlertAction(title: NSLocalizedString("confirm", comment: "Confirm"), style: .defaulted) { (action) in
+                let delayRelay = String(editDelayRelayAlert.textField.text ?? "")
+                if delayRelay.count > 0{
+                    let delayRelayInt = Int(delayRelay) ?? 0
+                    if delayRelayInt >= 3 && delayRelayInt <= 255{
+                        self.writeDelayRelayStatus(delayTime: delayRelayInt)
+                        editDelayRelayAlert.dismiss()
+                    }else{
+                        Toast.hudBuilder.title(NSLocalizedString("relay_delay_error_warning", comment: "Value is incorrect!It must between 3 and 255")).show()
+                    }
+                }else{
+                    Toast.hudBuilder.title(NSLocalizedString("relay_delay_error_warning", comment: "Value is incorrect!It must between 3 and 255")).show()
+                }
+            }
+            editDelayRelayAlert.addAction(action: action_one)
+            editDelayRelayAlert.addAction(action: action_two)
+            editDelayRelayAlert.show()
+        }
+        alertController.addAction(action2)
+        let action3 = UIAlertAction(title: NSLocalizedString("relay_pulse", comment: "Pulse"), style: .default) { action in
+            let editForm = EditPulseRelayController()
+            editForm.delegate = self
+            editForm.connectStatusDelegate = self
+            self.leaveViewNeedDisconnect = false
+            self.relaySwitch.isOn = self.relayStatus
+            self.navigationController?.pushViewController(editForm, animated: false)
+        }
+        alertController.addAction(action3)
+
+        let cancelAction = UIAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { action in
+            // 处理取消按钮被点击的逻辑
+            self.relaySwitch.isOn = self.relayStatus
+            print("取消按钮被点击")
+        }
+        alertController.addAction(cancelAction)
+
+        // 在视图控制器中呈现 UIAlertController
+        present(alertController, animated: true, completion: nil)
+         
     }
     
     @objc func upgradeClick(){
@@ -2819,30 +2959,30 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     
     @objc func betaUpgradeClick(){
         if self.betaUpgradeWarningView != nil && !self.betaUpgradeWarningView.isDismiss{
-                   self.betaUpgradeWarningView.show()
-                   return
-               }
-               self.betaUpgradeWarningView = AEAlertView(style: .defaulted)
-               self.betaUpgradeWarningView.title = NSLocalizedString("betaUpgrade", comment:"Beta upgrade")
-               self.betaUpgradeWarningView.message = NSLocalizedString("new_beta_version_found_warning", comment:"New beta version found,updated?")
-               let upgradeCancel = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
-                   self.betaUpgradeWarningView.dismiss()
-                   if self.initStart == false{
-                       self.showWaitingWin(title: NSLocalizedString("waiting", comment:"Waiting"))
-                       self.showPwdWin()
-                   }
-               }
-               let upgradeConfirm = AEAlertAction(title: NSLocalizedString("confirm", comment: "Confirm"), style: .defaulted) { (action) in
-                   self.isUpgrade = true
-                   self.betaUpgradeWarningView.dismiss()
-                   self.showWaitingWin(title: NSLocalizedString("waiting", comment:"Waiting"))
-                   if self.foundDevice {
-                       self.doBetaUpgrade()
-                   }
-               }
-               self.betaUpgradeWarningView.addAction(action: upgradeCancel)
-               self.betaUpgradeWarningView.addAction(action: upgradeConfirm)
-               self.betaUpgradeWarningView.show()
+            self.betaUpgradeWarningView.show()
+            return
+        }
+        self.betaUpgradeWarningView = AEAlertView(style: .defaulted)
+        self.betaUpgradeWarningView.title = NSLocalizedString("betaUpgrade", comment:"Beta upgrade")
+        self.betaUpgradeWarningView.message = NSLocalizedString("new_beta_version_found_warning", comment:"New beta version found,updated?")
+        let upgradeCancel = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
+            self.betaUpgradeWarningView.dismiss()
+            if self.initStart == false{
+                self.showWaitingWin(title: NSLocalizedString("waiting", comment:"Waiting"))
+                self.showPwdWin()
+            }
+        }
+        let upgradeConfirm = AEAlertAction(title: NSLocalizedString("confirm", comment: "Confirm"), style: .defaulted) { (action) in
+            self.isUpgrade = true
+            self.betaUpgradeWarningView.dismiss()
+            self.showWaitingWin(title: NSLocalizedString("waiting", comment:"Waiting"))
+            if self.foundDevice {
+                self.doBetaUpgrade()
+            }
+        }
+        self.betaUpgradeWarningView.addAction(action: upgradeCancel)
+        self.betaUpgradeWarningView.addAction(action: upgradeConfirm)
+        self.betaUpgradeWarningView.show()
     }
     
     @objc func debugUpgradeClick(){
@@ -2944,29 +3084,29 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         }
     }
     func doBetaUpgrade(){
-            self.waitingView.dismiss()
-            self.showProgressBar()
-            print("try to update")
-            self.isUpgrade = false
-            self.needConnect = false
-            self.centralManager.cancelPeripheralConnection(self.selfPeripheral)
-            let lastUpgradeFileUrl = NSHomeDirectory() + "/Documents/dfu_app_\(self.deviceType)_V\(self.software).zip"
-            if FileTool.fileExists(filePath: lastUpgradeFileUrl){
-                FileTool.removeFile(lastUpgradeFileUrl)
-            }
-            self.isBetaUpgrade = true
-            if FileTool.fileExists(filePath: self.betaUpgradePackUrl){
-                FileTool.removeFile(self.betaUpgradePackUrl)
-            }
-            self.showWaitingWin(title: NSLocalizedString("waiting", comment: "Waiting"))
-            let downloadUrl = URL(string: self.betaUpgradePackageLink)
-                //请求
-            let request = URLRequest(url: downloadUrl!)
-            //下载任务
-            let downloadTask = session.downloadTask(with: request)
-            //使用resume方法启动任务
-            downloadTask.resume()
+        self.waitingView.dismiss()
+        self.showProgressBar()
+        print("try to update")
+        self.isUpgrade = false
+        self.needConnect = false
+        self.centralManager.cancelPeripheralConnection(self.selfPeripheral)
+        let lastUpgradeFileUrl = NSHomeDirectory() + "/Documents/dfu_app_\(self.deviceType)_V\(self.software).zip"
+        if FileTool.fileExists(filePath: lastUpgradeFileUrl){
+            FileTool.removeFile(lastUpgradeFileUrl)
         }
+        self.isBetaUpgrade = true
+        if FileTool.fileExists(filePath: self.betaUpgradePackUrl){
+            FileTool.removeFile(self.betaUpgradePackUrl)
+        }
+        self.showWaitingWin(title: NSLocalizedString("waiting", comment: "Waiting"))
+        let downloadUrl = URL(string: self.betaUpgradePackageLink)
+        //请求
+        let request = URLRequest(url: downloadUrl!)
+        //下载任务
+        let downloadTask = session.downloadTask(with: request)
+        //使用resume方法启动任务
+        downloadTask.resume()
+    }
     
     //下载代理方法，下载结束
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask,
@@ -2981,13 +3121,22 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         //创建文件管理器
         let fileManager = FileManager.default
         if self.isBetaUpgrade{
-            try! fileManager.moveItem(atPath: locationPath, toPath: self.betaUpgradePackUrl)
+            
+            do {
+                try fileManager.moveItem(atPath: locationPath, toPath: self.betaUpgradePackUrl)
+            } catch let error as NSError {
+                print("移动文件失败：\(error.localizedDescription)")
+            }
             print("new location:\(self.betaUpgradePackUrl)")
         }else{
-            try! fileManager.moveItem(atPath: locationPath, toPath: self.upgradePackUrl)
+            do {
+                try fileManager.moveItem(atPath: locationPath, toPath: self.upgradePackUrl)
+            } catch let error as NSError {
+                print("移动文件失败：\(error.localizedDescription)")
+            }
             print("new location:\(self.upgradePackUrl)")
         }
-      
+        
         self.upgradeDevice()
     }
     
@@ -3082,6 +3231,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     var clearRecordView:UIView!
     var saveCountView:UIView!
     var relayView:UIView!
+    var relayFlashingView:UIView!
     var ledView:UIView!
     var lightSensorOpenView:UIView!
     var resetFactoryView:UIView!
@@ -4100,7 +4250,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         self.saveCountLabel.textColor = UIColor.black
         self.saveCountLabel.lineBreakMode = NSLineBreakMode.byWordWrapping;
         self.saveCountLabel.numberOfLines = 0;
-        self.saveCountLabel.text = NSLocalizedString("save_count_desc", comment: "Save count:")
+        self.saveCountLabel.text = NSLocalizedString("save_count_desc", comment: "History count:")
         self.saveCountLabel.frame = CGRect(x: 15, y: 0, width: descWidth - 10, height: 60)
         saveCountView.addSubview(self.saveCountLabel)
         self.saveCountContentLabel = UILabel()
@@ -4140,7 +4290,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         self.readAlarmLabel.textColor = UIColor.black
         self.readAlarmLabel.lineBreakMode = NSLineBreakMode.byWordWrapping;
         self.readAlarmLabel.numberOfLines = 0;
-        self.readAlarmLabel.text = NSLocalizedString("save_count_desc", comment: "Save count:")
+        self.readAlarmLabel.text = NSLocalizedString("save_alarm_count", comment: "Alarm count:")
         self.readAlarmLabel.frame = CGRect(x: 15, y: 0, width: descWidth - 10, height: 60)
         readAlarmView.addSubview(self.readAlarmLabel)
         self.readAlarmContentLabel = UILabel()
@@ -4574,6 +4724,32 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         }else{
             relayView.isHidden = true
         }
+        relayFlashingView = UIView()
+        relayFlashingView.heightAnchor.constraint(equalToConstant: 60).isActive = true
+        relayFlashingView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
+        stackView.addArrangedSubview(relayFlashingView)
+        self.relayFlashingLabel = UILabel()
+        self.relayFlashingLabel.font = UIFont.systemFont(ofSize: fontSize)
+        self.relayFlashingLabel.textColor = UIColor.black
+        self.relayFlashingLabel.lineBreakMode = NSLineBreakMode.byWordWrapping;
+        self.relayFlashingLabel.numberOfLines = 0;
+        self.relayFlashingLabel.text = NSLocalizedString("flashing_relay", comment:"Relay periodic switching")
+        self.relayFlashingLabel.frame = CGRect(x: 15, y: 0, width: descWidth, height: 60)
+        relayFlashingView.addSubview(self.relayFlashingLabel)
+        self.relayFlashingSwitch = UISwitch()
+        self.relayFlashingSwitch.frame = CGRect(x: contentX, y: 10, width: 70, height: 45)
+        self.relayFlashingSwitch.addTarget(self, action: #selector(relayFlashingSwitchAction),
+                                           for:UIControl.Event.valueChanged)
+        relayFlashingView.addSubview(self.relayFlashingSwitch)
+        let relayFlashingLine = UIView()
+        relayFlashingLine.backgroundColor = UIColor.gray
+        relayFlashingLine.frame = CGRect(x: 0, y: Double(60), width: Double(KSize.width), height: 0.5)
+        relayFlashingView.addSubview(relayFlashingLine)
+        if self.isCurrentDeviceTypeFunc(funcName: "relay"){
+            relayFlashingView.isHidden = false
+        }else{
+            relayFlashingView.isHidden = true
+        }
         
         
         ledView = UIView()
@@ -4768,7 +4944,31 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     }
     
     func showUpgradeWin(){
-       	
+        if self.upgradeWarningView != nil && !self.upgradeWarningView.isDismiss{
+            self.upgradeWarningView.show()
+            return
+        }
+        self.upgradeWarningView = AEAlertView(style: .defaulted)
+        self.upgradeWarningView.title = NSLocalizedString("upgrade", comment:"Upgrade")
+        self.upgradeWarningView.message = NSLocalizedString("new_version_found_warning", comment:"New version found,updated?")
+        let upgradeCancel = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
+            self.upgradeWarningView.dismiss()
+            if self.initStart == false{
+                self.showWaitingWin(title: NSLocalizedString("waiting", comment:"Waiting"))
+                self.showPwdWin()
+            }
+        }
+        let upgradeConfirm = AEAlertAction(title: NSLocalizedString("confirm", comment: "Confirm"), style: .defaulted) { (action) in
+            self.isUpgrade = true
+            self.upgradeWarningView.dismiss()
+            self.showWaitingWin(title: NSLocalizedString("waiting", comment:"Waiting"))
+            if self.foundDevice {
+                self.doUpgrade()
+            }
+        }
+        self.upgradeWarningView.addAction(action: upgradeCancel)
+        self.upgradeWarningView.addAction(action: upgradeConfirm)
+        self.upgradeWarningView.show()
     }
     private var isShowPwdDlg = false
     func showPwdWin(){
@@ -4787,7 +4987,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         let action_one = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
             self.isShowPwdDlg = false
             self.pwdAlert.dismiss()
-            self.waitingView.dismiss()	
+            self.waitingView.dismiss()
             self.navigationController?.popViewController(animated: true)
             
         }
@@ -4798,28 +4998,9 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             if pwd.count == 6{
                 self.pwdAlert.dismiss()
                 self.confirmPwd = pwd
+                self.showWaitingWin(title: NSLocalizedString("waiting", comment: "waiting"))
                 if self.connected == true{
-                    self.initStart = true
-                    self.readTransmittedPower()
-                    self.readBroadcastCycle()
-                    self.readDeviceName()
-                    self.readVersion()
-                    self.readHumidityAlarm()
-                    self.readTempAlarm()
-                    self.readLedOpenStatus()
-                    self.readRelayStatus()
-                    self.readSaveCount()
-                    self.readSaveInterval()
-                    self.readLightSensorOpenStatus()
-                    self.readRs485Enable()
-                    self.readOneWireWorkMode()
-                    self.readRs485BaudRate()
-                    self.readBroadcastType()
-                    self.readLongRangeEnable()
-                    self.readGSensorEnable()
-                    self.readDinStatusEvent()
-                    self.readDinVoltage( )
-                    self.readDoorEnableStatus()
+                    self.doInitSucc()
                 }
             }else{
                 Toast.hudBuilder.title(NSLocalizedString("pwd_value_error_warning", comment: "Value is incorrect!The length has to be 6 digits")).show()
@@ -4892,7 +5073,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             if funcName == "saveInterval" || funcName == "firmware" || funcName == "password" || funcName == "resetFactory" || funcName == "broadcastCycle"
                 || funcName == "tempAlarm" || funcName == "ledOpen" || funcName == "deviceName" || funcName == "startRecord"
                 || funcName == "stopRecord" || funcName == "clearRecord" || funcName == "readHistory" || funcName == "humidityAlarm"
-                || funcName == "saveCount" || funcName == "readAlarm" || funcName == "readOriginData" || funcName == "transmittedPower"
+                || funcName == "saveCount" || funcName == "readOriginData" || funcName == "transmittedPower"
                 || funcName == "time"{
                 return true;
             }else{
@@ -4913,7 +5094,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             if funcName == "saveInterval" || funcName == "firmware" || funcName == "password" || funcName == "resetFactory" || funcName == "broadcastCycle"
                 || funcName == "tempAlarm" || funcName == "ledOpen" || funcName == "deviceName" || funcName == "startRecord"
                 || funcName == "stopRecord" || funcName == "clearRecord"
-                || funcName == "saveCount" || funcName == "readAlarm" || funcName == "readOriginData" || funcName == "transmittedPower" || funcName == "longRangeEnable"
+                || funcName == "saveCount" || funcName == "readOriginData" || funcName == "transmittedPower" || funcName == "longRangeEnable"
                 || funcName == "broadcastType"  || funcName == "readHistory"
                 || funcName == "time"    || funcName == "shutdown" || funcName == "doorEnable"  || funcName == "gSensorEnable"
                 || funcName == "gSensorSensitivity" || funcName == "gSensorDetectionDuration" || funcName == "gSensorDetectionInterval"
@@ -4925,7 +5106,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             if funcName == "saveInterval" || funcName == "firmware" || funcName == "password" || funcName == "resetFactory" || funcName == "broadcastCycle"
                 || funcName == "tempAlarm" || funcName == "ledOpen" || funcName == "deviceName" || funcName == "startRecord"
                 || funcName == "stopRecord" || funcName == "clearRecord"
-                || funcName == "saveCount" || funcName == "readAlarm" || funcName == "readOriginData" || funcName == "transmittedPower" || funcName == "longRangeEnable"
+                || funcName == "saveCount"  || funcName == "readOriginData" || funcName == "transmittedPower" || funcName == "longRangeEnable"
                 || funcName == "broadcastType" || funcName == "readHistory" || funcName == "humidityAlarm"
                 || funcName == "time"   || funcName == "shutdown"
                 || funcName == "beaconMajorSet" || funcName == "beaconMinorSet" || funcName == "eddystoneNIDSet" || funcName == "eddystoneBIDSet"
@@ -4974,7 +5155,11 @@ extension EditConfigController:EditDoutOutputDelegate{
         self.writeDoutStatus(port:1,value:dout1)
     }
 }
-
+extension EditConfigController:EditPulseRelayDelegate{
+    func setPulseRelayValue(cycleTime:Int,initEnableTime:Int,toggleTime:Int,recoverTime:Int){
+        self.writePulseRelayStatus(cycleTime: cycleTime, initEnableTime: initEnableTime, toggleTime: toggleTime, recoverTime: recoverTime)
+    }
+}
 
 extension EditConfigController:EditRangeValueDelegate{
     func setRangeValue(high: Int, low: Int) {

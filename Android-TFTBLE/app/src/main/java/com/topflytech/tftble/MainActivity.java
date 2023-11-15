@@ -2,6 +2,7 @@ package com.topflytech.tftble;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -38,11 +39,19 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.alibaba.fastjson.JSONObject;
+import com.bigkoo.pickerview.builder.OptionsPickerBuilder;
+import com.bigkoo.pickerview.listener.OnOptionsSelectListener;
+import com.bigkoo.pickerview.view.OptionsPickerView;
 import com.tencent.bugly.crashreport.CrashReport;
 import com.topflytech.tftble.data.BleDeviceData;
+import com.topflytech.tftble.data.DfuService;
+import com.topflytech.tftble.data.DownloadFileManager;
 import com.topflytech.tftble.data.LogFileHelper;
 import com.topflytech.tftble.data.MyUtils;
+import com.topflytech.tftble.data.OpenAPI;
 import com.topflytech.tftble.view.MarqueeTextView;
 
 
@@ -57,6 +66,11 @@ import java.util.concurrent.TimeUnit;
 
 import cn.bingoogolapple.qrcode.zxing.QRCodeEncoder;
 import cn.pedant.SweetAlert.SweetAlertDialog;
+import no.nordicsemi.android.dfu.DfuProgressListener;
+import no.nordicsemi.android.dfu.DfuProgressListenerAdapter;
+import no.nordicsemi.android.dfu.DfuServiceController;
+import no.nordicsemi.android.dfu.DfuServiceInitiator;
+import no.nordicsemi.android.dfu.DfuServiceListenerHelper;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -69,8 +83,8 @@ public class MainActivity extends AppCompatActivity {
     private final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     public static ArrayList<BleDeviceData> allBleDeviceDataList = new ArrayList<BleDeviceData>();
     public static ArrayList<BleDeviceData> showBleDeviceDataList = new ArrayList<BleDeviceData>();
-    private ConcurrentHashMap<String, Integer> allMacIndex = new ConcurrentHashMap<String, Integer>(32);
-    private ConcurrentHashMap<String, Integer> showMacIndex = new ConcurrentHashMap<String, Integer>(32);
+//    private ConcurrentHashMap<String, Integer> allMacIndex = new ConcurrentHashMap<String, Integer>(32);
+//    private ConcurrentHashMap<String, Integer> showMacIndex = new ConcurrentHashMap<String, Integer>(32);
     private String serviceId = "27760001-999C-4D6A-9FC4-C7272BE10900";
     private String uuid = "27763561-999C-4D6A-9FC4-C7272BE10900";
     private ActionBar actionBar;
@@ -100,7 +114,29 @@ public class MainActivity extends AppCompatActivity {
     private Date dataNotifyDate;
     private Date enterDate;
     private ScanSettings mScanSettings;
-
+    private ArrayList<String> modelList = new ArrayList<String>(){
+        {
+            add("TSTH1-B");
+            add("TSDT1-B");
+            add("TSR1-B");
+            add("T-button");
+            add("T-sense");
+            add("T-hub");
+            add("T-one");
+        }
+    };
+    private ArrayList<String> deviceTypeList = new ArrayList<String>(){
+        {
+            add("S02");
+            add("S04");
+            add("S05");
+            add("S07");
+            add("S08");
+            add("S09");
+            add("S10");
+        }
+    };
+    private OptionsPickerView pvModel;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -181,9 +217,9 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     allBleDeviceDataList.clear();
-                    allMacIndex.clear();
+//                    allMacIndex.clear();
                     showBleDeviceDataList.clear();
-                    showMacIndex.clear();
+//                    showMacIndex.clear();
                     mListAdapter.notifyDataSetChanged();
                     if (bluetoothadapter.isEnabled()) {
                         if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
@@ -281,6 +317,7 @@ public class MainActivity extends AppCompatActivity {
                         llFuzzySearch.setVisibility(View.VISIBLE);
                     } else {
                         fuzzyKey = "";
+                        searchEditText.setText(fuzzyKey);
                         refreshShowItem();
                         llFuzzySearch.setVisibility(View.GONE);
                     }
@@ -385,9 +422,195 @@ public class MainActivity extends AppCompatActivity {
 
             service.scheduleWithFixedDelay(checkBleSearchStatus, 1, 1, TimeUnit.SECONDS);
         }
+
+
+        pvModel = new OptionsPickerBuilder(MainActivity.this, new OnOptionsSelectListener() {
+            @Override
+            public void onOptionsSelect(int options1, int option2, int options3 ,View v) {
+                //返回的分别是三个级别的选中位置
+                String modelName = modelList.get(options1);
+                String deviceType = deviceTypeList.get(options1);
+                SweetAlertDialog confirmUpgradeDlg = new SweetAlertDialog(MainActivity.this, SweetAlertDialog.WARNING_TYPE);
+                confirmUpgradeDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
+                confirmUpgradeDlg.setTitleText(getResources().getString(R.string.upgrade_device_to) + " " + modelName);
+                confirmUpgradeDlg.setCancelable(true);
+                confirmUpgradeDlg.setCancelText(getResources().getString(R.string.cancel));
+                confirmUpgradeDlg.setConfirmText(getResources().getString(R.string.confirm));
+                confirmUpgradeDlg.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                    @Override
+                    public void onClick(SweetAlertDialog sweetAlertDialog) {
+                        confirmUpgradeDlg.hide();
+                        upgradeDfuDevice(deviceType);
+
+                    }
+                });
+                confirmUpgradeDlg.show();
+            }
+        }).build();
+        pvModel.setPicker(modelList);
+    }
+    SweetAlertDialog waitingDlg;
+    private void showWaitingDlg(String warning){
+
+        waitingDlg = new SweetAlertDialog(MainActivity.this, SweetAlertDialog.PROGRESS_TYPE);
+        waitingDlg.getProgressHelper().setBarColor(Color.parseColor("#A5DC86"));
+        waitingDlg.setCancelable(false);
+        if (warning != null && !warning.isEmpty()){
+            waitingDlg.setTitleText(warning);
+            waitingDlg.show();
+        }
+    }
+    private BleDeviceData selectDfuDevice;
+    private void upgradeDfuDevice(String deviceType){
+        if(!MyUtils.isNetworkConnected(MainActivity.this)){
+            Toast.makeText(MainActivity.this,R.string.network_permission_fail,Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if(selectDfuDevice == null){
+            Toast.makeText(MainActivity.this,R.string.error_please_try_again,Toast.LENGTH_SHORT).show();
+            return;
+        }
+        showWaitingDlg(getResources().getString(R.string.waiting));
+        OpenAPI.instance().getServerVersion(deviceType,new OpenAPI.Callback() {
+            @Override
+            public void callback(StatusCode code, String result) {
+                if(code == StatusCode.OK){
+                    JSONObject resObj = JSONObject.parseObject(result);
+                    int jsonCode = resObj.getInteger("code");
+                    if(jsonCode == 0){
+                        JSONObject jsonData  = resObj.getJSONObject("data");
+                        if(jsonData != null){
+
+                            String upgradeLink = jsonData.getString("link");
+                            DownloadFileManager.instance().geetUpdateFileUrl(MainActivity.this, upgradeLink, "", deviceType, new DownloadFileManager.Callback() {
+                                @RequiresApi(api = Build.VERSION_CODES.O)
+                                @Override
+                                public void callback(StatusCode code, String result) {
+                                    if(StatusCode.OK == code){
+                                        updateDFU(selectDfuDevice.getMac(),selectDfuDevice.getDeviceName(),result);
+                                    }else{
+                                        if(waitingCancelDlg != null){
+                                            waitingCancelDlg.hide();
+                                        }
+                                        selectDfuDevice = null;
+                                        Toast.makeText(MainActivity.this,R.string.download_file_fail,Toast.LENGTH_LONG);
+                                    }
+                                }
+                            });
+                        }
+                    }else{
+                        selectDfuDevice = null;
+                        Toast.makeText(MainActivity.this,R.string.get_upgrade_info_fail,Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                }else{
+                    selectDfuDevice = null;
+                    Toast.makeText(MainActivity.this,R.string.get_upgrade_info_fail,Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            }
+        });
+    }
+    private DfuServiceController dfuServiceController;
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void updateDFU(String mac, String name, String path){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            DfuServiceInitiator.createDfuNotificationChannel(this);
+        }
+        DfuServiceListenerHelper.registerProgressListener(MainActivity.this, dfuProgressListener);
+        final DfuServiceInitiator starter = new DfuServiceInitiator(mac)
+                .setDeviceName(name)
+                .setForceDfu(true)
+                .setKeepBond(true)
+                .setPacketsReceiptNotificationsEnabled(true);
+        starter.setZip(path);
+        // We can use the controller to pause, resume or abort the DFU process.
+        dfuServiceController = starter.start(MainActivity.this, DfuService.class);
     }
 
+    private static int progressPercent = 0;
+    private static String upgradeErrorMsg = "";
+    private static String upgradeStatus = "";
 
+    private DfuProgressListener dfuProgressListener = new DfuProgressListenerAdapter() {
+        @Override
+        public void onDfuCompleted(String deviceAddress) {
+            Log.e("BluetoothUtils","onDfuCompleted");
+            upgradeStatus = "completed";
+            Toast.makeText(MainActivity.this,R.string.upgrade_succ,Toast.LENGTH_LONG);
+            waitingDlg.hide();
+            for(int i = 0;i < showBleDeviceDataList.size();i++){
+                BleDeviceData item = showBleDeviceDataList.get(i);
+                if(item.getMac().equals(selectDfuDevice.getMac())){
+                    showBleDeviceDataList.remove(i);
+                    break;
+                }
+            }
+            for(int i = 0;i < allBleDeviceDataList.size();i++){
+                BleDeviceData item = allBleDeviceDataList.get(i);
+                if(item.getMac().equals(selectDfuDevice.getMac())){
+                    allBleDeviceDataList.remove(i);
+                    break;
+                }
+            }
+            mListAdapter.notifyDataSetChanged();
+        }
+
+        @Override
+        public void onDfuAborted(String deviceAddress) {
+            Log.e("BluetoothUtils","onDfuAborted");
+            upgradeStatus = "aborted";
+            waitingDlg.hide();
+            Toast.makeText(MainActivity.this,R.string.upgrade_aborted,Toast.LENGTH_LONG);
+        }
+
+        @Override
+        public void onError(String deviceAddress, int error, int errorType, String message) {
+            Log.e("BluetoothUtils","onError");
+            upgradeStatus = "error";
+            upgradeErrorMsg = message;
+            waitingDlg.hide();
+            Toast.makeText(MainActivity.this,message,Toast.LENGTH_LONG);
+        }
+
+        @Override
+        public void onProgressChanged(String deviceAddress, int percent, float speed, float avgSpeed, int currentPart, int partsTotal) {
+//            Log.e("BluetoothUtils","onProgressChanged:"+percent);
+            progressPercent = percent;
+            upgradeStatus = "progressChanged";
+            if(waitingDlg != null){
+                waitingDlg.setTitleText(getResources().getString(R.string.processing)+ ":" + percent);
+            }
+
+        }
+
+        @Override
+        public void onDfuProcessStarted(String deviceAddress) {
+            Log.e("BluetoothUtils","onDfuProcessStarted");
+            upgradeStatus = "processStarted";
+            if(waitingDlg != null){
+                waitingDlg.setTitleText(getResources().getString(R.string.upgrade_process_start));
+            }
+
+        }
+
+        @Override
+        public void onDeviceConnecting(String deviceAddress) {
+            Log.e("BluetoothUtils","onDeviceConnecting");
+            upgradeStatus = "deviceConnecting";
+            if(waitingDlg != null){
+                waitingDlg.setTitleText(getResources().getString(R.string.upgrade_device_connecting));
+            }
+
+        }
+
+        @Override
+        public void onDeviceDisconnecting(String deviceAddress) {
+            Log.e("BluetoothUtils","onDeviceDisconnecting");
+            upgradeStatus = "deviceDisconnected";
+
+        }
+    };
 
     private void showWaitingCancelDlg(String warning) {
         waitingCancelDlg = new SweetAlertDialog(MainActivity.this, SweetAlertDialog.PROGRESS_TYPE);
@@ -506,35 +729,24 @@ public class MainActivity extends AppCompatActivity {
         if (bleDeviceData == null) {
             return;
         }
-        if (showMacIndex.get(bleDeviceData.getMac()) != null && showBleDeviceDataList.size() > 0) {
-            Integer index = showMacIndex.get(bleDeviceData.getMac());
-            if (showBleDeviceDataList.size() <= index) {
-                return;
+        boolean findItem = false;
+        for(int i = 0;i < showBleDeviceDataList.size();i++){
+            BleDeviceData item = showBleDeviceDataList.get(i);
+            if(item.getMac().equals(bleDeviceData.getMac())){
+                showBleDeviceDataList.set(i,bleDeviceData);
+                findItem = true;
+                break;
             }
-            BleDeviceData oldBleDeviceData = showBleDeviceDataList.get(index);
-            if (oldBleDeviceData != null) {
-                if (oldBleDeviceData.getDate().getTime() < bleDeviceData.getDate().getTime()) {
-                    showBleDeviceDataList.set(index, bleDeviceData);
-                }
-            } else {
-                showBleDeviceDataList.set(index, bleDeviceData);
-            }
-        } else {
+        }
+        if(!findItem){
             if (fuzzyKey == null || fuzzyKey.isEmpty()) {
                 showBleDeviceDataList.add(bleDeviceData);
-                showMacIndex.put(bleDeviceData.getMac(), showBleDeviceDataList.size() - 1);
             } else {
                 if ((bleDeviceData.getId() != null && bleDeviceData.getId().contains(fuzzyKey.toUpperCase()))
                         || (bleDeviceData.getDeviceName() != null && bleDeviceData.getDeviceName().toUpperCase().contains(fuzzyKey.toUpperCase()))) {
                     showBleDeviceDataList.add(bleDeviceData);
-                    showMacIndex.put(bleDeviceData.getMac(), showBleDeviceDataList.size() - 1);
                 }
             }
-//            if(fuzzyKey == null || fuzzyKey.isEmpty() ||bleDeviceData.getId() == null || bleDeviceData.getId().contains(fuzzyKey.toUpperCase())
-//                    || bleDeviceData.getDeviceName()== null || bleDeviceData.getDeviceName().toUpperCase().contains(fuzzyKey.toUpperCase())){
-//                showBleDeviceDataList.add(bleDeviceData);
-//                showMacIndex.put(bleDeviceData.getMac(), showBleDeviceDataList.size() - 1);
-//            }
         }
     }
 
@@ -553,16 +765,13 @@ public class MainActivity extends AppCompatActivity {
     private void refreshShowItem() {
         Log.e("aaa","refreshShowItem");
         showBleDeviceDataList.clear();
-        showMacIndex.clear();
         for (BleDeviceData bleDeviceData : allBleDeviceDataList) {
             if (fuzzyKey == null || fuzzyKey.isEmpty()) {
                 showBleDeviceDataList.add(bleDeviceData);
-                showMacIndex.put(bleDeviceData.getMac(), showBleDeviceDataList.size() - 1);
             } else {
                 if ((bleDeviceData.getId() != null && bleDeviceData.getId().contains(fuzzyKey.toUpperCase()))
                         || (bleDeviceData.getDeviceName() != null && bleDeviceData.getDeviceName().toUpperCase().contains(fuzzyKey.toUpperCase()))) {
                     showBleDeviceDataList.add(bleDeviceData);
-                    showMacIndex.put(bleDeviceData.getMac(), showBleDeviceDataList.size() - 1);
                 }
             }
         }
@@ -643,7 +852,7 @@ public class MainActivity extends AppCompatActivity {
             }
 //            Log.e("BluetoothUtils","MainActivity.onDeviceFounded " + device.getName() + "  " + device.getAddress() + "," + data);
             lastRecvDate = new Date();
-            if(device.getAddress() != null && device.getAddress().contains("F9:44")){
+            if(device.getAddress() != null && device.getAddress().contains("C9:96")){
                 Log.e("BluetoothUtils","MainActivity.onDeviceFounded " + device.getName() + "  "+ result.getScanRecord().getDeviceName() + "  " + device.getAddress() + "," + data);
             }
             if (data != null) {
@@ -662,9 +871,18 @@ public class MainActivity extends AppCompatActivity {
                     if(MyUtils.isOpenBroadcastLog){
                         LogFileHelper.getInstance(MainActivity.this).writeIntoFile("onDeviceFounded:" + result.getScanRecord().getDeviceName() + "," + device.getAddress() + "," + data);
                     }
-                    Integer index = allMacIndex.get(device.getAddress());
-                    if (index != null && allBleDeviceDataList.size() > index) {
-                        BleDeviceData bleDeviceData = allBleDeviceDataList.get(index);
+                    boolean findItem = false;
+                    BleDeviceData existItem = null;
+                    for(int i = 0;i < allBleDeviceDataList.size();i++){
+                        BleDeviceData item = allBleDeviceDataList.get(i);
+                        if(item.getMac().equals(device.getAddress())){
+                            existItem = item;
+                            findItem = true;
+                            break;
+                        }
+                    }
+                    if (findItem && existItem != null) {
+                        BleDeviceData bleDeviceData = existItem;
                         bleDeviceData.setRssi(rssi + "dBm");
                         bleDeviceData.setRssiInt(rssi);
                         bleDeviceData.setHexData(data);
@@ -674,7 +892,10 @@ public class MainActivity extends AppCompatActivity {
                         if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
 
                         }
-                        if (data.toLowerCase().startsWith("020106") && !tireHead.equals("ffac")){
+                        if(result.getScanRecord().getDeviceName().toLowerCase().contains("dfu") && data.toLowerCase().startsWith("020106030259fe")){
+                            bleDeviceData.setDeviceType("dfuDevice");
+                            bleDeviceData.setId(device.getAddress().replaceAll(":", ""));
+                        }else if (data.toLowerCase().startsWith("020106") && !tireHead.equals("ffac")){
                             try {
                                 if(device.getName() != null && device.getAddress().contains("F9:44")){
                                     Log.e("BluetoothUtils","MainActivity.onDeviceFounded " + device.getName() + "  "+ result.getScanRecord().getDeviceName() + "  " + device.getAddress() + "," + data);
@@ -712,7 +933,10 @@ public class MainActivity extends AppCompatActivity {
                         bleDeviceData.setDate(new Date());
                         bleDeviceData.setMac(device.getAddress());
                         bleDeviceData.setDeviceName(result.getScanRecord().getDeviceName());
-                        if (data.toLowerCase().startsWith("020106") && !tireHead.equals("ffac")){
+                        if(result.getScanRecord().getDeviceName().toLowerCase().contains("dfu")  && data.toLowerCase().startsWith("020106030259fe")){
+                            bleDeviceData.setDeviceType("dfuDevice");
+                            bleDeviceData.setId(device.getAddress().replaceAll(":", ""));
+                        }else if (data.toLowerCase().startsWith("020106") && !tireHead.equals("ffac")){
                             try {
                                 if(device.getName() != null && device.getAddress().contains("F9:44")){
                                     Log.e("BluetoothUtils","MainActivity.onDeviceFounded " + device.getName() + "  " + device.getAddress() + "," + data);
@@ -731,9 +955,18 @@ public class MainActivity extends AppCompatActivity {
 //                            e.printStackTrace();
                             }
                         }
-                        allBleDeviceDataList.add(bleDeviceData);
-                        index = allBleDeviceDataList.size() - 1;
-                        allMacIndex.put(device.getAddress(), index);
+                        findItem = false;
+                        for(int i = 0;i < allBleDeviceDataList.size();i++){
+                            BleDeviceData item = allBleDeviceDataList.get(i);
+                            if(item.getMac().equals(device.getAddress())){
+                                findItem = true;
+                                allBleDeviceDataList.set(i,bleDeviceData);
+                                break;
+                            }
+                        }
+                        if (!findItem) {
+                            allBleDeviceDataList.add(bleDeviceData);
+                        }
                     }
                     if (dataNotifyDate == null || lastRecvDate.getTime() - dataNotifyDate.getTime() > 1000) {
                         runOnUiThread(new Runnable() {
@@ -783,13 +1016,30 @@ public class MainActivity extends AppCompatActivity {
 
             final String mac = (String)view.getTag();
             Log.e("Click", "config device " + mac);
-            Integer index = allMacIndex.get(mac);
-            if (index == null || allBleDeviceDataList.size() <= 0){
-                return;
+
+            for(int i = 0;i < allBleDeviceDataList.size();i++){
+                BleDeviceData item = allBleDeviceDataList.get(i);
+                if(item.getMac().equals(mac)){
+                    connectDevice(item);
+                    break;
+                }
             }
-            BleDeviceData bleDeviceData = allBleDeviceDataList.get(index);
-            if(bleDeviceData != null){
-                connectDevice(bleDeviceData);
+//            mBluetoothAdapter.stopLeScan(startSearchCallback);
+        }
+    };
+    View.OnClickListener upgradeDfuErrorClick = new View.OnClickListener() {
+        @Override
+        public void onClick(final View view) {
+
+            final String mac = (String)view.getTag();
+            Log.e("Click", "upgradeDfuError device " + mac);
+            for(int i = 0;i < allBleDeviceDataList.size();i++){
+                BleDeviceData item = allBleDeviceDataList.get(i);
+                if(item.getMac().equals(mac)){
+                    selectDfuDevice = item;
+                    pvModel.setSelectOptions(0);
+                    pvModel.show();
+                }
             }
 //            mBluetoothAdapter.stopLeScan(startSearchCallback);
         }
@@ -1130,7 +1380,7 @@ public class MainActivity extends AppCompatActivity {
                     holder.batteryTextView = (TextView)convertView.findViewById(R.id.tx_battery);
                     holder.tempTextView = (TextView)convertView.findViewById(R.id.tx_temp);
                     holder.humidityTextView = (TextView)convertView.findViewById(R.id.tx_humidity);
-                    holder.devicePropTextView = (TextView)convertView.findViewById(R.id.tx_device_prop);
+//                    holder.devicePropTextView = (TextView)convertView.findViewById(R.id.tx_device_prop);
                     holder.alarmTextView = (MarqueeTextView) convertView.findViewById(R.id.tx_alarm);
                     holder.switchTempBtn = (Button)convertView.findViewById(R.id.btn_temp_switch);
                     holder.configBtn = (Button) convertView.findViewById(R.id.btn_config);
@@ -1155,7 +1405,7 @@ public class MainActivity extends AppCompatActivity {
                     holder.batteryLine = (LinearLayout)convertView.findViewById(R.id.line_battery);
                     holder.batteryPercentLine = (LinearLayout)convertView.findViewById(R.id.line_battery_percent);
                     holder.tempLine = (LinearLayout)convertView.findViewById(R.id.line_temp);
-                    holder.lightLine = (LinearLayout)convertView.findViewById(R.id.line_light);
+//                    holder.lightLine = (LinearLayout)convertView.findViewById(R.id.line_light);
                     holder.moveLine = (LinearLayout)convertView.findViewById(R.id.line_move);
                     holder.moveDetectionLine = (LinearLayout)convertView.findViewById(R.id.line_move_detection);
                     holder.stopDetectionLine = (LinearLayout)convertView.findViewById(R.id.line_stop_detection);
@@ -1186,7 +1436,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 holder.switchTempBtn.setText(BleDeviceData.getNextTempUnit(MainActivity.this));
                 holder.humidityTextView.setText(bleDeviceData.getHumidity() + "%");
-                holder.devicePropTextView.setText(bleDeviceData.getDeviceProp());
+//                holder.devicePropTextView.setText(bleDeviceData.getDeviceProp());
                 holder.switchTempBtn.setOnClickListener(switchTempUnitClick);
                 holder.configBtn.setTag(bleDeviceData.getMac());
                 holder.configBtn.setOnClickListener(configDeviceClick);
@@ -1213,7 +1463,7 @@ public class MainActivity extends AppCompatActivity {
                 holder.batteryLine.setVisibility(View.GONE);
                 holder.batteryPercentLine.setVisibility(View.GONE);
                 holder.tempLine.setVisibility(View.GONE);
-                holder.lightLine.setVisibility(View.GONE);
+//                holder.lightLine.setVisibility(View.GONE);
                 holder.moveLine.setVisibility(View.GONE);
                 holder.moveDetectionLine.setVisibility(View.GONE);
                 holder.stopDetectionLine.setVisibility(View.GONE);
@@ -1230,7 +1480,7 @@ public class MainActivity extends AppCompatActivity {
                     holder.batteryLine.setVisibility(View.VISIBLE);
                     holder.batteryPercentLine.setVisibility(View.VISIBLE);
                     holder.tempLine.setVisibility(View.VISIBLE);
-                    holder.lightLine.setVisibility(View.VISIBLE);
+//                    holder.lightLine.setVisibility(View.VISIBLE);
                     if(!bleDeviceData.getMove().equals("-")){
                         holder.moveLine.setVisibility(View.VISIBLE);
                         if(bleDeviceData.getMoveStatus() != 2){
@@ -1250,15 +1500,13 @@ public class MainActivity extends AppCompatActivity {
                     holder.batteryLine.setVisibility(View.VISIBLE);
                     holder.batteryPercentLine.setVisibility(View.VISIBLE);
                     holder.tempLine.setVisibility(View.VISIBLE);
-                    holder.lightLine.setVisibility(View.VISIBLE);
+//                    holder.lightLine.setVisibility(View.VISIBLE);
                     if(!bleDeviceData.getMove().equals("-")){
                         holder.moveLine.setVisibility(View.VISIBLE);
-                        if(bleDeviceData.getMoveStatus() != 2){
-                            holder.moveDetectionLine.setVisibility(View.VISIBLE);
-                            holder.stopDetectionLine.setVisibility(View.VISIBLE);
-                            holder.pitchLine.setVisibility(View.VISIBLE);
-                            holder.rollLine.setVisibility(View.VISIBLE);
-                        }
+                        holder.moveDetectionLine.setVisibility(View.VISIBLE);
+                        holder.stopDetectionLine.setVisibility(View.VISIBLE);
+                        holder.pitchLine.setVisibility(View.VISIBLE);
+                        holder.rollLine.setVisibility(View.VISIBLE);
                     }
                     holder.warnLine.setVisibility(View.VISIBLE);
                 }
@@ -1395,6 +1643,28 @@ public class MainActivity extends AppCompatActivity {
                 holder.configBtn.setTag(bleDeviceData.getMac());
                 holder.configBtn.setOnClickListener(configDeviceClick);
                 return convertView;
+            }else if(bleDeviceData.getDeviceType() != null && bleDeviceData.getDeviceType().equals("dfuDevice")){
+                if(null == convertView  || convertView.getTag() instanceof S09ViewHolder == false){
+                    convertView = View.inflate(getApplicationContext(),R.layout.ble_dfu_error_item,null);
+                    DfuErrorDeviceViewHolder holder = new DfuErrorDeviceViewHolder();
+                    holder.deviceNameTextView = (TextView)convertView.findViewById(R.id.tx_name);
+                    holder.idTextView = (TextView)convertView.findViewById(R.id.tx_ble_id);
+                    holder.dateTextView = (TextView)convertView.findViewById(R.id.tx_date);
+                    holder.rssiTextView = (TextView)convertView.findViewById(R.id.tx_rssi);
+                    holder.modelTextView = (TextView)convertView.findViewById(R.id.tx_device_model);
+                    holder.btnUpgrade = (Button) convertView.findViewById(R.id.btn_config);
+                    convertView.setTag(holder);
+                }
+
+                DfuErrorDeviceViewHolder holder = (DfuErrorDeviceViewHolder) convertView.getTag();
+                holder.deviceNameTextView.setText(bleDeviceData.getDeviceName());
+                holder.idTextView.setText(bleDeviceData.getId());
+                holder.dateTextView.setText(dateFormat.format(bleDeviceData.getDate()));
+                holder.rssiTextView.setText(bleDeviceData.getRssi());
+                holder.btnUpgrade.setTag(bleDeviceData.getMac());
+                holder.modelTextView.setText("Upgrade error");
+                holder.btnUpgrade.setOnClickListener(upgradeDfuErrorClick);
+                return convertView;
             }else{
                 if(null == convertView || convertView.getTag() instanceof ErrorDeviceViewHolder == false){
                     convertView = View.inflate(getApplicationContext(),R.layout.ble_invalid_detail_item,null);
@@ -1445,14 +1715,18 @@ public class MainActivity extends AppCompatActivity {
         class ErrorDeviceViewHolder {
             TextView deviceNameTextView,  idTextView,  dateTextView, rssiTextView,modelTextView,hardwareTextView,softwareTextView;
         }
+        class DfuErrorDeviceViewHolder {
+            TextView deviceNameTextView,  idTextView,  dateTextView, rssiTextView,modelTextView;
+            Button btnUpgrade;
+        }
         class S08ViewHolder {
             TextView deviceNameTextView,  idTextView,  dateTextView, rssiTextView,modelTextView,hardwareTextView,softwareTextView,
-                    batteryTextView,tempTextView,humidityTextView,devicePropTextView,doorTextView,batteryPercentTextView,broadcastTypeTextview,
-                    moveTextView,moveDetectionTextView,stopDetectionTextView,pitchTextView,rollTextView,bidTextView,nidTextView,
+                    batteryTextView,tempTextView,humidityTextView,doorTextView,batteryPercentTextView,broadcastTypeTextview,
+                    moveTextView,moveDetectionTextView,stopDetectionTextView,pitchTextView,rollTextView,bidTextView,nidTextView,//devicePropTextView,
                     majorTextView,minorTextView;
             Button switchTempBtn,configBtn,qrCodeBtn;
             LinearLayout qrcodeLL;
-            LinearLayout doorLine,bidLine,nidLine,batteryLine,batteryPercentLine,tempLine,lightLine,moveLine,moveDetectionLine,
+            LinearLayout doorLine,bidLine,nidLine,batteryLine,batteryPercentLine,tempLine,moveLine,moveDetectionLine,//lightLine,
                     stopDetectionLine,pitchLine,rollLine,warnLine,majorLine,minorLine;
             MarqueeTextView alarmTextView;
         }

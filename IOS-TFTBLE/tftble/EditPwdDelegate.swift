@@ -23,6 +23,10 @@ protocol EditDoutOutputDelegate{
     func setDoutValue(dout0:Int,dout1:Int)
 }
 
+protocol EditPulseRelayDelegate{
+    func setPulseRelayValue(cycleTime:Int,initEnableTime:Int,toggleTime:Int,recoverTime:Int)
+}
+
 protocol EditInstructionSequenceDelegate{
     func setCmd(cmd:String)
 }

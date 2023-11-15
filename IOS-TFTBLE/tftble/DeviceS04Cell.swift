@@ -251,7 +251,7 @@ class DeviceS04Cell: UITableViewCell {
         self.doorLabel.frame = CGRect(x: 8, y: 278, width: descWidth, height: 30)
         self.doorContentLabel.frame = CGRect(x: contentX, y: 278, width: self.bounds.size.width - contentX, height: 30)
         self.warnLabel.frame = CGRect(x: 8, y: 308, width: descWidth, height: 30)
-        marqueeView.frame = CGRect(x: contentX, y: 308, width: self.bounds.size.width - contentX, height: 30)
+        warnContentLabel.frame = CGRect(x: contentX, y: 308, width: self.bounds.size.width - contentX, height: 30)
         self.configLabel.frame = CGRect(x: 8, y: 338, width: descWidth, height: 30)
         self.configBtn.frame = CGRect(x: contentX, y: 338, width: 80, height: 24)
         self.qrCodeLabel.frame = CGRect(x: 8, y: 368, width: descWidth, height: 30)
@@ -301,7 +301,7 @@ class DeviceS04Cell: UITableViewCell {
         marqueeView.contentView = self.warnContentLabel
         marqueeView.contentMargin = 50
         marqueeView.marqueeType = .left
-        self.rootView.addSubview(marqueeView)
+        self.rootView.addSubview(warnContentLabel)
          self.initLayoutPosition()
         
     }

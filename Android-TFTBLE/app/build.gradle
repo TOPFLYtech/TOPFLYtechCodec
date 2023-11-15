@@ -19,9 +19,9 @@ android {
     defaultConfig {
         applicationId "com.topflytech.tftble"
         minSdkVersion 23
-        targetSdkVersion 31
-        versionCode 45
-        versionName "1.0.43"
+        targetSdkVersion 33
+        versionCode 49
+        versionName "1.0.46"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         ndk {
             // 设置支持的SO库架构

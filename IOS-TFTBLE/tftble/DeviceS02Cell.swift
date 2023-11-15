@@ -275,7 +275,7 @@ class DeviceS02Cell: UITableViewCell {
         self.configBtn.setTitleShadowColor(UIColor.black,for: .normal)
          self.qrCodeLabel.frame = CGRect(x: 8, y: 398, width: descWidth, height: 30)
          self.qrCodeBtn.frame = CGRect(x: contentX, y: 408, width: 80, height: 24)
-        marqueeView.frame = CGRect(x: contentX, y: 338, width: self.bounds.size.width - contentX, height: 30)
+        warnContentLabel.frame = CGRect(x: contentX, y: 338, width: self.bounds.size.width - contentX, height: 30)
                
           
                self.backgroundColor = UIColor.nordicLightGray
@@ -325,7 +325,7 @@ class DeviceS02Cell: UITableViewCell {
         marqueeView.contentView = self.warnContentLabel
         marqueeView.contentMargin = 50
         marqueeView.marqueeType = .left
-        self.rootView.addSubview(marqueeView)
+        self.rootView.addSubview(warnContentLabel)
         self.initLayoutPosition()
        
     }

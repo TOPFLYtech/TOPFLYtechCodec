@@ -203,6 +203,22 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
         initTempChart();
         initHumidityChart();
         initTable();
+        boolean isHadValidTempData = false;
+        boolean isHadValidHumidityData = false;
+        for(BleHisData bleHisData : showBleHisData){
+            if(bleHisData.getTemp() != -999){
+                isHadValidTempData = true;
+            }
+            if(bleHisData.getHumidity() != -999){
+                isHadValidHumidityData = true;
+            }
+        }
+        if(!isHadValidHumidityData){
+            llHumidityChart.setVisibility(View.GONE);
+        }
+        if(!isHadValidTempData){
+            llTempChart.setVisibility(View.GONE);
+        }
     }
     private void showWaitingDlg(String warning){
         waitingDlg = new SweetAlertDialog(HistoryReportActivity.this, SweetAlertDialog.PROGRESS_TYPE);
@@ -237,26 +253,30 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
         boolean beginTempUp = false,beginTempDown = false,beginHumidityUp = false,beginHumidityDown = false;
         long startTempCalDate = 0,endTempCalDate = 0,startHumidityCalDate = 0,endHumidityCalDate = 0;
         for(BleHisData bleHisData:showBleHisData){
-            tempSum += bleHisData.getTemp();
-            humiditySum += bleHisData.getHumidity();
+            if(bleHisData.getTemp() != -999){
+                tempSum += bleHisData.getTemp();
+            }
+            if(bleHisData.getHumidity() != -999){
+                humiditySum += bleHisData.getHumidity();
+            }
             if(bleHisData.getProp() == 1){
                 propOpenCount ++;
             }else{
                 propCloseCount++;
             }
-            if (bleHisData.getTemp() > maxTemp){
+            if (bleHisData.getTemp() != -999 && bleHisData.getTemp() > maxTemp){
                 maxTemp = bleHisData.getTemp();
             }
-            if(bleHisData.getTemp() < minTemp){
+            if(bleHisData.getTemp() != -999 && bleHisData.getTemp() < minTemp){
                 minTemp = bleHisData.getTemp();
             }
-            if(bleHisData.getHumidity() > maxHumidity){
+            if(bleHisData.getHumidity() > maxHumidity  && bleHisData.getHumidity() != -999){
                 maxHumidity = bleHisData.getHumidity();
             }
-            if(bleHisData.getHumidity() < minHumidity){
+            if(bleHisData.getHumidity() < minHumidity  && bleHisData.getHumidity() != -999){
                 minHumidity = bleHisData.getHumidity();
             }
-            if(tempAlarmUp != 4095 && bleHisData.getTemp() > tempAlarmUp){
+            if(tempAlarmUp != 4095 && bleHisData.getTemp() > tempAlarmUp && bleHisData.getTemp() != -999){
                 if (!beginTempUp){
                     beginTempUp = true;
                     startTempCalDate = bleHisData.getDate().getTime();
@@ -269,7 +289,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
                     overMaxTempLimitTime += endTempCalDate - startTempCalDate;
                 }
             }
-            if(tempAlarmDown != 4095 && bleHisData.getTemp() < tempAlarmDown){
+            if(tempAlarmDown != 4095 && bleHisData.getTemp() < tempAlarmDown && bleHisData.getTemp() != -999){
                 if (!beginTempDown){
                     beginTempDown = true;
                     startTempCalDate = bleHisData.getDate().getTime();
@@ -283,7 +303,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
                 }
             }
             if(deviceType.equals("S02") || deviceType.equals("S10")){
-                if(humidityAlarmUp != 4095 && bleHisData.getHumidity() > humidityAlarmUp){
+                if(humidityAlarmUp != 4095 && bleHisData.getHumidity() > humidityAlarmUp && bleHisData.getHumidity() != -999){
                     if (!beginHumidityUp){
                         beginHumidityUp = true;
                         startHumidityCalDate = bleHisData.getDate().getTime();
@@ -296,7 +316,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
                         overMaxHumidityLimitTime += endHumidityCalDate - startHumidityCalDate;
                     }
                 }
-                if(humidityAlarmDown != 4095 && bleHisData.getHumidity() < humidityAlarmDown){
+                if(humidityAlarmDown != 4095 && bleHisData.getHumidity() < humidityAlarmDown  && bleHisData.getHumidity() != -999){
                     if (!beginHumidityDown){
                         beginHumidityDown = true;
                         startHumidityCalDate = bleHisData.getDate().getTime();
@@ -410,9 +430,19 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
         txS02TempHead.setText(getResources().getString(R.string.table_head_temp) + "(" + BleDeviceData.getCurTempUnit(HistoryReportActivity.this) + ")");
         txS02HumidityHead.setText(getResources().getString(R.string.table_head_humidity));
         txS02TempStart.setText(beginTemp);
-        txS02HumidityStart.setText(String.valueOf(beginHumidity));
+        if(beginHumidity == -999){
+            txS02HumidityStart.setText("-");
+        }else{
+            txS02HumidityStart.setText(String.valueOf(beginHumidity));
+        }
+
         txS02TempEnd.setText(endTemp);
-        txS02HumidityEnd.setText(String.valueOf(endHumidity));
+        if(endHumidity == -999){
+            txS02HumidityEnd.setText("-");
+        }else{
+            txS02HumidityEnd.setText(String.valueOf(endHumidity));
+        }
+
         if(tempAlarmUp != 4095){
             txS02TempMaxLimit.setText(BleDeviceData.getCurTemp(HistoryReportActivity.this,tempAlarmUp));
         }else{
@@ -701,7 +731,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
             };
             xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
             xAxis.setValueFormatter( formatter);
-
+            xAxis.setLabelCount(3);
             xAxis.setEnabled(true);
 
             // vertical grid lines
@@ -843,7 +873,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
             xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
             xAxis.setValueFormatter( formatter);
             xAxis.setEnabled(true);
-
+            xAxis.setLabelCount(3);
             // vertical grid lines
 //            xAxis.enableGridDashedLine(10f, 10f, 0f);
             xAxis.setDrawAxisLine(true);
@@ -927,6 +957,9 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
         IFormat<Float> humidityFormat =  new IFormat<Float>() {
             @Override
             public String format(Float value) {
+                if(value == -999){
+                    return "-";
+                }
                 return String.format("%.0f",value);
             }
         };
@@ -1019,7 +1052,9 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
         for (int i = 0; i < showBleHisData.size(); i++) {
             BleHisData bleHisData = showBleHisData.get(i);
             float val = bleHisData.getTemp();
-            tempValues.add(new Entry(i, val, getResources().getDrawable(R.mipmap.star)));
+            if(bleHisData.getTemp() != -999){
+                tempValues.add(new Entry(i, val, getResources().getDrawable(R.mipmap.star)));
+            }
         }
 
         LineDataSet tempSet;
@@ -1066,8 +1101,10 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
         LineDataSet humiditySet;
         for (int i = 0; i < showBleHisData.size(); i++) {
             BleHisData bleHisData = showBleHisData.get(i);
-            float val = bleHisData.getHumidity();
-            humidityValues.add(new Entry(i, val, getResources().getDrawable(R.mipmap.star)));
+            if(bleHisData.getHumidity() != -999){
+                float val = bleHisData.getHumidity();
+                humidityValues.add(new Entry(i, val, getResources().getDrawable(R.mipmap.star)));
+            }
         }
         if (humidityChart.getData() != null &&
                 humidityChart.getData().getDataSetCount() > 0) {
@@ -1746,7 +1783,11 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
                 PdfPCell tableTempValueCell = new PdfPCell(new Paragraph(BleDeviceData.getCurTemp(HistoryReportActivity.this,bleHisData.getTemp())));
                 detailTable.addCell(tableTempValueCell);
                 if(deviceType.equals("S02") || deviceType.equals("S10")){
-                    PdfPCell tableHumidityValueCell = new PdfPCell(new Paragraph(String.format("%.0f",bleHisData.getHumidity())));
+                    String humidityStr = "-";
+                    if(bleHisData.getHumidity() != -999){
+                        humidityStr = String.format("%.0f",bleHisData.getHumidity());
+                    }
+                    PdfPCell tableHumidityValueCell = new PdfPCell(new Paragraph(humidityStr));
                     detailTable.addCell(tableHumidityValueCell);
                     String propValue = bleHisData.getProp() == 1 ? getResources().getString(R.string.prop_light) : getResources().getString(R.string.prop_dark);
                     PdfPCell tablePropValueCell = new PdfPCell(new Paragraph(selector.process(propValue)));
@@ -1891,7 +1932,11 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
             line.add(bleHisData.getBattery() + "%");
             line.add(BleDeviceData.getCurTemp(HistoryReportActivity.this,bleHisData.getTemp()) + BleDeviceData.getCurTempUnit(HistoryReportActivity.this));
             if(deviceType.equals("S02") || deviceType.equals("S10")){
-                line.add(String.format("%.0f",bleHisData.getHumidity()));
+                String humidityStr = "-";
+                if(bleHisData.getHumidity() != -999){
+                    humidityStr = String.format("%.0f",bleHisData.getHumidity());
+                }
+                line.add(humidityStr);
                 String propValue = bleHisData.getProp() == 1 ? getResources().getString(R.string.prop_light) : getResources().getString(R.string.prop_dark);
                 line.add(propValue);
             }else{
@@ -2221,7 +2266,11 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
 
                 if(deviceType.equals("S02") || deviceType.equals("S10")){
                     colIndex++;
-                    addExcelString(mWritableSheet,colIndex,rowIndex,String.format("%.0f",bleHisData.getHumidity()));
+                    String humidityStr = "-";
+                    if(bleHisData.getHumidity() != -999){
+                        humidityStr = String.format("%.0f",bleHisData.getHumidity());
+                    }
+                    addExcelString(mWritableSheet,colIndex,rowIndex,humidityStr);
                     colIndex++;
                     String propValue = bleHisData.getProp() == 1 ? getResources().getString(R.string.prop_light) : getResources().getString(R.string.prop_dark);
                     addExcelString(mWritableSheet,colIndex,rowIndex,propValue);

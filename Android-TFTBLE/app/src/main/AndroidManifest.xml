@@ -39,6 +39,9 @@
         android:usesCleartextTraffic="true"
         tools:replace="android:icon, android:theme">
         <activity
+            android:name=".EditPulseDelayActivity"
+            android:exported="false" />
+        <activity
             android:name=".EditRS485CmdActivity"
             android:exported="false" />
 

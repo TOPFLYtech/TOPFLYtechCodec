@@ -29,8 +29,8 @@
     <string name="temp_low_alarm">Temperature low alarm:</string>
     <string name="humidity_high_alarm">Humidity high alarm:</string>
     <string name="humidity_low_alarm">Humidity low alarm:</string>
-    <string name="save_count">Save count:</string>
-    <string name="save_alarm_count">Save alarm count:</string>
+    <string name="save_count">History count:</string>
+    <string name="save_alarm_count">Alarm count:</string>
     <string name="record_control">Record control:</string>
     <string name="stop_record">Stop record</string>
     <string name="start_record">Start record</string>
@@ -295,4 +295,19 @@
     <string name="ambient_light_desc">Ambient Light:</string>
     <string name="end_date">End date</string>
     <string name="start_date">Start date</string>
+    <string name="upgrade_device_to">Upgrade device to</string>
+    <string name="relay_delay">Delay</string>
+    <string name="relay_pulse">Pulse</string>
+    <string name="relay_delay_error_warning">The delay value must be between 3 and 255.</string>
+    <string name="cycle_time">Cycle time(ms)</string>
+    <string name="init_enable_time">Init enable time(ms)</string>
+    <string name="toggle_time">Toggle times</string>
+    <string name="recover_time">Recover time(min)</string>
+    <string name="cycle_time_warning">Cycle time value must be between 100 and 65535.</string>
+    <string name="init_enable_time_warning">Init enable time value must be between 10 and 65535.</string>
+    <string name="toggle_time_warning">Toggle times value must be between 1 and 65535.</string>
+    <string name="recover_time_warning">Recover time value must be between 0 and 255.</string>
+    <string name="flashing_relay">Relay periodic switching</string>
+    <string name="confirm_regular_relay_warning">Try switching the relay on and off periodically?</string>
+    <string name="cycle_time_error_warning">Cycle time must be greater than init enable time.</string>
 </resources>

@@ -22,11 +22,11 @@
     <string name="humidity_high_alarm">湿度高报警：</string>
     <string name="temp_low_alarm">温度过低警报：</string>
     <string name="configDesc">配置：</string>
-    <string name="save_alarm_count">保存警报计数：</string>
+    <string name="save_alarm_count">警报计数：</string>
     <string name="password_show">******</string>
     <string name="password">密码：</string>
     <string name="config">配置</string>
-    <string name="save_count">保存计数：</string>
+    <string name="save_count">历史计数：</string>
     <string name="clear_record">清除记录</string>
     <string name="led">Led：</string>
     <string name="reset_factory_desc">恢复出厂设置：</string>
@@ -296,4 +296,19 @@
     <string name="ambient_light_desc">环境光:</string>
     <string name="end_date">结束日期</string>
     <string name="start_date">开始日期</string>
+    <string name="upgrade_device_to">升级设备为</string>
+    <string name="relay_delay">延时</string>
+    <string name="relay_pulse">脉冲</string>
+    <string name="relay_delay_error_warning">延时的值必须在3到255之间.</string>
+    <string name="cycle_time">周期时长(ms)</string>
+    <string name="init_enable_time">首亮时长(ms)</string>
+    <string name="toggle_time">切换次数</string>
+    <string name="recover_time">恢复时间(min)</string>
+    <string name="cycle_time_warning">周期时长值必须在100到65535之间.</string>
+    <string name="init_enable_time_warning">首亮时长值必须在10到65535之间.</string>
+    <string name="toggle_time_warning">切换次数值必须在1到65535之间.</string>
+    <string name="recover_time_warning">恢复时间值必须在0到255之间.</string>
+    <string name="flashing_relay">继电器周期性开关</string>
+    <string name="confirm_regular_relay_warning">尝试周期性切换继电器?</string>
+    <string name="cycle_time_error_warning">周期时长必须大于首亮时长.</string>
 </resources>

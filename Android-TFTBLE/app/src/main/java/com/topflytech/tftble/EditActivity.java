@@ -33,6 +33,7 @@ import com.inuker.bluetooth.library.connect.response.BleConnectResponse;
 import com.inuker.bluetooth.library.connect.response.BleNotifyResponse;
 import com.inuker.bluetooth.library.connect.response.BleWriteResponse;
 import com.inuker.bluetooth.library.model.BleGattProfile;
+import com.itextpdf.xmp.impl.Utils;
 import com.topflytech.tftble.data.BleDeviceData;
 import com.topflytech.tftble.data.BleHisData;
 import com.topflytech.tftble.data.DfuService;
@@ -44,6 +45,7 @@ import com.topflytech.tftble.data.WriteSensorObj;
 import com.topflytech.tftble.view.SwitchButton;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -99,6 +101,7 @@ public class EditActivity extends AppCompatActivity {
     private OptionsPickerView pvRs385BaudRate;
     private OptionsPickerView pvBroadcastType;
     private OptionsPickerView pvBroadcastCycle;
+    private OptionsPickerView pvRelayType;
     public static final int REQUEST_CHANGE_PWD = 1;
     public static final int RESPONSE_CHANGE_PWD = 1;
 
@@ -123,15 +126,19 @@ public class EditActivity extends AppCompatActivity {
     public static final int RESPONSE_RS485_SEND_DATA = 9;
     public static final int REQUEST_SEND_INSTRUCTION_SEQUENCE = 10;
     public static final int RESPONSE_SEND_INSTRUCTION_SEQUENCE = 10;
+
+    public static final int REQUEST_EDIT_PULSE_DELAY = 11;
+    public static final int RESPONSE_EDIT_PULSE_DELAY = 11;
     private long startTimestamp,endTimestamp;
     private int transmittedPower;
     private boolean pwdErrorWarning = false;
     private TextView relayStatusTV;
-
+    private boolean relayFlashEnable = false;
     private ArrayList<String> portList;
     private boolean isWaitResponse = false;
     private LinkedBlockingQueue<WriteSensorObj> waitingSendMsgQueue = new LinkedBlockingQueue<>();
     private boolean isSendMsgThreadRunning = true;
+    private  ArrayList<String>  relayTypeList;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -168,6 +175,11 @@ public class EditActivity extends AppCompatActivity {
             add(getResources().getString(R.string.din_status_event_rising_edge));
             add(getResources().getString(R.string.din_status_event_falling_edge));
             add(getResources().getString(R.string.din_status_event_bilateral_margin));
+        }};
+        relayTypeList = new ArrayList<String>(){{
+            add(getResources().getString(R.string.normal));
+            add(getResources().getString(R.string.relay_delay));
+            add(getResources().getString(R.string.relay_pulse));
         }};
         oneWireWorkModeList = new ArrayList<String>(){{
             add(getResources().getString(R.string.close));
@@ -341,14 +353,15 @@ public class EditActivity extends AppCompatActivity {
         add("30s");
     }};
 
+
     private ArrayList<String> saveIntervalList = new ArrayList<>();
     private TextView deviceNameTV,modelTV,hardwareTV,softwareTV,broadcastCycleTV,saveRecordIntervalTV,
         tempHighAlarmTV,tempLowAlarmTV,humidityHighAlarmTV,humidityLowAlarmTV,saveCountTV,alarmCountTV,transmittedPowerTV,dinVoltageTV,dinStatusEventTV,
             dinStatusEventTypeTV,oneWireWorkModeTV,rs485BaudRateTV,broadcastTypeTV,gSensorSensitivityTV,gSensorDetectionIntervalTV,gSensorDetectionDurationTV,
             beaconMajorSetTV ,  beaconMinorSetTV ,  eddystoneNidSetTV, eddystoneBidSetTV;
-    private SwitchButton ledSwitch,relaySwitch, lightSensorEnableSwitch,rs485EnableSwitch,longRangeEnableSwitch,gSensorEnableSwitch,doorEnableSwitch;
-    private LinearLayout saveRecordIntervalLL,humidityHighAlarmLL,humidityLowAlarmLL,recordControlLL,relayLL,transmittedPowerLL,transmittedPowerLineLL,
-            saveRecordIntervaLineLL,humidityHighAlarmLineLL,humidityLowAlarmLineLL, recordControlLineLL,relayLineLL,
+    private SwitchButton ledSwitch,relaySwitch, relayFlashingSwitch,lightSensorEnableSwitch,rs485EnableSwitch,longRangeEnableSwitch,gSensorEnableSwitch,doorEnableSwitch;
+    private LinearLayout saveRecordIntervalLL,humidityHighAlarmLL,humidityLowAlarmLL,recordControlLL,relayLL,relayFlashingLL,transmittedPowerLL,transmittedPowerLineLL,
+            saveRecordIntervaLineLL,humidityHighAlarmLineLL,humidityLowAlarmLineLL, recordControlLineLL,relayLineLL,relayFlashingLineLL,
             readSaveCountLL,readSaveCountLineLL,readAlarmLL,readAlarmLineLL, clearRecordLineLL, clearRecordLL, lightSensorEnableLineLL, lightSensorEnableLL,
             readDinVoltageLL,readDinVoltageLineLL,dinStatusEventLL,dinStatusEventLineLL,readDinStatusEventTypeLL,readDinStatusEventTypeLineLL,
             doutStatusLL,doutStatusLineLL,readAinVoltageLL,readAinVoltageLineLL,setPositiveNegativeWarningLL,setPositiveNegativeWarningLineLL,
@@ -398,27 +411,138 @@ public class EditActivity extends AppCompatActivity {
         relaySwitch.setOnSwitchChangeListener(new SwitchButton.OnSwitchChangeListener() {
             @Override
             public void onSwitchChanged(boolean open) {
+                if(Integer.valueOf(software) >= 18){
+                    pvRelayType.show();
+                }else{
+                    if(MyUtils.isDebug){
+                        writeRelayStatus();
+                        return;
+                    }
+                    SweetAlertDialog confirmRelayDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.NORMAL_TYPE);
+                    confirmRelayDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
+                    confirmRelayDlg.setTitleText(getResources().getString(R.string.confirm_relay_warning));
+                    confirmRelayDlg.setCancelable(true);
+                    confirmRelayDlg.setCancelText(getResources().getString(R.string.cancel));
+                    confirmRelayDlg.setConfirmText(getResources().getString(R.string.confirm));
+                    confirmRelayDlg.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                        @Override
+                        public void onClick(SweetAlertDialog sweetAlertDialog) {
+                            sweetAlertDialog.hide();
+                            writeRelayStatus();
+                        }
+                    });
+                    confirmRelayDlg.show();
+                }
+            }
+        });
+        relayFlashingSwitch = (SwitchButton)findViewById(R.id.switch_flashing_relay);
+        relayFlashingSwitch.setOnSwitchChangeListener(new SwitchButton.OnSwitchChangeListener() {
+            @Override
+            public void onSwitchChanged(boolean open) {
                 if(MyUtils.isDebug){
-                    writeRelayStatus();
+                    writeFlashingRelayStatus();
                     return;
                 }
                 SweetAlertDialog confirmRelayDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.NORMAL_TYPE);
                 confirmRelayDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
-                confirmRelayDlg.setTitleText(getResources().getString(R.string.confirm_relay_warning));
+                confirmRelayDlg.setTitleText(getResources().getString(R.string.confirm_regular_relay_warning));
                 confirmRelayDlg.setCancelable(true);
                 confirmRelayDlg.setCancelText(getResources().getString(R.string.cancel));
                 confirmRelayDlg.setConfirmText(getResources().getString(R.string.confirm));
+                confirmRelayDlg.setCancelClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                    @Override
+                    public void onClick(SweetAlertDialog sweetAlertDialog) {
+                        sweetAlertDialog.hide();
+                        relayFlashingSwitch.setSwitchStatus(!relayFlashingSwitch.getSwitchStatus());
+                    }
+                });
                 confirmRelayDlg.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
                     @Override
                     public void onClick(SweetAlertDialog sweetAlertDialog) {
                         sweetAlertDialog.hide();
-                        writeRelayStatus();
+                        writeFlashingRelayStatus();
                     }
                 });
                 confirmRelayDlg.show();
-
             }
         });
+        pvRelayType = new OptionsPickerBuilder(EditActivity.this, new OnOptionsSelectListener() {
+            @Override
+            public void onOptionsSelect(int options1, int option2, int options3 ,View v) {
+                //返回的分别是三个级别的选中位置
+                if(options1 == 0){
+                    if(MyUtils.isDebug){
+                        writeRelayStatus();
+                        return;
+                    }
+                    SweetAlertDialog confirmRelayDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.NORMAL_TYPE);
+                    confirmRelayDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
+                    confirmRelayDlg.setTitleText(getResources().getString(R.string.confirm_relay_warning));
+                    confirmRelayDlg.setCancelable(true);
+                    confirmRelayDlg.setCancelText(getResources().getString(R.string.cancel));
+                    confirmRelayDlg.setConfirmText(getResources().getString(R.string.confirm));
+                    confirmRelayDlg.setCancelClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                        @Override
+                        public void onClick(SweetAlertDialog sweetAlertDialog) {
+                            sweetAlertDialog.hide();
+                            relaySwitch.setSwitchStatus(!relaySwitch.getSwitchStatus());
+                        }
+                    });
+                    confirmRelayDlg.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                        @Override
+                        public void onClick(SweetAlertDialog sweetAlertDialog) {
+                            sweetAlertDialog.hide();
+                            writeRelayStatus();
+                        }
+                    });
+                    confirmRelayDlg.show();
+                }else if(options1 == 1){
+                    SweetAlertDialog confirmDelayRelayDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.INPUT_TYPE);
+                    confirmDelayRelayDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
+                    confirmDelayRelayDlg.setTitleText(getResources().getString(R.string.confirm_relay_warning));
+                    confirmDelayRelayDlg.setCancelable(true);
+                    confirmDelayRelayDlg.setInputType(InputType.TYPE_CLASS_NUMBER);
+                    confirmDelayRelayDlg.setCancelText(getResources().getString(R.string.cancel));
+                    confirmDelayRelayDlg.setConfirmText(getResources().getString(R.string.confirm));
+                    confirmDelayRelayDlg.setCancelClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                        @Override
+                        public void onClick(SweetAlertDialog sweetAlertDialog) {
+                            sweetAlertDialog.hide();
+                            relaySwitch.setSwitchStatus(!relaySwitch.getSwitchStatus());
+                        }
+                    });
+                    confirmDelayRelayDlg.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                        @Override
+                        public void onClick(SweetAlertDialog sweetAlertDialog) {
+                            String delayValue = sweetAlertDialog.getInputText();
+                            if(delayValue.length() > 0){
+                                int delayInt = Float.valueOf(delayValue).intValue();
+                                if (delayInt >= 3 && delayInt <= 255){
+                                    writeDelayRelayStatus(delayInt);
+                                    sweetAlertDialog.hide();
+                                }else{
+                                    Toast.makeText(EditActivity.this,R.string.relay_delay_error_warning,Toast.LENGTH_SHORT).show();
+                                }
+                            }else{
+                                Toast.makeText(EditActivity.this,R.string.input_error,Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+                    confirmDelayRelayDlg.show();
+                }else if(options1 ==2){
+                    relaySwitch.setSwitchStatus(!relaySwitch.getSwitchStatus());
+                    Intent intent = new Intent(EditActivity.this,EditPulseDelayActivity.class);
+                    startActivityForResult(intent,REQUEST_EDIT_PULSE_DELAY);
+                }
+            }
+        }).addOnCancelClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                relaySwitch.setSwitchStatus(!relaySwitch.getSwitchStatus());
+            }
+        }).build();
+
+        pvRelayType.setPicker(relayTypeList);
         btnEditDeviceName = (Button)findViewById(R.id.btn_edit_device_name);
         btnEditDeviceName.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -1455,19 +1579,21 @@ public class EditActivity extends AppCompatActivity {
         transmittedPowerLL = (LinearLayout)findViewById(R.id.line_transmitted_power);
         transmittedPowerLineLL = (LinearLayout)findViewById(R.id.line_line_transmitted_power);
         relayLL = (LinearLayout)findViewById(R.id.line_relay);
+        relayLineLL = (LinearLayout)findViewById(R.id.line_line_relay);
+        relayFlashingLL = (LinearLayout)findViewById(R.id.line_flashing_relay);
         lightSensorEnableLL = (LinearLayout)findViewById(R.id.line_light_sensor);
         saveRecordIntervalLL.setVisibility(View.GONE);
         humidityLowAlarmLL.setVisibility(View.GONE);
         humidityHighAlarmLL.setVisibility(View.GONE);
         recordControlLL.setVisibility(View.GONE);
         relayLL.setVisibility(View.GONE);
+        relayFlashingLL.setVisibility(View.GONE);
         clearRecordLL.setVisibility(View.GONE);
-        relayLL.setVisibility(View.GONE);
         saveRecordIntervaLineLL = (LinearLayout)findViewById(R.id.line_line_save_record_interval);
         humidityLowAlarmLineLL = (LinearLayout)findViewById(R.id.line_line_humidity_low_alarm);
         humidityHighAlarmLineLL = (LinearLayout)findViewById(R.id.line_line_humidity_high_alarm);
         recordControlLineLL = (LinearLayout)findViewById(R.id.line_line_record_control);
-        relayLineLL = (LinearLayout)findViewById(R.id.line_line_relay);
+        relayFlashingLineLL = (LinearLayout)findViewById(R.id.line_line_flashing_relay);
         lightSensorEnableLineLL = (LinearLayout)findViewById(R.id.line_line_light_sensor);
         readSaveCountLL = (LinearLayout)findViewById(R.id.line_save_count);
         readSaveCountLineLL = (LinearLayout)findViewById(R.id.line_line_save_count);
@@ -1480,6 +1606,7 @@ public class EditActivity extends AppCompatActivity {
         humidityHighAlarmLineLL.setVisibility(View.GONE);
         recordControlLineLL.setVisibility(View.GONE);
         relayLineLL.setVisibility(View.GONE);
+        relayFlashingLineLL.setVisibility(View.GONE);
         readSaveCountLineLL.setVisibility(View.GONE);
         readSaveCountLL.setVisibility(View.GONE);
         readAlarmLL.setVisibility(View.GONE);
@@ -1636,6 +1763,10 @@ public class EditActivity extends AppCompatActivity {
             }
             relayLL.setVisibility(View.VISIBLE);
             relayLineLL.setVisibility(View.VISIBLE);
+            if(Integer.valueOf(software) >= 18){
+                relayFlashingLL.setVisibility(View.VISIBLE);
+                relayFlashingLineLL.setVisibility(View.VISIBLE);
+            }
             tempLowAlarmLL.setVisibility(View.VISIBLE);
             tempLowAlarmLineLL.setVisibility(View.VISIBLE);
             tempHighAlarmLL.setVisibility(View.VISIBLE);
@@ -1849,6 +1980,12 @@ public class EditActivity extends AppCompatActivity {
         }else if(requestCode == REQUEST_SEND_INSTRUCTION_SEQUENCE && resultCode == RESPONSE_SEND_INSTRUCTION_SEQUENCE){
             String cmd = data.getStringExtra("cmd");
             writeSendInstructionSequence(cmd);
+        }else if(requestCode == REQUEST_EDIT_PULSE_DELAY && resultCode == RESPONSE_EDIT_PULSE_DELAY){
+            Integer cycleTime = data.getIntExtra("cycleTime",-1);
+            Integer initEnableTime = data.getIntExtra("initEnableTime",-1);
+            Integer toggleTime = data.getIntExtra("toggleTime",-1);
+            Integer recoverTime = data.getIntExtra("recoverTime",-1);
+            writePulseRelayStatus(cycleTime,initEnableTime,toggleTime,recoverTime);
         }
     }
     SweetAlertDialog.OnSweetClickListener sweetPwdCancelClick = new SweetAlertDialog.OnSweetClickListener() {
@@ -2563,8 +2700,13 @@ public class EditActivity extends AppCompatActivity {
                 for(byte[] byteDataArray : mergeData){
                     boolean dataCorrect = MyUtils.checkOriginHisDataCrc(byteDataArray);
                     if(dataCorrect){
-                        ArrayList<BleHisData> bleHisDataList = MyUtils.parseS02BleHisData(byteDataArray);
-                        allBleHisData.addAll(bleHisDataList);
+                        if(deviceType.equals("S10")){
+                            ArrayList<BleHisData> bleHisDataList = MyUtils.parseS10BleHisData(byteDataArray);
+                            allBleHisData.addAll(bleHisDataList);
+                        }else{
+                            ArrayList<BleHisData> bleHisDataList = MyUtils.parseS02BleHisData(byteDataArray);
+                            allBleHisData.addAll(bleHisDataList);
+                        }
                     }else{
 //                        Toast.makeText(EditActivity.this,"Data not correct",Toast.LENGTH_LONG).show();
                     }
@@ -2911,10 +3053,16 @@ public class EditActivity extends AppCompatActivity {
         if (resp[2] == 0){
             relayStatusTV.setText("NC");
             relaySwitch.setSwitchStatus(false);
+
         }else{
             relayStatusTV.setText("NO");
             relaySwitch.setSwitchStatus(true);
         }
+        if(resp.length >= 5){
+            relayFlashEnable = resp[3] == 0x01;
+            relayFlashingSwitch.setSwitchStatus(relayFlashEnable);
+        }
+
     }
     private void readLightSensorOpen(){
         if(!isCurrentDeviceTypeFunc("lightSensorOpen")){
@@ -3424,6 +3572,38 @@ public class EditActivity extends AppCompatActivity {
             data = new byte[]{0};
         }
         writeArrayData(MyUtils.controlFunc.get("relay").get("write"),data,uuid);
+    }
+
+    private void writeDelayRelayStatus(int delayTime){
+        byte[] data = new byte[2];
+        if(relaySwitch.getSwitchStatus()){
+            data[0] = 0x01;
+        }else{
+            data[0] = 0x00;
+        }
+        data[1] = (byte)delayTime;
+        writeArrayData(MyUtils.controlFunc.get("relay").get("write"),data,uuid);
+    }
+
+    private void writeFlashingRelayStatus(){
+        byte[] data = new byte[2];
+        data[0] = 0x02;
+        data[1] =(relayFlashEnable ?  (byte)0x00 :  (byte)0x01);
+        writeArrayData(MyUtils.controlFunc.get("relay").get("write"),data,uuid);
+    }
+
+    private void writePulseRelayStatus(int cycleTime,int initEnableTime,int toggleTime,int recoverTime){
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try {
+            outputStream.write(0x03);
+            outputStream.write(MyUtils.short2Bytes(cycleTime));
+            outputStream.write(MyUtils.short2Bytes(initEnableTime));
+            outputStream.write(MyUtils.short2Bytes(toggleTime));
+            outputStream.write(recoverTime);
+            writeArrayData(MyUtils.controlFunc.get("relay").get("write"),outputStream.toByteArray(),uuid);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void writeShutdown(){

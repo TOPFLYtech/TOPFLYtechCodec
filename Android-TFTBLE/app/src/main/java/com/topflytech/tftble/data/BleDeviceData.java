@@ -343,6 +343,9 @@ public class BleDeviceData {
 
 
     public static String getCurTemp(Context context, float sourceTemp){
+        if(sourceTemp == -999){
+            return "-";
+        }
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
         String tempUnit = preferences.getString("tempUnit","0");
         if(tempUnit != null && tempUnit.equals("0")){
@@ -599,7 +602,7 @@ public class BleDeviceData {
                             this.broadcastType = "Eddystone T-button";
                         }
                         int batteryVoltage = MyUtils.bytes2Short(data,14);
-                        battery = String.format("%.3f V",batteryVoltage / 1000.0f);
+                        battery = String.format("%.2f V",batteryVoltage / 1000.0f);
                         batteryPercent = (data[16] & 0xff) + "%";
                         byte warnByte = data[17];
                         warn = warnByte;
@@ -650,7 +653,7 @@ public class BleDeviceData {
                             //"One wire";
                         }
                         int batteryVoltage = MyUtils.bytes2Short(data,14);
-                        battery = String.format("%.3f V",batteryVoltage / 1000.0f);
+                        battery = String.format("%.2f V",batteryVoltage / 1000.0f);
                         batteryPercent = (data[16] & 0xff) + "%";
                         int tempSrc =  MyUtils.bytes2Short(data,17);
                         int temp = (tempSrc & 0x7fff) * ((tempSrc & 0x8000) == 0x8000 ? -1 : 1);
@@ -671,10 +674,8 @@ public class BleDeviceData {
                             this.moveStatus = (data[22] & 0xff) >> 6;
                             if(moveStatus == 0){
                                 this.move = context.getResources().getString(R.string.move_static);
-                            }else if(moveStatus == 1){
+                            }else {
                                 this.move = context.getResources().getString(R.string.move_move);
-                            }else if(moveStatus == 2){
-                                this.move = context.getResources().getString(R.string.move_forbidden);
                             }
                             int moveInt = MyUtils.bytes2Short(data,22);
                             int stopInt  = MyUtils.bytes2Short(data,23);
@@ -739,18 +740,28 @@ public class BleDeviceData {
                             //"One wire";
                         }
                         int batteryVoltage = MyUtils.bytes2Short(data,14);
-                        battery = String.format("%.3f V",batteryVoltage / 1000.0f);
+                        battery = String.format("%.2f V",batteryVoltage / 1000.0f);
                         batteryPercent = (data[16] & 0xff) + "%";
                         int tempSrc =  MyUtils.bytes2Short(data,17);
-                        int temp = (tempSrc & 0x7fff) * ((tempSrc & 0x8000) == 0x8000 ? -1 : 1);
-                        sourceTemp = temp /100.0f;
+                        if(tempSrc == 65535){
+                            sourceTemp = -999;
+                        }else{
+                            int temp = (tempSrc & 0x7fff) * ((tempSrc & 0x8000) == 0x8000 ? -1 : 1);
+                            sourceTemp = temp /100.0f;
+                        }
+
                         if(data[20] == 0x00){
                             deviceProp = context.getResources().getString(R.string.normal);
                         }else{
                             deviceProp = context.getResources().getString(R.string.strong_light);
                         }
                         byte humidityByte = data[19];
-                        humidity = String.valueOf((int)humidityByte);
+                        if (humidityByte == -1){
+                            humidity = "-";
+                        }else{
+                            humidity = String.valueOf((int)humidityByte);
+                        }
+
 
                         byte warnByte = data[21];
                         warn = warnByte;

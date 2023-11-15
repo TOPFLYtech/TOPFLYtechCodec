@@ -32,8 +32,8 @@ class Utils{
         let version3 = all & 0x7f
         let testByte = data[index+2]
         var software = ""
-        if testByte != 0{
-            return String(format: "%d.%d.%02d  %02x",version1,version2,version3, testByte)
+        if testByte != 0{ 
+            return String(format: "%d.%d.%02d %@",version1,version2,version3, String(data: Data([testByte]), encoding: .utf8)!)
         }else{
             return String(format: "%d.%d.%02d",version1,version2,version3)
         }
@@ -76,6 +76,9 @@ class Utils{
     }
     
     static func getCurTemp(sourceTemp:Float) ->Float{
+        if sourceTemp == -999{
+            return sourceTemp
+        }
         let tempUnit = UserDefaults.standard.integer(forKey: "tempUnit")  
         if tempUnit == 0{
             return sourceTemp
@@ -84,6 +87,9 @@ class Utils{
         }
     }
     static func getSourceTemp(sourceTemp:Float) ->Float{
+        if sourceTemp == -999{
+            return sourceTemp
+        }
         let tempUnit = UserDefaults.standard.integer(forKey: "tempUnit")
         if tempUnit == 0{
             return sourceTemp
@@ -360,6 +366,239 @@ class Utils{
         }
         return resultArray.joined(separator: "")
     }
+    static func dealS10InvalidData(dataList: [BleHisData]) {
+       let THRESHOLD: Double = 0.0001
+       for item in dataList {
+           if abs(Double(item.temp) - 144.4) < THRESHOLD {
+               item.temp = -999
+           }
+           if abs(Double(item.humidity) - 126) < THRESHOLD {
+               item.humidity = -999
+           }
+       }
+    }
+
+    
+    static func parseS10BleHisData(historyArray:[UInt8]) ->[BleHisData]{
+            var timeIntervalTemp = Int(historyArray[1] & 0x3f) * Int((historyArray[1] & 0x40 == 0x40) ? 10 : 5)
+            var dataCount = Utils.bytes2Short(bytes: historyArray,offset: 2)
+            var timeInterval = Int(timeIntervalTemp)
+            var timestamp = Utils.bytes2Integer(buf: historyArray,pos: 4)
+            var curTimestamp = 0
+            var result = [BleHisData]()
+            if dataCount == 0{
+                dealS10InvalidData(dataList:result)
+                return result;
+            }
+            for j in 0...4{
+                var startIndex = 0
+                if j == 0{
+                    startIndex = 8;
+                    curTimestamp = timestamp
+                }
+                var item = BleHisData()
+                var prop = (historyArray[j * 256 + startIndex + 0] & 0x80) == 0x80 ? 1 : 0;
+                var value = Utils.bytes2Short(bytes: historyArray,offset: j * 256 + startIndex + 0) & 0x7fff
+                var temp = Float(((value & 0x7FC0) >> 6) * 4 - 600 )
+                temp = temp  / 10.0
+                var humidity = (value & 0x3F) * 2
+                var battery = historyArray[j * 256 + startIndex + 2] & 0xff
+                item.prop = prop
+                item.temp = temp
+                item.battery = Int(battery)
+                item.humidity = humidity
+                item.dateStamp = curTimestamp
+                result.append(item)
+                if result.count >= dataCount{
+                    dealS10InvalidData(dataList:result)
+                    return result;
+                }
+                curTimestamp += timeInterval
+                var remainByte = Utils.arraysCopyOfRange(src: historyArray, from: j * 256 + startIndex + 3, to: j * 256 + 256)
+                var remainBinaryStr = self.convertByteArrayToBinaryStr(byteArray: remainByte)
+                var remainBinaryChar = Utils.splitSingleStrToCharArr(strToSplit: remainBinaryStr)
+                var i = 0;
+                var dataSize = remainBinaryChar.count
+                while i < dataSize{
+                    var charItem = remainBinaryChar[i]
+                    i+=1
+                    if charItem == "0"{//not change
+                        var lastItem = result[result.count - 1]
+                        var curItem = BleHisData()
+                        curItem.dateStamp = curTimestamp
+                        curItem.humidity = lastItem.humidity
+                        curItem.temp = lastItem.temp
+                        curItem.battery = lastItem.battery
+                        curItem.prop = lastItem.prop
+                        result.append(curItem)
+                        if result.count >= dataCount{
+                            dealS10InvalidData(dataList:result)
+                            return result
+                        }
+                        curTimestamp += timeInterval
+                    }else{
+                        if i >= dataSize{
+                            break
+                        }
+                        let propStatus = remainBinaryChar[i]
+                        i+=1
+                        if i >= dataSize{
+                            break
+                        }
+                        let tempHumidityStatus = remainBinaryChar[i]
+                        i+=1
+                        if tempHumidityStatus == "1"{
+                            if(i+2 > dataSize){
+                                break
+                            }
+                            let firstChar = remainBinaryChar[i]
+                            i+=1
+                            let secondChar = remainBinaryChar[i]
+                            i+=1
+                            if firstChar == "0" && secondChar == "0"{
+                                let lastItem = result[result.count - 1]
+                                let curItem = BleHisData()
+                                curItem.dateStamp = curTimestamp
+                                curItem.humidity = lastItem.humidity
+                                curItem.temp = lastItem.temp
+                                curItem.battery = lastItem.battery
+                                curItem.prop = propStatus == "1" ? 1 : 0
+                                result.append(curItem)
+                                if result.count >= dataCount{
+                                    dealS10InvalidData(dataList:result)
+                                    return result
+                                }
+                                curTimestamp += timeInterval;
+                            }else if firstChar == "0" && secondChar == "1"{//humidity change
+                                if i >= dataSize{
+                                    break
+                                }
+                                var changeChar = remainBinaryChar[i];
+                                i+=1
+                                if changeChar == "0"{
+                                    var lastItem = result[result.count - 1]
+                                    var curItem = BleHisData()
+                                     curItem.dateStamp = curTimestamp
+                                    curItem.humidity = lastItem.humidity + 2
+                                    curItem.temp = lastItem.temp
+                                    curItem.battery = lastItem.battery
+                                    curItem.prop = propStatus == "1" ? 1 : 0
+                                    result.append(curItem)
+                                    if result.count >= dataCount{
+                                        dealS10InvalidData(dataList:result)
+                                        return result
+                                    }
+                                    curTimestamp += timeInterval;
+                                }else{
+                                    var lastItem = result[result.count - 1]
+                                    var curItem = BleHisData()
+                                    curItem.dateStamp = curTimestamp
+                                    curItem.humidity = lastItem.humidity - 2
+                                    curItem.temp = lastItem.temp
+                                    curItem.battery = lastItem.battery
+                                    curItem.prop = propStatus == "1" ? 1 : 0
+                                    result.append(curItem)
+                                    if result.count >= dataCount{
+                                        dealS10InvalidData(dataList:result)
+                                        return result
+                                    }
+                                    curTimestamp += timeInterval;
+                                }
+                            }else if firstChar == "1" && secondChar == "0" {//temp change
+                                if i >= dataSize{
+                                    break
+                                }
+                                var changeChar = remainBinaryChar[i]
+                                i+=1
+                                if changeChar == "0"{
+                                    var lastItem = result[result.count - 1]
+                                    var curItem = BleHisData()
+                                    curItem.dateStamp = curTimestamp
+                                    curItem.humidity = lastItem.humidity
+                                    curItem.temp = lastItem.temp + 0.2
+                                    curItem.battery = lastItem.battery
+                                    curItem.prop = propStatus == "1" ? 1 : 0
+                                    result.append(curItem)
+                                    if result.count >= dataCount{
+                                        dealS10InvalidData(dataList:result)
+                                        return result
+                                    }
+                                    curTimestamp += timeInterval
+                                }else{
+                                    var lastItem = result[result.count - 1]
+                                    var curItem = BleHisData()
+                                    curItem.dateStamp = curTimestamp
+                                    curItem.humidity = lastItem.humidity
+                                    curItem.temp = lastItem.temp - 0.2
+                                    curItem.battery = lastItem.battery
+                                    curItem.prop = propStatus == "1" ? 1 : 0
+                                    result.append(curItem)
+                                    if result.count >= dataCount{
+                                        dealS10InvalidData(dataList:result)
+                                        return result
+                                    }
+                                    curTimestamp += timeInterval;
+                                }
+                            }else{
+                                if i+2 > dataSize{
+                                    break
+                                }
+                                var changeFirstChar = remainBinaryChar[i]
+                                i+=1
+                                var changeSecondChar = remainBinaryChar[i]
+                                i+=1
+                                var tempChange = changeFirstChar == "0" ? 0.2 : -0.2
+                                var humidityChange = changeSecondChar == "0" ? 2 : -2
+                                var lastItem = result[result.count - 1]
+                                var curItem = BleHisData()
+                                curItem.dateStamp = curTimestamp
+                                curItem.humidity = lastItem.humidity + humidityChange
+                                curItem.temp = (lastItem.temp ?? 0) + Float(tempChange)
+                                curItem.battery = lastItem.battery
+                                curItem.prop = propStatus == "1" ? 1 : 0
+                                result.append(curItem)
+                                if result.count >= dataCount{
+                                    dealS10InvalidData(dataList:result)
+                                    return result
+                                }
+                                curTimestamp += timeInterval
+                            }
+                        }else{
+                            if i+15 > dataSize{
+                                break
+                            }
+                            var tempCharArray = Utils.arraysCopyOfRange(src: remainBinaryChar, from: i, to: i + 9)
+                            i+=9
+                            var humidityCharArray = Utils.arraysCopyOfRange(src: remainBinaryChar,from: i,to: i+6)
+                            i+=6
+                            var tempLong = Utils.binaryCharArrayToLong(binaryArray: tempCharArray)
+                            var humidityLong = Utils.binaryCharArrayToLong(binaryArray: humidityCharArray)
+                            var curTemp = Float(tempLong * 4 - 600 )
+                            curTemp = curTemp / 10.0
+                            var curHumidity = humidityLong * 2
+                            var lastItem = result[result.count - 1]
+                            var curItem = BleHisData()
+                            curItem.dateStamp = curTimestamp
+                            curItem.humidity = curHumidity
+                            curItem.temp = curTemp
+                            curItem.battery = lastItem.battery
+                            curItem.prop = propStatus == "1" ? 1 : 0
+                            result.append(curItem)
+                            if result.count >= dataCount{
+                                dealS10InvalidData(dataList:result)
+                                return result
+                            }
+                            curTimestamp += timeInterval
+                        }
+                    }
+                }
+                
+            }
+            
+            dealS10InvalidData(dataList:result)
+            return result;
+            
+        }
     
     static func parseS02BleHisData(historyArray:[UInt8]) ->[BleHisData]{
         var timeIntervalTemp = Int(historyArray[1] & 0x3f) * Int((historyArray[1] & 0x40 == 0x40) ? 10 : 5)

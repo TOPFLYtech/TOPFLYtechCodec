@@ -310,6 +310,7 @@ class DeviceS10Cell: UITableViewCell {
         self.minorLabel.isHidden = false
         self.minorContentLabel.isHidden = false
         self.warnLabel.isHidden = false
+        self.warnContentLabel.isHidden = false
         marqueeView.isHidden = false
         self.nidLabel.isHidden = false
         self.nidContentLabel.isHidden = false
@@ -370,6 +371,7 @@ class DeviceS10Cell: UITableViewCell {
             self.minorContentLabel.isHidden = true
             self.warnLabel.isHidden = true
             marqueeView.isHidden = true
+            self.warnContentLabel.isHidden = true
             self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 350)
         }else if broadcastType == "Long range"{
             self.batteryLabel.frame = CGRect(x: 8, y: height, width: Int(descWidth), height: 30)
@@ -402,7 +404,8 @@ class DeviceS10Cell: UITableViewCell {
             self.minorContentLabel.isHidden = true
             
             self.warnLabel.frame = CGRect(x: 8, y: height, width: Int(descWidth), height: 30)
-            marqueeView.frame = CGRect(x: contentX, y: CGFloat(height), width: self.bounds.size.width - contentX, height: 30)
+            self.warnContentLabel.frame = CGRect(x: contentX, y: CGFloat(height), width: self.bounds.size.width - contentX, height: 30)
+//            marqueeView.frame = CGRect(x: contentX, y: CGFloat(height), width: self.bounds.size.width - contentX, height: 30)
             height += 30
             self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 440)
         }else if broadcastType == "Beacon"{
@@ -421,17 +424,21 @@ class DeviceS10Cell: UITableViewCell {
             self.nidContentLabel.isHidden = true
             self.bidLabel.isHidden = true
             self.bidContentLabel.isHidden = true
-            
-            self.majorLabel.frame = CGRect(x: 8, y: height, width: Int(descWidth), height: 30)
-            self.majorContentLabel.frame = CGRect(x: contentX, y: CGFloat(height), width: self.bounds.size.width - contentX, height: 30)
-            height += 30
-            self.minorLabel.frame = CGRect(x: 8, y: height, width: Int(descWidth), height: 30)
-            self.minorContentLabel.frame = CGRect(x: contentX, y: CGFloat(height), width: self.bounds.size.width - contentX, height: 30)
-            height += 30
+            self.majorLabel.isHidden = true
+            self.majorContentLabel.isHidden = true
+            self.minorLabel.isHidden = true
+            self.minorContentLabel.isHidden = true
+//            self.majorLabel.frame = CGRect(x: 8, y: height, width: Int(descWidth), height: 30)
+//            self.majorContentLabel.frame = CGRect(x: contentX, y: CGFloat(height), width: self.bounds.size.width - contentX, height: 30)
+//            height += 30
+//            self.minorLabel.frame = CGRect(x: 8, y: height, width: Int(descWidth), height: 30)
+//            self.minorContentLabel.frame = CGRect(x: contentX, y: CGFloat(height), width: self.bounds.size.width - contentX, height: 30)
+//            height += 30
             
             self.warnLabel.isHidden = true
             marqueeView.isHidden = true
-            self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 350)
+            self.warnContentLabel.isHidden = true
+            self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 290)
         }else{
             self.batteryLabel.frame = CGRect(x: 8, y: height, width: Int(descWidth), height: 30)
             self.batteryContentLabel.frame = CGRect(x: contentX, y: CGFloat(height), width: self.bounds.size.width - contentX, height: 30)
@@ -460,9 +467,10 @@ class DeviceS10Cell: UITableViewCell {
             self.majorContentLabel.isHidden = true
             self.minorLabel.isHidden = true
             self.minorContentLabel.isHidden = true
-            
+            self.warnContentLabel.frame = CGRect(x: contentX, y: CGFloat(height), width: self.bounds.size.width - contentX, height: 30)
+       
             self.warnLabel.frame = CGRect(x: 8, y: height, width: Int(descWidth), height: 30)
-            marqueeView.frame = CGRect(x: contentX, y: CGFloat(height), width: self.bounds.size.width - contentX, height: 30)
+//            marqueeView.frame = CGRect(x: contentX, y: CGFloat(height), width: self.bounds.size.width - contentX, height: 30)
             height += 30
             self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 470)
         }
@@ -517,7 +525,8 @@ class DeviceS10Cell: UITableViewCell {
         self.minorContentLabel.frame = CGRect(x: contentX, y: 458, width: self.bounds.size.width - contentX, height: 30)
         
         self.warnLabel.frame = CGRect(x: 8, y: 488, width: descWidth, height: 30)
-        marqueeView.frame = CGRect(x: contentX, y: 488, width: self.bounds.size.width - contentX, height: 30)
+        self.warnContentLabel.frame = CGRect(x: contentX, y: 488, width: self.bounds.size.width - contentX, height: 30)
+//        marqueeView.frame = CGRect(x: contentX, y: 488, width: self.bounds.size.width - contentX, height: 30)
         self.configLabel.frame = CGRect(x: 8, y: 518, width: descWidth, height: 30)
         self.configBtn.frame = CGRect(x: contentX, y: 518, width: 80, height: 24)
         self.backgroundColor = UIColor.nordicLightGray
@@ -579,7 +588,8 @@ class DeviceS10Cell: UITableViewCell {
         marqueeView.contentView = self.warnContentLabel
         marqueeView.contentMargin = 50
         marqueeView.marqueeType = .left
-        self.rootView.addSubview(marqueeView)
+//        self.rootView.addSubview(marqueeView)
+        self.rootView.addSubview(warnContentLabel)
         self.initLayoutPosition()
         
     }
