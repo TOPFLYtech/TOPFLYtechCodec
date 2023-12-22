@@ -268,7 +268,7 @@ extension CGContext
             saveGState()
             translateBy(x: translate.x, y: translate.y)
             rotate(by: angleRadians)
-
+                    
             (text as NSString).draw(with: rect, options: .usesLineFragmentOrigin, attributes: attributes, context: nil)
 
             restoreGState()

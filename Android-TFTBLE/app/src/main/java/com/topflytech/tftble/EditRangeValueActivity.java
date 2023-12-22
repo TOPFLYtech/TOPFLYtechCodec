@@ -4,7 +4,9 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.text.InputType;
 import android.view.View;
 import android.widget.Button;
@@ -13,6 +15,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.topflytech.tftble.data.BleDeviceData;
+import com.topflytech.tftble.data.MyUtils;
 import com.topflytech.tftble.view.SwitchButton;
 
 public class EditRangeValueActivity extends AppCompatActivity {
@@ -55,7 +59,7 @@ public class EditRangeValueActivity extends AppCompatActivity {
             etLow.setText(lowValue);
         }
         if(editType.equals("temp")){
-            tvHead.setText(R.string.temp_alarm);
+            tvHead.setText(getResources().getString(R.string.temp_alarm) + "(" + BleDeviceData.getCurTempUnit(EditRangeValueActivity.this) +")");
             etHigh.setInputType(InputType.TYPE_NUMBER_FLAG_SIGNED | InputType.TYPE_NUMBER_FLAG_DECIMAL);
             etLow.setInputType(InputType.TYPE_NUMBER_FLAG_SIGNED | InputType.TYPE_NUMBER_FLAG_DECIMAL);
         }else if(editType.equals("humidity")){
@@ -111,16 +115,38 @@ public class EditRangeValueActivity extends AppCompatActivity {
         if (!highValueOpen || highValue.length() == 0){
             saveHighValue = 4095;
         }else{
-            saveHighValue = Float.valueOf(Float.valueOf(highValue) * 10).intValue();
+            try{
+                saveHighValue = Float.valueOf(Float.valueOf(BleDeviceData.getSourceTemp(EditRangeValueActivity.this,Float.valueOf(highValue) ) ) * 10).intValue();
+            }catch (Exception ex){
+                Toast.makeText(EditRangeValueActivity.this,R.string.value_must_be_number,Toast.LENGTH_SHORT).show();
+                return false;
+            }
         }
         if (!lowValueOpen  || lowValue.length() == 0){
             saveLowValue = 4095;
         }else{
-            saveLowValue = Float.valueOf(Float.valueOf(lowValue) * 10).intValue();
+            try{
+                saveLowValue = Float.valueOf(Float.valueOf(BleDeviceData.getSourceTemp(EditRangeValueActivity.this,Float.valueOf(lowValue) ) ) * 10).intValue();
+            }catch (Exception ex){
+                Toast.makeText(EditRangeValueActivity.this,R.string.value_must_be_number,Toast.LENGTH_SHORT).show();
+                return false;
+            }
+
+        }
+
+        if(saveHighValue <= saveLowValue && saveLowValue != 4095 && saveHighValue != 4095){
+            Toast.makeText(EditRangeValueActivity.this,R.string.high_must_great_than_low,Toast.LENGTH_SHORT).show();
+            return false;
         }
         if ((saveHighValue <= saveLowValue && saveLowValue != 4095) || (saveHighValue != 4095 && saveHighValue > 1000) ||
                 (saveLowValue != 4095 && saveLowValue < -400)){
-            Toast.makeText(EditRangeValueActivity.this,R.string.temp_range_error_warning,Toast.LENGTH_SHORT).show();
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(EditRangeValueActivity.this);
+            String tempUnit = preferences.getString("tempUnit","0");
+            if(tempUnit.equals("0")){
+                Toast.makeText(EditRangeValueActivity.this,R.string.temp_range_error_warning,Toast.LENGTH_SHORT).show();
+            }else{
+                Toast.makeText(EditRangeValueActivity.this,R.string.temp_range_error_warning1,Toast.LENGTH_SHORT).show();
+            }
             return false;
         }
         Intent intent = new Intent();
@@ -160,12 +186,27 @@ public class EditRangeValueActivity extends AppCompatActivity {
         if (!highValueOpen  || highValue.length() == 0){
             saveHighValue = 4095;
         }else{
-            saveHighValue = Integer.valueOf(highValue);
+            try{
+                saveHighValue = Integer.valueOf(highValue);
+            }catch (Exception ex){
+                Toast.makeText(EditRangeValueActivity.this,R.string.value_must_be_number,Toast.LENGTH_SHORT).show();
+                return false;
+            }
+
         }
         if (!lowValueOpen  || lowValue.length() == 0){
             saveLowValue = 4095;
         }else{
-            saveLowValue = Integer.valueOf(lowValue);
+            try{
+                saveLowValue = Integer.valueOf(lowValue);
+            }catch (Exception ex){
+                Toast.makeText(EditRangeValueActivity.this,R.string.value_must_be_number,Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        }
+        if(saveHighValue <= saveLowValue && saveLowValue != 4095 && saveHighValue != 4095){
+            Toast.makeText(EditRangeValueActivity.this,R.string.high_must_great_than_low,Toast.LENGTH_SHORT).show();
+            return false;
         }
         if  ((saveHighValue <= saveLowValue && saveLowValue != 4095) || (saveHighValue != 4095 && saveHighValue > 1000) ||
                 (saveLowValue != 4095 && saveLowValue < 0)){

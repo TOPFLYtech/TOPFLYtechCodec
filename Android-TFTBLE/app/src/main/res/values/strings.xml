@@ -66,6 +66,7 @@
     <string name="low_temp_warning">Value is incorrect!Need to turn on the low temperature warning switch.</string>
     <string name="low_temp_warning2">Value is incorrect!Need to set the low temperature warning value.</string>
     <string name="temp_range_error_warning">Value is incorrect!It must between -40 and 100.</string>
+    <string name="temp_range_error_warning1">Value is incorrect!It must between -40 and 212.</string>
     <string name="high_humidity_warning">Value is incorrect!Need to turn on the high humidity warning switch.</string>
     <string name="high_humidity_warning2">Value is incorrect!Need to set the high humidity warning value.</string>
     <string name="low_humidity_warning">Value is incorrect!Need to turn on the low humidity warning switch.</string>
@@ -310,4 +311,11 @@
     <string name="flashing_relay">Relay periodic switching</string>
     <string name="confirm_regular_relay_warning">Try switching the relay on and off periodically?</string>
     <string name="cycle_time_error_warning">Cycle time must be greater than init enable time.</string>
+    <string name="ext_sensor">Ext Sensor:</string>
+    <string name="temp_sensor_gx112">Temperature Sensor GX112</string>
+    <string name="not_find_ext_sensor">No external sensor found, please connect the external sensor first</string>
+    <string name="restart_app_warning">After positioning authorization, the APP needs to be restarted to function properly. The APP is about to restart. If it cannot be started, please manually start the APP</string>
+    <string name="device_name_len_error">The length of the device name must between 3 and 8.</string>
+    <string name="high_must_great_than_low">The highest value must be greater than the lowest value</string>
+    <string name="value_must_be_number">Input must be a number</string>
 </resources>

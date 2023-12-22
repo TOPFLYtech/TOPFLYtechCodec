@@ -279,7 +279,7 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
             self.detailTableView.reloadData()
             let page5 = PDFPage.view(self.detailTableView)
             var pages = [page1, page2, page3]
-            if self.deviceType == "S02" || self.deviceType == "S10"{
+            if self.deviceType == "S02" || (self.deviceType == "S10" && self.isHadValidHumidityData){
                 let page4 = PDFPage.image(self.humidityChartView.getChartImage(transparent: true)!)
                 pages = [page1, page2, page3, page4]
             }
@@ -490,7 +490,10 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
             worksheet_write_string(sheet, lxw_row_t(detailRowIndex), 4, NSLocalizedString("light1", comment: "Light"), nil)
         }else{
             worksheet_write_string(sheet, lxw_row_t(detailRowIndex), 3, NSLocalizedString("door1", comment: "Door"), nil)
-            worksheet_write_string(sheet, lxw_row_t(detailRowIndex), 4, NSLocalizedString("alarm1", comment: "Alarm"), nil)
+            if deviceType == "S04"{
+                worksheet_write_string(sheet, lxw_row_t(detailRowIndex), 4, NSLocalizedString("alarm1", comment: "Alarm"), nil)
+            }
+           
         }
         detailRowIndex += 1
         
@@ -517,7 +520,9 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
             }else{
                 let prop = bleHisItem.prop == 1 ? NSLocalizedString("open", comment: "Open") : NSLocalizedString("close", comment: "Close")
                 worksheet_write_string(sheet, lxw_row_t(detailRowIndex+index), 3, prop, nil)
-                worksheet_write_string(sheet, lxw_row_t(detailRowIndex), 4, Utils.getS04WarnDesc(warn: Int(bleHisItem.alarm)), nil)
+                if deviceType == "S04"{
+                    worksheet_write_string(sheet, lxw_row_t(detailRowIndex), 4, Utils.getS04WarnDesc(warn: Int(bleHisItem.alarm)), nil)
+                }
             }
         }
         
@@ -531,7 +536,7 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
         // Insert the chart into the worksheet
         worksheet_insert_chart(sheet, 20,0, tempChart);
         
-        if self.deviceType == "S02" || self.deviceType == "S10"{
+        if self.deviceType == "S02" || (self.deviceType == "S10" && self.isHadValidHumidityData){
             let humidityChart = workbook_add_chart(book, UInt8(LXW_CHART_LINE.rawValue))
             let humiditySeries = chart_add_series(humidityChart, nil, "Sheet1!$A$1:$A$5");
             chart_series_set_name(humiditySeries, NSLocalizedString("humidity1", comment: "Humidity"))
@@ -554,10 +559,19 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
         let path = NSHomeDirectory() + "/Documents/sample1.csv"
         let fileManager = FileManager.default
         fileManager.createFile(atPath: path, contents:nil, attributes:nil)
+        
+        let bomHeader: [UInt8] = [0xEF, 0xBB, 0xBF] // UTF-8 BOM 头
+
+        // 创建包含 BOM 头的 Data 对象
+        let bomData = Data(bomHeader)
         let handle = FileHandle(forWritingAtPath:path)
+        handle?.write(bomData)
         var StrItem = "\(NSLocalizedString("date1", comment: "Date")),\(NSLocalizedString("battery1", comment: "Battery")),\(NSLocalizedString("temp1", comment: "Temperature")),\(NSLocalizedString("humidity1", comment: "Humidity")),\(NSLocalizedString("light1", comment: "Light"))\n"
-        if self.deviceType == "S04" || self.deviceType == "S08"{
+        if self.deviceType == "S04"{
             StrItem = "\(NSLocalizedString("date1", comment: "Date")),\(NSLocalizedString("battery1", comment: "Battery")),\(NSLocalizedString("temp1", comment: "Temperature")),\(NSLocalizedString("door1", comment: "Door")),\(NSLocalizedString("alarm1", comment: "Alarm"))\n"
+        }
+        if  self.deviceType == "S08"{
+            StrItem = "\(NSLocalizedString("date1", comment: "Date")),\(NSLocalizedString("battery1", comment: "Battery")),\(NSLocalizedString("temp1", comment: "Temperature")),\(NSLocalizedString("door1", comment: "Door"))\n"
         }
         handle?.write(StrItem.data(using: String.Encoding.utf8)!)
         for var i in 0..<self.showBleHisData.count{
@@ -580,8 +594,14 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
                 if bleHisItem.temp != -999{
                     tempStr = String(format:"%.2f",Utils.getCurTemp(sourceTemp: bleHisItem.temp))
                 }
-                StrItem = self.dateFormatter.string(from: Date(timeIntervalSince1970: Double(bleHisItem.dateStamp))) + "," + String(format:"%d%%",bleHisItem.battery) + "," +
-                    tempStr + "," + (bleHisItem.prop == 1 ? NSLocalizedString("open", comment: "Open") : NSLocalizedString("close", comment: "Close")) + "," + Utils.getS04WarnDesc(warn: Int(bleHisItem.alarm)) + "\n"
+                if self.deviceType == "S04"{
+                    StrItem = self.dateFormatter.string(from: Date(timeIntervalSince1970: Double(bleHisItem.dateStamp))) + "," + String(format:"%d%%",bleHisItem.battery) + "," +
+                        tempStr + "," + (bleHisItem.prop == 1 ? NSLocalizedString("open", comment: "Open") : NSLocalizedString("close", comment: "Close")) + "," + Utils.getS04WarnDesc(warn: Int(bleHisItem.alarm)) + "\n"
+                }
+                if self.deviceType == "S08"{
+                    StrItem = self.dateFormatter.string(from: Date(timeIntervalSince1970: Double(bleHisItem.dateStamp))) + "," + String(format:"%d%%",bleHisItem.battery) + "," +
+                        tempStr + "," + (bleHisItem.prop == 1 ? NSLocalizedString("open", comment: "Open") : NSLocalizedString("close", comment: "Close")) + "\n"
+                }
             }
             handle?.write(StrItem.data(using: String.Encoding.utf8)!)
         }
@@ -665,6 +685,9 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
         }else{
             let headView = HistoryS04Header()
             headView.frame = CGRect(x: 0, y: 0, width: KSize.width, height: 40)
+            if deviceType != "S04"{
+                headView.hideAlarm()
+            }
             detailTableView.tableHeaderView = headView
         }
         detailTableView.tableFooterView?.isHidden = true;
@@ -1420,8 +1443,9 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
         tempChartView.dragDecelerationFrictionCoef = 0.9 //拖拽后惯性效果摩擦系数(0~1)越小惯性越不明显
         tempChartView.xAxis.labelPosition = .bottom
         tempChartView.xAxis.labelCount = 3 // 设置标签数量
-        tempChartView.rightAxis.drawLabelsEnabled = false
-
+        tempChartView.leftAxis.enabled = true
+        tempChartView.legend.enabled = false
+        tempChartView.leftAxis.drawTopYLabelEntryEnabled = true
         tempChartView.xAxis.granularity = Double(self.showBleHisData.count / (Int(self.view.bounds.width) / 90))
         tempChartView.xAxis.granularityEnabled = true
 
@@ -1439,7 +1463,7 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
 
         tempChartView.leftAxis.drawLimitLinesBehindDataEnabled = true
         var chartDateFormatter = DateFormatter()
-        chartDateFormatter.dateFormat = "MM-dd HH:mm:ss"
+        chartDateFormatter.dateFormat = "MM-dd HH:mm"
         var xValues = [String]()
         //
         var dataEntries = [ChartDataEntry]()

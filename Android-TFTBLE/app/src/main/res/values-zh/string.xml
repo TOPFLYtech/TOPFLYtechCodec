@@ -61,6 +61,7 @@
     <string name="factory_reset_succ">恢复出厂设置成功，请输入密码重新连接</string>
     <string name="low_temp_warning2">值不正确！需要设置低温警告值。</string>
     <string name="temp_range_error_warning">值不正确！必须在-40和100之间。</string>
+    <string name="temp_range_error_warning1">值不正确！必须在-40和212之间。</string>
     <string name="humidity_alarm">湿度报警</string>
     <string name="high_temp_warning2">值不正确！需要设置高温警告值。</string>
     <string name="high_humidity_warning">值不正确！需要打开高湿度警告开关。</string>
@@ -311,4 +312,11 @@
     <string name="flashing_relay">继电器周期性开关</string>
     <string name="confirm_regular_relay_warning">尝试周期性切换继电器?</string>
     <string name="cycle_time_error_warning">周期时长必须大于首亮时长.</string>
+    <string name="ext_sensor">外接传感器:</string>
+    <string name="temp_sensor_gx112">温度传感器GX112</string>
+    <string name="not_find_ext_sensor">没有找到外接传感器，请先连接外接传感器</string>
+    <string name="restart_app_warning">定位授权后需要重启APP才能正常使用，APP即将进行重启，如果无法启动，请手动启动APP</string>
+    <string name="device_name_len_error">设备名长度必须在3到8之间</string>
+    <string name="high_must_great_than_low">最高值必须大于最低值</string>
+    <string name="value_must_be_number">输入必须是数字</string>
 </resources>

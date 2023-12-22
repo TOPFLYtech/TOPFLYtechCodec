@@ -413,9 +413,11 @@ class DeviceS08Cell: UITableViewCell {
         self.batteryContentLabel.isHidden = true
         self.batteryPercentLabel.isHidden = true
         self.batteryPercentContentLabel.isHidden = true
+        self.warnLabel.isHidden = true
+        warnContentLabel.isHidden = true
         let descWidth = self.bounds.size.width / 2 - 20
         let contentX = self.bounds.size.width / 2
-        self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 380)
+        self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 350)
         self.rootView.isUserInteractionEnabled=true
         self.deviceNameLabel.frame = CGRect(x: 8, y: 8, width: descWidth, height: 30)
         self.deviceNameContentLabel.frame = CGRect(x: contentX, y: 8, width: self.bounds.size.width - contentX, height: 30)
@@ -438,12 +440,9 @@ class DeviceS08Cell: UITableViewCell {
         self.nidContentLabel.frame = CGRect(x: contentX, y: 248, width: self.bounds.size.width - contentX, height: 30)
         self.bidLabel.frame = CGRect(x: 8, y: 278, width: descWidth, height: 30)
         self.bidContentLabel.frame = CGRect(x: contentX, y: 278, width: self.bounds.size.width - contentX, height: 30)
-        
-        
-        self.warnLabel.frame = CGRect(x: 8, y: 308, width: descWidth, height: 30)
-        warnContentLabel.frame = CGRect(x: contentX, y: 308, width: self.bounds.size.width - contentX, height: 30)
-        self.configLabel.frame = CGRect(x: 8, y: 338, width: descWidth, height: 30)
-        self.configBtn.frame = CGRect(x: contentX, y: 338, width: 80, height: 24)
+         
+        self.configLabel.frame = CGRect(x: 8, y: 308, width: descWidth, height: 30)
+        self.configBtn.frame = CGRect(x: contentX, y: 308, width: 80, height: 24)
         self.backgroundColor = UIColor.nordicLightGray
         self.rootView.backgroundColor = UIColor.white
         self.rootView.layer.cornerRadius = 8
@@ -501,13 +500,13 @@ class DeviceS08Cell: UITableViewCell {
         self.batteryContentLabel.isHidden = true
         self.batteryPercentLabel.isHidden = true
         self.batteryPercentContentLabel.isHidden = true
-        self.broadcastTypeLabel.isHidden = true
-        self.broadcastTypeContentLabel.isHidden = true
         self.doorLabel.isHidden = true
         self.doorContentLabel.isHidden = true
         self.tempLabel.isHidden = true
         self.tempContentLabel.isHidden = true
         self.switchTempUnitBtn.isHidden = true
+        self.warnLabel.isHidden = true
+        warnContentLabel.isHidden = true
         let move = bleDeviceInfo["move"]
         let descWidth = self.bounds.size.width / 2 - 20
         let contentX = self.bounds.size.width / 2
@@ -536,18 +535,21 @@ class DeviceS08Cell: UITableViewCell {
         self.softwareContentLabel.frame = CGRect(x: contentX, y: CGFloat(heightY), width: self.bounds.size.width - contentX, height: 30)
         heightY += 30
         
-        
+        self.broadcastTypeLabel.frame = CGRect(x: 8, y: heightY, width: Int(descWidth), height: 30)
+        self.broadcastTypeContentLabel.frame = CGRect(x: contentX, y: CGFloat(heightY), width: self.bounds.size.width - contentX, height: 30)
+        heightY += 30
 //        self.majorLabel.frame = CGRect(x: 8, y: 428, width: descWidth, height: 30)
 //        self.majorContentLabel.frame = CGRect(x: contentX, y: 428, width: self.bounds.size.width - contentX, height: 30)
 //        self.minorLabel.frame = CGRect(x: 8, y: 458, width: descWidth, height: 30)
 //        self.minorContentLabel.frame = CGRect(x: contentX, y: 458, width: self.bounds.size.width - contentX, height: 30)
         
         
-        self.warnLabel.frame = CGRect(x: 8, y: heightY, width: Int(descWidth), height: 30)
-        warnContentLabel.frame = CGRect(x: contentX, y: CGFloat(heightY), width: self.bounds.size.width - contentX, height: 30)
-        heightY += 30
+//        self.warnLabel.frame = CGRect(x: 8, y: heightY, width: Int(descWidth), height: 30)
+//        warnContentLabel.frame = CGRect(x: contentX, y: CGFloat(heightY), width: self.bounds.size.width - contentX, height: 30)
+//        heightY += 30
         self.configLabel.frame = CGRect(x: 8, y: heightY, width: Int(descWidth), height: 30)
         self.configBtn.frame = CGRect(x: Int(contentX), y: heightY, width: 80, height: 24)
+        heightY += 30
         self.rootView.frame = CGRect(x: 5, y: 5, width: Int(self.bounds.size.width)-10, height: heightY+12)
         self.backgroundColor = UIColor.nordicLightGray
         self.rootView.backgroundColor = UIColor.white
@@ -679,7 +681,8 @@ class DeviceS08Cell: UITableViewCell {
             self.rollContentLabel.isHidden = true
         }
         
-        
+        self.warnLabel.isHidden = false
+        warnContentLabel.isHidden = false
         self.warnLabel.frame = CGRect(x: 8, y: heightY, width: descWidth, height: 30)
         warnContentLabel.frame = CGRect(x: contentX, y: heightY, width: Int(self.bounds.size.width) - contentX, height: 30)
         heightY += 30

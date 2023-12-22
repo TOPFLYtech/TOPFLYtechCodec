@@ -37,11 +37,11 @@
 "device_name"="Device name";
 "cancel"="Cancel";
 "confirm"="Confirm";
-"incorrect_name_length"="Incorrect name length!";
+"incorrect_name_length"="The length of the device name must between 3 and 8.";
 "broadcast_cycle"="Broadcast cycle";
 "broadcast_cycle_value_length_error"="Value is incorrect!It must between 5 and 1800";
 "s05_broadcast_cycle_value_length_error"="Value is incorrect!It must between 0 and 10";
-"reset_factory"="Reset Factory";
+"reset_factory"="Are you sure to restore the factory settings?";
 "password"="Password";
 "new_version_found_warning"="New version found,updated?";
 "name_desc"="Name:";
@@ -98,6 +98,7 @@
 "value_is_incorrect_need_turn_low_temp_switch"="Value is incorrect!Need to turn on the low temperature warning switch.";
 "value_is_incorrect_need_set_low_temp_value"="Value is incorrect!Need to set the low temperature warning value.";
 "value_incorrect_out_of_temp_range"="Value is incorrect!It must between -40 and 100.";
+"value_incorrect_out_of_temp_range1"="Value is incorrect!It must between -40 and 212.";
 "select_datetime"="Select datetime";
 "report"="Report";
 "send_csv"="Send csv";
@@ -271,3 +272,7 @@
 "flashing_relay"="Relay periodic switching:";
 "confirm_regular_relay_warning"="Try switching the relay on and off periodically?";
 "cycle_time_error_warning"="Cycle time must be greater than init enable time.";
+"ext_sensor_desc"="Ext Sensor:";
+"temp_sensor_gx112"="Temperature Sensor GX112";
+"not_find_ext_sensor"="No external sensor found, please connect the external sensor first";
+"high_must_great_than_low"="The highest value must be greater than the lowest value";

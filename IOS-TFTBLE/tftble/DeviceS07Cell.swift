@@ -462,7 +462,7 @@ class DeviceS07Cell: UITableViewCell {
         warnContentLabel.isHidden = true
         let descWidth = self.bounds.size.width / 2 - 20
         let contentX = self.bounds.size.width / 2
-        self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 350)
+        self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 290)
         self.rootView.isUserInteractionEnabled=true
         self.deviceNameLabel.frame = CGRect(x: 8, y: 8, width: descWidth, height: 30)
         self.deviceNameContentLabel.frame = CGRect(x: contentX, y: 8, width: self.bounds.size.width - contentX, height: 30)

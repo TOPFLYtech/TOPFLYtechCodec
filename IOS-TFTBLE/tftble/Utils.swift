@@ -32,7 +32,7 @@ class Utils{
         let version3 = all & 0x7f
         let testByte = data[index+2]
         var software = ""
-        if testByte != 0{ 
+        if testByte != 0{
             return String(format: "%d.%d.%02d %@",version1,version2,version3, String(data: Data([testByte]), encoding: .utf8)!)
         }else{
             return String(format: "%d.%d.%02d",version1,version2,version3)
@@ -79,7 +79,7 @@ class Utils{
         if sourceTemp == -999{
             return sourceTemp
         }
-        let tempUnit = UserDefaults.standard.integer(forKey: "tempUnit")  
+        let tempUnit = UserDefaults.standard.integer(forKey: "tempUnit")
         if tempUnit == 0{
             return sourceTemp
         }else{
@@ -107,22 +107,22 @@ class Utils{
     }
     
     static func getCurPressure(sourcePressure:Float) ->Float{
-           let pressureUnit = UserDefaults.standard.integer(forKey: "pressureUnit")
-           if pressureUnit == 0{
-               return sourcePressure
-           }else{
-               return sourcePressure / 0.1450377
-           }
-       }
-      
-       static func getCurPressureUnit() -> String{
-           let pressureUnit = UserDefaults.standard.integer(forKey: "pressureUnit")
-           if pressureUnit == 0{
-               return "Kpa"
-           }else{
-               return "Psi"
-           }
-       }
+        let pressureUnit = UserDefaults.standard.integer(forKey: "pressureUnit")
+        if pressureUnit == 0{
+            return sourcePressure
+        }else{
+            return sourcePressure / 0.1450377
+        }
+    }
+    
+    static func getCurPressureUnit() -> String{
+        let pressureUnit = UserDefaults.standard.integer(forKey: "pressureUnit")
+        if pressureUnit == 0{
+            return "Kpa"
+        }else{
+            return "Psi"
+        }
+    }
     
     static func bytes2Integer(buf:[UInt8],pos:Int) ->Int{
         var firstByte = 0;
@@ -140,12 +140,18 @@ class Utils{
     
     static func IntToBytes(intValue:Int)->[UInt8]{
         var byteArray = [UInt8]()
-
+        
         byteArray.append(UInt8((intValue >> 24) & 0xff))
         byteArray.append(UInt8((intValue >> 16) & 0xff))
         byteArray.append(UInt8((intValue >> 8) & 0xff))
         byteArray.append(UInt8(intValue & 0xff))
         return byteArray;
+    }
+    
+    static func isHexadecimal(_ string: String) -> Bool {
+        let regex = try! NSRegularExpression(pattern: "^[0-9a-fA-F]+$")
+        let range = NSRange(location: 0, length: string.utf16.count)
+        return regex.firstMatch(in: string, options: [], range: range) != nil
     }
     
     static func bytes2Short(bytes:[UInt8],offset:Int) ->Int{
@@ -242,36 +248,36 @@ class Utils{
     static func switchCurTempUnit(){
         let tempUnit = UserDefaults.standard.integer(forKey: "tempUnit")
         if tempUnit == 0{
-              UserDefaults.standard.set(1, forKey: "tempUnit")
+            UserDefaults.standard.set(1, forKey: "tempUnit")
         }else{
-             UserDefaults.standard.set(0, forKey: "tempUnit")
+            UserDefaults.standard.set(0, forKey: "tempUnit")
         }
     }
     
     static func getNextPressureUnit() -> String{
-         let pressureUnit = UserDefaults.standard.integer(forKey: "pressureUnit")
-         if pressureUnit == 0{
-        return "Psi"
-         }else{
-             return "Kpa"
-         }
-     }
-    static func switchCurPressureUnit(){
-            let pressureUnit = UserDefaults.standard.integer(forKey: "pressureUnit")
-            if pressureUnit == 0{
-                  UserDefaults.standard.set(1, forKey: "pressureUnit")
-            }else{
-                 UserDefaults.standard.set(0, forKey: "pressureUnit")
-            }
+        let pressureUnit = UserDefaults.standard.integer(forKey: "pressureUnit")
+        if pressureUnit == 0{
+            return "Psi"
+        }else{
+            return "Kpa"
         }
+    }
+    static func switchCurPressureUnit(){
+        let pressureUnit = UserDefaults.standard.integer(forKey: "pressureUnit")
+        if pressureUnit == 0{
+            UserDefaults.standard.set(1, forKey: "pressureUnit")
+        }else{
+            UserDefaults.standard.set(0, forKey: "pressureUnit")
+        }
+    }
     
     static func getS04WarnDesc(warn:Int) ->String{
         var warnStr = ""
         if (warn & 0x01) == 0x01 {
-           warnStr += NSLocalizedString("high_temperature_warning", comment:"High temperature warning;")
+            warnStr += NSLocalizedString("high_temperature_warning", comment:"High temperature warning;")
         }
         if (warn & 0x10) == 0x10 {
-           warnStr += NSLocalizedString("low_temperature_warning", comment:"Low temperature warning;")
+            warnStr += NSLocalizedString("low_temperature_warning", comment:"Low temperature warning;")
         }
         if (warn & 0x40) == 0x40{
             warnStr += NSLocalizedString("low_voltage_warning", comment:"Low voltage warning;")
@@ -314,9 +320,9 @@ class Utils{
                     var itemJ = item[j]
                     var indexJ = Utils.bytes2Short(bytes: itemJ, offset: 0)
                     if indexJ < indexI{
-                       temp = itemI
-                       itemI = itemJ
-                       itemJ = temp
+                        temp = itemI
+                        itemI = itemJ
+                        itemJ = temp
                     }
                     j+=1
                 }
@@ -367,238 +373,126 @@ class Utils{
         return resultArray.joined(separator: "")
     }
     static func dealS10InvalidData(dataList: [BleHisData]) {
-       let THRESHOLD: Double = 0.0001
-       for item in dataList {
-           if abs(Double(item.temp) - 144.4) < THRESHOLD {
-               item.temp = -999
-           }
-           if abs(Double(item.humidity) - 126) < THRESHOLD {
-               item.humidity = -999
-           }
-       }
+        let THRESHOLD: Double = 0.0001
+        for item in dataList {
+            if abs(Double(item.temp) - 144.4) < THRESHOLD {
+                item.temp = -999
+            }
+            if abs(Double(item.humidity) - 126) < THRESHOLD {
+                item.humidity = -999
+            }
+        }
     }
-
-    
-    static func parseS10BleHisData(historyArray:[UInt8]) ->[BleHisData]{
-            var timeIntervalTemp = Int(historyArray[1] & 0x3f) * Int((historyArray[1] & 0x40 == 0x40) ? 10 : 5)
-            var dataCount = Utils.bytes2Short(bytes: historyArray,offset: 2)
-            var timeInterval = Int(timeIntervalTemp)
-            var timestamp = Utils.bytes2Integer(buf: historyArray,pos: 4)
-            var curTimestamp = 0
-            var result = [BleHisData]()
-            if dataCount == 0{
-                dealS10InvalidData(dataList:result)
+    static func parseS10BleGX112HisData(historyArray:[UInt8]) ->[BleHisData]{
+        let timeIntervalTemp = Int(historyArray[1] & 0x3f) * Int((historyArray[1] & 0x40 == 0x40) ? 10 : 5)
+        let dataCount = Utils.bytes2Short(bytes: historyArray,offset: 2)
+        let timeInterval = Int(timeIntervalTemp)
+        let timestamp = Utils.bytes2Integer(buf: historyArray,pos: 4)
+        var curTimestamp = 0
+        var result = [BleHisData]()
+        if dataCount == 0{
+            dealS10InvalidData(dataList:result)
+            return result;
+        }
+        for j in 0...4{
+            var startIndex = 0
+            if j == 0{
+                startIndex = 8;
+                curTimestamp = timestamp
+            }
+            let remainByte = Utils.arraysCopyOfRange(src: historyArray, from: j * 256 + startIndex, to: j * 256 + 256)
+            let remainBinaryStr = self.convertByteArrayToBinaryStr(byteArray: remainByte)
+            let remainBinaryChar = Utils.splitSingleStrToCharArr(strToSplit: remainBinaryStr)
+            var i = 0
+            
+            var tempCharArray = Utils.arraysCopyOfRange(src: remainBinaryChar, from: i, to: i + 12)
+            i+=12
+            var batteryCharArray = Utils.arraysCopyOfRange(src: remainBinaryChar,from: i,to: i+8)
+            i+=8
+            var tempLong = Utils.binaryCharArrayToLong(binaryArray: tempCharArray)
+            var battery = Utils.binaryCharArrayToLong(binaryArray: batteryCharArray)
+            var temp = Float(tempLong) * 0.1 - 100
+            var item = BleHisData()
+            item.temp = temp
+            item.battery = Int(battery)
+            item.humidity = -999
+            item.dateStamp = curTimestamp
+            result.append(item)
+            if result.count >= dataCount{
                 return result;
             }
-            for j in 0...4{
-                var startIndex = 0
-                if j == 0{
-                    startIndex = 8;
-                    curTimestamp = timestamp
-                }
-                var item = BleHisData()
-                var prop = (historyArray[j * 256 + startIndex + 0] & 0x80) == 0x80 ? 1 : 0;
-                var value = Utils.bytes2Short(bytes: historyArray,offset: j * 256 + startIndex + 0) & 0x7fff
-                var temp = Float(((value & 0x7FC0) >> 6) * 4 - 600 )
-                temp = temp  / 10.0
-                var humidity = (value & 0x3F) * 2
-                var battery = historyArray[j * 256 + startIndex + 2] & 0xff
-                item.prop = prop
-                item.temp = temp
-                item.battery = Int(battery)
-                item.humidity = humidity
-                item.dateStamp = curTimestamp
-                result.append(item)
-                if result.count >= dataCount{
-                    dealS10InvalidData(dataList:result)
-                    return result;
-                }
-                curTimestamp += timeInterval
-                var remainByte = Utils.arraysCopyOfRange(src: historyArray, from: j * 256 + startIndex + 3, to: j * 256 + 256)
-                var remainBinaryStr = self.convertByteArrayToBinaryStr(byteArray: remainByte)
-                var remainBinaryChar = Utils.splitSingleStrToCharArr(strToSplit: remainBinaryStr)
-                var i = 0;
-                var dataSize = remainBinaryChar.count
-                while i < dataSize{
-                    var charItem = remainBinaryChar[i]
+            curTimestamp += timeInterval
+            var dataSize = remainBinaryChar.count
+            while i < dataSize{
+                var charItem = remainBinaryChar[i]
+                i+=1
+                if charItem == "0"{//not change
+                    var lastItem = result[result.count - 1]
+                    var curItem = BleHisData()
+                    curItem.dateStamp = curTimestamp
+                    curItem.humidity = lastItem.humidity
+                    curItem.temp = lastItem.temp
+                    curItem.battery = lastItem.battery
+                    curItem.prop = lastItem.prop
+                    result.append(curItem)
+                    if result.count >= dataCount{
+                        return result
+                    }
+                    curTimestamp += timeInterval
+                }else{
+                    if i+1 >= dataSize{
+                        break
+                    }
+                    let type = remainBinaryChar[i]
                     i+=1
-                    if charItem == "0"{//not change
+                    if type == "0"{// 12 bit temp
+                        if i+12 >= dataSize{
+                            break
+                        }
+                        tempCharArray = Utils.arraysCopyOfRange(src: remainBinaryChar, from: i, to: i + 12)
+                        i+=12
+                        tempLong = Utils.binaryCharArrayToLong(binaryArray: tempCharArray)
                         var lastItem = result[result.count - 1]
+                        temp = Float(tempLong) * 0.1 - 100
                         var curItem = BleHisData()
                         curItem.dateStamp = curTimestamp
                         curItem.humidity = lastItem.humidity
-                        curItem.temp = lastItem.temp
+                        curItem.temp = temp
                         curItem.battery = lastItem.battery
                         curItem.prop = lastItem.prop
                         result.append(curItem)
                         if result.count >= dataCount{
-                            dealS10InvalidData(dataList:result)
                             return result
                         }
                         curTimestamp += timeInterval
                     }else{
-                        if i >= dataSize{
+                        if i+1 >= dataSize{
                             break
                         }
-                        let propStatus = remainBinaryChar[i]
+                        var lastItem = result[result.count - 1]
+                        let isAdd = remainBinaryChar[i] == "0" ? 1 : -1
                         i+=1
-                        if i >= dataSize{
-                            break
+                        var curItem = BleHisData()
+                        curItem.dateStamp = curTimestamp
+                        curItem.humidity = lastItem.humidity
+                        curItem.temp = lastItem.temp + Float(isAdd) * 0.1
+                        curItem.battery = lastItem.battery
+                        curItem.prop = lastItem.prop
+                        result.append(curItem)
+                        if result.count >= dataCount{
+                            return result
                         }
-                        let tempHumidityStatus = remainBinaryChar[i]
-                        i+=1
-                        if tempHumidityStatus == "1"{
-                            if(i+2 > dataSize){
-                                break
-                            }
-                            let firstChar = remainBinaryChar[i]
-                            i+=1
-                            let secondChar = remainBinaryChar[i]
-                            i+=1
-                            if firstChar == "0" && secondChar == "0"{
-                                let lastItem = result[result.count - 1]
-                                let curItem = BleHisData()
-                                curItem.dateStamp = curTimestamp
-                                curItem.humidity = lastItem.humidity
-                                curItem.temp = lastItem.temp
-                                curItem.battery = lastItem.battery
-                                curItem.prop = propStatus == "1" ? 1 : 0
-                                result.append(curItem)
-                                if result.count >= dataCount{
-                                    dealS10InvalidData(dataList:result)
-                                    return result
-                                }
-                                curTimestamp += timeInterval;
-                            }else if firstChar == "0" && secondChar == "1"{//humidity change
-                                if i >= dataSize{
-                                    break
-                                }
-                                var changeChar = remainBinaryChar[i];
-                                i+=1
-                                if changeChar == "0"{
-                                    var lastItem = result[result.count - 1]
-                                    var curItem = BleHisData()
-                                     curItem.dateStamp = curTimestamp
-                                    curItem.humidity = lastItem.humidity + 2
-                                    curItem.temp = lastItem.temp
-                                    curItem.battery = lastItem.battery
-                                    curItem.prop = propStatus == "1" ? 1 : 0
-                                    result.append(curItem)
-                                    if result.count >= dataCount{
-                                        dealS10InvalidData(dataList:result)
-                                        return result
-                                    }
-                                    curTimestamp += timeInterval;
-                                }else{
-                                    var lastItem = result[result.count - 1]
-                                    var curItem = BleHisData()
-                                    curItem.dateStamp = curTimestamp
-                                    curItem.humidity = lastItem.humidity - 2
-                                    curItem.temp = lastItem.temp
-                                    curItem.battery = lastItem.battery
-                                    curItem.prop = propStatus == "1" ? 1 : 0
-                                    result.append(curItem)
-                                    if result.count >= dataCount{
-                                        dealS10InvalidData(dataList:result)
-                                        return result
-                                    }
-                                    curTimestamp += timeInterval;
-                                }
-                            }else if firstChar == "1" && secondChar == "0" {//temp change
-                                if i >= dataSize{
-                                    break
-                                }
-                                var changeChar = remainBinaryChar[i]
-                                i+=1
-                                if changeChar == "0"{
-                                    var lastItem = result[result.count - 1]
-                                    var curItem = BleHisData()
-                                    curItem.dateStamp = curTimestamp
-                                    curItem.humidity = lastItem.humidity
-                                    curItem.temp = lastItem.temp + 0.2
-                                    curItem.battery = lastItem.battery
-                                    curItem.prop = propStatus == "1" ? 1 : 0
-                                    result.append(curItem)
-                                    if result.count >= dataCount{
-                                        dealS10InvalidData(dataList:result)
-                                        return result
-                                    }
-                                    curTimestamp += timeInterval
-                                }else{
-                                    var lastItem = result[result.count - 1]
-                                    var curItem = BleHisData()
-                                    curItem.dateStamp = curTimestamp
-                                    curItem.humidity = lastItem.humidity
-                                    curItem.temp = lastItem.temp - 0.2
-                                    curItem.battery = lastItem.battery
-                                    curItem.prop = propStatus == "1" ? 1 : 0
-                                    result.append(curItem)
-                                    if result.count >= dataCount{
-                                        dealS10InvalidData(dataList:result)
-                                        return result
-                                    }
-                                    curTimestamp += timeInterval;
-                                }
-                            }else{
-                                if i+2 > dataSize{
-                                    break
-                                }
-                                var changeFirstChar = remainBinaryChar[i]
-                                i+=1
-                                var changeSecondChar = remainBinaryChar[i]
-                                i+=1
-                                var tempChange = changeFirstChar == "0" ? 0.2 : -0.2
-                                var humidityChange = changeSecondChar == "0" ? 2 : -2
-                                var lastItem = result[result.count - 1]
-                                var curItem = BleHisData()
-                                curItem.dateStamp = curTimestamp
-                                curItem.humidity = lastItem.humidity + humidityChange
-                                curItem.temp = (lastItem.temp ?? 0) + Float(tempChange)
-                                curItem.battery = lastItem.battery
-                                curItem.prop = propStatus == "1" ? 1 : 0
-                                result.append(curItem)
-                                if result.count >= dataCount{
-                                    dealS10InvalidData(dataList:result)
-                                    return result
-                                }
-                                curTimestamp += timeInterval
-                            }
-                        }else{
-                            if i+15 > dataSize{
-                                break
-                            }
-                            var tempCharArray = Utils.arraysCopyOfRange(src: remainBinaryChar, from: i, to: i + 9)
-                            i+=9
-                            var humidityCharArray = Utils.arraysCopyOfRange(src: remainBinaryChar,from: i,to: i+6)
-                            i+=6
-                            var tempLong = Utils.binaryCharArrayToLong(binaryArray: tempCharArray)
-                            var humidityLong = Utils.binaryCharArrayToLong(binaryArray: humidityCharArray)
-                            var curTemp = Float(tempLong * 4 - 600 )
-                            curTemp = curTemp / 10.0
-                            var curHumidity = humidityLong * 2
-                            var lastItem = result[result.count - 1]
-                            var curItem = BleHisData()
-                            curItem.dateStamp = curTimestamp
-                            curItem.humidity = curHumidity
-                            curItem.temp = curTemp
-                            curItem.battery = lastItem.battery
-                            curItem.prop = propStatus == "1" ? 1 : 0
-                            result.append(curItem)
-                            if result.count >= dataCount{
-                                dealS10InvalidData(dataList:result)
-                                return result
-                            }
-                            curTimestamp += timeInterval
-                        }
+                        curTimestamp += timeInterval
+                        
                     }
                 }
-                
             }
             
-            dealS10InvalidData(dataList:result)
-            return result;
-            
         }
+        return result;
+        
+    }
+    
     
     static func parseS02BleHisData(historyArray:[UInt8]) ->[BleHisData]{
         var timeIntervalTemp = Int(historyArray[1] & 0x3f) * Int((historyArray[1] & 0x40 == 0x40) ? 10 : 5)
@@ -695,7 +589,7 @@ class Utils{
                             if changeChar == "0"{
                                 var lastItem = result[result.count - 1]
                                 var curItem = BleHisData()
-                                 curItem.dateStamp = curTimestamp
+                                curItem.dateStamp = curTimestamp
                                 curItem.humidity = lastItem.humidity + 2
                                 curItem.temp = lastItem.temp
                                 curItem.battery = lastItem.battery
@@ -847,13 +741,13 @@ class Utils{
     }
     
     static func getTimes() -> [Int] {
-    
+        
         var timers: [Int] = [] //  返回的数组
-    
+        
         let calendar: Calendar = Calendar(identifier: .gregorian)
         var comps: DateComponents = DateComponents()
         comps = calendar.dateComponents([.year,.month,.day, .weekday, .hour, .minute,.second], from: Date())
-    
+        
         timers.append(comps.year! % 2000)  // 年 ，后2位数
         timers.append(comps.month!)            // 月
         timers.append(comps.day!)                // 日
@@ -861,7 +755,7 @@ class Utils{
         timers.append(comps.minute!)            // 分钟
         timers.append(comps.second!)            // 秒
         timers.append(comps.weekday! - 1)      //星期
-    
+        
         return timers;
     }
     
@@ -911,7 +805,7 @@ class Utils{
         return today
         
     }
-
+    
     static func getEndDate(selectedIndex:Int) -> Date{
         let calendar = Calendar.current
         let currentDate = Date()
@@ -946,4 +840,4 @@ class Utils{
         return today
         
     }
-} 
+}

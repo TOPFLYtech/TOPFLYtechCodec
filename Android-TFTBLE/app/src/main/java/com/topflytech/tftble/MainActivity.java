@@ -25,6 +25,8 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -137,6 +139,7 @@ public class MainActivity extends AppCompatActivity {
         }
     };
     private OptionsPickerView pvModel;
+    private int clickCount = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -147,6 +150,35 @@ public class MainActivity extends AppCompatActivity {
         actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
         actionBar.setDisplayShowCustomEnabled(true);
         actionBar.setCustomView(customView);
+        customView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                clickCount++;
+                if (clickCount >= 10) {
+                    MyUtils.isDebug = true;
+                    // 停止点击事件
+                    customView.setOnClickListener(null);
+                }else if(clickCount > 6){
+                    Toast.makeText(MainActivity.this,"再点击" + (10 - clickCount) + "次，打开Debug功能",Toast.LENGTH_SHORT).show();
+                }
+
+                if(clickCount == 1){
+                    // 在 20 秒后检查点击次数
+                    new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (!MyUtils.isDebug) {
+                                // 20 秒内未达到点击次数要求
+                                // 进行相应的处理逻辑
+                                clickCount = 0;
+                            }
+                        }
+                    }, 20000); // 20 秒
+                }
+            }
+        });
+
+
         enterDate = new Date();
         BluetoothManager bluetoothManager = (BluetoothManager) this.getSystemService(Context.BLUETOOTH_SERVICE);
         final BluetoothAdapter bluetoothadapter = bluetoothManager.getAdapter();
@@ -290,28 +322,6 @@ public class MainActivity extends AppCompatActivity {
             fuzzySearchBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-//                orignHistoryList.clear();
-//                for(String jsonStr : MyUtils.srcHisData){
-//                    JSONArray srcItemArray = (JSONArray)JSONArray.parse(jsonStr);
-//                    ArrayList<byte[]> curHistoryList = new ArrayList<>();
-//                    for(int i = 0;i < srcItemArray.size();i++){
-//                        String onRecordItem = srcItemArray.getString(i);
-//                        curHistoryList.add(MyUtils.hexString2Bytes(onRecordItem));
-//                    }
-//                    orignHistoryList.add(curHistoryList);
-//                }
-//                ArrayList<byte[]> mergeData = MyUtils.mergeOriginHisData(orignHistoryList);
-//                ArrayList<BleHisData> showBleHisData = new ArrayList<>();
-//                for(byte[] byteDataArray : mergeData){
-//                    boolean dataCorrect = MyUtils.checkOriginHisDataCrc(byteDataArray);
-//                    if(dataCorrect){
-//                        ArrayList<BleHisData> bleHisDataList = MyUtils.parseS02BleHisData(byteDataArray);
-//                        showBleHisData.addAll(bleHisDataList);
-//                        System.out.print("succ");
-//                    }else{
-//                        Toast.makeText(MainActivity.this,"Data not correct",Toast.LENGTH_LONG).show();
-//                    }
-//                }
 
                     if (!isFuzzySearchStatus) {
                         llFuzzySearch.setVisibility(View.VISIBLE);
@@ -648,7 +658,16 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_CODE_ACCESS_FINE_LOCATION || requestCode == REQUEST_CODE_ACCESS_COARSE_LOCATION) {
-            reStartApp();
+            SweetAlertDialog restartWarning = new SweetAlertDialog(MainActivity.this, SweetAlertDialog.WARNING_TYPE);
+            restartWarning.setTitleText("");
+            restartWarning.setContentText(getResources().getString(R.string.restart_app_warning));
+            restartWarning.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                @Override
+                public void onClick(SweetAlertDialog sweetAlertDialog) {
+                    reStartApp();
+                }
+            });
+            restartWarning.show();
         } else if (requestCode == REQUEST_CODE_BLUETOOTH_CONNECT || requestCode == REQUEST_CODE_BLUETOOTH_CONNECT) {
             BluetoothManager bluetoothManager = (BluetoothManager) this.getSystemService(Context.BLUETOOTH_SERVICE);
             BluetoothAdapter bluetoothadapter = bluetoothManager.getAdapter();
@@ -852,8 +871,9 @@ public class MainActivity extends AppCompatActivity {
             }
 //            Log.e("BluetoothUtils","MainActivity.onDeviceFounded " + device.getName() + "  " + device.getAddress() + "," + data);
             lastRecvDate = new Date();
-            if(device.getAddress() != null && device.getAddress().contains("C9:96")){
+            if(device.getAddress() != null && device.getAddress().contains("CD:5E")){
                 Log.e("BluetoothUtils","MainActivity.onDeviceFounded " + device.getName() + "  "+ result.getScanRecord().getDeviceName() + "  " + device.getAddress() + "," + data);
+            }else{
             }
             if (data != null) {
                 String head = data.substring(2, 8);
@@ -1537,6 +1557,7 @@ public class MainActivity extends AppCompatActivity {
                     holder.nidTextView = (TextView)convertView.findViewById(R.id.tx_nid);
                     holder.majorTextView = (TextView)convertView.findViewById(R.id.tx_major);
                     holder.minorTextView = (TextView)convertView.findViewById(R.id.tx_minor);
+                    holder.extSensorTextview = (TextView)convertView.findViewById(R.id.tx_ext_sensor_type);
 
                     holder.bidLine = (LinearLayout)convertView.findViewById(R.id.line_bid);
                     holder.nidLine = (LinearLayout)convertView.findViewById(R.id.line_nid);
@@ -1549,6 +1570,7 @@ public class MainActivity extends AppCompatActivity {
                     holder.minorLine = (LinearLayout)convertView.findViewById(R.id.line_minor);
                     holder.majorLine = (LinearLayout)convertView.findViewById(R.id.line_major);
                     holder.humidityLine = (LinearLayout)convertView.findViewById(R.id.line_humidity);
+                    holder.extSensorLine = (LinearLayout)convertView.findViewById(R.id.line_ext_sensor);
                     convertView.setTag(holder);
                 }
 
@@ -1580,6 +1602,7 @@ public class MainActivity extends AppCompatActivity {
                 holder.nidTextView.setText(bleDeviceData.getNid());
                 holder.majorTextView.setText(bleDeviceData.getMajor());
                 holder.minorTextView.setText(bleDeviceData.getMinor());
+                holder.extSensorTextview.setText(bleDeviceData.getExtSensorName(MainActivity.this));
                 if(MyUtils.isDebug){
                     holder.qrcodeLL.setVisibility(View.VISIBLE);
                     holder.qrCodeBtn.setTag(bleDeviceData.getId());
@@ -1595,26 +1618,32 @@ public class MainActivity extends AppCompatActivity {
                 holder.minorLine.setVisibility(View.GONE);
                 holder.majorLine.setVisibility(View.GONE);
                 holder.humidityLine.setVisibility(View.GONE);
+                holder.extSensorLine.setVisibility(View.GONE);
                 if(bleDeviceData.getBroadcastType().equals("Eddystone UID")){
                     holder.bidLine.setVisibility(View.VISIBLE);
                     holder.nidLine.setVisibility(View.VISIBLE);
                 }else  if(bleDeviceData.getBroadcastType().equals("Long range")){
                     holder.batteryLine.setVisibility(View.VISIBLE);
                     holder.batteryPercentLine.setVisibility(View.VISIBLE);
-                    holder.tempLine.setVisibility(View.VISIBLE);
-                    holder.humidityLine.setVisibility(View.VISIBLE);
-                    holder.lightLine.setVisibility(View.VISIBLE);
                     holder.warnLine.setVisibility(View.VISIBLE);
+                    holder.extSensorLine.setVisibility(View.VISIBLE);
+
+
+                    if(bleDeviceData.getExtSensorType() == 1){
+                        holder.tempLine.setVisibility(View.VISIBLE);
+                    }
                 }else  if(bleDeviceData.getBroadcastType().equals("Beacon")){
                     holder.minorLine.setVisibility(View.VISIBLE);
                     holder.majorLine.setVisibility(View.VISIBLE);
                 }else{
                     holder.batteryLine.setVisibility(View.VISIBLE);
                     holder.batteryPercentLine.setVisibility(View.VISIBLE);
-                    holder.tempLine.setVisibility(View.VISIBLE);
-                    holder.humidityLine.setVisibility(View.VISIBLE);
-                    holder.lightLine.setVisibility(View.VISIBLE);
                     holder.warnLine.setVisibility(View.VISIBLE);
+                    holder.extSensorLine.setVisibility(View.VISIBLE);
+
+                    if(bleDeviceData.getExtSensorType() == 1){
+                        holder.tempLine.setVisibility(View.VISIBLE);
+                    }
                 }
                 return convertView;
             }else if(bleDeviceData.getDeviceType() != null && bleDeviceData.getDeviceType().equals("S09")){
@@ -1745,9 +1774,9 @@ public class MainActivity extends AppCompatActivity {
         class S10ViewHolder {
             TextView deviceNameTextView,  idTextView,  dateTextView, rssiTextView,modelTextView,hardwareTextView,softwareTextView,
                     batteryTextView,tempTextView,humidityTextView,devicePropTextView,batteryPercentTextView,broadcastTypeTextview,
-                    bidTextView,nidTextView, majorTextView,minorTextView;;
+                    bidTextView,nidTextView, majorTextView,minorTextView,extSensorTextview;
             Button switchTempBtn,configBtn,qrCodeBtn;
-            LinearLayout bidLine,nidLine,batteryLine,batteryPercentLine,tempLine,lightLine,warnLine,majorLine,minorLine,humidityLine;
+            LinearLayout bidLine,nidLine,batteryLine,batteryPercentLine,tempLine,lightLine,warnLine,majorLine,minorLine,humidityLine,extSensorLine;
             LinearLayout qrcodeLL;
             MarqueeTextView alarmTextView;
         }

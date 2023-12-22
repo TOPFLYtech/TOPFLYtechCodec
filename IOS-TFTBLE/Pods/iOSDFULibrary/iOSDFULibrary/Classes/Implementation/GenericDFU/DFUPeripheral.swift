@@ -474,7 +474,7 @@ internal class BaseDFUPeripheral<TD : BasePeripheralDelegate> : NSObject, BaseDF
                 self.centralManager.cancelPeripheralConnection(peripheral)
             }
         }
-        connectionTimer?.schedule(deadline: .now() + 10.0)
+        connectionTimer?.schedule(deadline: .now() + 60)
         connectionTimer?.resume()
         logger.d("centralManager.connect(peripheral, options: nil)")
         centralManager.connect(peripheral!, options: nil)

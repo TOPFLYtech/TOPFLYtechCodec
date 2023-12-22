@@ -287,7 +287,36 @@
 
         </LinearLayout>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal"
+            android:id="@+id/line_ext_sensor">
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_weight="3"
+                android:background="@color/bg_color_white"
+                android:text="@string/ext_sensor"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:id="@+id/tx_ext_sensor_type"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_weight="2"
+                android:background="@color/bg_color_white"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"

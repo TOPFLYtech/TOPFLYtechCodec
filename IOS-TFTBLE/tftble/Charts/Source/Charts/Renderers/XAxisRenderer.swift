@@ -178,7 +178,7 @@ open class XAxisRenderer: NSObject, AxisRenderer
             else { return }
 
         let yOffset = axis.yOffset
-        
+        print("draw x label")
         switch axis.labelPosition {
         case .top:
             drawLabels(context: context, pos: viewPortHandler.contentTop - yOffset, anchor: CGPoint(x: 0.5, y: 1.0))
@@ -300,7 +300,7 @@ open class XAxisRenderer: NSObject, AxisRenderer
                     position.x += width / 2.0
                 }
             }
-            
+            print("draw label \(label), x \(position.x) y \(pos)")
             drawLabel(context: context,
                       formattedLabel: label,
                       x: position.x,

@@ -126,6 +126,19 @@ public class BleDeviceData {
     private int moveStatus;
     private String major;
     private String minor;
+    private int extSensorType;
+
+    public int getExtSensorType() {
+        return extSensorType;
+    }
+
+    public String getExtSensorName(Context context){
+        if (extSensorType == 1){
+            return context.getResources().getString(R.string.temp_sensor_gx112);
+        }else{
+            return "";
+        }
+    }
 
     public String getMajor() {
         return major;
@@ -568,7 +581,7 @@ public class BleDeviceData {
                 deviceType = "errorDevice";
                 return;
             }
-            if(data.length == 20){
+            if(data.length == 20 && data[2] == 0x00){
                 this.nid = hexData.substring(8,28);
                 this.bid = hexData.substring(28,40);
             }else{
@@ -725,7 +738,8 @@ public class BleDeviceData {
                     this.deviceProp = "-";
                     this.major = "-";
                     this.minor = "-";
-                    if(data.length < 22){
+                    this.extSensorType = 0;
+                    if(data.length < 19){
 
                     }else{
                         Boolean isGensor = false;
@@ -742,29 +756,21 @@ public class BleDeviceData {
                         int batteryVoltage = MyUtils.bytes2Short(data,14);
                         battery = String.format("%.2f V",batteryVoltage / 1000.0f);
                         batteryPercent = (data[16] & 0xff) + "%";
-                        int tempSrc =  MyUtils.bytes2Short(data,17);
-                        if(tempSrc == 65535){
-                            sourceTemp = -999;
-                        }else{
-                            int temp = (tempSrc & 0x7fff) * ((tempSrc & 0x8000) == 0x8000 ? -1 : 1);
-                            sourceTemp = temp /100.0f;
-                        }
-
-                        if(data[20] == 0x00){
-                            deviceProp = context.getResources().getString(R.string.normal);
-                        }else{
-                            deviceProp = context.getResources().getString(R.string.strong_light);
-                        }
-                        byte humidityByte = data[19];
-                        if (humidityByte == -1){
-                            humidity = "-";
-                        }else{
-                            humidity = String.valueOf((int)humidityByte);
-                        }
-
-
-                        byte warnByte = data[21];
+                        byte warnByte = data[17];
                         warn = warnByte;
+                        byte lightByte = data[18];
+                        byte extDeviceByte = data[19];
+                        this.extSensorType = extDeviceByte >> 4;
+                        int len = extDeviceByte & 0xf;
+                        if(this.extSensorType == 1){
+                            int tempSrc =  MyUtils.bytes2Short(data,20);
+                            if(tempSrc == 65535){
+                                sourceTemp = -999;
+                            }else{
+                                int temp = (tempSrc & 0x7fff) * ((tempSrc & 0x8000) == 0x8000 ? -1 : 1);
+                                sourceTemp = temp /100.0f;
+                            }
+                        }
                     }
 
                 }else{

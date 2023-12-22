@@ -78,6 +78,10 @@ class HistoryS04Header:UITableViewHeaderFooterView{
         self.alarmLabel.text = NSLocalizedString("alarm1", comment: "Alarm" )
     }
     
+    func hideAlarm(){
+        self.alarmLabel.isHidden = true
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }

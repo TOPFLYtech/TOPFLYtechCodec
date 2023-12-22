@@ -196,6 +196,10 @@ class EditRangeValueController:UIViewController{
         }else{
             saveLowValue = Int((Float)(lowValue)  ?? 0)
         }
+        if (saveHighValue < saveLowValue && saveLowValue != 4095 && saveHighValue != 4095){
+            Toast.hudBuilder.title(NSLocalizedString("high_must_great_than_low", comment: "The highest value must be greater than the lowest value")).show()
+                       return
+        }
         if  (saveHighValue < saveLowValue && saveLowValue != 4095) || (saveHighValue != 4095 && saveHighValue > 1000) ||
             (saveLowValue != 4095 && saveLowValue < 0){
             Toast.hudBuilder.title(NSLocalizedString("value_incorrect_out_of_range", comment: "Value is incorrect!It is out of range.")).show()
@@ -246,11 +250,20 @@ class EditRangeValueController:UIViewController{
         }
         print(saveLowValue)
         print(saveHighValue)
+        if (saveHighValue < saveLowValue && saveLowValue != 4095 && saveHighValue != 4095){
+            Toast.hudBuilder.title(NSLocalizedString("high_must_great_than_low", comment: "The highest value must be greater than the lowest value")).show()
+                       return
+        }
         if (saveHighValue < saveLowValue && saveLowValue != 4095) || (saveHighValue != 4095 && saveHighValue > 1000) ||
             (saveLowValue != 4095 && saveLowValue < -400){
-            Toast.hudBuilder.title(NSLocalizedString("value_incorrect_out_of_temp_range", comment: "Value is incorrect!It must between -40 and 100.")).show()
-                       return
-        } 
+            let tempUnit = UserDefaults.standard.integer(forKey: "tempUnit")
+            if tempUnit == 0{
+                Toast.hudBuilder.title(NSLocalizedString("value_incorrect_out_of_temp_range", comment: "Value is incorrect!It must between -40 and 100.")).show()
+            }else{
+                Toast.hudBuilder.title(NSLocalizedString("value_incorrect_out_of_temp_range1", comment: "Value is incorrect!It must between -40 and 212.")).show()
+            }
+            return
+        }
         self.delegate?.setRangeValue(high: saveHighValue, low: saveLowValue)
         self.navigationController?.popViewController(animated: false)
     }

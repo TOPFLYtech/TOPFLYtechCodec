@@ -14,10 +14,10 @@
 "upgrade"="升级";
 "device_name_desc"="设备名称：";
 "name_desc"="名称：";
-"reset_factory"="重设原厂";
+"reset_factory"="确认恢复出厂设置？";
 "broadcast_cycle_desc"="广播周期：";
 "temperature_low_alarm_desc"="温度过低警报：";
-"incorrect_name_length"="名称长度不正确！";
+"incorrect_name_length"="设备名长度必须在3到8之间";
 "upgrade_success"="升级成功";
 "transmitted_power"="发射功率：";
 "qr_code"="二维码";
@@ -130,6 +130,7 @@
 "report"="报告";
 "high_extreme_time_desc"="高于高点的时间：";
 "value_incorrect_out_of_temp_range"="值不正确！必须在-40和100之间。";
+"value_incorrect_out_of_temp_range"="值不正确！必须在-40和212之间。";
 "this_month"="这个月";
 "max_desc"="最高：";
 "need_reconnect_warning"="已断开连接，请手动重新连接！";
@@ -269,3 +270,7 @@
 "flashing_relay"="继电器周期性开关";
 "confirm_regular_relay_warning"="尝试周期性切换继电器?";
 "cycle_time_error_warning"="周期时长必须大于首亮时长.";
+"ext_sensor_desc"="外接传感器:";
+"temp_sensor_gx112"="温度传感器GX112";
+"not_find_ext_sensor"="没有找到外接传感器，请先连接外接传感器";
+"high_must_great_than_low"="最高值必须大于最低值";

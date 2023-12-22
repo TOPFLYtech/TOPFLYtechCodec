@@ -297,10 +297,10 @@ class DeviceS04Cell: UITableViewCell {
         }
         
         
-        marqueeView = JXMarqueeView()
-        marqueeView.contentView = self.warnContentLabel
-        marqueeView.contentMargin = 50
-        marqueeView.marqueeType = .left
+//        marqueeView = JXMarqueeView()
+//        marqueeView.contentView = self.warnContentLabel
+//        marqueeView.contentMargin = 50
+//        marqueeView.marqueeType = .left
         self.rootView.addSubview(warnContentLabel)
          self.initLayoutPosition()
         

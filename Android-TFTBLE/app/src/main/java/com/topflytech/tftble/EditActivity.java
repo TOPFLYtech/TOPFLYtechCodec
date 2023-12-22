@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.InputType;
 import android.util.Log;
 import android.view.View;
@@ -33,7 +34,6 @@ import com.inuker.bluetooth.library.connect.response.BleConnectResponse;
 import com.inuker.bluetooth.library.connect.response.BleNotifyResponse;
 import com.inuker.bluetooth.library.connect.response.BleWriteResponse;
 import com.inuker.bluetooth.library.model.BleGattProfile;
-import com.itextpdf.xmp.impl.Utils;
 import com.topflytech.tftble.data.BleDeviceData;
 import com.topflytech.tftble.data.BleHisData;
 import com.topflytech.tftble.data.DfuService;
@@ -78,6 +78,7 @@ public class EditActivity extends AppCompatActivity {
     private String confirmPwd,newPwd;
     SweetAlertDialog waitingDlg;
     SweetAlertDialog waitingCancelDlg;
+    SweetAlertDialog connectWaitingCancelDlg;
     SweetAlertDialog sweetPwdDlg;
     private String deviceName;
     EditText pwdEdit;
@@ -129,6 +130,13 @@ public class EditActivity extends AppCompatActivity {
 
     public static final int REQUEST_EDIT_PULSE_DELAY = 11;
     public static final int RESPONSE_EDIT_PULSE_DELAY = 11;
+
+
+
+    private int getExtSensorTypeNextCtrl = -1;
+    public static final int GET_EXT_SENSOR_TYPE_NEXT_DO_GET_HIS_DATA = 1;
+    public static final int GET_EXT_SENSOR_TYPE_NEXT_DO_START_RECORD = 2;
+
     private long startTimestamp,endTimestamp;
     private int transmittedPower;
     private boolean pwdErrorWarning = false;
@@ -237,7 +245,17 @@ public class EditActivity extends AppCompatActivity {
             waitingDlg.show();
         }
     }
-
+    private void showConnectWaitingCancelDlg(String warning){
+        connectWaitingCancelDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.PROGRESS_TYPE);
+        connectWaitingCancelDlg.getProgressHelper().setBarColor(Color.parseColor("#A5DC86"));
+        connectWaitingCancelDlg.showCancelButton(true);
+        connectWaitingCancelDlg.setCancelText(getResources().getString(R.string.cancel));
+        connectWaitingCancelDlg.setCancelClickListener(sweetPwdCancelClick);
+        if (warning != null && !warning.isEmpty()){
+            connectWaitingCancelDlg.setTitleText(warning);
+        }
+        connectWaitingCancelDlg.show();
+    }
     private void showWaitingCancelDlg(String warning){
         waitingCancelDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.PROGRESS_TYPE);
         waitingCancelDlg.getProgressHelper().setBarColor(Color.parseColor("#A5DC86"));
@@ -297,12 +315,32 @@ public class EditActivity extends AppCompatActivity {
         });
     }
 
+    private void connectFailTimeoutShow(long tick){
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                // 要执行的操作
+                if(!connectSucc && onThisView){
+                    if(connectWaitingCancelDlg != null){
+                        connectWaitingCancelDlg.hide();
+                    }
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                }
+            }
+        }, tick);
+    }
+
     private void doReconnect(){
-        reconnectBtn.setImageResource(R.mipmap.ic_refresh);
+        if(connectWaitingCancelDlg != null){
+            connectWaitingCancelDlg.hide();
+        }
+        reconnectBtn.setImageResource(R.mipmap.ic_disconnect);
         mClient.disconnect(mac);
         connectSucc = false;
-        showWaitingDlg(getResources().getString(R.string.reconnecting));
+        showConnectWaitingCancelDlg(getResources().getString(R.string.reconnecting));
         mClient.connect(mac,bleConnectResponse);
+        connectFailTimeoutShow(60000);
         mClient.registerConnectStatusListener(mac, mBleConnectStatusListener);
     }
 
@@ -354,6 +392,7 @@ public class EditActivity extends AppCompatActivity {
     }};
 
 
+
     private ArrayList<String> saveIntervalList = new ArrayList<>();
     private TextView deviceNameTV,modelTV,hardwareTV,softwareTV,broadcastCycleTV,saveRecordIntervalTV,
         tempHighAlarmTV,tempLowAlarmTV,humidityHighAlarmTV,humidityLowAlarmTV,saveCountTV,alarmCountTV,transmittedPowerTV,dinVoltageTV,dinStatusEventTV,
@@ -397,6 +436,11 @@ public class EditActivity extends AppCompatActivity {
         ledSwitch.setOnSwitchChangeListener(new SwitchButton.OnSwitchChangeListener() {
             @Override
             public void onSwitchChanged(boolean open) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    ledSwitch.setSwitchStatus(!ledSwitch.getSwitchStatus());
+                    return;
+                }
                 writeLedOpenStatus();
             }
         });
@@ -404,6 +448,11 @@ public class EditActivity extends AppCompatActivity {
         lightSensorEnableSwitch.setOnSwitchChangeListener(new SwitchButton.OnSwitchChangeListener() {
             @Override
             public void onSwitchChanged(boolean open) {
+                if(!connectSucc){
+                    lightSensorEnableSwitch.setSwitchStatus(!lightSensorEnableSwitch.getSwitchStatus());
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 writeLightSensorEnableStatus();
             }
         });
@@ -411,6 +460,11 @@ public class EditActivity extends AppCompatActivity {
         relaySwitch.setOnSwitchChangeListener(new SwitchButton.OnSwitchChangeListener() {
             @Override
             public void onSwitchChanged(boolean open) {
+                if(!connectSucc){
+                    relaySwitch.setSwitchStatus(!relaySwitch.getSwitchStatus());
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 if(Integer.valueOf(software) >= 18){
                     pvRelayType.show();
                 }else{
@@ -439,6 +493,11 @@ public class EditActivity extends AppCompatActivity {
         relayFlashingSwitch.setOnSwitchChangeListener(new SwitchButton.OnSwitchChangeListener() {
             @Override
             public void onSwitchChanged(boolean open) {
+                if(!connectSucc){
+                    relayFlashingSwitch.setSwitchStatus(!relayFlashingSwitch.getSwitchStatus());
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 if(MyUtils.isDebug){
                     writeFlashingRelayStatus();
                     return;
@@ -469,6 +528,10 @@ public class EditActivity extends AppCompatActivity {
         pvRelayType = new OptionsPickerBuilder(EditActivity.this, new OnOptionsSelectListener() {
             @Override
             public void onOptionsSelect(int options1, int option2, int options3 ,View v) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 //返回的分别是三个级别的选中位置
                 if(options1 == 0){
                     if(MyUtils.isDebug){
@@ -538,6 +601,10 @@ public class EditActivity extends AppCompatActivity {
         }).addOnCancelClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 relaySwitch.setSwitchStatus(!relaySwitch.getSwitchStatus());
             }
         }).build();
@@ -547,6 +614,10 @@ public class EditActivity extends AppCompatActivity {
         btnEditDeviceName.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 SweetAlertDialog editDeviceNameDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.INPUT_TYPE);
                 editDeviceNameDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
                 editDeviceNameDlg.setTitleText(getResources().getString(R.string.enter_device_name));
@@ -561,7 +632,7 @@ public class EditActivity extends AppCompatActivity {
                             sweetAlertDialog.hide();
                             writeDeviceName(deviceName);
                         }else{
-                            Toast.makeText(EditActivity.this,R.string.input_error,Toast.LENGTH_SHORT).show();
+                            Toast.makeText(EditActivity.this,R.string.device_name_len_error,Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
@@ -572,6 +643,10 @@ public class EditActivity extends AppCompatActivity {
         btnEditPwd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 Intent intent = new Intent( EditActivity.this, EditPwdActivity.class);
                 intent.putExtra("oldPwd",confirmPwd);
                 startActivityForResult(intent,REQUEST_CHANGE_PWD);
@@ -580,6 +655,10 @@ public class EditActivity extends AppCompatActivity {
         pvBroadcastCycle = new OptionsPickerBuilder(EditActivity.this, new OnOptionsSelectListener() {
             @Override
             public void onOptionsSelect(int options1, int option2, int options3 ,View v) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 //返回的分别是三个级别的选中位置
                 int broadcastCycle = 5 * (options1 + 1);
                 writeBroadcastData(broadcastCycle);
@@ -590,6 +669,10 @@ public class EditActivity extends AppCompatActivity {
         btnEditBroadcastCycle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 pvBroadcastCycle.setSelectOptions(0);
                 if(broadcastCycleTV.getText().toString().equals("10s")){
                     pvBroadcastCycle.setSelectOptions(1);
@@ -602,9 +685,13 @@ public class EditActivity extends AppCompatActivity {
         btnEditHighTemp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 Intent intent = new Intent( EditActivity.this, EditRangeValueActivity.class);
-                intent.putExtra("highValue",String.valueOf(tempAlarmUp));
-                intent.putExtra("lowValue",String.valueOf(tempAlarmDown));
+                intent.putExtra("highValue",BleDeviceData.getCurTemp(EditActivity.this,tempAlarmUp));
+                intent.putExtra("lowValue",BleDeviceData.getCurTemp(EditActivity.this,tempAlarmDown));
                 intent.putExtra("highValueOpen",tempAlarmUpOpen);
                 intent.putExtra("lowValueOpen",tempAlarmDownOpen);
                 intent.putExtra("editType","temp");
@@ -615,9 +702,13 @@ public class EditActivity extends AppCompatActivity {
         btnEditLowTemp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 Intent intent = new Intent( EditActivity.this, EditRangeValueActivity.class);
-                intent.putExtra("highValue",String.valueOf(tempAlarmUp));
-                intent.putExtra("lowValue",String.valueOf(tempAlarmDown));
+                intent.putExtra("highValue",BleDeviceData.getCurTemp(EditActivity.this,tempAlarmUp));
+                intent.putExtra("lowValue",BleDeviceData.getCurTemp(EditActivity.this,tempAlarmDown));
                 intent.putExtra("highValueOpen",tempAlarmUpOpen);
                 intent.putExtra("lowValueOpen",tempAlarmDownOpen);
                 intent.putExtra("editType","temp");
@@ -628,6 +719,10 @@ public class EditActivity extends AppCompatActivity {
         btnEditHumidityHigh.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 Intent intent = new Intent( EditActivity.this, EditRangeValueActivity.class);
                 intent.putExtra("highValue",String.valueOf(humidityAlarmUp));
                 intent.putExtra("lowValue",String.valueOf(humidityAlarmDown));
@@ -641,6 +736,10 @@ public class EditActivity extends AppCompatActivity {
         btnEditHumidityLow.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 Intent intent = new Intent( EditActivity.this, EditRangeValueActivity.class);
                 intent.putExtra("highValue",String.valueOf(humidityAlarmUp));
                 intent.putExtra("lowValue",String.valueOf(humidityAlarmDown));
@@ -657,6 +756,10 @@ public class EditActivity extends AppCompatActivity {
         pvSaveInterval = new OptionsPickerBuilder(EditActivity.this, new OnOptionsSelectListener() {
             @Override
             public void onOptionsSelect(int options1, int option2, int options3 ,View v) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 //返回的分别是三个级别的选中位置
 //                String tx = options1Items.get(options1).getPickerViewText()
 //                        + options2Items.get(options1).get(option2)
@@ -671,6 +774,10 @@ public class EditActivity extends AppCompatActivity {
         btnEditSaveRecordInterval.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
 //                SweetAlertDialog editSaveRecordIntervalDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.INPUT_TYPE);
 //                editSaveRecordIntervalDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
 //                editSaveRecordIntervalDlg.setTitleText(getResources().getString(R.string.enter_save_record_interval));
@@ -696,6 +803,14 @@ public class EditActivity extends AppCompatActivity {
 //                    }
 //                });
 //                editSaveRecordIntervalDlg.show();
+                pvSaveInterval.setSelectOptions(0);
+                String curItem = saveRecordIntervalTV.getText().toString().replace("s", "");
+                for(int i = 0;i < saveIntervalList.size();i++){
+                    if(curItem.equals(saveIntervalList.get(i))){
+                        pvSaveInterval.setSelectOptions(i);
+                    }
+                }
+
                 pvSaveInterval.show();
             }
         });
@@ -703,6 +818,10 @@ public class EditActivity extends AppCompatActivity {
         btnRefreshSaveCount.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 showWaitingDlg(getResources().getString(R.string.waiting));
                 readSaveCount();
             }
@@ -711,6 +830,10 @@ public class EditActivity extends AppCompatActivity {
         btnRefreshAlarmCount.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 showWaitingDlg(getResources().getString(R.string.waiting));
                 readSaveCount();
             }
@@ -719,19 +842,33 @@ public class EditActivity extends AppCompatActivity {
         btnReadSaveCount.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startHistory = false;
-                Intent intent = new Intent(EditActivity.this,HistorySelectActivity.class);
-                intent.putExtra("mac",mac);
-                intent.putExtra("deviceType",deviceType);
-                intent.putExtra("id",id);
-                intent.putExtra("reportType","history");
-                startActivityForResult(intent,REQUEST_READ_HISTORY_TIME);
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if(deviceType.equals("S10")){
+                    getExtSensorTypeNextCtrl = GET_EXT_SENSOR_TYPE_NEXT_DO_GET_HIS_DATA;
+                    readExtSensorType();
+                }else{
+                    startHistory = false;
+                    Intent intent = new Intent(EditActivity.this,HistorySelectActivity.class);
+                    intent.putExtra("mac",mac);
+                    intent.putExtra("deviceType",deviceType);
+                    intent.putExtra("id",id);
+                    intent.putExtra("reportType","history");
+                    startActivityForResult(intent,REQUEST_READ_HISTORY_TIME);
+                }
+
             }
         });
         btnReadAlarmCount = (Button)findViewById(R.id.btn_read_alarm_count);
         btnReadAlarmCount.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 startHistory = false;
                 Intent intent = new Intent(EditActivity.this,HistorySelectActivity.class);
                 intent.putExtra("mac",mac);
@@ -745,13 +882,26 @@ public class EditActivity extends AppCompatActivity {
         btnStartRecord.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startRecord();
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if(deviceType.equals("S10")){
+                    getExtSensorTypeNextCtrl = GET_EXT_SENSOR_TYPE_NEXT_DO_START_RECORD;
+                    readExtSensorType();
+                }else{
+                    startRecord();
+                }
             }
         });
         btnStopRecord = (Button)findViewById(R.id.btn_stop_record);
         btnStopRecord.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 stopRecord();
             }
         });
@@ -759,6 +909,10 @@ public class EditActivity extends AppCompatActivity {
         btnClearRecord.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 clearRecord();
             }
         });
@@ -766,6 +920,10 @@ public class EditActivity extends AppCompatActivity {
         btnResetFactory.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 SweetAlertDialog confirmRelayDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.NORMAL_TYPE);
                 confirmRelayDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
                 confirmRelayDlg.setTitleText(getResources().getString(R.string.confirm_reset_factory_warning));
@@ -787,6 +945,10 @@ public class EditActivity extends AppCompatActivity {
         btnUpgrade.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 SweetAlertDialog confirmUpgradeDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.NORMAL_TYPE);
                 confirmUpgradeDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
                 confirmUpgradeDlg.setTitleText(getResources().getString(R.string.upgrade_confirm));
@@ -809,6 +971,10 @@ public class EditActivity extends AppCompatActivity {
         btnBetaUpgrade.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 SweetAlertDialog confirmUpgradeDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.NORMAL_TYPE);
                 confirmUpgradeDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
                 confirmUpgradeDlg.setTitleText(getResources().getString(R.string.upgrade_beta_confirm));
@@ -830,6 +996,10 @@ public class EditActivity extends AppCompatActivity {
         pvTransmittedPower = new OptionsPickerBuilder(EditActivity.this, new OnOptionsSelectListener() {
             @Override
             public void onOptionsSelect(int options1, int option2, int options3 ,View v) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 //返回的分别是三个级别的选中位置
 //                String tx = options1Items.get(options1).getPickerViewText()
 //                        + options2Items.get(options1).get(option2)
@@ -845,6 +1015,10 @@ public class EditActivity extends AppCompatActivity {
         btnEditTransmittedPower.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 pvTransmittedPower.setSelectOptions(0);
                 for(int i = 0;i < transmittedPowerList.size();i++){
                     String item  = transmittedPowerList.get(i);
@@ -863,6 +1037,10 @@ public class EditActivity extends AppCompatActivity {
         btnDebugUpgrade.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 SweetAlertDialog urlDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.INPUT_TYPE);
                 urlDlg.setTitleText(getResources().getString(R.string.input_debug_upgrade_url));
                 urlDlg.setCancelable(true);
@@ -883,8 +1061,10 @@ public class EditActivity extends AppCompatActivity {
                                     if(StatusCode.OK == code){
                                         updateDFU(mac,deviceName,result);
                                     }else{
-                                        waitingDlg.hide();
-                                        Toast.makeText(EditActivity.this,R.string.download_file_fail,Toast.LENGTH_LONG);
+                                        if(waitingDlg != null){
+                                            waitingDlg.hide();
+                                        }
+                                        Toast.makeText(EditActivity.this,R.string.download_file_fail,Toast.LENGTH_LONG).show();
                                     }
                                 }
                             });
@@ -908,6 +1088,10 @@ public class EditActivity extends AppCompatActivity {
         pvDinStatusEvent = new OptionsPickerBuilder(EditActivity.this, new OnOptionsSelectListener() {
             @Override
             public void onOptionsSelect(int options1, int option2, int options3 ,View v) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 //返回的分别是三个级别的选中位置
 //                String tx = options1Items.get(options1).getPickerViewText()
 //                        + options2Items.get(options1).get(option2)
@@ -921,6 +1105,10 @@ public class EditActivity extends AppCompatActivity {
         btnDinStatusEvent.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 pvDinStatusEvent.setSelectOptions(0);
                 int index = dinStatusEventList.indexOf(dinStatusEventTV.getText().toString());
                 if(index >= 0 && index < dinStatusEventList.size()){
@@ -933,6 +1121,10 @@ public class EditActivity extends AppCompatActivity {
         btnEditDoutStatus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 dout0 = null;
                 dout1 = null;
                 readDoutStatus(0);
@@ -944,6 +1136,10 @@ public class EditActivity extends AppCompatActivity {
         btnShowAinVoltage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 ain1=null;
                 ain2=null;
                 ain3=null;
@@ -958,6 +1154,10 @@ public class EditActivity extends AppCompatActivity {
         pvPortSelect = new OptionsPickerBuilder(EditActivity.this, new OnOptionsSelectListener() {
             @Override
             public void onOptionsSelect(int options1, int option2, int options3 ,View v) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 readPositiveNegativeWarning(options1 );
             }
         }).build();
@@ -966,6 +1166,10 @@ public class EditActivity extends AppCompatActivity {
         btnPositiveNegativeWarning.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 pvPortSelect.show();
             }
         });
@@ -973,6 +1177,10 @@ public class EditActivity extends AppCompatActivity {
         btnGeoOneWireDevice.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 readOneWireDevice();
             }
         });
@@ -981,6 +1189,10 @@ public class EditActivity extends AppCompatActivity {
         pvOneWireWorkMode = new OptionsPickerBuilder(EditActivity.this, new OnOptionsSelectListener() {
             @Override
             public void onOptionsSelect(int options1, int option2, int options3 ,View v) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 //返回的分别是三个级别的选中位置
                 writeOneWireWorkMode(options1);
             }
@@ -989,6 +1201,10 @@ public class EditActivity extends AppCompatActivity {
         btnOneWireWorkMode.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 int value = oneWireWorkModeList.indexOf(oneWireWorkModeTV.getText().toString().trim());
                 if(value >= 0){
                     pvOneWireWorkMode.setSelectOptions(value);
@@ -1000,6 +1216,10 @@ public class EditActivity extends AppCompatActivity {
         pvRs385BaudRate = new OptionsPickerBuilder(EditActivity.this, new OnOptionsSelectListener() {
             @Override
             public void onOptionsSelect(int options1, int option2, int options3 ,View v) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 //返回的分别是三个级别的选中位置
                 writeRs485BaudRate(Integer.valueOf(rs485BaudRateList.get(options1)));
             }
@@ -1009,6 +1229,10 @@ public class EditActivity extends AppCompatActivity {
         btnRs485BaudRate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 int value = rs485BaudRateList.indexOf(rs485BaudRateTV.getText().toString().trim());
                 if(value >= 0){
                     pvRs385BaudRate.setSelectOptions(value);
@@ -1020,6 +1244,11 @@ public class EditActivity extends AppCompatActivity {
         rs485EnableSwitch.setOnSwitchChangeListener(new SwitchButton.OnSwitchChangeListener() {
             @Override
             public void onSwitchChanged(boolean open) {
+                if(!connectSucc){
+                    rs485EnableSwitch.setSwitchStatus(!rs485EnableSwitch.getSwitchStatus());
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 writeRs485EnableStatus();
             }
         });
@@ -1028,6 +1257,10 @@ public class EditActivity extends AppCompatActivity {
         pvBroadcastType = new OptionsPickerBuilder(EditActivity.this, new OnOptionsSelectListener() {
             @Override
             public void onOptionsSelect(int options1, int option2, int options3 ,View v) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 //返回的分别是三个级别的选中位置
                 writeBroadcastType(options1);
             }
@@ -1036,6 +1269,10 @@ public class EditActivity extends AppCompatActivity {
         btnBroadcastType.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 int value = broadcastTypeList.indexOf(broadcastTypeTV.getText().toString().trim());
                 if(value >= 0){
                     pvBroadcastType.setSelectOptions(value);
@@ -1047,6 +1284,11 @@ public class EditActivity extends AppCompatActivity {
         longRangeEnableSwitch.setOnSwitchChangeListener(new SwitchButton.OnSwitchChangeListener() {
             @Override
             public void onSwitchChanged(boolean open) {
+                if(!connectSucc){
+                    longRangeEnableSwitch.setSwitchStatus(!longRangeEnableSwitch.getSwitchStatus());
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 writeLongRangeEnableStatus();
             }
         });
@@ -1054,6 +1296,11 @@ public class EditActivity extends AppCompatActivity {
         gSensorEnableSwitch.setOnSwitchChangeListener(new SwitchButton.OnSwitchChangeListener() {
             @Override
             public void onSwitchChanged(boolean open) {
+                if(!connectSucc){
+                    gSensorEnableSwitch.setSwitchStatus(!gSensorEnableSwitch.getSwitchStatus());
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 writeGSensorEnableStatus();
             }
         });
@@ -1061,6 +1308,10 @@ public class EditActivity extends AppCompatActivity {
         btnDinVoltageRefresh.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 readDinVoltage();
             }
         });
@@ -1068,6 +1319,10 @@ public class EditActivity extends AppCompatActivity {
         btnSendCmdData.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 Intent intent = new Intent(EditActivity.this, EditRS485CmdActivity.class);
                 startActivityForResult(intent, REQUEST_RS485_SEND_DATA);
             }
@@ -1076,6 +1331,10 @@ public class EditActivity extends AppCompatActivity {
         btnSendInstructionSequence.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 Intent intent = new Intent(EditActivity.this,EditInstructionSequenceActivity.class);
                 startActivityForResult(intent,REQUEST_SEND_INSTRUCTION_SEQUENCE);
             }
@@ -1084,6 +1343,10 @@ public class EditActivity extends AppCompatActivity {
         btnShutdown.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 SweetAlertDialog confirmRelayDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.NORMAL_TYPE);
                 confirmRelayDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
                 confirmRelayDlg.setTitleText(getResources().getString(R.string.confirm_shutdown_warning));
@@ -1104,6 +1367,11 @@ public class EditActivity extends AppCompatActivity {
         doorEnableSwitch.setOnSwitchChangeListener(new SwitchButton.OnSwitchChangeListener() {
             @Override
             public void onSwitchChanged(boolean open) {
+                if(!connectSucc){
+                    doorEnableSwitch.setSwitchStatus(!doorEnableSwitch.getSwitchStatus());
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 writeDoorEnableStatus();
             }
         });
@@ -1112,6 +1380,10 @@ public class EditActivity extends AppCompatActivity {
         btnGSensorSensitivity.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 SweetAlertDialog editGSensorSensitivityDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.INPUT_TYPE);
                 editGSensorSensitivityDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
                 editGSensorSensitivityDlg.setTitleText(getResources().getString(R.string.gsensor_sensitivity));
@@ -1145,6 +1417,10 @@ public class EditActivity extends AppCompatActivity {
         btnGSensorDetectionDuration.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 SweetAlertDialog editGSensorDetectionDurationDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.INPUT_TYPE);
                 editGSensorDetectionDurationDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
                 editGSensorDetectionDurationDlg.setTitleText(getResources().getString(R.string.gsensor_detection_duration));
@@ -1178,6 +1454,10 @@ public class EditActivity extends AppCompatActivity {
         btnGSensorDetectionInterval.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 SweetAlertDialog editGSensorDetectionIntervalDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.INPUT_TYPE);
                 editGSensorDetectionIntervalDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
                 editGSensorDetectionIntervalDlg.setTitleText(getResources().getString(R.string.gsensor_detection_interval));
@@ -1218,6 +1498,10 @@ public class EditActivity extends AppCompatActivity {
         btnBeaconMajorSet.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 SweetAlertDialog editBeaconMajorSetDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.INPUT_TYPE);
                 editBeaconMajorSetDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
                 editBeaconMajorSetDlg.setTitleText(getResources().getString(R.string.beacon_major_set));
@@ -1248,6 +1532,10 @@ public class EditActivity extends AppCompatActivity {
         btnBeaconMinorSet.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 SweetAlertDialog editBeaconMinorSetDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.INPUT_TYPE);
                 editBeaconMinorSetDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
                 editBeaconMinorSetDlg.setTitleText(getResources().getString(R.string.beacon_minor_set));
@@ -1278,6 +1566,10 @@ public class EditActivity extends AppCompatActivity {
         btnEddystoneNidSet.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 SweetAlertDialog editEddystoneNidSetDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.INPUT_TYPE);
                 editEddystoneNidSetDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
                 editEddystoneNidSetDlg.setTitleText(getResources().getString(R.string.eddystone_nid_set));
@@ -1315,6 +1607,10 @@ public class EditActivity extends AppCompatActivity {
         btnEddystoneBidSet.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectSucc){
+                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 SweetAlertDialog editEddystoneBidSetDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.INPUT_TYPE);
                 editEddystoneBidSetDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
                 editEddystoneBidSetDlg.setTitleText(getResources().getString(R.string.eddystone_bid_set));
@@ -1363,8 +1659,10 @@ public class EditActivity extends AppCompatActivity {
                 if(StatusCode.OK == code){
                     updateDFU(mac,deviceName,result);
                 }else{
-                    waitingDlg.hide();
-                    Toast.makeText(EditActivity.this,R.string.download_file_fail,Toast.LENGTH_LONG);
+                    if(waitingDlg != null){
+                        waitingDlg.hide();
+                    }
+                    Toast.makeText(EditActivity.this,R.string.download_file_fail,Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -1379,8 +1677,10 @@ public class EditActivity extends AppCompatActivity {
                 if(StatusCode.OK == code){
                     updateDFU(mac,deviceName,result);
                 }else{
-                    waitingDlg.hide();
-                    Toast.makeText(EditActivity.this,R.string.download_file_fail,Toast.LENGTH_LONG);
+                    if(waitingDlg != null){
+                        waitingDlg.hide();
+                    }
+                    Toast.makeText(EditActivity.this,R.string.download_file_fail,Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -1410,6 +1710,9 @@ public class EditActivity extends AppCompatActivity {
 
             } else if (status == STATUS_DISCONNECTED) {
                 if (onThisView){
+                    if(connectWaitingCancelDlg != null){
+                        connectWaitingCancelDlg.hide();
+                    }
                     Toast.makeText(EditActivity.this,R.string.disconnect_from_device,Toast.LENGTH_SHORT).show();
                 }
                 connectSucc = false;
@@ -1435,6 +1738,7 @@ public class EditActivity extends AppCompatActivity {
             }
 
             mClient.connect(mac,bleConnectResponse);
+            connectFailTimeoutShow(60000);
             mClient.registerConnectStatusListener(mac, mBleConnectStatusListener);
         }
 
@@ -1442,7 +1746,9 @@ public class EditActivity extends AppCompatActivity {
         public void onDfuAborted(String deviceAddress) {
             Log.e("BluetoothUtils","onDfuAborted");
             upgradeStatus = "aborted";
-            waitingDlg.hide();
+            if(waitingDlg != null){
+                waitingDlg.hide();
+            }
             Toast.makeText(EditActivity.this,R.string.upgrade_aborted,Toast.LENGTH_LONG);
         }
 
@@ -1451,7 +1757,9 @@ public class EditActivity extends AppCompatActivity {
             Log.e("BluetoothUtils","onError");
             upgradeStatus = "error";
             upgradeErrorMsg = message;
-            waitingDlg.hide();
+            if(waitingDlg != null){
+                waitingDlg.hide();
+            }
             Toast.makeText(EditActivity.this,message,Toast.LENGTH_LONG);
         }
 
@@ -1744,14 +2052,14 @@ public class EditActivity extends AppCompatActivity {
                 transmittedPowerLL.setVisibility(View.VISIBLE);
                 transmittedPowerLineLL.setVisibility(View.VISIBLE);
             }
-            if(Integer.valueOf(software) > 10){
-                recordControlLL.setVisibility(View.VISIBLE);
-                recordControlLineLL.setVisibility(View.VISIBLE);
-                readAlarmLL.setVisibility(View.VISIBLE);
-                readAlarmLineLL.setVisibility(View.VISIBLE);
-                clearRecordLL.setVisibility(View.VISIBLE);
-                clearRecordLineLL.setVisibility(View.VISIBLE);
-            }
+//            if(Integer.valueOf(software) > 10){
+//                recordControlLL.setVisibility(View.VISIBLE);
+//                recordControlLineLL.setVisibility(View.VISIBLE);
+//                readAlarmLL.setVisibility(View.VISIBLE);
+//                readAlarmLineLL.setVisibility(View.VISIBLE);
+//                clearRecordLL.setVisibility(View.VISIBLE);
+//                clearRecordLineLL.setVisibility(View.VISIBLE);
+//            }
             tempLowAlarmLL.setVisibility(View.VISIBLE);
             tempLowAlarmLineLL.setVisibility(View.VISIBLE);
             tempHighAlarmLL.setVisibility(View.VISIBLE);
@@ -1832,8 +2140,7 @@ public class EditActivity extends AppCompatActivity {
             oneWireWorkModeLineLL.setVisibility(View.VISIBLE);
             broadcastCycleLL.setVisibility(View.GONE);
             broadcastCycleLineLL.setVisibility(View.GONE);
-            longRangeLL.setVisibility(View.VISIBLE);
-            longRangeLineLL.setVisibility(View.VISIBLE);
+
         }else if (deviceType.equals("S08")){
             transmittedPowerLL.setVisibility(View.VISIBLE);
             transmittedPowerLineLL.setVisibility(View.VISIBLE);
@@ -1850,20 +2157,18 @@ public class EditActivity extends AppCompatActivity {
             humidityHighAlarmLL.setVisibility(View.GONE);
             humidityLowAlarmLineLL.setVisibility(View.GONE);
             humidityHighAlarmLineLL.setVisibility(View.GONE);
-            longRangeLL.setVisibility(View.VISIBLE);
-            longRangeLineLL.setVisibility(View.VISIBLE);
+
             broadcastTypeLL.setVisibility(View.VISIBLE);
             broadcastTypeLineLL.setVisibility(View.VISIBLE);
-            gSensorEnableLL.setVisibility(View.VISIBLE);
-            gSensorEnableLineLL.setVisibility(View.VISIBLE);
+
             tempLowAlarmLL.setVisibility(View.VISIBLE);
             tempLowAlarmLineLL.setVisibility(View.VISIBLE);
             tempHighAlarmLL.setVisibility(View.VISIBLE);
             tempHighAlarmLineLL.setVisibility(View.VISIBLE);
             shutdownLL.setVisibility(View.VISIBLE);
             shutdownLineLL.setVisibility(View.VISIBLE);
-            doorEnableLL.setVisibility(View.VISIBLE);
-            doorEnableLineLL.setVisibility(View.VISIBLE);
+//            doorEnableLL.setVisibility(View.VISIBLE);
+//            doorEnableLineLL.setVisibility(View.VISIBLE);
         }
         else if (deviceType.equals("S10")){
             transmittedPowerLL.setVisibility(View.VISIBLE);
@@ -1881,8 +2186,7 @@ public class EditActivity extends AppCompatActivity {
             humidityHighAlarmLL.setVisibility(View.VISIBLE);
             humidityLowAlarmLineLL.setVisibility(View.VISIBLE);
             humidityHighAlarmLineLL.setVisibility(View.VISIBLE);
-            longRangeLL.setVisibility(View.VISIBLE);
-            longRangeLineLL.setVisibility(View.VISIBLE);
+
             broadcastTypeLL.setVisibility(View.VISIBLE);
             broadcastTypeLineLL.setVisibility(View.VISIBLE);
             gSensorEnableLL.setVisibility(View.GONE);
@@ -1906,8 +2210,6 @@ public class EditActivity extends AppCompatActivity {
             broadcastTypeLineLL.setVisibility(View.VISIBLE);
             ledLL.setVisibility(View.GONE);
             ledLineLL.setVisibility(View.GONE);
-            longRangeLL.setVisibility(View.VISIBLE);
-            longRangeLineLL.setVisibility(View.VISIBLE);
         }
     }
 
@@ -2021,7 +2323,9 @@ public class EditActivity extends AppCompatActivity {
                 readGSensorEnable();
                 readDinStatusEvent();
                 readDinVoltage( );
-                readDoorEnableStatus();
+                if( !deviceType.equals("S08")){
+                    readDoorEnableStatus();
+                }
                 fixTime();
             }else{
                 Toast.makeText(EditActivity.this,R.string.input_error,Toast.LENGTH_SHORT).show();
@@ -2044,7 +2348,9 @@ public class EditActivity extends AppCompatActivity {
                         .setTitleText(getResources().getString(R.string.warning))
                         .setContentText(getResources().getString(R.string.connect_fail))
                         .show();
-                waitingDlg.hide();
+                if(waitingDlg != null){
+                    waitingDlg.hide();
+                }
             }
         }
     };
@@ -2073,7 +2379,9 @@ public class EditActivity extends AppCompatActivity {
                         readTransmittedPowerResp(value);
                     }else if(type == MyUtils.controlFunc.get("saveCount").get("read")){
                         readSaveCountResp(value);
-                        waitingDlg.hide();
+                        if(waitingDlg != null){
+                            waitingDlg.hide();
+                        }
                     }else if(type == MyUtils.controlFunc.get("readOriginData").get("read")){
                         readHistoryResp(value);
                     }else if(type == MyUtils.controlFunc.get("readAlarm").get("read")){
@@ -2146,6 +2454,8 @@ public class EditActivity extends AppCompatActivity {
                     }else if(type == MyUtils.controlFunc.get("broadcastType").get("read")
                             || type == MyUtils.controlFunc.get("broadcastType").get("write")){
                         readBroadcastTypeResp(value);
+                    }else if(type == MyUtils.controlFunc.get("readExtSensorType").get("read") ){
+                        readExtSensorTypeResp(value);
                     }else if(type == MyUtils.controlFunc.get("longRangeEnable").get("read") ||
                             type == MyUtils.controlFunc.get("longRangeEnable").get("write")){
                         readLongRangeEnableStatusResp(value);
@@ -2195,7 +2505,9 @@ public class EditActivity extends AppCompatActivity {
                         readEddystoneBidSetResp(value);
                     }
                 }else if (status == 1){
-                    waitingDlg.hide();
+                    if(waitingDlg != null){
+                        waitingDlg.hide();
+                    }
                     if(!pwdErrorWarning){
                         Toast.makeText(EditActivity.this,R.string.password_is_error,Toast.LENGTH_SHORT).show();
                         pwdErrorWarning = true;
@@ -2208,7 +2520,9 @@ public class EditActivity extends AppCompatActivity {
                         readNextAlarmResp(value);
                     }
                 }else {
-                    waitingDlg.hide();
+                    if(waitingDlg != null){
+                        waitingDlg.hide();
+                    }
                     Toast.makeText(EditActivity.this,R.string.error_please_try_again,Toast.LENGTH_SHORT).show();
                 }
             }
@@ -2218,7 +2532,7 @@ public class EditActivity extends AppCompatActivity {
         public void onResponse(int code) {
             if (code == REQUEST_SUCCESS) {
                 if(!connectSucc){
-                    waitingDlg.hide();
+                    connectWaitingCancelDlg.hide();
                     showPwdDlg();
                 }
                 connectSucc = true;
@@ -2237,7 +2551,7 @@ public class EditActivity extends AppCompatActivity {
                         .setTitleText(getResources().getString(R.string.warning))
                         .setContentText(getResources().getString(R.string.connect_fail))
                         .show();
-                waitingDlg.hide();
+                connectWaitingCancelDlg.hide();
                 mClient.disconnect(mac);
             }
         }
@@ -2258,8 +2572,9 @@ public class EditActivity extends AppCompatActivity {
                 waitingDlg.dismiss();
                 waitingDlg = null;
             }
-            showWaitingDlg(getResources().getString(R.string.connecting));
+            showConnectWaitingCancelDlg(getResources().getString(R.string.connecting));
             mClient.connect(mac, bleConnectResponse);
+            connectFailTimeoutShow(60000);
             mClient.registerConnectStatusListener(mac, mBleConnectStatusListener);
         }
     }
@@ -2284,6 +2599,11 @@ public class EditActivity extends AppCompatActivity {
                 waitingCancelDlg.hide();
                 waitingCancelDlg.dismiss();
                 waitingCancelDlg = null;
+            }
+            if(connectWaitingCancelDlg != null){
+                connectWaitingCancelDlg.hide();
+                connectWaitingCancelDlg.dismiss();
+                connectWaitingCancelDlg = null;
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -2422,6 +2742,29 @@ public class EditActivity extends AppCompatActivity {
         int value = MyUtils.bytes2Integer(resp,2);
         rs485BaudRateTV.setText(String.valueOf(value));
     }
+    private int extSensorType = 0;
+    private void readExtSensorTypeResp(byte[] resp){
+        int value = resp[2];
+        extSensorType = value;
+        if(value == 1){
+            if(getExtSensorTypeNextCtrl == GET_EXT_SENSOR_TYPE_NEXT_DO_GET_HIS_DATA){
+                startHistory = false;
+                getExtSensorTypeNextCtrl = -1;
+                Intent intent = new Intent(EditActivity.this,HistorySelectActivity.class);
+                intent.putExtra("mac",mac);
+                intent.putExtra("deviceType",deviceType);
+                intent.putExtra("id",id);
+                intent.putExtra("reportType","history");
+                startActivityForResult(intent,REQUEST_READ_HISTORY_TIME);
+            }else if(getExtSensorTypeNextCtrl == GET_EXT_SENSOR_TYPE_NEXT_DO_START_RECORD){
+                getExtSensorTypeNextCtrl = -1;
+                startRecord();
+            }
+
+            }else{
+            Toast.makeText(EditActivity.this,R.string.not_find_ext_sensor,Toast.LENGTH_SHORT).show();
+        }
+    }
 
     private void readBroadcastTypeResp(byte[] resp){
         int value = resp[2];
@@ -2460,6 +2803,16 @@ public class EditActivity extends AppCompatActivity {
                     eddystoneBidSetLineLL.setVisibility(View.VISIBLE);
                     readEddystoneBidSet();
                     readEddystoneNidSet();
+                }
+            }
+            if(deviceType.equals("S08")){
+                if(value == 0){
+                    doorEnableLineLL.setVisibility(View.VISIBLE);
+                    doorEnableLL.setVisibility(View.VISIBLE);
+                    readDoorEnableStatus();
+                }else{
+                    doorEnableLineLL.setVisibility(View.GONE);
+                    doorEnableLL.setVisibility(View.GONE);
                 }
             }
         }
@@ -2701,8 +3054,10 @@ public class EditActivity extends AppCompatActivity {
                     boolean dataCorrect = MyUtils.checkOriginHisDataCrc(byteDataArray);
                     if(dataCorrect){
                         if(deviceType.equals("S10")){
-                            ArrayList<BleHisData> bleHisDataList = MyUtils.parseS10BleHisData(byteDataArray);
-                            allBleHisData.addAll(bleHisDataList);
+                            if(extSensorType == 1){
+                                ArrayList<BleHisData> bleHisDataList = MyUtils.parseS10BleGX112HisData(byteDataArray);
+                                allBleHisData.addAll(bleHisDataList);
+                            }
                         }else{
                             ArrayList<BleHisData> bleHisDataList = MyUtils.parseS02BleHisData(byteDataArray);
                             allBleHisData.addAll(bleHisDataList);
@@ -2782,6 +3137,14 @@ public class EditActivity extends AppCompatActivity {
             return;
         }
         writeArrayData(MyUtils.controlFunc.get("broadcastType").get("read"),null,uuid);
+    }
+
+
+    private void readExtSensorType(){
+        if(!isCurrentDeviceTypeFunc("readExtSensorType")){
+            return;
+        }
+        writeArrayData(MyUtils.controlFunc.get("readExtSensorType").get("read"),null,uuid);
     }
 
     private void readBeaconMajorSet(){
@@ -2995,7 +3358,7 @@ public class EditActivity extends AppCompatActivity {
             }else{
                 tempAlarmUp = (tempAlarmUpTemp & 0xfff) * 0.1f;
             }
-            tempHighAlarmTV.setText(String.format("%.1f %s",tempAlarmUp, BleDeviceData.getCurTempUnit(EditActivity.this)));
+            tempHighAlarmTV.setText(String.format("%s %s",BleDeviceData.getCurTemp(EditActivity.this,tempAlarmUp), BleDeviceData.getCurTempUnit(EditActivity.this)));
         }
         if (tempAlarmDownTemp == 4095){
             tempAlarmDown = 4095;
@@ -3009,7 +3372,7 @@ public class EditActivity extends AppCompatActivity {
             }
 
             tempAlarmDownOpen = true;
-            tempLowAlarmTV.setText(String.format("%.1f %s",tempAlarmDown,BleDeviceData.getCurTempUnit(EditActivity.this)));
+            tempLowAlarmTV.setText(String.format("%s %s",BleDeviceData.getCurTemp(EditActivity.this,tempAlarmDown),BleDeviceData.getCurTempUnit(EditActivity.this)));
         }
     }
 
@@ -3625,8 +3988,7 @@ public class EditActivity extends AppCompatActivity {
             }
             if (funcName.equals("firmware") || funcName.equals("password") || funcName.equals("resetFactory") || funcName.equals("broadcastCycle")
                     || funcName.equals("tempAlarm") || funcName.equals("ledOpen") || funcName.equals("deviceName") || funcName.equals("startRecord")
-                    || funcName.equals("stopRecord") || funcName.equals("clearRecord")
-                    || funcName.equals("saveCount") || funcName.equals("readAlarm") || funcName.equals("readOriginData") || funcName.equals("time")) {
+                    || funcName.equals("stopRecord") || funcName.equals("clearRecord") || funcName.equals("time")) {
                 if(Integer.valueOf(software) < 11 && (funcName.equals("saveInterval") || funcName.equals("saveCount")
                         || funcName.equals("readAlarm") || funcName.equals("readOriginData") || funcName.equals("startRecord"))){
                     return false;
@@ -3684,7 +4046,7 @@ public class EditActivity extends AppCompatActivity {
                     || funcName.equals("readDinVoltage") || funcName.equals("dinStatusEvent") || funcName.equals("doutStatus")|| funcName.equals("readVinVoltage")
                     || funcName.equals("readAinVoltage") || funcName.equals("setPositiveNegativeWarning") || funcName.equals("ainPositiveNegativeWarning") || funcName.equals("getOneWireDevice")
                     || funcName.equals("sendCmdSequence") || funcName.equals("sequential") || funcName.equals("oneWireWorkMode") || funcName.equals("rs485SendData")
-                    || funcName.equals("rs485BaudRate") || funcName.equals("rs485Enable") || funcName.equals("longRangeEnable") || funcName.equals("getAinEvent")) {
+                    || funcName.equals("rs485BaudRate") || funcName.equals("rs485Enable")  || funcName.equals("getAinEvent")) {
                 return true;
             }else{
                 return false;
@@ -3693,9 +4055,9 @@ public class EditActivity extends AppCompatActivity {
             if(funcName.equals("saveInterval") || funcName.equals("firmware") || funcName.equals("password") || funcName.equals("resetFactory") || funcName.equals("broadcastCycle")
                     || funcName.equals("tempAlarm") || funcName.equals("ledOpen") || funcName.equals("deviceName") || funcName.equals("startRecord")
                     || funcName.equals("stopRecord") || funcName.equals("clearRecord")
-                    || funcName.equals("saveCount") || funcName.equals("readAlarm") || funcName.equals("readOriginData") || funcName.equals("transmittedPower") || funcName.equals("longRangeEnable")
+                    || funcName.equals("saveCount") || funcName.equals("readAlarm") || funcName.equals("readOriginData") || funcName.equals("transmittedPower")
                     || funcName.equals("broadcastType")  || funcName.equals("readHistory")
-                    || funcName.equals("time")    || funcName.equals("shutdown") || funcName.equals("doorEnable")  || funcName.equals("gSensorEnable")
+                    || funcName.equals("time")    || funcName.equals("shutdown") || funcName.equals("doorEnable")
                     || funcName.equals("gSensorSensitivity") || funcName.equals("gSensorDetectionDuration") || funcName.equals("gSensorDetectionInterval")
                     || funcName.equals("beaconMajorSet") || funcName.equals("beaconMinorSet") || funcName.equals("eddystoneNIDSet") || funcName.equals("eddystoneBIDSet") ){
                 return true;
@@ -3705,9 +4067,9 @@ public class EditActivity extends AppCompatActivity {
             if(funcName.equals("saveInterval") || funcName.equals("firmware") || funcName.equals("password") || funcName.equals("resetFactory") || funcName.equals("broadcastCycle")
                     || funcName.equals("tempAlarm") || funcName.equals("ledOpen") || funcName.equals("deviceName") || funcName.equals("startRecord")
                     || funcName.equals("stopRecord") || funcName.equals("clearRecord")
-                    || funcName.equals("saveCount") || funcName.equals("readAlarm") || funcName.equals("readOriginData") || funcName.equals("transmittedPower") || funcName.equals("longRangeEnable")
+                    || funcName.equals("saveCount") || funcName.equals("readAlarm") || funcName.equals("readOriginData") || funcName.equals("transmittedPower")
                     || funcName.equals("broadcastType") ||funcName.equals("readHistory") ||funcName.equals("humidityAlarm")
-                    || funcName.equals("time")   || funcName.equals("shutdown")
+                    || funcName.equals("time")   || funcName.equals("shutdown") || funcName.equals("readExtSensorType")
                     || funcName.equals("beaconMajorSet") || funcName.equals("beaconMinorSet") || funcName.equals("eddystoneNIDSet") || funcName.equals("eddystoneBIDSet")
             ){
                 return true;
@@ -3716,7 +4078,7 @@ public class EditActivity extends AppCompatActivity {
         }
         else if (deviceType.equals("S07")){
             if(funcName.equals("firmware") || funcName.equals("password") || funcName.equals("resetFactory") || funcName.equals("broadcastCycle")
-                    ||  funcName.equals("transmittedPower") || funcName.equals("longRangeEnable") || funcName.equals("deviceName")
+                    ||  funcName.equals("transmittedPower") || funcName.equals("deviceName")
                     || funcName.equals("broadcastType")
                     || funcName.equals("beaconMajorSet") || funcName.equals("beaconMinorSet") || funcName.equals("eddystoneNIDSet") || funcName.equals("eddystoneBIDSet") ){
                 return true;

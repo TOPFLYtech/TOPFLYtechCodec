@@ -125,6 +125,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     private var relayTypeList:[String] = [String]()
     private var rs485BaudRateList:[String] = ["1200", "2400", "4800", "9600", "14400", "19200", "28800", "31250", "38400", "56000", "57600", "76800", "115200", "230400", "250000"]
     private var broadcastTypeList:[String] = ["Eddystone","Beacon"]
+    private var broadcastCycleList:[String] = ["5s","10s","15s","20s","25s","30s"]
     private let controlFunc:[String:[String:Int]] = [
         "firmware": [ "read": 1 ],
         "saveCount": [ "read": 2 ],
@@ -179,6 +180,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         "beaconMinorSet":[ "read":0x7a, "write":0x79, ],
         "eddystoneNIDSet":[ "read":0x7c, "write":0x7b, ],
         "eddystoneBIDSet":[ "read":0x7e, "write":0x7d, ],
+        "readExtSensorType": [ "read": 9 ],
     ]
     private var fontSize:CGFloat = Utils.fontSize
     private var waitingView:AEUIAlertView!
@@ -300,7 +302,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     private var longRangeLabel:UILabel!
     private var doorLabel:UILabel!
     private var shutdownLabel:UILabel!
-    
+    private var isReadingHistory = false
     
     private var editDinVoltageBtn:QMUIGhostButton!
     private var editDinStatusEventBtn:QMUIGhostButton!
@@ -353,7 +355,11 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     private var curHistoryList:[[UInt8]] = [[UInt8]]()
     private var historyIndex = 0
     private let dateFormatter = DateFormatter()
-    
+     
+    private var getExtSensorTypeNextCtrl = -1
+    private let GET_EXT_SENSOR_TYPE_NEXT_DO_GET_HIS_DATA = 1
+    private let GET_EXT_SENSOR_TYPE_NEXT_DO_START_RECORD = 2
+    private var extSensorType = 0
     override func viewDidDisappear(_ animated: Bool) {
         self.needConnect = false
         if self.leaveViewNeedDisconnect{
@@ -426,7 +432,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         print(mac)
         //        Toast.waitingBuilder.prompt("Connectting").show()
         self.initUI()
-        self.showWaitingWin(title: NSLocalizedString("connecting", comment: "Connecting"))
+        self.showWaitingWin(title: NSLocalizedString("connecting", comment: "Connecting"),isShowCancel: true,isCancelDoClose: true)
         self.checkUpdate(isEnterCheck: true)
         self.checkBetaUpdate()
     }
@@ -438,7 +444,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             self.centralManager.cancelPeripheralConnection(self.selfPeripheral)
         }
         if self.selfPeripheral != nil{
-            self.showWaitingWin(title: NSLocalizedString("waiting", comment: "Waiting"))
+            self.showWaitingWin(title: NSLocalizedString("waiting", comment: "Waiting"),isShowCancel: true,isCancelDoClose: true)
             self.centralManager.connect(self.selfPeripheral)
         }
         
@@ -720,6 +726,9 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                     else if(type == UInt8(self.controlFunc["readDinVoltage"]?["read"] ?? 0)){
                         readDinVoltageResp(resp: bytes)
                     }
+                    else if(type == UInt8(self.controlFunc["readExtSensorType"]?["read"] ?? 0)){
+                        readExtSensorTypeResp(resp: bytes)
+                    }
                     else if(type == UInt8(self.controlFunc["dinStatusEvent"]?["read"] ?? 0)
                             || type == UInt8(self.controlFunc["dinStatusEvent"]?["write"] ?? 0)){
                         readDinStatusEventResp(resp: bytes)
@@ -819,8 +828,9 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                         self.initStart = false
                         self.showPwdWin()
                     }
-                    
+                    self.isReadingHistory = false
                 }else{
+                    self.isReadingHistory = false
                     self.waitingView.dismiss()
                     print("Error,please try again!\(type)")
                     Toast.hudBuilder.title(NSLocalizedString("error_need_try_warning", comment: "Error,please try again!")).show()
@@ -862,7 +872,34 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         }
         self.readData(cmdHead: self.controlFunc["broadcastCycle"]?["read"] ?? 0)
     }
+    func readExtSensorType(){
+        if !self.isCurrentDeviceTypeFunc(funcName: "readExtSensorType"){
+            return
+        }
+        self.readData(cmdHead: self.controlFunc["readExtSensorType"]?["read"] ?? 0)
+    }
     
+    func readExtSensorTypeResp(resp:[UInt8]){
+        self.extSensorType = Int(resp[2])
+        if self.extSensorType == 1{
+            if getExtSensorTypeNextCtrl == GET_EXT_SENSOR_TYPE_NEXT_DO_START_RECORD{
+                getExtSensorTypeNextCtrl = -1
+                self.startRecord()
+            }else if getExtSensorTypeNextCtrl == GET_EXT_SENSOR_TYPE_NEXT_DO_GET_HIS_DATA{
+                if self.isReadingHistory{
+                    return
+                }
+                getExtSensorTypeNextCtrl = -1
+                let editView = HistorySelectController()
+                self.leaveViewNeedDisconnect = false
+                editView.setDateDelegate = self
+                self.isReadHis = true
+                self.navigationController?.pushViewController(editView, animated: false)
+            }
+        }else{
+            Toast.hudBuilder.title(NSLocalizedString("not_find_ext_sensor", comment: "No external sensor found, please connect the external sensor first")).show()
+        }
+    }
     func readDinVoltageResp(resp:[UInt8]){
         self.dinVoltageContentLabel.text = String(format:"%d",resp[2])
     }
@@ -1189,6 +1226,14 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                     self.readEddystoneNidSet()
                 }
             }
+            if self.deviceType == "S08"{
+                if value == 0{
+                    self.readDoorEnableStatus()
+                    self.doorView.isHidden = false
+                }else{
+                    self.doorView.isHidden = true
+                }
+            }
         }
     }
     func readGSensorEnableStatusResp(resp:[UInt8]){
@@ -1287,14 +1332,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         self.saveCount = (Int(resp[3]) << 8) + Int(resp[4])
         self.saveAlarmCount = (Int(resp[5]) << 8) + Int(resp[6])
         self.saveCountContentLabel.text = String(self.saveCount)
-        if(self.saveCount == 0){
-            self.saveCountReadBtn.isHidden = true
-        }
         self.readAlarmContentLabel.text = String(self.saveAlarmCount)
-        if(self.saveAlarmCount == 0){
-            self.readAlarmReadBtn.isHidden = true
-        }
-        
         if(self.isSaveRecordStatus){
             self.startRecordBtn.isHidden = true
             self.stopRecordBtn.isHidden = false
@@ -1302,7 +1340,6 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             self.startRecordBtn.isHidden = false
             self.stopRecordBtn.isHidden = true
         }
-        
     }
     
     func readVersion(){
@@ -1795,6 +1832,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     
     func writeArrayData(cmdHead:Int,content:[UInt8]){
         if !self.connected{
+            self.isReadingHistory = false
             Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
             return
         }
@@ -1857,9 +1895,12 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                     do{
                         var dataCorrect = Utils.checkOriginHisDataCrc(byteDataArray: byteDataArray)
                         if dataCorrect{
-                            var bleHisDataList:[BleHisData]
+                            var bleHisDataList:[BleHisData] = [BleHisData]()
                             if deviceType == "S10"{
-                                bleHisDataList = Utils.parseS10BleHisData(historyArray: byteDataArray)
+                                if self.extSensorType == 1{
+                                    bleHisDataList = Utils.parseS10BleGX112HisData(historyArray: byteDataArray)
+                                }
+                             
                             }else{
                                 bleHisDataList = Utils.parseS02BleHisData(historyArray: byteDataArray)
                             }
@@ -1874,7 +1915,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                     }
                     i+=1
                 }
-                self.waitingView.dismiss()
+               
                 var bleHisDataList = [BleHisData]()
                 i = 0
                 while i < self.allBleHisData.count{
@@ -1890,10 +1931,13 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                     self.allBleHisData.append(bleHisDataList[i])
                     i+=1
                 }
+                self.waitingView.dismiss()
+                self.isReadingHistory = false
                 if self.allBleHisData.count == 0{
                     Toast.hudBuilder.title(NSLocalizedString("not_found_data", comment: "Not found data")).show()
                     return
                 }
+               
                 let historyView = HistoryReportController()
                 historyView.startDate = Int(self.startDate.timeIntervalSince1970)
                 historyView.endDate = Int(self.endDate.timeIntervalSince1970)
@@ -2254,7 +2298,9 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         self.readGSensorEnable()
         self.readDinStatusEvent()
         self.readDinVoltage( )
-        self.readDoorEnableStatus()
+        if self.deviceType != "S08"{
+            self.readDoorEnableStatus()
+        }
         self.fixTime()
     }
     
@@ -2315,6 +2361,10 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     }
     
     @objc private func editDeviceName() {
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         let editNameAlert = AEUIAlertView(style: .textField, title: NSLocalizedString("device_name", comment: "Device name"), message: nil)
         editNameAlert.textField.placeholder = NSLocalizedString("device_name", comment: "Device name")
         
@@ -2327,7 +2377,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                 self.writeDeviceName(name: deviceName)
                 editNameAlert.dismiss()
             }else{
-                Toast.hudBuilder.title(NSLocalizedString("incorrect_name_length", comment: "Incorrect name length!")).show()
+                Toast.hudBuilder.title(NSLocalizedString("incorrect_name_length", comment: "The length of the device name must between 3 and 8.")).show()
             }
         }
         editNameAlert.addAction(action: action_one)
@@ -2339,6 +2389,10 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     
     
     @objc private func editPassword() {
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         let editPwd = EditPwdController()
         editPwd.delegate = self
         editPwd.connectStatusDelegate = self
@@ -2348,6 +2402,10 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     }
     
     @objc private func editTransmittedPower(sender:UIButton){
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         var currentIndex = 0
         for var index in 0..<self.transmittedPowerList.count{
             if String(self.transmittedPower) == self.transmittedPowerList[index]{
@@ -2368,41 +2426,34 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         }, cancel: { ActionMultipleStringCancelBlock in return }, origin: sender)
     }
     
-    @objc private func editBroadcastCycle(){
-        let editBroadcastCycleAlert = AEUIAlertView(style: .number, title: NSLocalizedString("broadcast_cycle", comment: "Broadcast cycle"), message: nil)
-        editBroadcastCycleAlert.textField.placeholder = NSLocalizedString("broadcast_cycle", comment: "Broadcast cycle")
-        
-        let action_one = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
-            editBroadcastCycleAlert.dismiss()
+    @objc private func editBroadcastCycle(sender:UIButton){
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
         }
-        let action_two = AEAlertAction(title: NSLocalizedString("confirm", comment: "Confirm"), style: .defaulted) { (action) in
-            let broadcastCycle = String(editBroadcastCycleAlert.textField.text ?? "")
-            if broadcastCycle.count > 0{
-                let broadcastCycleInt = Int(broadcastCycle) ?? 0
-                if self.deviceType == "S05"{
-                    if broadcastCycleInt >= 0 && broadcastCycleInt <= 10{
-                        self.writeBroadcastData(value: broadcastCycleInt)
-                        editBroadcastCycleAlert.dismiss()
-                    }else{
-                        Toast.hudBuilder.title(NSLocalizedString("s05_broadcast_cycle_value_length_error", comment: "Value is incorrect!It must between 0 and 10")).show()
-                    }
-                }else{
-                    if broadcastCycleInt >= 5 && broadcastCycleInt <= 1800{
-                        self.writeBroadcastData(value: broadcastCycleInt)
-                        editBroadcastCycleAlert.dismiss()
-                    }else{
-                        Toast.hudBuilder.title(NSLocalizedString("broadcast_cycle_value_length_error", comment: "Value is incorrect!It must between 5 and 1800")).show()
-                    }
-                }
-            }else{
-                Toast.hudBuilder.title(NSLocalizedString("broadcast_cycle_value_length_error", comment: "Value is incorrect!It must between 5 and 1800")).show()
+        var currentIndex = 0
+        let key = self.broadcastCycleContentLabel.text
+        var selectIndex = 0
+        for (index, element) in self.broadcastCycleList.enumerated() {
+            if element == key{
+                selectIndex = index
+                break
             }
         }
-        editBroadcastCycleAlert.addAction(action: action_one)
-        editBroadcastCycleAlert.addAction(action: action_two)
-        editBroadcastCycleAlert.show()
+        ActionSheetStringPicker.show(withTitle: "", rows: self.broadcastCycleList, initialSelection:selectIndex, doneBlock: {
+            picker, index, value in
+            let broadcastCycleInt = Int(self.broadcastCycleList[index].replacingOccurrences(of: "s", with: ""))
+            self.writeBroadcastData(value: broadcastCycleInt ?? 10)
+            return
+        }, cancel: { ActionMultipleStringCancelBlock in return }, origin: sender)
+        
+      
     }
     @objc private func editTempAlarm(){
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         self.leaveViewNeedDisconnect = false
         let editRangeValue = EditRangeValueController()
         editRangeValue.delegate = self
@@ -2426,6 +2477,10 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     }
     
     @objc private func editHumidityAlarm(){
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         self.leaveViewNeedDisconnect = false
         let editRangeValue = EditRangeValueController()
         editRangeValue.delegate = self
@@ -2439,32 +2494,19 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         self.navigationController?.pushViewController(editRangeValue, animated: false)
     }
     @objc private func editSaveIntervalClick(sender:UIButton){
-        //        let editSaveIntervalAlert = AEUIAlertView(style: .number, title: "Save interval", message: nil)
-        //        editSaveIntervalAlert.textField.placeholder = "Save interval"
-        //
-        //        let action_one = AEAlertAction(title: "Cancel", style: .cancel) { (action) in
-        //            editSaveIntervalAlert.dismiss()
-        //        }
-        //        let action_two = AEAlertAction(title: "Confirm", style: .defaulted) { (action) in
-        //            let broadcastCycle = String(editSaveIntervalAlert.textField.text ?? "")
-        //            if broadcastCycle.count > 0{
-        //                let saveIntervalInt = Int(broadcastCycle) ?? 0
-        //                if saveIntervalInt >= 10{
-        //                    self.writeSaveIntervalData(value: saveIntervalInt)
-        //                    editSaveIntervalAlert.dismiss()
-        //                }else{
-        //                    Toast.hudBuilder.title("Value is incorrect!It must be greater than 10").show()
-        //                }
-        //
-        //            }else{
-        //                Toast.hudBuilder.title("Incorrect name length!").show()
-        //            }
-        //        }
-        //        editSaveIntervalAlert.addAction(action: action_one)
-        //        editSaveIntervalAlert.addAction(action: action_two)
-        //        editSaveIntervalAlert.show()
-        
-        ActionSheetStringPicker.show(withTitle: "", rows: self.saveIntervalList, initialSelection:0, doneBlock: {
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
+        let key = self.saveIntervalContentLabel.text?.replacingOccurrences(of: "s", with: "")
+        var selectIndex = 0
+        for (index, element) in self.saveIntervalList.enumerated() {
+            if element == key{
+                selectIndex = index
+                break
+            }
+        }
+        ActionSheetStringPicker.show(withTitle: "", rows: self.saveIntervalList, initialSelection:selectIndex, doneBlock: {
             picker, index, value in
             //                                self.currentDateSelect = index
             //                        print("values = \(values)")
@@ -2477,18 +2519,19 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     }
     
     @objc private func resetFactoryClick() {
-        let animV = AEUIAlertView(style: .textField, title: NSLocalizedString("reset_factory", comment:"Reset Factory"), message: nil)
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
+        let animV = AEAlertView(style: .defaulted)
+        animV.message = NSLocalizedString("reset_factory", comment: "Are you sure to restore the factory settings?")
         animV.textField.placeholder = NSLocalizedString("password", comment:"Password")
         let action_one = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
             animV.dismiss()
         }
         let action_two = AEAlertAction(title: NSLocalizedString("confirm", comment: "Confirm"), style: .defaulted) { (action) in
-            
-            let pwd = String(animV.textField.text ?? "")
-            if pwd.count > 0{
-                self.writeResetFactory()
-                animV.dismiss()
-            }
+            self.writeResetFactory()
+            animV.dismiss()
         }
         
         animV.addAction(action: action_one)
@@ -2498,12 +2541,20 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     }
     
     @objc private func doutStatusClick() {
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         dout0 = -1
         dout1 = -1
         self.readDoutStatus(port: 0)
         self.readDoutStatus(port: 1)
     }
     @objc private func ainVoltageClick() {
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         ain1 = -1
         ain2 = -1
         ain3 = -1
@@ -2514,6 +2565,10 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         self.readVinVoltage()
     }
     @objc private func positiveNegativeWarningClick(sender:UIButton) {
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         ActionSheetStringPicker.show(withTitle: "", rows: self.portList, initialSelection:0, doneBlock: {
             picker, index, value in
             self.readPositiveNegativeWarning(port: index)
@@ -2522,9 +2577,17 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         
     }
     @objc private func oneWireDeviceClick() {
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         self.readOneWireDevice()
     }
     @objc private func editOneWireWorkModeClick(sender:UIButton) {
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         var currentIndex = 0
         var patchStr = self.oneWireWorkModeContentLabel.text
         for var index in 0..<self.oneWireWorkModeList.count{
@@ -2540,6 +2603,10 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         }, cancel: { ActionMultipleStringCancelBlock in return }, origin: sender)
     }
     @objc private func sendInstructionSequenceClick() {
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         let editForm = EditInstructionSequenceController()
         editForm.delegate = self
         editForm.connectStatusDelegate = self
@@ -2551,6 +2618,10 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         //device now is not need this function
     }
     @objc private func sendDataClick() {
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         let editForm = EditRS485CmdController()
         editForm.delegate = self
         editForm.connectStatusDelegate = self
@@ -2561,6 +2632,10 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     
     
     @objc private func editRs485BaudRateClick(sender:UIButton) {
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         var currentIndex = 0
         var patchStr = self.rs485BaudRateContentLabel.text
         for var index in 0..<self.rs485BaudRateList.count{
@@ -2576,6 +2651,10 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         }, cancel: { ActionMultipleStringCancelBlock in return }, origin: sender)
     }
     @objc private func editBroadcastTypeClick(sender:UIButton) {
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         print("editBroadcastTypeClick")
         var currentIndex = 0
         var patchStr = self.broadcastTypeContentLabel.text
@@ -2592,6 +2671,10 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         }, cancel: { ActionMultipleStringCancelBlock in return }, origin: sender)
     }
     @objc private func editGSensorSensitivityClick() {
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         print("editGSensorSensitivityClick")
         let editGSensorSensitivityAlert = AEUIAlertView(style: .textField, title: NSLocalizedString("gsensor_sensitivity", comment: "Gsensor sensitivity"), message: nil)
         editGSensorSensitivityAlert.textField.placeholder = NSLocalizedString("gsensor_sensitivity", comment: "Gsensor sensitivity")
@@ -2624,6 +2707,10 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         editGSensorSensitivityAlert.show()
     }
     @objc private func editGSensorDetectionDurationClick() {
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         let editGSensorDetectionDurationAlert = AEUIAlertView(style: .textField, title: NSLocalizedString("gsensor_detection_duration", comment: "Gsensor detection duration"), message: nil)
         editGSensorDetectionDurationAlert.textField.placeholder = NSLocalizedString("gsensor_detection_duration", comment: "Gsensor detection duration")
         
@@ -2655,6 +2742,10 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         editGSensorDetectionDurationAlert.show()
     }
     @objc private func editGSensorDetectionIntervalClick() {
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         let editGSensorDetectionIntervalAlert = AEUIAlertView(style: .textField, title: NSLocalizedString("gsensor_detection_interval", comment: "Gsensor detection interval"), message: nil)
         editGSensorDetectionIntervalAlert.textField.placeholder = NSLocalizedString("gsensor_detection_interval", comment: "Gsensor detection interval")
         
@@ -2674,7 +2765,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                     self.writeGSensorDetectionInterval(value: gSensorDetectionInterval)
                     editGSensorDetectionIntervalAlert.dismiss()
                 }else{
-                    Toast.hudBuilder.title(NSLocalizedString("gsensor_detection_duration_error_warning", comment: "Value is incorrect!It must between 2 and 180.")).show()
+                    Toast.hudBuilder.title(NSLocalizedString("gsensor_detection_interval_error_warning", comment: "Value is incorrect!It must between 2 and 180.")).show()
                 }
                 
             }else{
@@ -2686,6 +2777,10 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         editGSensorDetectionIntervalAlert.show()
     }
     @objc private func editBeaconMajorSetClick() {
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         let editBeaconMajorSetAlert = AEUIAlertView(style: .textField, title: NSLocalizedString("beacon_major_set", comment: "Beacon major set"), message: nil)
         editBeaconMajorSetAlert.textField.placeholder = NSLocalizedString("beacon_major_set", comment: "Beacon major set")
         
@@ -2717,6 +2812,10 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         editBeaconMajorSetAlert.show()
     }
     @objc private func editBeaconMinorSetClick() {
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         let editBeaconMinorSetAlert = AEUIAlertView(style: .textField, title: NSLocalizedString("beacon_minor_set", comment: "Beacon minor set"), message: nil)
         editBeaconMinorSetAlert.textField.placeholder = NSLocalizedString("beacon_minor_set", comment: "Beacon minor set")
         
@@ -2748,6 +2847,10 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         editBeaconMinorSetAlert.show()
     }
     @objc private func editEddystoneNidSetClick() {
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         let editEddystoneNidSetAlert = AEUIAlertView(style: .textField, title: NSLocalizedString("eddystone_nid_set", comment: "Name space ID"), message: nil)
         editEddystoneNidSetAlert.textField.placeholder = NSLocalizedString("eddystone_nid_set", comment: "Name space ID")
         
@@ -2759,9 +2862,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             saveEddystoneNidSetValue = saveEddystoneNidSetValue.replacingOccurrences(of: "0x", with: "")
             saveEddystoneNidSetValue = saveEddystoneNidSetValue.replacingOccurrences(of: "0X", with: "")
             saveEddystoneNidSetValue = saveEddystoneNidSetValue.replacingOccurrences(of: " ", with: "")
-            let hexLowercaseCharacterSet = CharacterSet(charactersIn: "0123456789abcdef").inverted
-            let hexUppercaseCharacterSet = CharacterSet(charactersIn: "0123456789ABCDEF").inverted
-            if saveEddystoneNidSetValue.rangeOfCharacter(from: hexLowercaseCharacterSet) == nil && saveEddystoneNidSetValue.rangeOfCharacter(from: hexUppercaseCharacterSet) == nil {
+            if Utils.isHexadecimal(saveEddystoneNidSetValue)  {
                 print("All characters are in 0 to f or 0 to F.")
             } else {
                 print("Not all characters are in 0 to f or 0 to F.")
@@ -2781,6 +2882,10 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         editEddystoneNidSetAlert.show()
     }
     @objc private func editEddystoneBidSetClick() {
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         let editEddystoneBidSetAlert = AEUIAlertView(style: .textField, title: NSLocalizedString("eddystone_bid_set", comment: "Instance ID"), message: nil)
         editEddystoneBidSetAlert.textField.placeholder = NSLocalizedString("eddystone_bid_set", comment: "Instance ID")
         
@@ -2792,9 +2897,8 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             saveEddystoneBidSetValue = saveEddystoneBidSetValue.replacingOccurrences(of: "0x", with: "")
             saveEddystoneBidSetValue = saveEddystoneBidSetValue.replacingOccurrences(of: "0X", with: "")
             saveEddystoneBidSetValue = saveEddystoneBidSetValue.replacingOccurrences(of: " ", with: "")
-            let hexLowercaseCharacterSet = CharacterSet(charactersIn: "0123456789abcdef").inverted
-            let hexUppercaseCharacterSet = CharacterSet(charactersIn: "0123456789ABCDEF").inverted
-            if saveEddystoneBidSetValue.rangeOfCharacter(from: hexLowercaseCharacterSet) == nil && saveEddystoneBidSetValue.rangeOfCharacter(from: hexUppercaseCharacterSet) == nil {
+             
+            if Utils.isHexadecimal(saveEddystoneBidSetValue)  {
                 print("All characters are in 0 to f or 0 to F.")
             } else {
                 print("Not all characters are in 0 to f or 0 to F.")
@@ -2814,6 +2918,10 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         editEddystoneBidSetAlert.show()
     }
     @objc private func shutdownClick() {
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         let shutdownWarningView = AEAlertView(style: .defaulted)
         shutdownWarningView.message = NSLocalizedString("confirm_shutdown_warning", comment: "Confirm shutdown?")
         let upgradeCancel = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
@@ -2829,36 +2937,72 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         shutdownWarningView.show()
     }
     @objc func ledSwitchAction(senger:UISwitch){
+        if !self.connected{
+            self.ledSwitch.isOn = !self.ledSwitch.isOn
+           Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+           return
+       }
         print("ledSwitchAction")
         self.writeLedOpenStatus()
     }
     @objc func lightSeosorOpenSwitchAction(senger:UISwitch){
+        if !self.connected{
+            self.lightSensorOpenSwitch.isOn = !self.lightSensorOpenSwitch.isOn
+           Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+           return
+       }
         print("lightSeosorOpenSwitchAction")
         self.writeLightSensorOpenStatus()
     }
     
     @objc func rs485EnableSwitchAction(senger:UISwitch){
+        if !self.connected{
+            self.rs485EnableSwitch.isOn = !self.rs485EnableSwitch.isOn
+           Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+           return
+       }
         print("rs485EnableSwitchAction")
         self.writeRs485EnableStatus()
         
     }
     
     @objc func gSensorSwitchAction(senger:UISwitch){
+        if !self.connected{
+            self.gSensorSwitch.isOn = !self.gSensorSwitch.isOn
+           Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+           return
+       }
         print("gSensorSwitchAction")
         self.writeGSensorEnableStatus()
         
     }
     @objc func longRangeSwitchAction(senger:UISwitch){
+        if !self.connected{
+            self.longRangeSwitch.isOn = !self.longRangeSwitch.isOn
+           Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+           return
+       }
         print("longRangeSwitchAction")
         self.writeLongRangeEnableStatus()
         
     }
     @objc func doorSwitchAction(sender:UISwitch){
+        if !self.connected{
+            self.doorSwitch.isOn = !self.doorSwitch.isOn
+           Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+           return
+       }
         print("doorSwitchAction")
         self.writeDoorEnableStatus()
         
     }
     @objc func  relayFlashingSwitchAction(sender:UISwitch){
+        if !self.connected{
+            self.relayFlashingSwitch.isOn = !self.relayFlashingSwitch.isOn
+           Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+           return
+       }
+               
         if(Utils.isDebug){
             self.writeFlashingRelayStatus()
             return
@@ -2880,6 +3024,11 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         
     }
     @objc func relaySwitchAction(sender:UISwitch){
+        if !self.connected{
+            self.relaySwitch.isOn = !self.relaySwitch.isOn
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         let alertController = UIAlertController(title: "", message: nil, preferredStyle: .actionSheet)
 
         // 添加操作按钮
@@ -2954,10 +3103,18 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     }
     
     @objc func upgradeClick(){
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         self.checkUpdate(isEnterCheck: false)
     }
     
     @objc func betaUpgradeClick(){
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         if self.betaUpgradeWarningView != nil && !self.betaUpgradeWarningView.isDismiss{
             self.betaUpgradeWarningView.show()
             return
@@ -2986,6 +3143,10 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     }
     
     @objc func debugUpgradeClick(){
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         let inputUrlAlert = AEUIAlertView(style: .textField, title: NSLocalizedString("upgradePackageUrl", comment: "Upgrade package url"), message: nil)
         inputUrlAlert.textField.placeholder = NSLocalizedString("upgradePackageUrl", comment: "Upgrade package url")
         
@@ -3025,18 +3186,39 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     }
     
     @objc func saveCountRefreshClick(){
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         self.showWaitingWin(title: NSLocalizedString("waiting", comment: "Waiting"))
         self.readSaveCount()
     }
     var isReadHis:Bool = false
     @objc func readHistoryClick(){
-        let editView = HistorySelectController()
-        self.leaveViewNeedDisconnect = false
-        editView.setDateDelegate = self
-        self.isReadHis = true
-        self.navigationController?.pushViewController(editView, animated: false)
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
+        if deviceType == "S10"{
+            self.getExtSensorTypeNextCtrl = GET_EXT_SENSOR_TYPE_NEXT_DO_GET_HIS_DATA
+            self.readExtSensorType()
+        }else{
+            if self.isReadingHistory{
+                return
+            }
+            let editView = HistorySelectController()
+            self.leaveViewNeedDisconnect = false
+            editView.setDateDelegate = self
+            self.isReadHis = true
+            self.navigationController?.pushViewController(editView, animated: false)
+        }
+        
     }
     @objc func readAlarmClick(){
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         let editView = HistorySelectController()
         self.leaveViewNeedDisconnect = false
         editView.setDateDelegate = self
@@ -3045,14 +3227,32 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     }
     
     @objc func startRecordClick(){
-        self.startRecord()
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
+        if deviceType == "S10"{
+            getExtSensorTypeNextCtrl = GET_EXT_SENSOR_TYPE_NEXT_DO_START_RECORD
+            self.readExtSensorType()
+        }else{
+            self.startRecord()
+        }
+     
     }
     
     @objc func stopRecordClick(){
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         self.stopRecord()
     }
     
     @objc func clearRecordClick(){
+        if !self.connected{
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
         self.clearRecord()
     }
     
@@ -3071,17 +3271,13 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         }
         self.isBetaUpgrade = false
         self.showWaitingWin(title: NSLocalizedString("waiting", comment: "Waiting"))
-        if FileTool.fileExists(filePath: self.upgradePackUrl){
-            self.upgradeDevice()
-        }else{
-            let downloadUrl = URL(string: self.upgradePackageLink)
-            //请求
-            let request = URLRequest(url: downloadUrl!)
-            //下载任务
-            let downloadTask = session.downloadTask(with: request)
-            //使用resume方法启动任务
-            downloadTask.resume()
-        }
+        let downloadUrl = URL(string: self.upgradePackageLink)
+        //请求
+        let request = URLRequest(url: downloadUrl!)
+        //下载任务
+        let downloadTask = session.downloadTask(with: request)
+        //使用resume方法启动任务
+        downloadTask.resume()
     }
     func doBetaUpgrade(){
         self.waitingView.dismiss()
@@ -3113,69 +3309,116 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                     didFinishDownloadingTo location: URL) {
         //下载结束
         print("下载结束")
-        //输出下载文件原来的存放目录
-        print("location:\(location)")
-        //location位置转换
-        let locationPath = location.path
-        //拷贝到用户目录
-        //创建文件管理器
-        let fileManager = FileManager.default
-        if self.isBetaUpgrade{
-            
-            do {
-                try fileManager.moveItem(atPath: locationPath, toPath: self.betaUpgradePackUrl)
-            } catch let error as NSError {
-                print("移动文件失败：\(error.localizedDescription)")
-            }
-            print("new location:\(self.betaUpgradePackUrl)")
+        if let httpResponse = downloadTask.response as? HTTPURLResponse {
+                  if httpResponse.statusCode == 200 {
+                      // 下载成功
+                      //输出下载文件原来的存放目录
+                      print("location:\(location)")
+                      //location位置转换
+                      let locationPath = location.path
+                      //拷贝到用户目录
+                      //创建文件管理器
+                      let fileManager = FileManager.default
+                      if self.isBetaUpgrade{
+                          do {
+                              try fileManager.removeItem(atPath: self.betaUpgradePackUrl)
+                              print("File deleted successfully")
+                          } catch {
+                              print("Error deleting file: \(error)")
+                          }
+                          do {
+                              try fileManager.moveItem(atPath: locationPath, toPath: self.betaUpgradePackUrl)
+                              print("new location:\(self.betaUpgradePackUrl)")
+                              self.upgradeDevice()
+                          } catch let error as NSError {
+                              print("移动文件失败：\(error.localizedDescription)")
+                              self.downloadFail()
+                          }
+                        
+                      }else{
+                          do {
+                              try fileManager.removeItem(atPath: self.upgradePackUrl)
+                              print("File deleted successfully")
+                          } catch {
+                              print("Error deleting file: \(error)")
+                          }
+                          do {
+                              try fileManager.moveItem(atPath: locationPath, toPath: self.upgradePackUrl)
+                              print("new location:\(self.upgradePackUrl)")
+                              self.upgradeDevice()
+                          } catch let error as NSError {
+                              print("移动文件失败：\(error.localizedDescription)")
+                              self.downloadFail()
+                          }
+                         
+                      }
+                  } else {
+                      // 下载失败
+                      self.downloadFail()
+                  }
         }else{
-            do {
-                try fileManager.moveItem(atPath: locationPath, toPath: self.upgradePackUrl)
-            } catch let error as NSError {
-                print("移动文件失败：\(error.localizedDescription)")
-            }
-            print("new location:\(self.upgradePackUrl)")
+            self.downloadFail()
         }
         
-        self.upgradeDevice()
+        
+      
     }
     
     func upgradeDevice(){
         self.waitingView.dismiss()
         var url = URL(string:self.upgradePackUrl)
+        var filePath = self.upgradePackUrl
         if self.isBetaUpgrade{
             url = URL(string:self.betaUpgradePackUrl)
+            filePath = self.betaUpgradePackUrl
+        }
+        let fileManager = FileManager.default
+      
+
+        if fileManager.fileExists(atPath: filePath ?? "") {
+            print("File exists")
+        } else {
+            self.downloadFail()
         }
         if url != nil{
-            let dfuFirmware = DFUFirmware(urlToZipFile: url!)!
-            let initiator = DFUServiceInitiator().with(firmware: dfuFirmware)
-            // Optional:
-            // initiator.forceDfu = true/false // default false
-            // initiator.packetReceiptNotificationParameter = N // default is 12
-            initiator.logger = self // - to get log info
-            initiator.delegate = self // - to be informed about current state and errors
-            initiator.progressDelegate = self // - to show progress bar
-            // initiator.peripheralSelector = ... // the default selector is used
-            
-            let controller = initiator.start(target: self.selfPeripheral)
+            do {
+                let dfuFirmware = DFUFirmware(urlToZipFile: url!)!
+                let initiator = DFUServiceInitiator().with(firmware: dfuFirmware)
+                // Optional:
+                // initiator.forceDfu = true/false // default false
+                // initiator.packetReceiptNotificationParameter = N // default is 12
+                initiator.logger = self // - to get log info
+                initiator.delegate = self // - to be informed about current state and errors
+                initiator.progressDelegate = self // - to show progress bar
+                // initiator.peripheralSelector = ... // the default selector is used
+                
+                let controller = initiator.start(target: self.selfPeripheral)
+            } catch let error as NSError {
+                self.downloadFail()
+            }
+         
         }
     }
     
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         print("下载error：\(error)")
         if error != nil{
-            DispatchQueue.main.async {
-                if self.progressView != nil {
-                    self.progressView.dismiss()
-                }
-                if self.waitingView != nil{
-                    self.waitingView.dismiss()
-                }
-                
-                Toast.hudBuilder.title(NSLocalizedString("downloadError", comment: "Download upgrade package error,please try again!")).show()
-            }
+            self.downloadFail()
         }
         
+    }
+    
+    func downloadFail(){
+        DispatchQueue.main.async {
+            if self.progressView != nil {
+                self.progressView.dismiss()
+            }
+            if self.waitingView != nil{
+                self.waitingView.dismiss()
+            }
+            
+            Toast.hudBuilder.title(NSLocalizedString("downloadError", comment: "Download upgrade package error,please try again!")).show()
+        }
     }
     
     //下载代理方法，监听下载进度
@@ -4745,7 +4988,9 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         relayFlashingLine.backgroundColor = UIColor.gray
         relayFlashingLine.frame = CGRect(x: 0, y: Double(60), width: Double(KSize.width), height: 0.5)
         relayFlashingView.addSubview(relayFlashingLine)
-        if self.isCurrentDeviceTypeFunc(funcName: "relay"){
+        let curVersion = self.software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "")
+        var curVerionInt = Int(curVersion) ?? 0
+        if self.isCurrentDeviceTypeFunc(funcName: "relay") && curVerionInt >= 18{
             relayFlashingView.isHidden = false
         }else{
             relayFlashingView.isHidden = true
@@ -4901,13 +5146,26 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         self.centralManager = CBCentralManager(delegate: self, queue: nil)
         
     }
-    func showWaitingWin(title:String){
+    func showWaitingWin(title:String,isShowCancel:Bool?=false,isCancelDoClose:Bool?=false){
         if self.waitingView != nil && !self.waitingView.isDismiss{
             self.waitingView.show()
             return
         }
+        let action_one = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
+             
+            self.waitingView.dismiss()
+            if isCancelDoClose ?? false{
+                self.navigationController?.popViewController(animated: true)
+            }
+            
+        }
         self.waitingView = AEUIAlertView(style: .textField, title: title, message: nil)
-        self.waitingView.actions = []
+        if isShowCancel ?? false{
+            self.waitingView.actions = [action_one]
+        }else{
+            self.waitingView.actions = []
+        }
+     
         self.waitingView.resetActions()
         
         let animation = UIView(frame: CGRect(x: 0, y: 0, width: 80, height: 80))
@@ -4970,6 +5228,9 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         self.upgradeWarningView.addAction(action: upgradeConfirm)
         self.upgradeWarningView.show()
     }
+    
+    
+    
     private var isShowPwdDlg = false
     func showPwdWin(){
         if self.pwdAlert != nil && !self.pwdAlert.isDismiss{
@@ -5025,13 +5286,8 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                 }
             }
             if funcName == "firmware" || funcName == "password" || funcName == "resetFactory" || funcName == "broadcastCycle"
-                || funcName == "tempAlarm" || funcName == "ledOpen" || funcName == "deviceName" || funcName == "startRecord"
-                || funcName == "stopRecord" || funcName == "clearRecord"
-                || funcName == "saveCount" || funcName == "readAlarm" || funcName == "readOriginData" || funcName == "time" {
-                if Int(software) ?? 0 < 11 && (funcName == "saveInterval" || funcName == "saveCount"
-                                               || funcName == "readAlarm" || funcName == "readOriginData" || funcName == "startRecord") {
-                    return false;
-                }
+                || funcName == "tempAlarm" || funcName == "ledOpen" || funcName == "deviceName"    || funcName == "time" {
+               
                 return true;
             }else{
                 return false;
@@ -5085,7 +5341,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                 || funcName == "readDinVoltage" || funcName == "dinStatusEvent" || funcName == "doutStatus" || funcName == "readVinVoltage"
                 || funcName == "readAinVoltage" || funcName == "setPositiveNegativeWarning" || funcName == "ainPositiveNegativeWarning" || funcName == "getOneWireDevice"
                 || funcName == "sendCmdSequence" || funcName == "oneWireWorkMode" || funcName == "rs485SendData"
-                || funcName == "rs485BaudRate" || funcName == "rs485Enable" || funcName == "longRangeEnable" || funcName == "getAinEvent" {
+                || funcName == "rs485BaudRate" || funcName == "rs485Enable" || funcName == "getAinEvent" {
                 return true;
             }else{
                 return false;
@@ -5094,10 +5350,9 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             if funcName == "saveInterval" || funcName == "firmware" || funcName == "password" || funcName == "resetFactory" || funcName == "broadcastCycle"
                 || funcName == "tempAlarm" || funcName == "ledOpen" || funcName == "deviceName" || funcName == "startRecord"
                 || funcName == "stopRecord" || funcName == "clearRecord"
-                || funcName == "saveCount" || funcName == "readOriginData" || funcName == "transmittedPower" || funcName == "longRangeEnable"
+                || funcName == "saveCount" || funcName == "readOriginData" || funcName == "transmittedPower"
                 || funcName == "broadcastType"  || funcName == "readHistory"
-                || funcName == "time"    || funcName == "shutdown" || funcName == "doorEnable"  || funcName == "gSensorEnable"
-                || funcName == "gSensorSensitivity" || funcName == "gSensorDetectionDuration" || funcName == "gSensorDetectionInterval"
+                || funcName == "time"    || funcName == "shutdown" || funcName == "doorEnable"
                 || funcName == "beaconMajorSet" || funcName == "beaconMinorSet" || funcName == "eddystoneNIDSet" || funcName == "eddystoneBIDSet" {
                 return true;
             }
@@ -5106,9 +5361,9 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             if funcName == "saveInterval" || funcName == "firmware" || funcName == "password" || funcName == "resetFactory" || funcName == "broadcastCycle"
                 || funcName == "tempAlarm" || funcName == "ledOpen" || funcName == "deviceName" || funcName == "startRecord"
                 || funcName == "stopRecord" || funcName == "clearRecord"
-                || funcName == "saveCount"  || funcName == "readOriginData" || funcName == "transmittedPower" || funcName == "longRangeEnable"
+                || funcName == "saveCount"  || funcName == "readOriginData" || funcName == "transmittedPower"
                 || funcName == "broadcastType" || funcName == "readHistory" || funcName == "humidityAlarm"
-                || funcName == "time"   || funcName == "shutdown"
+                || funcName == "time"   || funcName == "shutdown"   || funcName == "readExtSensorType"
                 || funcName == "beaconMajorSet" || funcName == "beaconMinorSet" || funcName == "eddystoneNIDSet" || funcName == "eddystoneBIDSet"
             {
                 return true;
@@ -5117,7 +5372,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         }
         else if deviceType == "S07"{
             if funcName == "firmware" || funcName == "password" || funcName == "resetFactory" || funcName == "broadcastCycle"
-                ||  funcName == "transmittedPower" || funcName == "longRangeEnable" || funcName == "deviceName"
+                ||  funcName == "transmittedPower" || funcName == "deviceName"
                 || funcName == "broadcastType"
                 || funcName == "beaconMajorSet" || funcName == "beaconMinorSet" || funcName == "eddystoneNIDSet" || funcName == "eddystoneBIDSet" {
                 return true;
@@ -5190,6 +5445,7 @@ extension EditConfigController:HistorySelectDelegate{
         self.startDate = startDate
         self.endDate = endDate
         if(self.isReadHis){
+            self.isReadingHistory = true
             self.historyIndex = 0
             self.originHistoryList.removeAll()
             self.showWaitingWin(title: NSLocalizedString("loading", comment: "Loading"))

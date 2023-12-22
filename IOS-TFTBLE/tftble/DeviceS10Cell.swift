@@ -174,6 +174,19 @@ class DeviceS10Cell: UITableViewCell {
         return label
     }()
     
+    lazy var extSensorTypeLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.black
+        label.text = NSLocalizedString("ext_sensor_desc", comment: "Ext sensor:")
+        label.font = UIFont.systemFont(ofSize: fontSize)
+        return label
+    }()
+    lazy var extSensorTypeContentLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.black
+        label.font = UIFont.systemFont(ofSize: fontSize)
+        return label
+    }()
     
     lazy var nidLabel: UILabel = {
         let label = UILabel()
@@ -316,10 +329,17 @@ class DeviceS10Cell: UITableViewCell {
         self.nidContentLabel.isHidden = false
         self.bidLabel.isHidden = false
         self.bidContentLabel.isHidden = false 
+        self.extSensorTypeLabel.isHidden = false
+        self.extSensorTypeContentLabel.isHidden = false
+        
+        self.humidityLabel.isHidden = true
+        self.humidityContentLabel.isHidden = true
+        self.ambientLightLabel.isHidden = true
+        self.ambientLightContentLabel.isHidden = true
         let descWidth = self.bounds.size.width / 2 - 20
         let contentX = self.bounds.size.width / 2
-        
-        let broadcastType = bleDeviceInfo["broadcastType"] as! String ?? ""
+        let extSensorType = bleDeviceInfo["extSensorType"] as? String ?? ""
+        let broadcastType = bleDeviceInfo["broadcastType"] as? String ?? ""
         var height:Int = 8
         self.rootView.isUserInteractionEnabled=true
         self.deviceNameLabel.frame = CGRect(x: 8, y: height, width: Int(descWidth), height: 30)
@@ -352,6 +372,8 @@ class DeviceS10Cell: UITableViewCell {
             self.batteryContentLabel.isHidden = true
             self.batteryPercentLabel.isHidden = true
             self.batteryPercentContentLabel.isHidden = true
+            self.extSensorTypeLabel.isHidden = true
+            self.extSensorTypeContentLabel.isHidden = true
             self.tempLabel.isHidden = true
             self.tempContentLabel.isHidden = true
             self.switchTempUnitBtn.isHidden = true
@@ -380,20 +402,21 @@ class DeviceS10Cell: UITableViewCell {
             self.batteryPercentLabel.frame = CGRect(x: 8, y: height, width: Int(descWidth), height: 30)
             self.batteryPercentContentLabel.frame = CGRect(x: contentX, y: CGFloat(height), width: self.bounds.size.width - contentX, height: 30)
             height += 30
-            self.tempLabel.frame = CGRect(x: 8, y: height, width: Int(descWidth), height: 30)
-            self.tempContentLabel.frame = CGRect(x: Int(contentX), y: height, width: Int(self.bounds.size.width) - Int(contentX) - 70, height: 30)
-            self.switchTempUnitBtn.frame = CGRect(x: Int(self.bounds.size.width) - 70, y: height, width: 50, height: 24)
-            self.switchTempUnitBtn.setTitleShadowColor(UIColor.green,for: .highlighted)
-            self.switchTempUnitBtn.setTitleShadowColor(UIColor.black,for: .normal)
+            self.extSensorTypeLabel.frame = CGRect(x: 8, y: height, width: Int(descWidth), height: 30)
+            self.extSensorTypeContentLabel.frame = CGRect(x: contentX, y: CGFloat(height), width: self.bounds.size.width - contentX, height: 30)
             height += 30
-            self.humidityLabel.frame = CGRect(x: 8, y: height, width: Int(descWidth), height: 30)
-            self.humidityContentLabel.frame = CGRect(x: contentX, y:CGFloat(height), width: self.bounds.size.width - contentX, height: 30)
-            height += 30
-            
-            
-            self.ambientLightLabel.frame = CGRect(x: 8, y: height, width: Int(descWidth), height: 30)
-            self.ambientLightContentLabel.frame = CGRect(x: contentX, y:CGFloat(height), width: self.bounds.size.width - contentX, height: 30)
-            height += 30
+            if extSensorType == "1"{
+                self.tempLabel.frame = CGRect(x: 8, y: height, width: Int(descWidth), height: 30)
+                self.tempContentLabel.frame = CGRect(x: Int(contentX), y: height, width: Int(self.bounds.size.width) - Int(contentX) - 70, height: 30)
+                self.switchTempUnitBtn.frame = CGRect(x: Int(self.bounds.size.width) - 70, y: height, width: 50, height: 24)
+                self.switchTempUnitBtn.setTitleShadowColor(UIColor.green,for: .highlighted)
+                self.switchTempUnitBtn.setTitleShadowColor(UIColor.black,for: .normal)
+                height += 30
+            } else{
+                self.tempLabel.isHidden = true
+                self.tempContentLabel.isHidden = true
+                self.switchTempUnitBtn.isHidden = true
+            }
             self.nidLabel.isHidden = true
             self.nidContentLabel.isHidden = true
             self.bidLabel.isHidden = true
@@ -404,7 +427,7 @@ class DeviceS10Cell: UITableViewCell {
             self.minorContentLabel.isHidden = true
             
             self.warnLabel.frame = CGRect(x: 8, y: height, width: Int(descWidth), height: 30)
-            self.warnContentLabel.frame = CGRect(x: contentX, y: CGFloat(height), width: self.bounds.size.width - contentX, height: 30)
+            self.warnContentLabel.frame = CGRect(x: contentX, y: CGFloat(height), width: self.bounds.size.width - contentX-10, height: 30)
 //            marqueeView.frame = CGRect(x: contentX, y: CGFloat(height), width: self.bounds.size.width - contentX, height: 30)
             height += 30
             self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 440)
@@ -413,6 +436,8 @@ class DeviceS10Cell: UITableViewCell {
             self.batteryContentLabel.isHidden = true
             self.batteryPercentLabel.isHidden = true
             self.batteryPercentContentLabel.isHidden = true
+            self.extSensorTypeLabel.isHidden = true
+            self.extSensorTypeContentLabel.isHidden = true
             self.tempLabel.isHidden = true
             self.tempContentLabel.isHidden = true
             self.switchTempUnitBtn.isHidden = true
@@ -446,19 +471,21 @@ class DeviceS10Cell: UITableViewCell {
             self.batteryPercentLabel.frame = CGRect(x: 8, y: height, width: Int(descWidth), height: 30)
             self.batteryPercentContentLabel.frame = CGRect(x: contentX, y: CGFloat(height), width: self.bounds.size.width - contentX, height: 30)
             height += 30
-            self.tempLabel.frame = CGRect(x: 8, y: height, width: Int(descWidth), height: 30)
-            self.tempContentLabel.frame = CGRect(x: Int(contentX), y: height, width: Int(self.bounds.size.width) - Int(contentX) - 70, height: 30)
-            self.switchTempUnitBtn.frame = CGRect(x: Int(self.bounds.size.width) - 70, y: height, width: 50, height: 24)
-            self.switchTempUnitBtn.setTitleShadowColor(UIColor.green,for: .highlighted)
-            self.switchTempUnitBtn.setTitleShadowColor(UIColor.black,for: .normal)
+            self.extSensorTypeLabel.frame = CGRect(x: 8, y: height, width: Int(descWidth), height: 30)
+            self.extSensorTypeContentLabel.frame = CGRect(x: contentX, y: CGFloat(height), width: self.bounds.size.width - contentX, height: 30)
             height += 30
-            self.humidityLabel.frame = CGRect(x: 8, y: height, width: Int(descWidth), height: 30)
-            self.humidityContentLabel.frame = CGRect(x: contentX, y:CGFloat(height), width: self.bounds.size.width - contentX, height: 30)
-            height += 30
-            
-            self.ambientLightLabel.frame = CGRect(x: 8, y: height, width: Int(descWidth), height: 30)
-            self.ambientLightContentLabel.frame = CGRect(x: contentX, y:CGFloat(height), width: self.bounds.size.width - contentX, height: 30)
-            height += 30
+            if extSensorType == "1"{
+                self.tempLabel.frame = CGRect(x: 8, y: height, width: Int(descWidth), height: 30)
+                self.tempContentLabel.frame = CGRect(x: Int(contentX), y: height, width: Int(self.bounds.size.width) - Int(contentX) - 70, height: 30)
+                self.switchTempUnitBtn.frame = CGRect(x: Int(self.bounds.size.width) - 70, y: height, width: 50, height: 24)
+                self.switchTempUnitBtn.setTitleShadowColor(UIColor.green,for: .highlighted)
+                self.switchTempUnitBtn.setTitleShadowColor(UIColor.black,for: .normal)
+                height += 30
+            } else{
+                self.tempLabel.isHidden = true
+                self.tempContentLabel.isHidden = true
+                self.switchTempUnitBtn.isHidden = true
+            }
             self.nidLabel.isHidden = true
             self.nidContentLabel.isHidden = true
             self.bidLabel.isHidden = true
@@ -467,16 +494,19 @@ class DeviceS10Cell: UITableViewCell {
             self.majorContentLabel.isHidden = true
             self.minorLabel.isHidden = true
             self.minorContentLabel.isHidden = true
-            self.warnContentLabel.frame = CGRect(x: contentX, y: CGFloat(height), width: self.bounds.size.width - contentX, height: 30)
+            self.warnLabel.isHidden = false
+            warnContentLabel.isHidden = false
+            self.warnContentLabel.frame = CGRect(x: contentX, y: CGFloat(height), width: self.bounds.size.width - contentX-10, height: 30)
        
             self.warnLabel.frame = CGRect(x: 8, y: height, width: Int(descWidth), height: 30)
 //            marqueeView.frame = CGRect(x: contentX, y: CGFloat(height), width: self.bounds.size.width - contentX, height: 30)
             height += 30
-            self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 470)
+           
         }
         self.configLabel.frame = CGRect(x: 8, y: height, width: Int(descWidth), height: 30)
         self.configBtn.frame = CGRect(x: Int(contentX), y: height, width: 80, height: 24)
         height += 30
+        self.rootView.frame = CGRect(x: 5, y: 5, width: Int(self.bounds.size.width)-10, height: height+10)
         self.backgroundColor = UIColor.nordicLightGray
         self.rootView.backgroundColor = UIColor.white
         self.rootView.layer.cornerRadius = 8
@@ -525,7 +555,7 @@ class DeviceS10Cell: UITableViewCell {
         self.minorContentLabel.frame = CGRect(x: contentX, y: 458, width: self.bounds.size.width - contentX, height: 30)
         
         self.warnLabel.frame = CGRect(x: 8, y: 488, width: descWidth, height: 30)
-        self.warnContentLabel.frame = CGRect(x: contentX, y: 488, width: self.bounds.size.width - contentX, height: 30)
+        self.warnContentLabel.frame = CGRect(x: contentX, y: 488, width: self.bounds.size.width - contentX-10, height: 30)
 //        marqueeView.frame = CGRect(x: contentX, y: 488, width: self.bounds.size.width - contentX, height: 30)
         self.configLabel.frame = CGRect(x: 8, y: 518, width: descWidth, height: 30)
         self.configBtn.frame = CGRect(x: contentX, y: 518, width: 80, height: 24)
@@ -582,7 +612,8 @@ class DeviceS10Cell: UITableViewCell {
         self.rootView.addSubview(configBtn)
         self.rootView.addSubview(idLabel)
         self.rootView.addSubview(idContentLabel)
-        
+        self.rootView.addSubview(extSensorTypeLabel)
+        self.rootView.addSubview(extSensorTypeContentLabel)
         
         marqueeView = JXMarqueeView()
         marqueeView.contentView = self.warnContentLabel

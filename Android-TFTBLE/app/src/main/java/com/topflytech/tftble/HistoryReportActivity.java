@@ -161,6 +161,8 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
     private SweetAlertDialog waitingDlg;
     private SharedPreferences preferences;
     private  FontSelector selector;
+    boolean isHadValidTempData = false;
+    boolean isHadValidHumidityData = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -177,10 +179,10 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
         mac = intent.getStringExtra("mac");
         reportType = intent.getStringExtra("reportType");
         deviceType = intent.getStringExtra("deviceType");
-        tempAlarmUp = intent.getFloatExtra("tempAlarmUp",4095);
-        tempAlarmDown = intent.getFloatExtra("tempAlarmDown",4095);
-        humidityAlarmUp = intent.getFloatExtra("humidityAlarmUp",4095);
-        humidityAlarmDown = intent.getFloatExtra("humidityAlarmDown",4095);
+        tempAlarmUp = intent.getFloatExtra("tempAlarmUp",4095.0f);
+        tempAlarmDown = intent.getFloatExtra("tempAlarmDown",4095.0f);
+        humidityAlarmUp = intent.getFloatExtra("humidityAlarmUp",4095.0f);
+        humidityAlarmDown = intent.getFloatExtra("humidityAlarmDown",4095.0f);
         deviceName = intent.getStringExtra("deviceName");
         id = intent.getStringExtra("id");
         startDate = intent.getLongExtra("startDate",0);
@@ -203,8 +205,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
         initTempChart();
         initHumidityChart();
         initTable();
-        boolean isHadValidTempData = false;
-        boolean isHadValidHumidityData = false;
+
         for(BleHisData bleHisData : showBleHisData){
             if(bleHisData.getTemp() != -999){
                 isHadValidTempData = true;
@@ -657,6 +658,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
             tempChart.setScaleEnabled(false);
              tempChart.setScaleXEnabled(false);
              tempChart.setScaleYEnabled(false);
+
             SweetAlertDialog gotoDetailChartDlg = new SweetAlertDialog(HistoryReportActivity.this, SweetAlertDialog.WARNING_TYPE);
             gotoDetailChartDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
             gotoDetailChartDlg.setTitleText(getResources().getString(R.string.show_detail_chart));
@@ -719,7 +721,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
                             if(preDate.getDay() != now.getDay()){
                                 result = mFormat.format(now);
                             }else{
-                                result = mFormat2.format(now);
+                                result = mFormat.format(now);
                             }
                         }
 
@@ -860,7 +862,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
                             if(preDate.getDay() != now.getDay()){
                                 result = mFormat.format(now);
                             }else{
-                                result = mFormat2.format(now);
+                                result = mFormat.format(now);
                             }
                         }
 
@@ -1081,6 +1083,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
 //            tempSet.setFormLineDashEffect(new DashPathEffect(new float[]{10f, 5f}, 0f));
             tempSet.setFormSize(15.f);
             tempSet.setValueTextSize(9f);
+            tempSet.setDrawValues(false);
 //            tempSet.enableDashedHighlightLine(10f, 5f, 0f);
             tempSet.setDrawFilled(true);
             tempSet.setFillFormatter(new IFillFormatter() {
@@ -1126,6 +1129,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
 //            humiditySet.setFormLineDashEffect(new DashPathEffect(new float[]{10f, 5f}, 0f));
             humiditySet.setFormSize(15.f);
             humiditySet.setValueTextSize(9f);
+            humiditySet.setDrawValues(false);
             humiditySet.setAxisDependency(YAxis.AxisDependency.RIGHT);
 //            humiditySet.enableDashedHighlightLine(10f, 5f, 0f);
             humiditySet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
@@ -1480,7 +1484,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
         Document document = new Document();
         try {
             saveToGallery(tempChart, getSaveName("temp"));
-            if(deviceType.equals("S02") || deviceType.equals("S10")){
+            if(deviceType.equals("S02") || (deviceType.equals("S10") && isHadValidHumidityData)){
                 saveToGallery(humidityChart, getSaveName("humidity"));
             }
             File file = new File(realPath);
@@ -1545,7 +1549,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
             reportSumTable.addCell(lightCloseCell);
             document.add(reportSumTable);
 
-            if(deviceType.equals("S02")  || deviceType.equals("S10")){
+            if(deviceType.equals("S02")  || deviceType.equals("S10") ){
                 PdfPTable detailSumTable = new PdfPTable(3);
                 detailSumTable.setSpacingBefore(10f);
                 detailSumTable.setSpacingAfter(10f);
@@ -1637,28 +1641,38 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
                 detailSumTable.addCell(overLowAlarmTimeHumidityCell);
 
                 document.add(detailSumTable);
+                try{
+                    Image imgTemp = Image.getInstance(getDownDirs() +File.separator+ getSaveName("temp"));
+                    if (imgTemp != null){
+                        document.newPage();
+                        //设置图片缩放到A4纸的大小
+                        imgTemp.scaleToFit(PageSize.A4.getWidth() , PageSize.A4.getHeight());
+                        //设置图片的显示位置（居中）
+                        imgTemp.setAbsolutePosition((PageSize.A4.getWidth() - imgTemp.getScaledWidth()) / 2, (PageSize.A4.getHeight() - imgTemp.getScaledHeight()) / 2);
+                        document.add(imgTemp);
+                    }
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
 
-                Image imgTemp = Image.getInstance(getDownDirs() +File.separator+ getSaveName("temp"));
-                if (imgTemp != null){
-                    document.newPage();
-                    //设置图片缩放到A4纸的大小
-                    imgTemp.scaleToFit(PageSize.A4.getWidth() , PageSize.A4.getHeight());
-                    //设置图片的显示位置（居中）
-                    imgTemp.setAbsolutePosition((PageSize.A4.getWidth() - imgTemp.getScaledWidth()) / 2, (PageSize.A4.getHeight() - imgTemp.getScaledHeight()) / 2);
-                    document.add(imgTemp);
+                try{
+                    if(isHadValidHumidityData){
+                        Image imgHumidity = Image.getInstance(getDownDirs() +File.separator+ getSaveName("humidity"));
+                        if(imgHumidity != null){
+                            document.newPage();
+                            //设置图片缩放到A4纸的大小
+                            imgHumidity.scaleToFit(PageSize.A4.getWidth() , PageSize.A4.getHeight());
+                            //设置图片的显示位置（居中）
+                            imgHumidity.setAbsolutePosition((PageSize.A4.getWidth() - imgHumidity.getScaledWidth()) / 2, (PageSize.A4.getHeight() - imgHumidity.getScaledHeight()) / 2);
+                            document.add(imgHumidity);
+                            document.newPage();
+                        }
+                    }
+                }catch (Exception e){
+                    e.printStackTrace();
                 }
 
 
-                Image imgHumidity = Image.getInstance(getDownDirs() +File.separator+ getSaveName("humidity"));
-                if(imgHumidity != null){
-                    document.newPage();
-                    //设置图片缩放到A4纸的大小
-                    imgHumidity.scaleToFit(PageSize.A4.getWidth() , PageSize.A4.getHeight());
-                    //设置图片的显示位置（居中）
-                    imgHumidity.setAbsolutePosition((PageSize.A4.getWidth() - imgHumidity.getScaledWidth()) / 2, (PageSize.A4.getHeight() - imgHumidity.getScaledHeight()) / 2);
-                    document.add(imgHumidity);
-                    document.newPage();
-                }
 
             }else{
                 PdfPTable detailSumTable = new PdfPTable(2);
@@ -1754,6 +1768,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
                     detailColumnCount = 4;
                 }
             }
+            document.newPage();
             PdfPTable detailTable = new PdfPTable(detailColumnCount);
             PdfPCell tableDateHeadCell = new PdfPCell(new Paragraph(selector.process(getResources().getString(R.string.table_head_date))));
             detailTable.addCell(tableDateHeadCell);
@@ -2079,7 +2094,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
     public boolean exportExcel(String filePath){
         try {
             saveToGallery(tempChart, getSaveName("temp"));
-            if(deviceType.equals("S02") || deviceType.equals("S10")){
+            if(deviceType.equals("S02") || (deviceType.equals("S10") && isHadValidHumidityData)){
                 saveToGallery(humidityChart, getSaveName("humidity"));
             }
             OutputStream os = new FileOutputStream(filePath);

@@ -74,9 +74,7 @@ class EditInstructionSequenceController : UIViewController {
         cmdStr = cmdStr.replacingOccurrences(of: "0x", with: "")
         cmdStr = cmdStr.replacingOccurrences(of: "0X", with: "")
         cmdStr = cmdStr.replacingOccurrences(of: " ", with: "")
-        let hexLowercaseCharacterSet = CharacterSet(charactersIn: "0123456789abcdef").inverted
-        let hexUppercaseCharacterSet = CharacterSet(charactersIn: "0123456789ABCDEF").inverted
-        if cmdStr.rangeOfCharacter(from: hexLowercaseCharacterSet) == nil && cmdStr.rangeOfCharacter(from: hexUppercaseCharacterSet) == nil {
+        if Utils.isHexadecimal(cmdStr)  {
             print("All characters are in 0 to f or 0 to F.")
         } else {
             print("Not all characters are in 0 to f or 0 to F.")
