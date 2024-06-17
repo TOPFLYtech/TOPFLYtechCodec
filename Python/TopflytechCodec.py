@@ -3068,7 +3068,7 @@ class Decoder:
             if isHadFmsData:
                 lastMileageDiff = -999
                 engineHours = bytes2Integer(data, 26)
-                if engineHours == 4294967295l:
+                if engineHours == 4294967295:
                     engineHours = -999
                 coolingFluidTemp = data[71]
                 if coolingFluidTemp < 0:
@@ -4351,7 +4351,7 @@ class ObdDecoder:
             airPressure += 256
         if airPressure == 255:
             airPressure = -999
-        coolingFluidTemp = (int)(data[63]) < 0
+        coolingFluidTemp = (int)(data[63])
         if coolingFluidTemp < 0:
             coolingFluidTemp += 256
         if coolingFluidTemp == 255:
