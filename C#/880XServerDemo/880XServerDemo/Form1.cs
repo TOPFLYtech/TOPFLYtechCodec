@@ -49,6 +49,31 @@ namespace _880XServerDemo
                 return;
             }
             isRunning = true;
+            if (protocolTypeCb.Text.Equals("TCP"))
+            {
+                startTcpServer();
+            }
+            else
+            {
+                startUdpServer();
+            }
+            protocolTypeCb.Enabled = false;
+            btnBeginListen.Enabled = false;
+            btnStopServer.Enabled = true;
+            ShowMsg("Server start success!~");
+
+        }
+        private UdpClient udpServer;
+        private void startUdpServer()
+        {
+            udpServer = new UdpClient(int.Parse(txtPort.Text.Trim()));
+            threadWatch = new Thread(watchUdpConnection);
+            threadWatch.IsBackground = true;
+            threadWatch.Start();
+        }
+
+        private void startTcpServer()
+        {
             socketWatch = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             IPAddress address = IPAddress.Parse(txtIP.Text.Trim());
             IPEndPoint endpoint = new IPEndPoint(address, int.Parse(txtPort.Text.Trim()));
@@ -67,11 +92,9 @@ namespace _880XServerDemo
                 return;
             }
             socketWatch.Listen(10);
-            threadWatch = new Thread(WatchConnection);
-            threadWatch.IsBackground = true; 
-            threadWatch.Start(); 
-            ShowMsg("Server start success!~");
-
+            threadWatch = new Thread(WatchTcpConnection);
+            threadWatch.IsBackground = true;
+            threadWatch.Start();
         }
 
         private void btnStopServer_Click(object sender, EventArgs e)
@@ -80,19 +103,84 @@ namespace _880XServerDemo
             {
                 return;
             }
+            stopAllServer(); 
+        }
+
+        private void stopAllServer()
+        {
+            protocolTypeCb.Enabled = true;
             isRunning = false;
+            btnBeginListen.Enabled = true;
+            btnStopServer.Enabled = false;
+            stopTcpServer();
+            stopUdpServer();
+            ShowMsg("Server stop success!~");
+        }
+
+        private void stopUdpServer()
+        {
+            if(udpServer != null)
+            {
+                udpServer.Close();
+            }
+        }
+
+        private void stopTcpServer()
+        {
             Thread.Sleep(300);
             foreach (Socket socket in dict.Values)
             {
                 socket.Close();
             }
-            socketWatch.Close();
-            ShowMsg("Server stop success!~");
-             
+            if(socketWatch != null)
+            {
+                socketWatch.Close();
+            }
+    
         }
 
+        void watchUdpConnection()
+        {
+            while (isRunning)
+            {
+                try
+                { 
+                    IPEndPoint remoteEP = null;
+                    byte[] receiveBytes = udpServer.Receive(ref remoteEP); 
+
+                    if (rbNoObd.Checked)
+                    {
+                        List<TopflytechCodec.Entities.Message> messageList = decoder.decode(receiveBytes);
+                        foreach (TopflytechCodec.Entities.Message message in messageList)
+                        {
+                            DealUdpNoObdDeviceMessage(message, remoteEP);
+                        }
+                    }
+                    else if (rbObd.Checked)
+                    {
+                        List<TopflytechCodec.Entities.Message> messageList = obdDecoder.decode(receiveBytes);
+                        foreach (TopflytechCodec.Entities.Message message in messageList)
+                        {
+                            DealUdpObdDeviceMessage(message, remoteEP);
+                        }
+                    }
+                    else if (rbPersonal.Checked)
+                    {
+                        List<TopflytechCodec.Entities.Message> messageList = personalDecoder.decode(receiveBytes);
+                        foreach (TopflytechCodec.Entities.Message message in messageList)
+                        {
+                            DealUdpPersonalDeviceMessage(message, remoteEP);
+                        }
+                    } 
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+            }
+        }
  
-        void WatchConnection()
+        void WatchTcpConnection()
         {
             while (isRunning)
             {
@@ -651,6 +739,346 @@ namespace _880XServerDemo
             }
         }
 
+
+        /**
+         * Device model like :8803Pro,8806,8808A,8808B,8603. use this method. 
+         */
+        private void DealUdpNoObdDeviceMessage(TopflytechCodec.Entities.Message message, IPEndPoint remoteEP)
+        { 
+            if (message is TopflytechCodec.Entities.SignInMessage)
+            {
+                SignInMessage signInMessage = (SignInMessage)message;
+                ShowMsg("receive signIn Message imei :" + signInMessage.Imei + " serial no: " + signInMessage.SerialNo + " firmware :" + signInMessage.Firmware + " software: " + signInMessage.Software);
+                //8806 Plus or some new model device,need serial no,reply this message 
+                byte[] reply = t880xPlusEncoder.getSignInMsgReply(signInMessage.Imei, true, signInMessage.SerialNo);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is TopflytechCodec.Entities.HeartbeatMessage)
+            {
+                HeartbeatMessage heartbeatMessage = (HeartbeatMessage)message;
+                ShowMsg("receive heartbeat Message imei :" + heartbeatMessage.Imei + " serial no: " + heartbeatMessage.SerialNo);
+                //8806 Plus or some new model device,need serial no,reply this message 
+                byte[] reply = t880xPlusEncoder.getHeartbeatMsgReply(heartbeatMessage.Imei, true, heartbeatMessage.SerialNo);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is TopflytechCodec.Entities.LocationInfoMessage)
+            {
+                LocationInfoMessage locationInfoMessage = (LocationInfoMessage)message;
+                ShowMsg("receive location Info Message imei :" + locationInfoMessage.Imei + " serial no: " + locationInfoMessage.SerialNo);
+                ShowMsg("lat:" + locationInfoMessage.Latitude + " lng:" + locationInfoMessage.Longitude);
+                //8806 Plus or some new model device, these is the code of 8806 plus. 
+                byte[] reply = t880xPlusEncoder.getLocationMsgReply(locationInfoMessage.Imei, true, locationInfoMessage.SerialNo, message.ProtocolHeadType);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is TopflytechCodec.Entities.LocationAlarmMessage)
+            {
+                LocationAlarmMessage locationAlarmMessage = (LocationAlarmMessage)message;
+                ShowMsg("receive location alarm Message imei :" + locationAlarmMessage.Imei + " serial no: " + locationAlarmMessage.SerialNo + " Alarm is : " + locationAlarmMessage.OriginalAlarmCode);
+                ShowMsg("lat:" + locationAlarmMessage.Latitude + " lng:" + locationAlarmMessage.Longitude);
+                //8806 Plus or some new model device,need serial no,reply this message 
+                byte[] reply = t880xPlusEncoder.getLocationAlarmMsgReply(locationAlarmMessage.Imei, true, locationAlarmMessage.SerialNo, locationAlarmMessage.OriginalAlarmCode, message.ProtocolHeadType);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is GpsDriverBehaviorMessage)
+            {
+                GpsDriverBehaviorMessage gpsDriverBehaviorMessage = (GpsDriverBehaviorMessage)message;
+                ShowMsg("receive gps driver behavior message :" + gpsDriverBehaviorMessage.Imei);
+                ShowMsg("behavior is :" + getGpsDriverBehaviorDescription(gpsDriverBehaviorMessage.BehaviorType));
+                //8806 Plus or some new model device,need serial no,reply this message 
+                byte[] reply = t880xPlusEncoder.getGpsDriverBehaviorMsgReply(gpsDriverBehaviorMessage.Imei, gpsDriverBehaviorMessage.SerialNo);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is TopflytechCodec.Entities.ConfigMessage)
+            {
+                ConfigMessage configMessage = (ConfigMessage)message;
+                ShowMsg("receive config Message imei :" + configMessage.Imei + " serial no: " + configMessage.SerialNo + " config Content:" + configMessage.ConfigResultContent);
+            }
+            else if (message is TopflytechCodec.Entities.AccelerationDriverBehaviorMessage)
+            {
+                AccelerationDriverBehaviorMessage accelerationDriverBehaviorMessage = (AccelerationDriverBehaviorMessage)message;
+                ShowMsg("receive acceleration driver behavior message :" + accelerationDriverBehaviorMessage.Imei);
+                ShowMsg("behavior is :" + getGpsDriverBehaviorDescription(accelerationDriverBehaviorMessage.BehaviorType));
+                //8806 Plus or some new model device,need serial no,reply this message 
+                byte[] reply = t880xPlusEncoder.getAccelerationDriverBehaviorMsgReply(accelerationDriverBehaviorMessage.Imei, accelerationDriverBehaviorMessage.SerialNo);
+                udpServer.Send(reply, reply.Length, remoteEP);
+
+            }
+            else if (message is TopflytechCodec.Entities.AccidentAccelerationMessage)
+            {
+                AccidentAccelerationMessage accidentAccelerationMessage = (AccidentAccelerationMessage)message;
+                ShowMsg("receive accident acceleration message :" + accidentAccelerationMessage.Imei);
+                //8806 Plus or some new model device,need serial no,reply this message 
+                byte[] reply = t880xPlusEncoder.getAccelerationAlarmMsgReply(accidentAccelerationMessage.Imei, accidentAccelerationMessage.SerialNo);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is BluetoothPeripheralDataMessage)
+            {
+                BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = (BluetoothPeripheralDataMessage)message;
+                ShowMsg("receive bluetooth peripheral data message:" + bluetoothPeripheralDataMessage.Imei); 
+                byte[] reply = t880xPlusEncoder.getBluetoothPeripheralMsgReply(bluetoothPeripheralDataMessage.Imei, bluetoothPeripheralDataMessage.SerialNo, bluetoothPeripheralDataMessage.ProtocolHeadType);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is NetworkInfoMessage)
+            {
+                NetworkInfoMessage networkInfoMessage = (NetworkInfoMessage)message;
+                ShowMsg("receive network info message :" + networkInfoMessage.Imei); 
+                byte[] reply = t880xPlusEncoder.getNetworkMsgReply(networkInfoMessage.Imei, networkInfoMessage.SerialNo);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is WifiMessage)
+            {
+                WifiMessage wifiMessage = (WifiMessage)message;
+                ShowMsg("receive wifi location message :" + wifiMessage.Imei);
+                byte[] reply = t880xPlusEncoder.getWifiMsgReply(wifiMessage.Imei, true, wifiMessage.SerialNo);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is OneWireMessage)
+            {
+                OneWireMessage oneWire = (OneWireMessage)message;
+                ShowMsg("receive one wire message :" + oneWire.Imei);
+                byte[] reply = t880xPlusEncoder.getOneWireMsgReply(oneWire.Imei, true, oneWire.SerialNo);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is RS485Message)
+            {
+                RS485Message rs485 = (RS485Message)message;
+                ShowMsg("receive RS485 message :" + rs485.Imei);
+                byte[] reply = t880xPlusEncoder.getRs485MsgReply(rs485.Imei, true, rs485.SerialNo);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is ObdMessage)
+            {
+                ObdMessage obdMessage = (ObdMessage)message;
+                ShowMsg("receive DTC(OBD) message :" + obdMessage.Imei);
+                byte[] reply = t880xPlusEncoder.getObdMsgReply(obdMessage.Imei, obdMessage.SerialNo);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is ForwardMessage)
+            {
+                ForwardMessage forwardMessage = (ForwardMessage)message;
+                ShowMsg("receive debug message :" + forwardMessage.Imei + " : " + forwardMessage.Content);
+            }
+            else if (message is USSDMessage)
+            {
+                USSDMessage ussdMessage = (USSDMessage)message;
+                ShowMsg("receive ussd message :" + ussdMessage.Imei + " : " + ussdMessage.Content);
+            }
+            else if (message is RS232Message)
+            {
+                RS232Message rs232Message = (RS232Message)message;
+                ShowMsg("receive RS232 message :" + rs232Message.Imei); 
+                byte[] reply = t880xPlusEncoder.getRS232MsgReply(rs232Message.Imei, rs232Message.SerialNo);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+        }
+
+        private void DealUdpObdDeviceMessage(TopflytechCodec.Entities.Message message, IPEndPoint remoteEP)
+        { 
+            if (message is TopflytechCodec.Entities.SignInMessage)
+            {
+                SignInMessage signInMessage = (SignInMessage)message;
+                ShowMsg("receive signIn Message imei :" + signInMessage.Imei + " serial no: " + signInMessage.SerialNo + " firmware :" + signInMessage.Firmware + " software: " + signInMessage.Software + "platform:" + signInMessage.Platform);
+                //some  model device,need serial no,reply this message 
+                byte[] reply = t880xdEncoder.getSignInMsgReply(signInMessage.Imei, true, signInMessage.SerialNo);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is TopflytechCodec.Entities.HeartbeatMessage)
+            {
+                HeartbeatMessage heartbeatMessage = (HeartbeatMessage)message;
+                ShowMsg("receive heartbeat Message imei :" + heartbeatMessage.Imei + " serial no: " + heartbeatMessage.SerialNo);
+                //some model device,need serial no,reply this message 
+                byte[] reply = t880xdEncoder.getHeartbeatMsgReply(heartbeatMessage.Imei, true, heartbeatMessage.SerialNo);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is TopflytechCodec.Entities.LocationInfoMessage)
+            {
+                LocationInfoMessage locationInfoMessage = (LocationInfoMessage)message;
+                ShowMsg("receive location Info Message imei :" + locationInfoMessage.Imei + " serial no: " + locationInfoMessage.SerialNo);
+                ShowMsg("lat:" + locationInfoMessage.Latitude + " lng:" + locationInfoMessage.Longitude);
+                //some model device, these is the code of 8806 plus. 
+                byte[] reply = t880xdEncoder.getLocationMsgReply(locationInfoMessage.Imei, true, locationInfoMessage.SerialNo, locationInfoMessage.ProtocolHeadType);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is TopflytechCodec.Entities.LocationAlarmMessage)
+            {
+                LocationAlarmMessage locationAlarmMessage = (LocationAlarmMessage)message;
+                ShowMsg("receive location alarm Message imei :" + locationAlarmMessage.Imei + " serial no: " + locationAlarmMessage.SerialNo + " Alarm is : " + locationAlarmMessage.OriginalAlarmCode);
+                ShowMsg("lat:" + locationAlarmMessage.Latitude + " lng:" + locationAlarmMessage.Longitude);
+                //some model device,need serial no,reply this message 
+                byte[] reply = t880xdEncoder.getLocationAlarmMsgReply(locationAlarmMessage.Imei, true, locationAlarmMessage.SerialNo, locationAlarmMessage.OriginalAlarmCode, locationAlarmMessage.ProtocolHeadType);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is GpsDriverBehaviorMessage)
+            {
+                GpsDriverBehaviorMessage gpsDriverBehaviorMessage = (GpsDriverBehaviorMessage)message;
+                ShowMsg("receive gps driver behavior message :" + gpsDriverBehaviorMessage.Imei);
+                ShowMsg("behavior is :" + getGpsDriverBehaviorDescription(gpsDriverBehaviorMessage.BehaviorType));
+                //some model device,need serial no,reply this message 
+                byte[] reply = t880xdEncoder.getGpsDriverBehaviorMsgReply(gpsDriverBehaviorMessage.Imei, gpsDriverBehaviorMessage.SerialNo);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is ObdMessage)
+            {
+                ObdMessage obdMsg = (ObdMessage)message;
+                ShowMsg("receive OBD message :" + obdMsg.Imei);
+                byte[] reply = t880xdEncoder.getObdMsgReply(obdMsg.Imei, obdMsg.SerialNo);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is TopflytechCodec.Entities.ConfigMessage)
+            {
+                ConfigMessage configMessage = (ConfigMessage)message;
+                ShowMsg("receive config Message imei :" + configMessage.Imei + " serial no: " + configMessage.SerialNo + " config Content:" + configMessage.ConfigResultContent);
+            }
+            else if (message is TopflytechCodec.Entities.AccelerationDriverBehaviorMessage)
+            {
+                AccelerationDriverBehaviorMessage accelerationDriverBehaviorMessage = (AccelerationDriverBehaviorMessage)message;
+                ShowMsg("receive acceleration driver behavior message :" + accelerationDriverBehaviorMessage.Imei);
+                ShowMsg("behavior is :" + getGpsDriverBehaviorDescription(accelerationDriverBehaviorMessage.BehaviorType));
+                //some model device,need serial no,reply this message 
+                byte[] reply = t880xdEncoder.getAccelerationDriverBehaviorMsgReply(accelerationDriverBehaviorMessage.Imei, accelerationDriverBehaviorMessage.SerialNo);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is TopflytechCodec.Entities.AccidentAccelerationMessage)
+            {
+                AccidentAccelerationMessage accidentAccelerationMessage = (AccidentAccelerationMessage)message;
+                ShowMsg("receive accident acceleration message :" + accidentAccelerationMessage.Imei);
+                //some model device,need serial no,reply this message 
+                byte[] reply = t880xdEncoder.getAccelerationAlarmMsgReply(accidentAccelerationMessage.Imei, accidentAccelerationMessage.SerialNo);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is BluetoothPeripheralDataMessage)
+            {
+                BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = (BluetoothPeripheralDataMessage)message;
+                ShowMsg("receive bluetooth peripheral data message:" + bluetoothPeripheralDataMessage.Imei); 
+                byte[] reply = t880xdEncoder.getBluetoothPeripheralMsgReply(bluetoothPeripheralDataMessage.Imei, bluetoothPeripheralDataMessage.SerialNo, bluetoothPeripheralDataMessage.ProtocolHeadType);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is NetworkInfoMessage)
+            {
+                NetworkInfoMessage networkInfoMessage = (NetworkInfoMessage)message;
+                ShowMsg("receive network info message :" + networkInfoMessage.Imei); 
+                byte[] reply = t880xdEncoder.getNetworkMsgReply(networkInfoMessage.Imei, networkInfoMessage.SerialNo);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is WifiMessage)
+            {
+                WifiMessage wifiMessage = (WifiMessage)message;
+                ShowMsg("receive wifi location message :" + wifiMessage.Imei);
+                byte[] reply = t880xdEncoder.getWifiMsgReply(wifiMessage.Imei, true, wifiMessage.SerialNo);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is ForwardMessage)
+            {
+                ForwardMessage forwardMessage = (ForwardMessage)message;
+                ShowMsg("receive debug message :" + forwardMessage.Imei + " : " + forwardMessage.Content);
+            }
+            else if (message is USSDMessage)
+            {
+                USSDMessage ussdMessage = (USSDMessage)message;
+                ShowMsg("receive ussd message :" + ussdMessage.Imei + " : " + ussdMessage.Content);
+            }
+
+        }
+
+
+        private void DealUdpPersonalDeviceMessage(TopflytechCodec.Entities.Message message, IPEndPoint remoteEP)
+        { 
+            if (message is TopflytechCodec.Entities.SignInMessage)
+            {
+                SignInMessage signInMessage = (SignInMessage)message;
+                ShowMsg("receive signIn Message imei :" + signInMessage.Imei + " serial no: " + signInMessage.SerialNo + " firmware :" + signInMessage.Firmware + " software: " + signInMessage.Software + "platform:" + signInMessage.Platform);
+                //some model device,need serial no,reply this message 
+                byte[] reply = personalEncoder.getSignInMsgReply(signInMessage.Imei, true, signInMessage.SerialNo);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is TopflytechCodec.Entities.HeartbeatMessage)
+            {
+                HeartbeatMessage heartbeatMessage = (HeartbeatMessage)message;
+                ShowMsg("receive heartbeat Message imei :" + heartbeatMessage.Imei + " serial no: " + heartbeatMessage.SerialNo);
+                //some model device,need serial no,reply this message 
+                //}
+                byte[] reply = personalEncoder.getHeartbeatMsgReply(heartbeatMessage.Imei, true, heartbeatMessage.SerialNo);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is TopflytechCodec.Entities.LocationInfoMessage)
+            {
+                LocationInfoMessage locationInfoMessage = (LocationInfoMessage)message;
+                ShowMsg("receive location Info Message imei :" + locationInfoMessage.Imei + " serial no: " + locationInfoMessage.SerialNo);
+                ShowMsg("lat:" + locationInfoMessage.Latitude + " lng:" + locationInfoMessage.Longitude);
+                //some model device, these is the code of 8806 plus. 
+                byte[] reply = personalEncoder.getLocationMsgReply(locationInfoMessage.Imei, true, locationInfoMessage.SerialNo, locationInfoMessage.ProtocolHeadType);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is TopflytechCodec.Entities.LocationAlarmMessage)
+            {
+                LocationAlarmMessage locationAlarmMessage = (LocationAlarmMessage)message;
+                ShowMsg("receive location alarm Message imei :" + locationAlarmMessage.Imei + " serial no: " + locationAlarmMessage.SerialNo + " Alarm is : " + locationAlarmMessage.OriginalAlarmCode);
+                ShowMsg("lat:" + locationAlarmMessage.Latitude + " lng:" + locationAlarmMessage.Longitude); 
+                byte[] reply = personalEncoder.getLocationAlarmMsgReply(locationAlarmMessage.Imei, true, locationAlarmMessage.SerialNo, locationAlarmMessage.OriginalAlarmCode, locationAlarmMessage.ProtocolHeadType);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is NetworkInfoMessage)
+            {
+                NetworkInfoMessage networkInfoMessage = (NetworkInfoMessage)message;
+                ShowMsg("receive network info message :" + networkInfoMessage.Imei); 
+                byte[] reply = personalEncoder.getNetworkMsgReply(networkInfoMessage.Imei, networkInfoMessage.SerialNo);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is WifiMessage)
+            {
+                WifiMessage wifiMessage = (WifiMessage)message;
+                ShowMsg("receive wifi location message :" + wifiMessage.Imei);
+                byte[] reply = personalEncoder.getWifiMsgReply(wifiMessage.Imei, wifiMessage.SerialNo);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is LockMessage)
+            {
+                LockMessage lockMessage = (LockMessage)message;
+                ShowMsg("receive lock message :" + lockMessage.Imei + " id:" + lockMessage.LockId);
+                byte[] reply = personalEncoder.getLockMsgReply(lockMessage.Imei, lockMessage.SerialNo);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is InnerGeoDataMessage)
+            {
+                InnerGeoDataMessage innerGeoDataMessage = (InnerGeoDataMessage)message;
+                ShowMsg("receive inner geo message :" + innerGeoDataMessage.Imei);
+                byte[] reply = personalEncoder.getInnerGeoDataMsgReply(innerGeoDataMessage.Imei, true, innerGeoDataMessage.SerialNo);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is DeviceTempCollectionMessage)
+            {
+                DeviceTempCollectionMessage deviceTempCollectionMessage = (DeviceTempCollectionMessage)message;
+                ShowMsg("receive external device data message :" + deviceTempCollectionMessage.Imei);
+                byte[] reply = personalEncoder.getDeviceTempCollectionMsgReply(deviceTempCollectionMessage.Imei, deviceTempCollectionMessage.SerialNo);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is ForwardMessage)
+            {
+                ForwardMessage forwardMessage = (ForwardMessage)message;
+                ShowMsg("receive debug message :" + forwardMessage.Imei + " : " + forwardMessage.Content);
+            }
+            else if (message is USSDMessage)
+            {
+                USSDMessage ussdMessage = (USSDMessage)message;
+                ShowMsg("receive ussd message :" + ussdMessage.Imei + " : " + ussdMessage.Content);
+            }
+            else if (message is BluetoothPeripheralDataMessage)
+            {
+                BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = (BluetoothPeripheralDataMessage)message;
+                ShowMsg("receive bluetooth peripheral data message:" + bluetoothPeripheralDataMessage.Imei); 
+                byte[] reply = personalEncoder.getBluetoothPeripheralMsgReply(bluetoothPeripheralDataMessage.Imei, bluetoothPeripheralDataMessage.SerialNo, bluetoothPeripheralDataMessage.ProtocolHeadType);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+            else if (message is WifiWithDeviceInfoMessage)
+            {
+                WifiWithDeviceInfoMessage wifiWithDeviceInfoMessage = (WifiWithDeviceInfoMessage)message;
+                ShowMsg("receive wifi with device infomation message:" + wifiWithDeviceInfoMessage.Imei);
+                byte[] reply = personalEncoder.getWifiWithDeviceInfoReply(wifiWithDeviceInfoMessage.Imei,
+                    wifiWithDeviceInfoMessage.SerialNo, wifiWithDeviceInfoMessage.OriginalAlarmCode, wifiWithDeviceInfoMessage.ProtocolHeadType);
+                udpServer.Send(reply, reply.Length, remoteEP);
+            }
+        }
+
         public String getGpsDriverBehaviorDescription(int behaviorType){
             if (behaviorType == GpsDriverBehaviorType.HIGH_SPEED_ACCELERATE){
                 return "The vehicle accelerates at the high speed.";
@@ -691,12 +1119,9 @@ namespace _880XServerDemo
             return "[" + ByteToString(command) +"]"; 
         }
 
-      
-
-       
-
-         
-        
-         
+        private void topflytech880xServer_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            stopAllServer();
+        }
     }
 }

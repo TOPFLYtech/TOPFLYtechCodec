@@ -41,6 +41,7 @@
             this.rbObd = new System.Windows.Forms.RadioButton();
             this.rbNoObd = new System.Windows.Forms.RadioButton();
             this.rbPersonal = new System.Windows.Forms.RadioButton();
+            this.protocolTypeCb = new System.Windows.Forms.ComboBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -48,7 +49,7 @@
             // 
             this.lbOnline.FormattingEnabled = true;
             this.lbOnline.ItemHeight = 12;
-            this.lbOnline.Location = new System.Drawing.Point(12, 76);
+            this.lbOnline.Location = new System.Drawing.Point(12, 104);
             this.lbOnline.Name = "lbOnline";
             this.lbOnline.Size = new System.Drawing.Size(134, 316);
             this.lbOnline.TabIndex = 18;
@@ -56,7 +57,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(12, 40);
+            this.label3.Location = new System.Drawing.Point(12, 68);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(53, 12);
             this.label3.TabIndex = 17;
@@ -64,7 +65,7 @@
             // 
             // txtMsg
             // 
-            this.txtMsg.Location = new System.Drawing.Point(165, 69);
+            this.txtMsg.Location = new System.Drawing.Point(165, 97);
             this.txtMsg.Multiline = true;
             this.txtMsg.Name = "txtMsg";
             this.txtMsg.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
@@ -104,7 +105,7 @@
             this.txtIP.Name = "txtIP";
             this.txtIP.Size = new System.Drawing.Size(100, 21);
             this.txtIP.TabIndex = 11;
-            this.txtIP.Text = "192.168.1.53";
+            this.txtIP.Text = "127.0.0.1";
             // 
             // label1
             // 
@@ -130,7 +131,7 @@
             this.groupBox1.Controls.Add(this.rbObd);
             this.groupBox1.Controls.Add(this.rbNoObd);
             this.groupBox1.Controls.Add(this.rbPersonal);
-            this.groupBox1.Location = new System.Drawing.Point(254, 8);
+            this.groupBox1.Location = new System.Drawing.Point(303, 8);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(254, 44);
             this.groupBox1.TabIndex = 44;
@@ -169,11 +170,24 @@
             this.rbPersonal.Text = "Personal";
             this.rbPersonal.UseVisualStyleBackColor = true;
             // 
+            // protocolTypeCb
+            // 
+            this.protocolTypeCb.FormattingEnabled = true;
+            this.protocolTypeCb.Items.AddRange(new object[] {
+            "TCP",
+            "UDP"});
+            this.protocolTypeCb.Location = new System.Drawing.Point(231, 11);
+            this.protocolTypeCb.Name = "protocolTypeCb";
+            this.protocolTypeCb.Size = new System.Drawing.Size(65, 20);
+            this.protocolTypeCb.TabIndex = 45;
+            this.protocolTypeCb.Text = "TCP";
+            // 
             // topflytech880xServer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(684, 442);
+            this.Controls.Add(this.protocolTypeCb);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btnStopServer);
             this.Controls.Add(this.lbOnline);
@@ -186,6 +200,7 @@
             this.Controls.Add(this.label1);
             this.Name = "topflytech880xServer";
             this.Text = "Topflytech 880XServer V1.0";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.topflytech880xServer_FormClosing);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
@@ -208,6 +223,7 @@
         private System.Windows.Forms.RadioButton rbObd;
         private System.Windows.Forms.RadioButton rbNoObd;
         private System.Windows.Forms.RadioButton rbPersonal;
+        private System.Windows.Forms.ComboBox protocolTypeCb;
     }
 }
 
