@@ -1,0 +1,49 @@
+/* 
+  Localizable.strings
+  bleAhtiLost
+
+  Created by china topflytech on 2024/4/12.
+  
+*/
+"app_name"="TFTAntiLost";
+"warning"="Warning";
+"connect_fail"="Connect fail!";
+"connecting"="Connecting";
+"input_device_password"="Enter password";
+"info"="Information";
+"confirm"="Confirm";
+"cancel"="Cancel";
+"password_is_error"="Password is error!";
+"error_please_try_again"="Error,please try again!";
+"ble_connect"="Bluetooth connection:";
+"connect_status"="Connection Status:";
+"signal"="Signal:";
+"two_way_notification"="Two-way notification:";
+"two_way_anti_lost"="Two-way anti-lost:";
+"silent_mode"="Silent mode:";
+"search_mode"="Search mode:";
+"notification_duration"="Notification duration (seconds):";
+"notification_count"="Number of notifications:";
+"mobile_notification_type"="Mobile phone notification method:";
+"sound"="Sound";
+"shock"="Shock";
+"mobile_notification_duration"="Mobile phone notification duration (seconds):";
+"mobile_notification_count"="Number of mobile phone notifications:";
+"ble_not_support"="Does not support Bluetooth";
+"restart_app_warning"="After positioning authorization, the APP needs to be restarted to function properly. The APP is about to restart. If it cannot be started, please manually start the APP";
+"scanning"="Scanning";
+"disconnected"="Disconnected";
+"ble_close"="Bluetooth is turned off";
+"connect_succ"="connection succeeded";
+"imei_check_error"="Please enter 15 digit IMEI";
+"notification_duration_check"="Please enter the notification duration";
+"notification_count_check"="Please enter the number of notifications";
+"need_connect_ble_first"="Bluetooth connection has not been successful, please wait.";
+"mobile_notification_duration_check"="Please enter the mobile phone notification duration";
+"mobile_notification_count_check"="Please enter the number of mobile phone notifications";
+"waiting"="Waiting...";
+"success"="Success!";
+"lost_connect"="Device disconnected";
+"device_invalid_set_value_warning"="The set value must between 1 and 255";
+"mobile_invalid_set_value_warning"="The mobile phone alarm value setting must be between 1 and 255";
+"lost_connect_desc"="Lost connection with the Bluetooth device. Please check the device status or reconnect.";

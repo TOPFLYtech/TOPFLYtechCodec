@@ -1,0 +1,49 @@
+/* 
+  Localizable.strings
+  bleAhtiLost
+
+  Created by china topflytech on 2024/4/12.
+  
+*/
+"app_name"="TFTAntiLost";
+"warning"="警告";
+"connect_fail"="连接失败！";
+"connecting"="连接中";
+"info"="信息";
+"confirm"="确认";
+"input_device_password"="输入密码";
+"cancel"="取消";
+"error_please_try_again"="错误，请重试！";
+"password_is_error"="密码错误！";
+"ble_connect"="蓝牙连接:";
+"connect_status"="连接状态:";
+"signal"="信号:";
+"two_way_notification"="双向通知:";
+"two_way_anti_lost"="双向防丢:";
+"silent_mode"="静默模式:";
+"search_mode"="搜索模式:";
+"notification_duration"="通知持续时间 (秒):";
+"notification_count"="通知次数:";
+"mobile_notification_type"="手机通知方式:";
+"sound"="声音";
+"shock"="震动";
+"mobile_notification_duration"="手机通知持续时间 (秒):";
+"mobile_notification_count"="手机通知次数:";
+"ble_not_support"="不支持蓝牙";
+"restart_app_warning"="定位授权后需要重启APP才能正常使用，APP即将进行重启，如果无法启动，请手动启动APP";
+"scanning"="搜索中";
+"disconnected"="已断连";
+"ble_close"="蓝牙已关闭";
+"connect_succ"="连接成功";
+"imei_check_error"="请输入15位IMEI";
+"notification_duration_check"="请输入通知持续时间";
+"notification_count_check"="请输入通知次数";
+"need_connect_ble_first"="蓝牙尚未连接成功，请等待";
+"mobile_notification_duration_check"="请输入手机通知持续时间";
+"mobile_notification_count_check"="请输入手机通知次数";
+"waiting"="等候...";
+"success"="成功！";
+"lost_connect"="设备断开连接";
+"device_invalid_set_value_warning"="设置值必须在1到255之间";
+"mobile_invalid_set_value_warning"="手机警报值设置必须在1到255之间";
+"lost_connect_desc"="已与蓝牙设备失去连接，请检查设备状态或重新连接";

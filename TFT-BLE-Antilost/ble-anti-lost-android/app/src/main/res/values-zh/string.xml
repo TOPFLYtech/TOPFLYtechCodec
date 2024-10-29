@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TFT BLE AntiLost</string>
+    <string name="warning">警告</string>
+    <string name="connect_fail">连接失败！</string>
+    <string name="connecting">连接中</string>
+    <string name="info">信息</string>
+    <string name="confirm">确认</string>
+    <string name="input_device_password">输入密码</string>
+    <string name="cancel">取消</string>
+    <string name="error_please_try_again">错误，请重试！</string>
+    <string name="password_is_error">密码错误！</string>
+    <string name="ble_connect">蓝牙连接:</string>
+    <string name="connect_status">连接状态:</string>
+    <string name="signal">信号:</string>
+    <string name="two_way_notification">双向通知:</string>
+    <string name="two_way_anti_lost">双向防丢:</string>
+    <string name="silent_mode">静默模式:</string>
+    <string name="search_mode">搜索模式:</string>
+    <string name="notification_duration">通知持续时间 (秒):</string>
+    <string name="notification_count">通知次数:</string>
+    <string name="mobile_notification_type">手机通知方式:</string>
+    <string name="sound">声音</string>
+    <string name="shock">震动</string>
+    <string name="mobile_notification_duration">手机通知持续时间 (秒):</string>
+    <string name="mobile_notification_count">手机通知次数:</string>
+    <string name="ble_not_support">不支持蓝牙</string>
+    <string name="restart_app_warning">定位授权后需要重启APP才能正常使用，APP即将进行重启，如果无法启动，请手动启动APP</string>
+    <string name="scanning">搜索中</string>
+    <string name="disconnected">已断连</string>
+    <string name="ble_close">蓝牙已关闭</string>
+    <string name="connect_succ">连接成功</string>
+    <string name="imei_check_error">请输入15位IMEI</string>
+    <string name="notification_duration_check">请输入通知持续时间</string>
+    <string name="notification_count_check">请输入通知次数</string>
+    <string name="need_connect_ble_first">蓝牙尚未连接成功，请等待</string>
+    <string name="mobile_notification_duration_check">请输入手机通知持续时间</string>
+    <string name="mobile_notification_count_check">请输入手机通知次数</string>
+    <string name="waiting">等候...</string>
+    <string name="success">成功！</string>
+    <string name="lost_connect">设备断开连接</string>
+    <string name="mobile_warning_set_tips">如果没有收到通知或者通知没有震动和声音，请到手机设置，通知设置找到应用，设置通知为重要，并且把震动和声音都开启</string>
+    <string name="device_invalid_set_value_warning">设置值必须在1到255之间</string>
+    <string name="mobile_invalid_set_value_warning">手机警报值设置必须在1到255之间</string>
+</resources>

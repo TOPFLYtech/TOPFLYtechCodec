@@ -1,0 +1,93 @@
+apply plugin: 'com.android.application'
+
+android {
+
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+    compileSdkVersion 34
+    defaultConfig {
+        applicationId "com.topflytech.bleAntiLost"
+        minSdkVersion 23
+        targetSdkVersion 34
+        versionCode 2
+        versionName "1.0.1"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        ndk {
+            // 设置支持的SO库架构
+            abiFilters 'armeabi' , 'x86', 'armeabi-v7a', 'x86_64', 'arm64-v8a'
+        }
+
+    }
+//    buildTypes {
+//        release {
+//            minifyEnabled false
+//            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+//            signingConfig signingConfigs.release
+//        }
+//        debug{
+//            signingConfig signingConfigs.release
+//        }
+//    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    repositories {
+        maven { url 'https://jitpack.io' }
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    //    compile 'com.android.support:appcompat-v7:26.0.0-alpha1'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    implementation 'com.google.android.material:material:1.0.0'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
+    implementation 'com.alibaba:fastjson:1.1.46.android'
+//    implementation 'com.inuker.bluetooth:library:1.4.0'
+    implementation 'com.liulishuo.filedownloader:library:1.7.7'
+    implementation project(path: ':sweetAlert')
+    implementation 'com.borax12.materialdaterangepicker:library:2.0'
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+    implementation 'com.github.huangyanbin:SmartTable:2.2.0'
+    implementation 'com.itextpdf:itextg:5.5.10'
+    implementation 'cn.bingoogolapple:bga-qrcode-zxing:1.3.7'
+    implementation 'pub.devrel:easypermissions:1.0.1'
+    implementation 'com.sun.mail:android-mail:1.6.0'
+    implementation 'net.sourceforge.jexcelapi:jxl:2.6.12'
+    implementation 'com.tencent.bugly:crashreport:latest.release'
+    implementation 'com.tencent.bugly:nativecrashreport:latest.release'
+    implementation 'com.contrarywind:Android-PickerView:4.1.9'
+    implementation 'com.qmuiteam:qmui:2.0.0-alpha10'
+    implementation 'androidx.core:core:1.9.0'
+    implementation 'androidx.annotation:annotation-experimental:1.3.0'
+ 
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'com.github.loper7:DateTimePicker:0.6.2'
+
+
+    // OpenCV基础库（*必须）
+    implementation 'com.github.jenly1314.WeChatQRCode:opencv:2.0.1'
+    implementation 'com.github.jenly1314.WeChatQRCode:opencv-armv7a:2.0.1'
+
+// OpenCV的其他ABI（可选），根据你的需要选择想要支持的SO库架构
+    implementation 'com.github.jenly1314.WeChatQRCode:opencv-armv64:2.0.1'
+    implementation 'com.github.jenly1314.WeChatQRCode:opencv-x86:2.0.1'
+    implementation 'com.github.jenly1314.WeChatQRCode:opencv-x86_64:2.0.1'
+
+//// OpenCV二维码识别功能（可选）
+//    implementation 'com.github.jenly1314.WeChatQRCode:opencv-qrcode:2.0.1'
+//// OpenCV二维码扫码功能（可选）
+//    implementation 'com.github.jenly1314.WeChatQRCode:opencv-qrcode-scanning:2.0.1'
+
+// 微信二维码识别功能（可选）
+    implementation 'com.github.jenly1314.WeChatQRCode:wechat-qrcode:2.0.1'
+// 微信二维码扫码功能（可选）
+    implementation 'com.github.jenly1314.WeChatQRCode:wechat-qrcode-scanning:2.0.1'
+
+}

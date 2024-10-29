@@ -1,0 +1,512 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:padding="5dp"
+    android:background="@color/bg_color_white"
+    android:layout_height="match_parent"  >
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/edit_item_high"
+        android:orientation="horizontal"
+        android:gravity="center"
+        >
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/bg_color_white"
+            android:text="IMEI:"
+            android:gravity="center"
+            android:layout_marginRight="1dp"
+            android:layout_marginBottom="1dp"
+            android:layout_marginLeft="@dimen/tv_margin_left"
+            android:layout_weight="2"
+            android:textColor="@color/tx_black"
+            android:textSize="@dimen/btn_size" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_weight="2"
+            android:layout_height="match_parent">
+            <EditText
+                android:inputType="numberSigned|numberDecimal"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/edit_text_height"
+                android:background="@drawable/edit_bg"
+                android:textCursorDrawable="@drawable/edit_cursor_color"
+                android:layout_marginRight="15dp"
+                android:id="@+id/et_imei"
+                android:layout_weight="2"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/btn_size" />
+            <ImageButton
+                android:textAllCaps="false"
+                android:background="@drawable/dialog_btn_bg"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:id="@+id/btn_scan"
+                android:layout_weight="12"
+                android:src="@mipmap/ic_scan"
+                android:textSize="@dimen/btn_size"></ImageButton>
+        </LinearLayout>
+
+
+    </LinearLayout>　
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/edit_item_high"
+        android:orientation="horizontal"
+        android:gravity="center"
+        >
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/bg_color_white"
+            android:text="@string/ble_connect"
+            android:gravity="center"
+            android:layout_marginRight="1dp"
+            android:layout_marginBottom="1dp"
+            android:layout_marginLeft="@dimen/tv_margin_left"
+            android:layout_weight="2"
+            android:textColor="@color/tx_black"
+            android:textSize="@dimen/btn_size" />
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_weight="2"
+            android:layout_height="match_parent">
+<!--            <com.topflytech.bleAntiLost.view.SwitchButton-->
+<!--                android:id="@+id/switch_ble_connect"-->
+<!--                android:layout_width="@dimen/switch_btn_width"-->
+<!--                android:layout_height="@dimen/switch_btn_height"-->
+<!--                android:layout_alignParentRight="true"-->
+<!--                android:layout_gravity="center"-->
+<!--                android:layout_marginRight="17dp"-->
+<!--                />-->
+            <Switch
+                android:id="@+id/switch_ble_connect"
+                android:layout_width="wrap_content"
+                android:layout_gravity="center"
+                android:layout_height="wrap_content"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/bg_color_white"
+                android:id="@+id/tv_connect_log"
+                android:gravity="center"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/tv_margin_left"
+                android:layout_gravity="center"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/btn_size" />
+        </LinearLayout>
+
+    </LinearLayout>　
+    <LinearLayout
+        android:background="@drawable/border"
+        android:padding="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_weight="3"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            >
+            <ImageView
+                android:layout_width="90dp"
+                android:layout_height="90dp"
+                android:id="@+id/img_device"
+                android:src="@mipmap/device_k100"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_weight="2"
+            android:orientation="vertical"
+            android:layout_height="wrap_content">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                >
+                <ImageView
+                    android:layout_width="30dp"
+                    android:padding="3dp"
+                    android:layout_height="30dp"
+                    android:src="@mipmap/ic_ble"/>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/connect_status"
+                    android:layout_marginLeft="@dimen/tv_margin_left"
+                    android:layout_weight="1"
+                    android:textColor="@color/tx_black"
+                    android:textSize="@dimen/btn_size" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/tv_connect_status"
+                    android:layout_marginLeft="@dimen/tv_margin_left"
+                    android:layout_weight="1"
+                    android:textColor="@color/tx_black"
+                    android:textSize="@dimen/btn_size" />
+
+            </LinearLayout>　
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                >
+                <ImageView
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:padding="3dp"
+                    android:src="@mipmap/ic_signal"/>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/signal"
+                    android:layout_marginLeft="@dimen/tv_margin_left"
+                    android:layout_weight="1"
+                    android:textColor="@color/tx_black"
+                    android:textSize="@dimen/btn_size" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/tv_signal"
+                    android:layout_marginLeft="@dimen/tv_margin_left"
+                    android:layout_weight="1"
+                    android:textColor="@color/tx_black"
+                    android:textSize="@dimen/btn_size" />
+
+            </LinearLayout>　
+<!--            <LinearLayout-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:orientation="horizontal"-->
+<!--                android:gravity="center"-->
+<!--                >-->
+<!--                <ImageView-->
+<!--                    android:layout_width="30dp"-->
+<!--                    android:layout_height="30dp"-->
+<!--                    android:src="@mipmap/ic_launcher"/>-->
+<!--                <TextView-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:text="@string/two_way_notification"-->
+<!--                    android:layout_marginLeft="@dimen/tv_margin_left"-->
+<!--                    android:layout_weight="1"-->
+<!--                    android:textColor="@color/tx_black"-->
+<!--                    android:textSize="@dimen/btn_size" />-->
+
+<!--                <TextView-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:id="@+id/tv_two_way_notification"-->
+<!--                    android:layout_marginLeft="@dimen/tv_margin_left"-->
+<!--                    android:layout_weight="1"-->
+<!--                    android:textColor="@color/tx_black"-->
+<!--                    android:textSize="@dimen/btn_size" />-->
+
+<!--            </LinearLayout>　-->
+
+        </LinearLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="10dp"
+        >
+
+    </LinearLayout>
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:background="@drawable/border"
+        android:padding="10dp"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/edit_item_high"
+            android:orientation="horizontal"
+            android:gravity="center"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/bg_color_white"
+                android:text="@string/two_way_anti_lost"
+                android:gravity="center"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/tv_margin_left"
+                android:layout_weight="3"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/btn_size" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_weight="3"
+                android:layout_height="match_parent">
+                <Switch
+                    android:id="@+id/switch_two_way_anti_lost"
+                    android:layout_width="@dimen/switch_btn_width"
+                    android:layout_height="@dimen/switch_btn_height"
+                    android:layout_alignParentRight="true"
+                    android:layout_gravity="center"
+                    android:layout_marginRight="17dp"
+                    />
+
+            </LinearLayout>
+
+        </LinearLayout>　
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/edit_item_high"
+            android:orientation="horizontal"
+            android:gravity="center"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/bg_color_white"
+                android:text="@string/search_mode"
+                android:gravity="center"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/tv_margin_left"
+                android:layout_weight="3"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/btn_size" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_weight="3"
+                android:layout_height="match_parent">
+                <Switch
+                    android:id="@+id/switch_search_mode"
+                    android:layout_width="@dimen/switch_btn_width"
+                    android:layout_height="@dimen/switch_btn_height"
+                    android:layout_alignParentRight="true"
+                    android:layout_gravity="center"
+                    android:layout_marginRight="17dp"
+                    />
+
+            </LinearLayout>
+
+        </LinearLayout>　
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/edit_item_high"
+            android:orientation="horizontal"
+            android:gravity="center"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/bg_color_white"
+                android:text="@string/notification_duration"
+                android:gravity="center"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/tv_margin_left"
+                android:layout_weight="2"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/btn_size" />
+
+            <EditText
+                android:inputType="numberSigned|numberDecimal"
+                android:layout_width="match_parent"
+                android:id="@+id/et_notification_duration"
+                android:layout_height="@dimen/edit_text_height"
+                android:background="@drawable/edit_bg"
+                android:textCursorDrawable="@drawable/edit_cursor_color"
+                android:layout_weight="2"
+                android:layout_marginRight="15dp"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/btn_size" />
+
+        </LinearLayout>　
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/edit_item_high"
+            android:orientation="horizontal"
+            android:gravity="center"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/bg_color_white"
+                android:text="@string/notification_count"
+                android:gravity="center"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/tv_margin_left"
+                android:layout_weight="2"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/btn_size" />
+
+            <EditText
+                android:inputType="numberSigned|numberDecimal"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/edit_text_height"
+                android:background="@drawable/edit_bg"
+                android:textCursorDrawable="@drawable/edit_cursor_color"
+                android:layout_weight="2"
+                android:id="@+id/et_notification_count"
+                android:layout_marginRight="15dp"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/btn_size" />
+
+        </LinearLayout>　
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/edit_item_high"
+            android:orientation="horizontal"
+            android:gravity="center"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/bg_color_white"
+                android:text="@string/mobile_notification_type"
+                android:gravity="center"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/tv_margin_left"
+                android:layout_weight="3"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/btn_size" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_weight="3"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_height="match_parent">
+
+                <CheckBox
+                    android:layout_width="wrap_content"
+                    android:layout_weight="3"
+                    android:id="@+id/cb_sound"
+                    android:orientation="horizontal"
+                    android:layout_height="match_parent"
+                    android:text="@string/sound">
+
+                </CheckBox>
+                <CheckBox
+                    android:layout_width="wrap_content"
+                    android:layout_weight="3"
+                    android:id="@+id/cb_shock"
+                    android:orientation="horizontal"
+                    android:layout_height="match_parent"
+                    android:text="@string/shock">
+
+                </CheckBox>
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:id="@+id/img_warning_tips"
+                    android:src="@mipmap/ic_tips"/>
+            </LinearLayout>
+
+        </LinearLayout>　
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/edit_item_high"
+            android:orientation="horizontal"
+            android:gravity="center"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/bg_color_white"
+                android:text="@string/mobile_notification_duration"
+                android:gravity="center"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/tv_margin_left"
+                android:layout_weight="2"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/btn_size" />
+
+            <EditText
+                android:inputType="numberSigned|numberDecimal"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/edit_text_height"
+                android:background="@drawable/edit_bg"
+                android:id="@+id/et_mobile_notification_duration"
+                android:textCursorDrawable="@drawable/edit_cursor_color"
+                android:layout_weight="2"
+                android:layout_marginRight="15dp"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/btn_size" />
+
+        </LinearLayout>　
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/edit_item_high"
+            android:orientation="horizontal"
+            android:gravity="center"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/bg_color_white"
+                android:text="@string/mobile_notification_count"
+                android:gravity="center"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/tv_margin_left"
+                android:layout_weight="2"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/btn_size" />
+
+            <EditText
+                android:inputType="numberSigned|numberDecimal"
+                android:layout_width="match_parent"
+                android:id="@+id/et_mobile_notification_count"
+                android:layout_height="@dimen/edit_text_height"
+                android:background="@drawable/edit_bg"
+                android:textCursorDrawable="@drawable/edit_cursor_color"
+                android:layout_weight="2"
+                android:layout_marginRight="15dp"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/btn_size" />
+
+        </LinearLayout>　
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/edit_item_high"
+            android:orientation="horizontal"
+            android:gravity="center"
+            >
+
+            <com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton
+                android:layout_width="200dp"
+                android:layout_height="30dp"
+                android:textAllCaps="false"
+                android:text="@string/confirm"
+                android:layout_margin="12dp"
+                android:id="@+id/btn_confirm">
+            </com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton>
+
+        </LinearLayout>　
+    </LinearLayout>
+</LinearLayout>

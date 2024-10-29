@@ -1,0 +1,32 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="MyAppTheme" parent="QMUI.Compat">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+<!--    <style name="AppTheme.NoActionBar" parent="QMUI.Compat">-->
+<!--&lt;!&ndash;        <item name="windowActionBar">false</item>&ndash;&gt;-->
+<!--&lt;!&ndash;        <item name="windowNoTitle">true</item>&ndash;&gt;-->
+<!--    </style>-->
+    <style name="editTextStyle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:background">@drawable/search_edit_text_bg</item>
+        <item name="android:drawablePadding">@dimen/dp_2</item>
+        <item name="android:drawableStart">@mipmap/ic_edit_search</item>
+        <item name="android:gravity">center_vertical</item>
+        <!--<item name="android:imeOptions">actionSearch</item>-->
+        <item name="android:paddingLeft">@dimen/dp_15</item>
+        <item name="android:paddingRight">@dimen/dp_15</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:textSize">@dimen/sp_11</item>
+        <item name="android:textColorHint">#B3B3B3</item>
+    </style>
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" /> 
+</resources>

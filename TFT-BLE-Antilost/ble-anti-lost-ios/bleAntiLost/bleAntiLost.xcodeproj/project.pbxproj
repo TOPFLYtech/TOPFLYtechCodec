@@ -1,0 +1,563 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		9117DD3E2C1C4601004A2E32 /* QRCodeScannerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9117DD3D2C1C4601004A2E32 /* QRCodeScannerViewController.m */; };
+		912869962BC7D029006813FA /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 912869952BC7D029006813FA /* AppDelegate.m */; };
+		912869992BC7D029006813FA /* SceneDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 912869982BC7D029006813FA /* SceneDelegate.m */; };
+		9128699C2BC7D029006813FA /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9128699B2BC7D029006813FA /* ViewController.m */; };
+		9128699F2BC7D029006813FA /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9128699D2BC7D029006813FA /* Main.storyboard */; };
+		912869A12BC7D02A006813FA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 912869A02BC7D02A006813FA /* Assets.xcassets */; };
+		912869A42BC7D02A006813FA /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 912869A22BC7D02A006813FA /* LaunchScreen.storyboard */; };
+		912869A72BC7D02A006813FA /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 912869A62BC7D02A006813FA /* main.m */; };
+		912869B62BC938F2006813FA /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 912869B82BC938F2006813FA /* Localizable.strings */; };
+		912869D12BC93AA8006813FA /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 912869CF2BC93AA8006813FA /* Localizable.strings */; };
+		91B8E4E72BCD182A00EA51EB /* UIColor+Nordic.h in Sources */ = {isa = PBXBuildFile; fileRef = 91B8E4E62BCD182A00EA51EB /* UIColor+Nordic.h */; };
+		91B8E4FC2BCFD09E00EA51EB /* ic_scan.png in Resources */ = {isa = PBXBuildFile; fileRef = 91B8E4FB2BCFD09E00EA51EB /* ic_scan.png */; };
+		91B8E5012BCFD0CD00EA51EB /* ic_uncheckbox.png in Resources */ = {isa = PBXBuildFile; fileRef = 91B8E4FD2BCFD0CD00EA51EB /* ic_uncheckbox.png */; };
+		91B8E5022BCFD0CD00EA51EB /* ic_ble.png in Resources */ = {isa = PBXBuildFile; fileRef = 91B8E4FE2BCFD0CD00EA51EB /* ic_ble.png */; };
+		91B8E5032BCFD0CD00EA51EB /* ic_checkbox.png in Resources */ = {isa = PBXBuildFile; fileRef = 91B8E4FF2BCFD0CD00EA51EB /* ic_checkbox.png */; };
+		91B8E5042BCFD0CD00EA51EB /* ic_signal.png in Resources */ = {isa = PBXBuildFile; fileRef = 91B8E5002BCFD0CD00EA51EB /* ic_signal.png */; };
+		91B8E50B2BCFD1C500EA51EB /* TFTBleManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 91B8E5082BCFD1C500EA51EB /* TFTBleManager.m */; };
+		91B8E50C2BCFD1C500EA51EB /* Utils.m in Sources */ = {isa = PBXBuildFile; fileRef = 91B8E5052BCFD1C500EA51EB /* Utils.m */; };
+		91B8E50D2BCFD1C500EA51EB /* BleDeviceData.m in Sources */ = {isa = PBXBuildFile; fileRef = 91B8E5062BCFD1C500EA51EB /* BleDeviceData.m */; };
+		91B8E50F2BD1498600EA51EB /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 91B8E50E2BD1498600EA51EB /* UserNotifications.framework */; };
+		91B8E5122BD24CA300EA51EB /* laba.caf in Resources */ = {isa = PBXBuildFile; fileRef = 91B8E5112BD24CA300EA51EB /* laba.caf */; };
+		91E59A3B2C24238A00C714F8 /* device_vovx10.png in Resources */ = {isa = PBXBuildFile; fileRef = 91E59A392C24238A00C714F8 /* device_vovx10.png */; };
+		91E59A3C2C24238A00C714F8 /* device_k100.png in Resources */ = {isa = PBXBuildFile; fileRef = 91E59A3A2C24238A00C714F8 /* device_k100.png */; };
+		91F179FD2C11B14E00A45EBA /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 91F179FC2C11B14E00A45EBA /* AudioToolbox.framework */; };
+		93C3C1EE5C9FAA17EE6E76AE /* Pods_bleAntiLost.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 71BFDD4505FB9812A2EF09C3 /* Pods_bleAntiLost.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		50F2E1A0A85706243F61D1A5 /* Pods-bleAhtiLost.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bleAhtiLost.debug.xcconfig"; path = "Target Support Files/Pods-bleAhtiLost/Pods-bleAhtiLost.debug.xcconfig"; sourceTree = "<group>"; };
+		71BFDD4505FB9812A2EF09C3 /* Pods_bleAntiLost.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_bleAntiLost.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		824874A46FC5DDE6D35D18EE /* Pods-bleAntiLost.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bleAntiLost.release.xcconfig"; path = "Target Support Files/Pods-bleAntiLost/Pods-bleAntiLost.release.xcconfig"; sourceTree = "<group>"; };
+		9117DD3D2C1C4601004A2E32 /* QRCodeScannerViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = QRCodeScannerViewController.m; sourceTree = "<group>"; };
+		9117DD3F2C1C4615004A2E32 /* QRCodeScannerViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = QRCodeScannerViewController.h; sourceTree = "<group>"; };
+		912869912BC7D029006813FA /* bleAntiLost.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = bleAntiLost.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		912869942BC7D029006813FA /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		912869952BC7D029006813FA /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		912869972BC7D029006813FA /* SceneDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SceneDelegate.h; sourceTree = "<group>"; };
+		912869982BC7D029006813FA /* SceneDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SceneDelegate.m; sourceTree = "<group>"; };
+		9128699A2BC7D029006813FA /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		9128699B2BC7D029006813FA /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		9128699E2BC7D029006813FA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		912869A02BC7D02A006813FA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		912869A32BC7D02A006813FA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		912869A52BC7D02A006813FA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		912869A62BC7D02A006813FA /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		912869B72BC938F2006813FA /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		912869D02BC93AA8006813FA /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = Localizable.strings; sourceTree = "<group>"; };
+		91B8E4E62BCD182A00EA51EB /* UIColor+Nordic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "UIColor+Nordic.h"; sourceTree = "<group>"; };
+		91B8E4FB2BCFD09E00EA51EB /* ic_scan.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_scan.png; sourceTree = "<group>"; };
+		91B8E4FD2BCFD0CD00EA51EB /* ic_uncheckbox.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_uncheckbox.png; sourceTree = "<group>"; };
+		91B8E4FE2BCFD0CD00EA51EB /* ic_ble.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_ble.png; sourceTree = "<group>"; };
+		91B8E4FF2BCFD0CD00EA51EB /* ic_checkbox.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_checkbox.png; sourceTree = "<group>"; };
+		91B8E5002BCFD0CD00EA51EB /* ic_signal.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_signal.png; sourceTree = "<group>"; };
+		91B8E5052BCFD1C500EA51EB /* Utils.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Utils.m; sourceTree = "<group>"; };
+		91B8E5062BCFD1C500EA51EB /* BleDeviceData.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BleDeviceData.m; sourceTree = "<group>"; };
+		91B8E5072BCFD1C500EA51EB /* BleDeviceData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BleDeviceData.h; sourceTree = "<group>"; };
+		91B8E5082BCFD1C500EA51EB /* TFTBleManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TFTBleManager.m; sourceTree = "<group>"; };
+		91B8E5092BCFD1C500EA51EB /* Utils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Utils.h; sourceTree = "<group>"; };
+		91B8E50A2BCFD1C500EA51EB /* TFTBleManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TFTBleManager.h; sourceTree = "<group>"; };
+		91B8E50E2BD1498600EA51EB /* UserNotifications.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotifications.framework; path = System/Library/Frameworks/UserNotifications.framework; sourceTree = SDKROOT; };
+		91B8E5102BD2497900EA51EB /* bleAntiLost.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = bleAntiLost.entitlements; sourceTree = "<group>"; };
+		91B8E5112BD24CA300EA51EB /* laba.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = laba.caf; sourceTree = "<group>"; };
+		91E59A392C24238A00C714F8 /* device_vovx10.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = device_vovx10.png; sourceTree = "<group>"; };
+		91E59A3A2C24238A00C714F8 /* device_k100.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = device_k100.png; sourceTree = "<group>"; };
+		91F179FC2C11B14E00A45EBA /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		9246CEAA3F9058FFA4309442 /* Pods-bleAhtiLost.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bleAhtiLost.release.xcconfig"; path = "Target Support Files/Pods-bleAhtiLost/Pods-bleAhtiLost.release.xcconfig"; sourceTree = "<group>"; };
+		C2F386B506A23C2A22D8EA44 /* Pods-bleAntiLost.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bleAntiLost.debug.xcconfig"; path = "Target Support Files/Pods-bleAntiLost/Pods-bleAntiLost.debug.xcconfig"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		9128698E2BC7D029006813FA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				91F179FD2C11B14E00A45EBA /* AudioToolbox.framework in Frameworks */,
+				91B8E50F2BD1498600EA51EB /* UserNotifications.framework in Frameworks */,
+				93C3C1EE5C9FAA17EE6E76AE /* Pods_bleAntiLost.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		4D6A8628F83AD1431577EBAE /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				50F2E1A0A85706243F61D1A5 /* Pods-bleAhtiLost.debug.xcconfig */,
+				9246CEAA3F9058FFA4309442 /* Pods-bleAhtiLost.release.xcconfig */,
+				C2F386B506A23C2A22D8EA44 /* Pods-bleAntiLost.debug.xcconfig */,
+				824874A46FC5DDE6D35D18EE /* Pods-bleAntiLost.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		912869882BC7D028006813FA = {
+			isa = PBXGroup;
+			children = (
+				912869932BC7D029006813FA /* bleAntiLost */,
+				912869922BC7D029006813FA /* Products */,
+				4D6A8628F83AD1431577EBAE /* Pods */,
+				D595A7E63B9E89C8192C4114 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		912869922BC7D029006813FA /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				912869912BC7D029006813FA /* bleAntiLost.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		912869932BC7D029006813FA /* bleAntiLost */ = {
+			isa = PBXGroup;
+			children = (
+				91E59A3A2C24238A00C714F8 /* device_k100.png */,
+				91E59A392C24238A00C714F8 /* device_vovx10.png */,
+				91B8E5112BD24CA300EA51EB /* laba.caf */,
+				91B8E5102BD2497900EA51EB /* bleAntiLost.entitlements */,
+				91B8E5072BCFD1C500EA51EB /* BleDeviceData.h */,
+				91B8E5062BCFD1C500EA51EB /* BleDeviceData.m */,
+				91B8E50A2BCFD1C500EA51EB /* TFTBleManager.h */,
+				91B8E5082BCFD1C500EA51EB /* TFTBleManager.m */,
+				91B8E5092BCFD1C500EA51EB /* Utils.h */,
+				91B8E5052BCFD1C500EA51EB /* Utils.m */,
+				91B8E4FE2BCFD0CD00EA51EB /* ic_ble.png */,
+				91B8E4FF2BCFD0CD00EA51EB /* ic_checkbox.png */,
+				91B8E5002BCFD0CD00EA51EB /* ic_signal.png */,
+				91B8E4FD2BCFD0CD00EA51EB /* ic_uncheckbox.png */,
+				91B8E4FB2BCFD09E00EA51EB /* ic_scan.png */,
+				912869CE2BC93A9B006813FA /* zh-Hans.lproj */,
+				912869942BC7D029006813FA /* AppDelegate.h */,
+				912869952BC7D029006813FA /* AppDelegate.m */,
+				912869972BC7D029006813FA /* SceneDelegate.h */,
+				912869982BC7D029006813FA /* SceneDelegate.m */,
+				9128699A2BC7D029006813FA /* ViewController.h */,
+				9128699B2BC7D029006813FA /* ViewController.m */,
+				9128699D2BC7D029006813FA /* Main.storyboard */,
+				912869A02BC7D02A006813FA /* Assets.xcassets */,
+				912869A22BC7D02A006813FA /* LaunchScreen.storyboard */,
+				912869A52BC7D02A006813FA /* Info.plist */,
+				912869A62BC7D02A006813FA /* main.m */,
+				912869B82BC938F2006813FA /* Localizable.strings */,
+				91B8E4E62BCD182A00EA51EB /* UIColor+Nordic.h */,
+				9117DD3D2C1C4601004A2E32 /* QRCodeScannerViewController.m */,
+				9117DD3F2C1C4615004A2E32 /* QRCodeScannerViewController.h */,
+			);
+			path = bleAntiLost;
+			sourceTree = "<group>";
+		};
+		912869CE2BC93A9B006813FA /* zh-Hans.lproj */ = {
+			isa = PBXGroup;
+			children = (
+				912869CF2BC93AA8006813FA /* Localizable.strings */,
+			);
+			path = "zh-Hans.lproj";
+			sourceTree = "<group>";
+		};
+		D595A7E63B9E89C8192C4114 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				91F179FC2C11B14E00A45EBA /* AudioToolbox.framework */,
+				91B8E50E2BD1498600EA51EB /* UserNotifications.framework */,
+				71BFDD4505FB9812A2EF09C3 /* Pods_bleAntiLost.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		912869902BC7D029006813FA /* bleAntiLost */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 912869AA2BC7D02A006813FA /* Build configuration list for PBXNativeTarget "bleAntiLost" */;
+			buildPhases = (
+				835DA709BB797C4C86DF0EFE /* [CP] Check Pods Manifest.lock */,
+				9128698D2BC7D029006813FA /* Sources */,
+				9128698E2BC7D029006813FA /* Frameworks */,
+				9128698F2BC7D029006813FA /* Resources */,
+				BB75C1218786A6B7EF526D7D /* [CP] Embed Pods Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = bleAntiLost;
+			productName = bleAhtiLost;
+			productReference = 912869912BC7D029006813FA /* bleAntiLost.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		912869892BC7D028006813FA /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					912869902BC7D029006813FA = {
+						CreatedOnToolsVersion = 15.0.1;
+					};
+				};
+			};
+			buildConfigurationList = 9128698C2BC7D029006813FA /* Build configuration list for PBXProject "bleAntiLost" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+				"zh-Hans",
+			);
+			mainGroup = 912869882BC7D028006813FA;
+			productRefGroup = 912869922BC7D029006813FA /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				912869902BC7D029006813FA /* bleAntiLost */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		9128698F2BC7D029006813FA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				91B8E5032BCFD0CD00EA51EB /* ic_checkbox.png in Resources */,
+				91B8E5122BD24CA300EA51EB /* laba.caf in Resources */,
+				912869D12BC93AA8006813FA /* Localizable.strings in Resources */,
+				912869A42BC7D02A006813FA /* LaunchScreen.storyboard in Resources */,
+				91E59A3C2C24238A00C714F8 /* device_k100.png in Resources */,
+				912869B62BC938F2006813FA /* Localizable.strings in Resources */,
+				91B8E5022BCFD0CD00EA51EB /* ic_ble.png in Resources */,
+				91B8E5042BCFD0CD00EA51EB /* ic_signal.png in Resources */,
+				91B8E5012BCFD0CD00EA51EB /* ic_uncheckbox.png in Resources */,
+				91B8E4FC2BCFD09E00EA51EB /* ic_scan.png in Resources */,
+				912869A12BC7D02A006813FA /* Assets.xcassets in Resources */,
+				9128699F2BC7D029006813FA /* Main.storyboard in Resources */,
+				91E59A3B2C24238A00C714F8 /* device_vovx10.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		835DA709BB797C4C86DF0EFE /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-bleAntiLost-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		BB75C1218786A6B7EF526D7D /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-bleAntiLost/Pods-bleAntiLost-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-bleAntiLost/Pods-bleAntiLost-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-bleAntiLost/Pods-bleAntiLost-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		9128698D2BC7D029006813FA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9128699C2BC7D029006813FA /* ViewController.m in Sources */,
+				912869962BC7D029006813FA /* AppDelegate.m in Sources */,
+				91B8E50C2BCFD1C500EA51EB /* Utils.m in Sources */,
+				912869A72BC7D02A006813FA /* main.m in Sources */,
+				91B8E50D2BCFD1C500EA51EB /* BleDeviceData.m in Sources */,
+				91B8E4E72BCD182A00EA51EB /* UIColor+Nordic.h in Sources */,
+				91B8E50B2BCFD1C500EA51EB /* TFTBleManager.m in Sources */,
+				912869992BC7D029006813FA /* SceneDelegate.m in Sources */,
+				9117DD3E2C1C4601004A2E32 /* QRCodeScannerViewController.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		9128699D2BC7D029006813FA /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				9128699E2BC7D029006813FA /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		912869A22BC7D02A006813FA /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				912869A32BC7D02A006813FA /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		912869B82BC938F2006813FA /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				912869B72BC938F2006813FA /* en */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		912869CF2BC93AA8006813FA /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				912869D02BC93AA8006813FA /* zh-Hans */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		912869A82BC7D02A006813FA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		912869A92BC7D02A006813FA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		912869AB2BC7D02A006813FA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = C2F386B506A23C2A22D8EA44 /* Pods-bleAntiLost.debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
+				CODE_SIGN_ENTITLEMENTS = bleAntiLost/bleAntiLost.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1.0.1;
+				DEVELOPMENT_TEAM = 6W672XHN78;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = bleAntiLost/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = BleAntiLost;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Need to use Bluetooth to search and connect your device";
+				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "Need to use Bluetooth to search and connect your device";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Need to use camera to scan QR code";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.topflytech.bleAntiLost;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		912869AC2BC7D02A006813FA /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 824874A46FC5DDE6D35D18EE /* Pods-bleAntiLost.release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
+				CODE_SIGN_ENTITLEMENTS = bleAntiLost/bleAntiLost.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1.0.1;
+				DEVELOPMENT_TEAM = 6W672XHN78;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = bleAntiLost/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = BleAntiLost;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Need to use Bluetooth to search and connect your device";
+				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "Need to use Bluetooth to search and connect your device";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Need to use camera to scan QR code";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.topflytech.bleAntiLost;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		9128698C2BC7D029006813FA /* Build configuration list for PBXProject "bleAntiLost" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				912869A82BC7D02A006813FA /* Debug */,
+				912869A92BC7D02A006813FA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		912869AA2BC7D02A006813FA /* Build configuration list for PBXNativeTarget "bleAntiLost" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				912869AB2BC7D02A006813FA /* Debug */,
+				912869AC2BC7D02A006813FA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 912869892BC7D028006813FA /* Project object */;
+}

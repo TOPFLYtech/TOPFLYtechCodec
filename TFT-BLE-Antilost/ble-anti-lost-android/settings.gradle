@@ -1,0 +1,2 @@
+include ':app', ':sweetAlert'
+rootProject.name='TFTAntiLost'
