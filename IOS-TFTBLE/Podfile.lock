@@ -7,6 +7,7 @@ PODS:
   - DateTimePicker (2.4.1)
   - iOSDFULibrary (4.6.1):
     - ZIPFoundation (= 0.9.9)
+  - IQKeyboardManagerSwift (6.5.11)
   - JXMarqueeView (0.0.8)
   - libxlsxwriter (0.6.9)
   - PDFGenerator (3.1.0)
@@ -22,6 +23,7 @@ DEPENDENCIES:
   - CLXToast
   - DateTimePicker (from `https://github.com/itsmeichigo/DateTimePicker.git`)
   - iOSDFULibrary
+  - IQKeyboardManagerSwift
   - JXMarqueeView
   - libxlsxwriter
   - PDFGenerator (from `https://github.com/sgr-ksmt/PDFGenerator.git`)
@@ -35,6 +37,7 @@ SPEC REPOS:
     - Bugly
     - CLXToast
     - iOSDFULibrary
+    - IQKeyboardManagerSwift
     - JXMarqueeView
     - libxlsxwriter
     - QMUIKit
@@ -76,6 +79,7 @@ SPEC CHECKSUMS:
   CLXToast: 01c075036feabfebe256856018996f10bd73f24f
   DateTimePicker: 997176ea28954f3c18817b9565a53b28ee4400b8
   iOSDFULibrary: 3053cf01eaabec37dc7372fb77ae4a218b577c55
+  IQKeyboardManagerSwift: c7955c0bdbf7b2eb29bb7daaa44e3d90f55a9a85
   JXMarqueeView: dfb4eadb1bf7245c9b41706e907c889fbf53c2dc
   libxlsxwriter: 863cff6657797176917741ab87b783fe99539869
   PDFGenerator: 17d6bc525db0a3fcd156fbf00f9d1b8d5cc75d1e
@@ -85,6 +89,6 @@ SPEC CHECKSUMS:
   swiftScan: d7f91607b1a47cc04e6eb654c2c01e2e940e337d
   ZIPFoundation: 89df685c971926b0323087952320bdfee9f0b6ef
 
-PODFILE CHECKSUM: 8a419f9ebe24df9b1194a6ef98f0c8178d42bf25
+PODFILE CHECKSUM: e9550e2eb573475273ad085d11fa8eeb1588cd09
 
-COCOAPODS: 1.11.2
+COCOAPODS: 1.15.2

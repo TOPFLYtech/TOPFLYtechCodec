@@ -9,6 +9,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
@@ -20,6 +21,7 @@ import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -30,6 +32,7 @@ import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
@@ -44,18 +47,22 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.alibaba.fastjson.JSONObject;
-import com.bigkoo.pickerview.builder.OptionsPickerBuilder;
-import com.bigkoo.pickerview.listener.OnOptionsSelectListener;
-import com.bigkoo.pickerview.view.OptionsPickerView;
+import com.github.gzuliyujiang.wheelpicker.OptionPicker;
+import com.king.wechat.qrcode.WeChatQRCodeDetector;
 import com.tencent.bugly.crashreport.CrashReport;
 import com.topflytech.tftble.data.BleDeviceData;
+import com.topflytech.tftble.data.BluetoothPermissionHelper;
 import com.topflytech.tftble.data.DfuService;
 import com.topflytech.tftble.data.DownloadFileManager;
 import com.topflytech.tftble.data.LogFileHelper;
 import com.topflytech.tftble.data.MyUtils;
 import com.topflytech.tftble.data.OpenAPI;
+import com.topflytech.tftble.data.SingleClickListener;
+import com.topflytech.tftble.data.SingleOptionSelectClickListener;
 import com.topflytech.tftble.view.MarqueeTextView;
 
+
+import org.opencv.OpenCV;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -75,7 +82,7 @@ import no.nordicsemi.android.dfu.DfuServiceInitiator;
 import no.nordicsemi.android.dfu.DfuServiceListenerHelper;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements BluetoothPermissionHelper.BluetoothPermissionCallback {
     //    BluetoothClient mClient;
     private static final int REQUEST_CODE_ACCESS_COARSE_LOCATION = 1;
     private static final int REQUEST_CODE_ACCESS_FINE_LOCATION = 2;
@@ -92,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
     private ActionBar actionBar;
     private ImageView refreshButton;
     private ImageView fuzzySearchBtn;
+    private ImageView infoBtn;
     private EditText searchEditText;
     private ImageButton scanBtn;
     private Date lastRecvDate;
@@ -111,8 +119,8 @@ public class MainActivity extends AppCompatActivity {
             overMaxTempLimitCount, overMaxTempLimitTime, overMinTempLimitCount, overMinTempLimitTime,
             overMaxHumidityLimitCount, overMaxHumidityLimitTime, overMinHumidityLimitCount, overMinHumidityLimitTime;
     private LinearLayout llFuzzySearch;
-    public static final int REQUEST_SCAN_QRCODE = 1;
-    public static final int RESPONSE_SCAN_QRCODE = 1;
+    public static final int REQUEST_SCAN_QRCODE = 99;
+    public static final int RESPONSE_SCAN_QRCODE = 99;
     private Date dataNotifyDate;
     private Date enterDate;
     private ScanSettings mScanSettings;
@@ -138,11 +146,19 @@ public class MainActivity extends AppCompatActivity {
             add("S10");
         }
     };
-    private OptionsPickerView pvModel;
+    private OptionPicker pvModel;
     private int clickCount = 0;
+    private BluetoothPermissionHelper bluetoothPermissionHelper;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //初始化OpenCV
+        OpenCV.initAsync(MainActivity.this);
+
+        //初始化WeChatQRCodeDetector
+        WeChatQRCodeDetector.init(MainActivity.this);
+        bluetoothPermissionHelper = new BluetoothPermissionHelper(this, this);
         CrashReport.initCrashReport(getApplicationContext());
         setContentView(R.layout.activity_main);
         actionBar = getSupportActionBar();
@@ -194,56 +210,16 @@ public class MainActivity extends AppCompatActivity {
             });
             confirmRelayDlg.show();
         } else {
-
-            if (bluetoothadapter.isEnabled()) {
-
-            } else {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
-                            Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                        //判断是否需要向用户解释为什么需要申请该权限
-                        if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
-                                Manifest.permission.BLUETOOTH_CONNECT)) {
-//                        Toast.makeText(context,"Need to open ")
-                        }
-                        //请求权限
-                        ActivityCompat.requestPermissions(MainActivity.this,
-                                new String[]{Manifest.permission.BLUETOOTH_CONNECT},
-                                REQUEST_CODE_BLUETOOTH_CONNECT);
-                    }
-                    Intent enabler = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                    MainActivity.this.startActivity(enabler);
-                } else {
-                    Intent enabler = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                    MainActivity.this.startActivity(enabler);
-                }
-
-            }
             refreshButton = (ImageView) findViewById(R.id.main_left_refresh);
-            refreshButton.setOnClickListener(new View.OnClickListener() {
+            refreshButton.setOnClickListener(new SingleClickListener() {
                 @Override
-                public void onClick(View view) {
+                public void onSingleClick(View view) {
                     if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-                        // TODO: Consider calling
-                        //    ActivityCompat#requestPermissions
-                        // here to request the missing permissions, and then overriding
-                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                        //                                          int[] grantResults)
-                        // to handle the case where the user grants the permission. See the documentation
-                        // for ActivityCompat#requestPermissions for more details.
-//                        return;
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                            return;
-                        }
+
                     }
 //                    mBluetoothAdapter.stopLeScan(startSearchCallback);
                     try {
-                        mBLEScanner.stopScan(new ScanCallback() {
-                            @Override
-                            public void onScanResult(int callbackType, ScanResult result) {
-                                super.onScanResult(callbackType, result);
-                            }
-                        });
+                        mBLEScanner.stopScan(startScanCallback);
                     } catch (Exception e) {
 
                     }
@@ -255,23 +231,15 @@ public class MainActivity extends AppCompatActivity {
                     mListAdapter.notifyDataSetChanged();
                     if (bluetoothadapter.isEnabled()) {
                         if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-                            // TODO: Consider calling
-                            //    ActivityCompat#requestPermissions
-                            // here to request the missing permissions, and then overriding
-                            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                            //                                          int[] grantResults)
-                            // to handle the case where the user grants the permission. See the documentation
-                            // for ActivityCompat#requestPermissions for more details.
-//                            return;
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                return;
-                            }
+
                         }
 
 //                        mBluetoothAdapter.startLeScan(startSearchCallback);
                         if (mBLEScanner == null) {
                             mBLEScanner = mBluetoothAdapter.getBluetoothLeScanner();
                         }
+
+                        initScanSettings(mBluetoothAdapter);
                         mBLEScanner.startScan(null, mScanSettings, startScanCallback);
                         showWaitingCancelDlg("");
                     } else {
@@ -283,16 +251,16 @@ public class MainActivity extends AppCompatActivity {
             searchEditText = (EditText) findViewById(R.id.et_fuzzy_search);
             llFuzzySearch = (LinearLayout) findViewById(R.id.ll_fuzzy_search);
             scanBtn = (ImageButton) findViewById(R.id.btn_scan);
-            scanBtn.setOnClickListener(new View.OnClickListener() {
+            scanBtn.setOnClickListener(new SingleClickListener() {
                 @Override
-                public void onClick(View view) {
-                    Intent intent = new Intent(MainActivity.this, ScanActivity.class);
+                public void onSingleClick(View view) {
+                    Intent intent = new Intent(MainActivity.this, WeChatQRCodeActivity.class);
                     startActivityForResult(intent, REQUEST_SCAN_QRCODE);
                 }
             });
-            searchEditText.setOnClickListener(new View.OnClickListener() {
+            searchEditText.setOnClickListener(new SingleClickListener() {
                 @Override
-                public void onClick(View view) {
+                public void onSingleClick(View view) {
                     // 显示软键盘
                     InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
                     imm.showSoftInput(searchEditText, 0);
@@ -318,10 +286,24 @@ public class MainActivity extends AppCompatActivity {
                     refreshShowItem();
                 }
             });
-            fuzzySearchBtn = (ImageView) findViewById(R.id.main_right_fuzzy_search);
-            fuzzySearchBtn.setOnClickListener(new View.OnClickListener() {
+            infoBtn = (ImageView) findViewById(R.id.main_bar_info);
+            infoBtn.setOnClickListener(new SingleClickListener() {
                 @Override
-                public void onClick(View view) {
+                public void onSingleClick(View view) {
+                    try {
+                        PackageManager packageManager = MainActivity.this.getPackageManager();
+                        PackageInfo packageInfo = packageManager.getPackageInfo(MainActivity.this.getPackageName(), 0);
+                        Toast.makeText(MainActivity.this,"V"+packageInfo.versionName,Toast.LENGTH_SHORT).show();
+                    } catch (PackageManager.NameNotFoundException e) {
+                        e.printStackTrace();
+
+                    }
+                }
+            });
+            fuzzySearchBtn = (ImageView) findViewById(R.id.main_right_fuzzy_search);
+            fuzzySearchBtn.setOnClickListener(new SingleClickListener() {
+                @Override
+                public void onSingleClick(View view) {
 
                     if (!isFuzzySearchStatus) {
                         llFuzzySearch.setVisibility(View.VISIBLE);
@@ -337,71 +319,76 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 //        mClient = new BluetoothClient(MainActivity.this);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {//如果 API level 是大于等于 23(Android 6.0) 时
-                //判断是否具有权限
-                if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
-                        Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    //判断是否需要向用户解释为什么需要申请该权限
-                    if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
-                            Manifest.permission.ACCESS_COARSE_LOCATION)) {
-//                        Toast.makeText(context,"Need to open ")
+
+            initScanSettings(bluetoothadapter);
+
+            mListView = (ListView) findViewById(R.id.listView);
+            mListView.setDividerHeight(0);
+            mListAdapter = new ItemAdapter();
+            mListView.setAdapter(mListAdapter);
+
+            service.scheduleWithFixedDelay(checkBleSearchStatus, 1, 1, TimeUnit.SECONDS);
+        }
+
+        pvModel = new OptionPicker(this);
+        pvModel.setData(modelList);
+        pvModel.setOnOptionPickedListener(new SingleOptionSelectClickListener() {
+            @Override
+            public void onSingleOptionClick(int position, Object item) {
+                //返回的分别是三个级别的选中位置
+                String modelName = modelList.get(position);
+                String deviceType = deviceTypeList.get(position);
+                SweetAlertDialog confirmUpgradeDlg = new SweetAlertDialog(MainActivity.this, SweetAlertDialog.WARNING_TYPE);
+                confirmUpgradeDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
+                confirmUpgradeDlg.setTitleText(getResources().getString(R.string.upgrade_device_to) + " " + modelName);
+                confirmUpgradeDlg.setCancelable(true);
+                confirmUpgradeDlg.setCancelText(getResources().getString(R.string.cancel));
+                confirmUpgradeDlg.setConfirmText(getResources().getString(R.string.confirm));
+                confirmUpgradeDlg.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                    @Override
+                    public void onClick(SweetAlertDialog sweetAlertDialog) {
+                        confirmUpgradeDlg.hide();
+                        upgradeDfuDevice(deviceType);
+
                     }
-                    //请求权限
-                    ActivityCompat.requestPermissions(MainActivity.this,
-                            new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
-                            REQUEST_CODE_ACCESS_COARSE_LOCATION);
-                }
-                if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
-                        Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    //判断是否需要向用户解释为什么需要申请该权限
-                    if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
-                            Manifest.permission.ACCESS_FINE_LOCATION)) {
-//                        Toast.makeText(context,"Need to open ")
-                    }
-                    //请求权限
-                    ActivityCompat.requestPermissions(MainActivity.this,
-                            new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                            REQUEST_CODE_ACCESS_FINE_LOCATION);
-                }
+                });
+                confirmUpgradeDlg.show();
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
-                        Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                    //判断是否需要向用户解释为什么需要申请该权限
-                    if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
-                            Manifest.permission.BLUETOOTH_CONNECT)) {
-//                        Toast.makeText(context,"Need to open ")
-                    }
-                    //请求权限
-                    ActivityCompat.requestPermissions(MainActivity.this,
-                            new String[]{Manifest.permission.BLUETOOTH_CONNECT},
-                            REQUEST_CODE_BLUETOOTH_CONNECT);
-                }
-                if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
-                        Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-                    //判断是否需要向用户解释为什么需要申请该权限
-                    if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
-                            Manifest.permission.BLUETOOTH_SCAN)) {
-//                        Toast.makeText(context,"Need to open ")
-                    }
-                    //请求权限
-                    ActivityCompat.requestPermissions(MainActivity.this,
-                            new String[]{Manifest.permission.BLUETOOTH_SCAN},
-                            REQUEST_CODE_BLUETOOTH_CONNECT);
-                }
-                if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
-                        Manifest.permission.BLUETOOTH_ADVERTISE) != PackageManager.PERMISSION_GRANTED) {
-                    //判断是否需要向用户解释为什么需要申请该权限
-                    if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
-                            Manifest.permission.BLUETOOTH_ADVERTISE)) {
-//                        Toast.makeText(context,"Need to open ")
-                    }
-                    //请求权限
-                    ActivityCompat.requestPermissions(MainActivity.this,
-                            new String[]{Manifest.permission.BLUETOOTH_ADVERTISE},
-                            REQUEST_CODE_BLUETOOTH_ADVERTISE);
-                }
+        });
+
+
+        LinearLayout rootView = findViewById(R.id.root_view);
+
+        // 添加点击事件监听器
+        rootView.setOnClickListener(new SingleClickListener() {
+            @Override
+            public void onSingleClick(View v) {
+                hideKeyboard();
             }
+        });
+    }
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        if (ev.getAction() == MotionEvent.ACTION_DOWN) {
+            View view = getCurrentFocus();
+            if (view != null) {
+                InputMethodManager imm = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            }
+        }
+        return super.dispatchTouchEvent(ev);
+    }
+
+    // 隐藏键盘的方法
+    private void hideKeyboard() {
+        View view = this.getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
+    private void initScanSettings(BluetoothAdapter bluetoothadapter) {
+        if(mScanSettings == null){
             ScanSettings.Builder builder = new ScanSettings.Builder()
                     //设置高功耗模式
                     .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY);
@@ -424,41 +411,9 @@ public class MainActivity extends AppCompatActivity {
                 builder.setReportDelay(0L);
             }
             mScanSettings = builder.build();
-
-            mListView = (ListView) findViewById(R.id.listView);
-            mListView.setDividerHeight(0);
-            mListAdapter = new ItemAdapter();
-            mListView.setAdapter(mListAdapter);
-
-            service.scheduleWithFixedDelay(checkBleSearchStatus, 1, 1, TimeUnit.SECONDS);
         }
-
-
-        pvModel = new OptionsPickerBuilder(MainActivity.this, new OnOptionsSelectListener() {
-            @Override
-            public void onOptionsSelect(int options1, int option2, int options3 ,View v) {
-                //返回的分别是三个级别的选中位置
-                String modelName = modelList.get(options1);
-                String deviceType = deviceTypeList.get(options1);
-                SweetAlertDialog confirmUpgradeDlg = new SweetAlertDialog(MainActivity.this, SweetAlertDialog.WARNING_TYPE);
-                confirmUpgradeDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
-                confirmUpgradeDlg.setTitleText(getResources().getString(R.string.upgrade_device_to) + " " + modelName);
-                confirmUpgradeDlg.setCancelable(true);
-                confirmUpgradeDlg.setCancelText(getResources().getString(R.string.cancel));
-                confirmUpgradeDlg.setConfirmText(getResources().getString(R.string.confirm));
-                confirmUpgradeDlg.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
-                    @Override
-                    public void onClick(SweetAlertDialog sweetAlertDialog) {
-                        confirmUpgradeDlg.hide();
-                        upgradeDfuDevice(deviceType);
-
-                    }
-                });
-                confirmUpgradeDlg.show();
-            }
-        }).build();
-        pvModel.setPicker(modelList);
     }
+
     SweetAlertDialog waitingDlg;
     private void showWaitingDlg(String warning){
 
@@ -657,46 +612,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_CODE_ACCESS_FINE_LOCATION || requestCode == REQUEST_CODE_ACCESS_COARSE_LOCATION) {
-            SweetAlertDialog restartWarning = new SweetAlertDialog(MainActivity.this, SweetAlertDialog.WARNING_TYPE);
-            restartWarning.setTitleText("");
-            restartWarning.setContentText(getResources().getString(R.string.restart_app_warning));
-            restartWarning.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
-                @Override
-                public void onClick(SweetAlertDialog sweetAlertDialog) {
-                    reStartApp();
-                }
-            });
-            restartWarning.show();
-        } else if (requestCode == REQUEST_CODE_BLUETOOTH_CONNECT || requestCode == REQUEST_CODE_BLUETOOTH_CONNECT) {
-            BluetoothManager bluetoothManager = (BluetoothManager) this.getSystemService(Context.BLUETOOTH_SERVICE);
-            BluetoothAdapter bluetoothadapter = bluetoothManager.getAdapter();
-            if (bluetoothadapter != null) {
-                if (bluetoothadapter.isEnabled()) {
-                    if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-                        // TODO: Consider calling
-                        //    ActivityCompat#requestPermissions
-                        // here to request the missing permissions, and then overriding
-                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                        //                                          int[] grantResults)
-                        // to handle the case where the user grants the permission. See the documentation
-                        // for ActivityCompat#requestPermissions for more details.
-//                            return;
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                            return;
-                        }
-                    }
-
-//                        mBluetoothAdapter.startLeScan(startSearchCallback);
-                    mBLEScanner.startScan(null, mScanSettings, startScanCallback);
-                    showWaitingCancelDlg("");
-                } else {
-                    Intent enabler = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                    MainActivity.this.startActivity(enabler);
-                }
-            }
-
-        }
+        bluetoothPermissionHelper.onRequestPermissionsResult(requestCode,grantResults);
     }
 
     @Override
@@ -706,6 +622,7 @@ public class MainActivity extends AppCompatActivity {
             String value = data.getStringExtra("value");
             searchEditText.setText(value);
         }
+        bluetoothPermissionHelper.onActivityResult(requestCode,resultCode);
     }
 
 
@@ -714,23 +631,15 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         if (mBluetoothAdapter != null) {
             if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-//                return;
-//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-//                    return;
-//                }
+
             }
+
 //            mBluetoothAdapter.startLeScan(startSearchCallback);
             if (mBLEScanner == null) {
                 mBLEScanner = mBluetoothAdapter.getBluetoothLeScanner();
             }
             if (mBLEScanner != null) {
+                initScanSettings(mBluetoothAdapter);
                 mBLEScanner.startScan(null, mScanSettings, startScanCallback);
             }
 
@@ -817,28 +726,14 @@ public class MainActivity extends AppCompatActivity {
             Date now = new Date();
             if (now.getTime() - checkDate.getTime() > 45000) {
                 //need restart ble search
+                enterDate = new Date();
                 Log.e("BluetoothUtils", "restart search");
                 if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
-//                    return;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        return;
-                    }
+
                 }
 //                mBluetoothAdapter.stopLeScan(startSearchCallback);
                 try {
-                    mBLEScanner.stopScan(new ScanCallback() {
-                        @Override
-                        public void onScanResult(int callbackType, ScanResult result) {
-                            super.onScanResult(callbackType, result);
-                        }
-                    });
+                    mBLEScanner.stopScan(startScanCallback);
                 } catch (Exception e) {
 
                 }
@@ -849,6 +744,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 checkDate = now;
 //                mBluetoothAdapter.startLeScan(startSearchCallback);
+                initScanSettings(mBluetoothAdapter);
                 mBLEScanner.startScan(null, mScanSettings, startScanCallback);
             }
         }
@@ -871,7 +767,7 @@ public class MainActivity extends AppCompatActivity {
             }
 //            Log.e("BluetoothUtils","MainActivity.onDeviceFounded " + device.getName() + "  " + device.getAddress() + "," + data);
             lastRecvDate = new Date();
-            if(device.getAddress() != null && device.getAddress().contains("CD:5E")){
+            if(device.getAddress() != null && device.getAddress().contains("88:49")){
                 Log.e("BluetoothUtils","MainActivity.onDeviceFounded " + device.getName() + "  "+ result.getScanRecord().getDeviceName() + "  " + device.getAddress() + "," + data);
             }else{
             }
@@ -908,6 +804,7 @@ public class MainActivity extends AppCompatActivity {
                         bleDeviceData.setHexData(data);
                         bleDeviceData.setSrcData(scanRecord);
                         bleDeviceData.setDate(new Date());
+
                         bleDeviceData.setDeviceName(result.getScanRecord().getDeviceName());
                         if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
 
@@ -988,7 +885,13 @@ public class MainActivity extends AppCompatActivity {
                             allBleDeviceDataList.add(bleDeviceData);
                         }
                     }
-                    if (dataNotifyDate == null || lastRecvDate.getTime() - dataNotifyDate.getTime() > 1000) {
+                    int refreshTime = 1000;
+                    if(allBleDeviceDataList.size() > 30){
+                        refreshTime = 2200;
+                    }else if(allBleDeviceDataList.size() > 20){
+                        refreshTime = 1600;
+                    }
+                    if (dataNotifyDate == null || lastRecvDate.getTime() - dataNotifyDate.getTime() > refreshTime) {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -1014,9 +917,9 @@ public class MainActivity extends AppCompatActivity {
     };
 
 
-    View.OnClickListener switchPressureUnitClick = new View.OnClickListener() {
+    View.OnClickListener switchPressureUnitClick = new SingleClickListener() {
         @Override
-        public void onClick(View view) {
+        public void onSingleClick(View view) {
             Log.e("Click", "switch pressure");
             BleDeviceData.switchCurPressureUnit(MainActivity.this);
             mListAdapter.notifyDataSetChanged();
@@ -1030,10 +933,9 @@ public class MainActivity extends AppCompatActivity {
             mListAdapter.notifyDataSetChanged();
         }
     };
-    View.OnClickListener configDeviceClick = new View.OnClickListener() {
+    View.OnClickListener configDeviceClick = new SingleClickListener() {
         @Override
-        public void onClick(final View view) {
-
+        public void onSingleClick(final View view) {
             final String mac = (String)view.getTag();
             Log.e("Click", "config device " + mac);
 
@@ -1047,9 +949,40 @@ public class MainActivity extends AppCompatActivity {
 //            mBluetoothAdapter.stopLeScan(startSearchCallback);
         }
     };
-    View.OnClickListener upgradeDfuErrorClick = new View.OnClickListener() {
+
+    View.OnClickListener resetDevicePwdClick = new SingleClickListener() {
         @Override
-        public void onClick(final View view) {
+        public void onSingleClick(final View view) {
+
+            final String mac = (String)view.getTag();
+            Log.e("Click", "config device " + mac);
+
+            for(int i = 0;i < allBleDeviceDataList.size();i++){
+                BleDeviceData item = allBleDeviceDataList.get(i);
+                if(item.getMac().equals(mac)){
+                    try {
+                        if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+                        }
+                        mBLEScanner.stopScan(startScanCallback);
+                    }catch (Exception e){
+
+                    }
+                    Intent intent = new Intent( MainActivity.this, SuperPwdResetActivity.class);
+                    intent.putExtra("mac",item.getMac());
+                    intent.putExtra("deviceType",item.getDeviceType());
+                    intent.putExtra("id",item.getId());
+                    intent.putExtra("software",item.getSoftware());
+                    startActivity(intent);
+                    break;
+                }
+            }
+//            mBluetoothAdapter.stopLeScan(startSearchCallback);
+        }
+    };
+
+    View.OnClickListener upgradeDfuErrorClick = new SingleClickListener() {
+        @Override
+        public void onSingleClick(final View view) {
 
             final String mac = (String)view.getTag();
             Log.e("Click", "upgradeDfuError device " + mac);
@@ -1057,7 +990,7 @@ public class MainActivity extends AppCompatActivity {
                 BleDeviceData item = allBleDeviceDataList.get(i);
                 if(item.getMac().equals(mac)){
                     selectDfuDevice = item;
-                    pvModel.setSelectOptions(0);
+                    pvModel.setDefaultPosition(0);
                     pvModel.show();
                 }
             }
@@ -1071,12 +1004,7 @@ public class MainActivity extends AppCompatActivity {
 
 
             }
-            mBLEScanner.stopScan(new ScanCallback() {
-                @Override
-                public void onScanResult(int callbackType, ScanResult result) {
-                    super.onScanResult(callbackType, result);
-                }
-            });
+            mBLEScanner.stopScan(startScanCallback);
         }catch (Exception e){
 
         }
@@ -1087,9 +1015,9 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra("software",bleDeviceData.getSoftware());
         startActivity(intent);
     }
-    View.OnClickListener showQrCodeClick = new View.OnClickListener() {
+    View.OnClickListener showQrCodeClick = new SingleClickListener() {
         @Override
-        public void onClick(final View view) {
+        public void onSingleClick(final View view) {
             final String id = (String)view.getTag();
             SweetAlertDialog pDialog = new SweetAlertDialog(MainActivity.this, SweetAlertDialog.CUSTOM_IMAGE_TYPE);
             Bitmap  bitmap =    QRCodeEncoder.syncEncodeQRCode(id,200);
@@ -1100,6 +1028,55 @@ public class MainActivity extends AppCompatActivity {
 
         }
     };
+    @Override
+    protected void onStart() {
+        super.onStart();
+        bluetoothPermissionHelper.startCheckBlePermission();
+    }
+    @Override
+    public void onPermissionsGranted() {
+
+        startBluetoothOperations();
+    }
+    private void startBluetoothOperations() {
+
+        // 这里放置蓝牙扫描和连接的代码
+        if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+
+        }
+        //            mBluetoothAdapter.startLeScan(startSearchCallback);
+        if (mBLEScanner == null) {
+            mBLEScanner = mBluetoothAdapter.getBluetoothLeScanner();
+        }
+        if (mBLEScanner != null) {
+            initScanSettings(mBluetoothAdapter);
+            mBLEScanner.startScan(null, mScanSettings, startScanCallback);
+        }
+        if(allBleDeviceDataList.size() == 0){
+            showWaitingCancelDlg("");
+        }
+
+    }
+    @Override
+    public void onLocationStart() {
+
+        try {
+            if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+
+            }
+            if (mBLEScanner == null) {
+                mBLEScanner = mBluetoothAdapter.getBluetoothLeScanner();
+            }
+            if (mBLEScanner != null) {
+                mBLEScanner.stopScan(startScanCallback);
+                initScanSettings(mBluetoothAdapter);
+                mBLEScanner.startScan(null, mScanSettings, startScanCallback);
+            }
+        } catch (Exception e) {
+
+        }
+
+    }
 
 
     class ItemAdapter extends BaseAdapter{
@@ -1152,6 +1129,8 @@ public class MainActivity extends AppCompatActivity {
                     holder.configBtn = (Button) convertView.findViewById(R.id.btn_config);
                     holder.qrcodeLL = (LinearLayout) convertView.findViewById(R.id.ll_show_qrcode);
                     holder.qrCodeBtn = (Button)convertView.findViewById(R.id.btn_show_qrcode);
+                    holder.resetPwdLL = (LinearLayout) convertView.findViewById(R.id.ll_reset_pwd);
+                    holder.resetPwdBtn = (Button)convertView.findViewById(R.id.btn_reset_pwd);
                     convertView.setTag(holder);
                 }
 
@@ -1177,6 +1156,13 @@ public class MainActivity extends AppCompatActivity {
                     holder.qrCodeBtn.setTag(bleDeviceData.getId());
                     holder.qrCodeBtn.setOnClickListener(showQrCodeClick);
                 }
+                holder.resetPwdBtn.setTag(bleDeviceData.getMac());
+                holder.resetPwdBtn.setOnClickListener(resetDevicePwdClick);
+                if(bleDeviceData.getSoftware().compareTo("23") >= 0){
+                    holder.resetPwdLL.setVisibility(View.VISIBLE);
+                }else{
+                    holder.resetPwdLL.setVisibility(View.GONE);
+                }
                 return convertView;
             }else if(bleDeviceData.getDeviceType() != null && bleDeviceData.getDeviceType().equals("S04")){
                 if(null == convertView  || convertView.getTag() instanceof S04ViewHolder == false){
@@ -1197,6 +1183,8 @@ public class MainActivity extends AppCompatActivity {
                     holder.configBtn = (Button) convertView.findViewById(R.id.btn_config);
                     holder.qrcodeLL = (LinearLayout) convertView.findViewById(R.id.ll_show_qrcode);
                     holder.qrCodeBtn = (Button)convertView.findViewById(R.id.btn_show_qrcode);
+                    holder.resetPwdLL = (LinearLayout) convertView.findViewById(R.id.ll_reset_pwd);
+                    holder.resetPwdBtn = (Button)convertView.findViewById(R.id.btn_reset_pwd);
                     convertView.setTag(holder);
                 }
 
@@ -1221,6 +1209,13 @@ public class MainActivity extends AppCompatActivity {
                     holder.qrCodeBtn.setTag(bleDeviceData.getId());
                     holder.qrCodeBtn.setOnClickListener(showQrCodeClick);
                 }
+                holder.resetPwdBtn.setTag(bleDeviceData.getMac());
+                holder.resetPwdBtn.setOnClickListener(resetDevicePwdClick);
+                if(bleDeviceData.getSoftware().compareTo("22") >= 0){
+                    holder.resetPwdLL.setVisibility(View.VISIBLE);
+                }else{
+                    holder.resetPwdLL.setVisibility(View.GONE);
+                }
                 return convertView;
             }else if(bleDeviceData.getDeviceType() != null && bleDeviceData.getDeviceType().equals("S05")){
                 if(null == convertView || convertView.getTag() instanceof S05ViewHolder == false){
@@ -1241,6 +1236,8 @@ public class MainActivity extends AppCompatActivity {
                     holder.configBtn = (Button) convertView.findViewById(R.id.btn_config);
                     holder.qrcodeLL = (LinearLayout) convertView.findViewById(R.id.ll_show_qrcode);
                     holder.qrCodeBtn = (Button)convertView.findViewById(R.id.btn_show_qrcode);
+                    holder.resetPwdLL = (LinearLayout) convertView.findViewById(R.id.ll_reset_pwd);
+                    holder.resetPwdBtn = (Button)convertView.findViewById(R.id.btn_reset_pwd);
                     convertView.setTag(holder);
                 }
 
@@ -1264,6 +1261,13 @@ public class MainActivity extends AppCompatActivity {
                     holder.qrcodeLL.setVisibility(View.VISIBLE);
                     holder.qrCodeBtn.setTag(bleDeviceData.getId());
                     holder.qrCodeBtn.setOnClickListener(showQrCodeClick);
+                }
+                holder.resetPwdBtn.setTag(bleDeviceData.getMac());
+                holder.resetPwdBtn.setOnClickListener(resetDevicePwdClick);
+                if(bleDeviceData.getSoftware().compareTo("17") >= 0){
+                    holder.resetPwdLL.setVisibility(View.VISIBLE);
+                }else{
+                    holder.resetPwdLL.setVisibility(View.GONE);
                 }
                 return convertView;
             }else if(bleDeviceData.getDeviceType() != null && bleDeviceData.getDeviceType().equals("tire")){
@@ -1331,7 +1335,8 @@ public class MainActivity extends AppCompatActivity {
                     holder.batteryPercentLine = (LinearLayout)convertView.findViewById(R.id.line_battery_percent);
                     holder.warnLine = (LinearLayout)convertView.findViewById(R.id.line_warn);
                     holder.flagLine = (LinearLayout)convertView.findViewById(R.id.line_flag);
-
+                    holder.resetPwdLL = (LinearLayout) convertView.findViewById(R.id.ll_reset_pwd);
+                    holder.resetPwdBtn = (Button)convertView.findViewById(R.id.btn_reset_pwd);
                     convertView.setTag(holder);
                 }
 
@@ -1350,6 +1355,8 @@ public class MainActivity extends AppCompatActivity {
                 holder.minorTextView.setText(bleDeviceData.getMinor());
                 holder.bidTextView.setText(bleDeviceData.getBid());
                 holder.nidTextView.setText(bleDeviceData.getNid());
+                holder.resetPwdBtn.setTag(bleDeviceData.getMac());
+                holder.resetPwdBtn.setOnClickListener(resetDevicePwdClick);
                 if(bleDeviceData.getBroadcastType().equals("Beacon")){
                     holder.alarmTextView.setText("-");
                 }else{
@@ -1367,6 +1374,13 @@ public class MainActivity extends AppCompatActivity {
                 holder.batteryPercentLine.setVisibility(View.GONE);
                 holder.warnLine.setVisibility(View.GONE);
                 holder.flagLine.setVisibility(View.GONE);
+                String formatSoftware = bleDeviceData.getSoftware().replace("V","").replaceAll("v","").replaceAll("\\.","");
+                int result = formatSoftware.compareToIgnoreCase("1006");
+                if(result >= 0){
+                    holder.resetPwdLL.setVisibility(View.VISIBLE);
+                }else{
+                    holder.resetPwdLL.setVisibility(View.GONE);
+                }
                 if(bleDeviceData.getBroadcastType().equals("Eddystone UID")){
                     holder.bidLine.setVisibility(View.VISIBLE);
                     holder.nidLine.setVisibility(View.VISIBLE);
@@ -1434,7 +1448,8 @@ public class MainActivity extends AppCompatActivity {
                     holder.warnLine = (LinearLayout)convertView.findViewById(R.id.line_warn);
                     holder.minorLine = (LinearLayout)convertView.findViewById(R.id.line_minor);
                     holder.majorLine = (LinearLayout)convertView.findViewById(R.id.line_major);
-
+                    holder.resetPwdLL = (LinearLayout) convertView.findViewById(R.id.ll_reset_pwd);
+                    holder.resetPwdBtn = (Button)convertView.findViewById(R.id.btn_reset_pwd);
                     convertView.setTag(holder);
                 }
 
@@ -1454,6 +1469,15 @@ public class MainActivity extends AppCompatActivity {
                     holder.tempTextView.setText(BleDeviceData.getCurTemp(MainActivity.this,bleDeviceData.getSourceTemp()) + BleDeviceData.getCurTempUnit(MainActivity.this));
                     holder.alarmTextView.setText(BleDeviceData.getWarnDesc(MainActivity.this,bleDeviceData.getDeviceType(),bleDeviceData.getWarn()));
                 }
+                String formatSoftware = bleDeviceData.getSoftware().replace("V","").replaceAll("v","").replaceAll("\\.","");
+                int result = formatSoftware.compareToIgnoreCase("1006");
+                if(result >= 0){
+                    holder.resetPwdLL.setVisibility(View.VISIBLE);
+                }else{
+                    holder.resetPwdLL.setVisibility(View.GONE);
+                }
+                holder.resetPwdBtn.setTag(bleDeviceData.getMac());
+                holder.resetPwdBtn.setOnClickListener(resetDevicePwdClick);
                 holder.switchTempBtn.setText(BleDeviceData.getNextTempUnit(MainActivity.this));
                 holder.humidityTextView.setText(bleDeviceData.getHumidity() + "%");
 //                holder.devicePropTextView.setText(bleDeviceData.getDeviceProp());
@@ -1571,6 +1595,8 @@ public class MainActivity extends AppCompatActivity {
                     holder.majorLine = (LinearLayout)convertView.findViewById(R.id.line_major);
                     holder.humidityLine = (LinearLayout)convertView.findViewById(R.id.line_humidity);
                     holder.extSensorLine = (LinearLayout)convertView.findViewById(R.id.line_ext_sensor);
+                    holder.resetPwdLL = (LinearLayout) convertView.findViewById(R.id.ll_reset_pwd);
+                    holder.resetPwdBtn = (Button)convertView.findViewById(R.id.btn_reset_pwd);
                     convertView.setTag(holder);
                 }
 
@@ -1619,6 +1645,15 @@ public class MainActivity extends AppCompatActivity {
                 holder.majorLine.setVisibility(View.GONE);
                 holder.humidityLine.setVisibility(View.GONE);
                 holder.extSensorLine.setVisibility(View.GONE);
+                holder.resetPwdBtn.setTag(bleDeviceData.getMac());
+                holder.resetPwdBtn.setOnClickListener(resetDevicePwdClick);
+                String formatSoftware = bleDeviceData.getSoftware().replace("V","").replaceAll("v","").replaceAll("\\.","");
+                int result = formatSoftware.compareToIgnoreCase("1005");
+                if(result >= 0){
+                    holder.resetPwdLL.setVisibility(View.VISIBLE);
+                }else{
+                    holder.resetPwdLL.setVisibility(View.GONE);
+                }
                 if(bleDeviceData.getBroadcastType().equals("Eddystone UID")){
                     holder.bidLine.setVisibility(View.VISIBLE);
                     holder.nidLine.setVisibility(View.VISIBLE);
@@ -1657,11 +1692,75 @@ public class MainActivity extends AppCompatActivity {
                     holder.modelTextView = (TextView)convertView.findViewById(R.id.tx_device_model);
                     holder.hardwareTextView = (TextView)convertView.findViewById(R.id.tx_hardware);
                     holder.softwareTextView = (TextView)convertView.findViewById(R.id.tx_software);
+                    holder.input0TextView = (TextView)convertView.findViewById(R.id.tx_input0);
+                    holder.output0TextView = (TextView)convertView.findViewById(R.id.tx_output0);
+                    holder.output1TextView = (TextView)convertView.findViewById(R.id.tx_output1);
+                    holder.analog0TextView = (TextView)convertView.findViewById(R.id.tx_analog_input_0);
+                    holder.analog1TextView = (TextView)convertView.findViewById(R.id.tx_analog_input_1);
+                    holder.analog2TextView = (TextView)convertView.findViewById(R.id.tx_analog_input_2);
                     holder.configBtn = (Button) convertView.findViewById(R.id.btn_config);
                     convertView.setTag(holder);
                 }
 
                 S09ViewHolder holder = (S09ViewHolder) convertView.getTag();
+                holder.deviceNameTextView.setText(bleDeviceData.getDeviceName());
+                holder.idTextView.setText(bleDeviceData.getId());
+                holder.dateTextView.setText(dateFormat.format(bleDeviceData.getDate()));
+                holder.rssiTextView.setText(bleDeviceData.getRssi());
+                holder.modelTextView.setText(bleDeviceData.getModelName());
+                holder.hardwareTextView.setText("V" + bleDeviceData.getHardware());
+                holder.softwareTextView.setText("V" + bleDeviceData.getSoftware());
+                holder.input0TextView.setText(bleDeviceData.getInput0());
+                holder.output0TextView.setText(bleDeviceData.getOutput0());
+                holder.output1TextView.setText(bleDeviceData.getOutput1());
+                holder.analog0TextView.setText(bleDeviceData.getAnalog0());
+                holder.analog1TextView.setText(bleDeviceData.getAnalog1());
+                holder.analog2TextView.setText(bleDeviceData.getAnalog2());
+                holder.configBtn.setTag(bleDeviceData.getMac());
+                holder.configBtn.setOnClickListener(configDeviceClick);
+                return convertView;
+            }else if(bleDeviceData.getDeviceType() != null && bleDeviceData.getDeviceType().equals("A001")){
+                if(null == convertView  || convertView.getTag() instanceof A001ViewHolder == false){
+                    convertView = View.inflate(getApplicationContext(),R.layout.ble_a001_detail_item,null);
+                    A001ViewHolder holder = new A001ViewHolder();
+                    holder.deviceNameTextView = (TextView)convertView.findViewById(R.id.tx_name);
+                    holder.idTextView = (TextView)convertView.findViewById(R.id.tx_ble_id);
+                    holder.dateTextView = (TextView)convertView.findViewById(R.id.tx_date);
+                    holder.rssiTextView = (TextView)convertView.findViewById(R.id.tx_rssi);
+                    holder.modelTextView = (TextView)convertView.findViewById(R.id.tx_device_model);
+                    holder.hardwareTextView = (TextView)convertView.findViewById(R.id.tx_hardware);
+                    holder.softwareTextView = (TextView)convertView.findViewById(R.id.tx_software);
+                    holder.configBtn = (Button) convertView.findViewById(R.id.btn_config);
+                    convertView.setTag(holder);
+                }
+
+                A001ViewHolder holder = (A001ViewHolder) convertView.getTag();
+                holder.deviceNameTextView.setText(bleDeviceData.getDeviceName());
+                holder.idTextView.setText(bleDeviceData.getId());
+                holder.dateTextView.setText(dateFormat.format(bleDeviceData.getDate()));
+                holder.rssiTextView.setText(bleDeviceData.getRssi());
+                holder.modelTextView.setText(bleDeviceData.getModelName());
+                holder.hardwareTextView.setText("V" + bleDeviceData.getHardware());
+                holder.softwareTextView.setText("V" + bleDeviceData.getSoftware());
+                holder.configBtn.setTag(bleDeviceData.getMac());
+                holder.configBtn.setOnClickListener(configDeviceClick);
+                return convertView;
+            }else if(bleDeviceData.getDeviceType() != null && bleDeviceData.getDeviceType().equals("A002")){
+                if(null == convertView  || convertView.getTag() instanceof A002ViewHolder == false){
+                    convertView = View.inflate(getApplicationContext(),R.layout.ble_a002_detail_item,null);
+                    A002ViewHolder holder = new A002ViewHolder();
+                    holder.deviceNameTextView = (TextView)convertView.findViewById(R.id.tx_name);
+                    holder.idTextView = (TextView)convertView.findViewById(R.id.tx_ble_id);
+                    holder.dateTextView = (TextView)convertView.findViewById(R.id.tx_date);
+                    holder.rssiTextView = (TextView)convertView.findViewById(R.id.tx_rssi);
+                    holder.modelTextView = (TextView)convertView.findViewById(R.id.tx_device_model);
+                    holder.hardwareTextView = (TextView)convertView.findViewById(R.id.tx_hardware);
+                    holder.softwareTextView = (TextView)convertView.findViewById(R.id.tx_software);
+                    holder.configBtn = (Button) convertView.findViewById(R.id.btn_config);
+                    convertView.setTag(holder);
+                }
+
+                A002ViewHolder holder = (A002ViewHolder) convertView.getTag();
                 holder.deviceNameTextView.setText(bleDeviceData.getDeviceName());
                 holder.idTextView.setText(bleDeviceData.getId());
                 holder.dateTextView.setText(dateFormat.format(bleDeviceData.getDate()));
@@ -1723,22 +1822,22 @@ public class MainActivity extends AppCompatActivity {
         class S02ViewHolder {
             TextView deviceNameTextView,  idTextView,  dateTextView, rssiTextView,modelTextView,hardwareTextView,softwareTextView,
                     batteryTextView,tempTextView,humidityTextView,devicePropTextView;
-            Button switchTempBtn,configBtn,qrCodeBtn;
-            LinearLayout qrcodeLL;
+            Button switchTempBtn,configBtn,qrCodeBtn,resetPwdBtn;
+            LinearLayout qrcodeLL,resetPwdLL;
             MarqueeTextView alarmTextView;
         }
         class S04ViewHolder {
             TextView deviceNameTextView,  idTextView,  dateTextView, rssiTextView,modelTextView,hardwareTextView,softwareTextView,
                     batteryTextView,tempTextView,devicePropTextView;
-            Button switchTempBtn,configBtn,qrCodeBtn;
-            LinearLayout qrcodeLL;
+            Button switchTempBtn,configBtn,qrCodeBtn,resetPwdBtn;
+            LinearLayout qrcodeLL,resetPwdLL;
             MarqueeTextView alarmTextView;
         }
         class S05ViewHolder {
             TextView deviceNameTextView,  idTextView,  dateTextView, rssiTextView,modelTextView,hardwareTextView,softwareTextView,
             batteryTextView,tempTextView,devicePropTextView;
-            Button switchTempBtn,configBtn,qrCodeBtn;
-            LinearLayout qrcodeLL;
+            Button switchTempBtn,configBtn,qrCodeBtn,resetPwdBtn;
+            LinearLayout qrcodeLL,resetPwdLL;
             MarqueeTextView alarmTextView;
         }
         class ErrorDeviceViewHolder {
@@ -1753,8 +1852,8 @@ public class MainActivity extends AppCompatActivity {
                     batteryTextView,tempTextView,humidityTextView,doorTextView,batteryPercentTextView,broadcastTypeTextview,
                     moveTextView,moveDetectionTextView,stopDetectionTextView,pitchTextView,rollTextView,bidTextView,nidTextView,//devicePropTextView,
                     majorTextView,minorTextView;
-            Button switchTempBtn,configBtn,qrCodeBtn;
-            LinearLayout qrcodeLL;
+            Button switchTempBtn,configBtn,qrCodeBtn,resetPwdBtn;
+            LinearLayout qrcodeLL,resetPwdLL;
             LinearLayout doorLine,bidLine,nidLine,batteryLine,batteryPercentLine,tempLine,moveLine,moveDetectionLine,//lightLine,
                     stopDetectionLine,pitchLine,rollLine,warnLine,majorLine,minorLine;
             MarqueeTextView alarmTextView;
@@ -1763,21 +1862,22 @@ public class MainActivity extends AppCompatActivity {
             TextView deviceNameTextView,  idTextView,  dateTextView, rssiTextView,modelTextView,hardwareTextView,softwareTextView,
                     batteryTextView,batteryPercentTextView,flagTextView,broadcastTypeTextview,bidTextView,nidTextView,majorTextView,minorTextView;
             MarqueeTextView alarmTextView;
-            LinearLayout  bidLine,nidLine,majorLine,minorLine,batteryLine,batteryPercentLine,warnLine,flagLine;
-            Button configBtn;
+            LinearLayout  bidLine,nidLine,majorLine,minorLine,batteryLine,batteryPercentLine,warnLine,flagLine,resetPwdLL;
+            Button configBtn,resetPwdBtn;
 
         }
         class S09ViewHolder {
-            TextView deviceNameTextView,  idTextView,  dateTextView, rssiTextView,modelTextView,hardwareTextView,softwareTextView;
+            TextView deviceNameTextView,  idTextView,  dateTextView, rssiTextView,modelTextView,hardwareTextView,softwareTextView,
+                input0TextView,output0TextView,output1TextView,analog0TextView,analog1TextView,analog2TextView;
             Button configBtn;
         }
         class S10ViewHolder {
             TextView deviceNameTextView,  idTextView,  dateTextView, rssiTextView,modelTextView,hardwareTextView,softwareTextView,
                     batteryTextView,tempTextView,humidityTextView,devicePropTextView,batteryPercentTextView,broadcastTypeTextview,
                     bidTextView,nidTextView, majorTextView,minorTextView,extSensorTextview;
-            Button switchTempBtn,configBtn,qrCodeBtn;
+            Button switchTempBtn,configBtn,qrCodeBtn,resetPwdBtn;
             LinearLayout bidLine,nidLine,batteryLine,batteryPercentLine,tempLine,lightLine,warnLine,majorLine,minorLine,humidityLine,extSensorLine;
-            LinearLayout qrcodeLL;
+            LinearLayout qrcodeLL,resetPwdLL;
             MarqueeTextView alarmTextView;
         }
         class TireViewHolder {
@@ -1785,6 +1885,15 @@ public class MainActivity extends AppCompatActivity {
                     batteryTextView,tireTextView,tempTextView;
             Button switchTempBtn,switchPressureBtn;
             MarqueeTextView statusTextView;
+        }
+
+        class A001ViewHolder {
+            TextView deviceNameTextView,  idTextView,  dateTextView, rssiTextView,modelTextView,hardwareTextView,softwareTextView ;
+            Button configBtn;
+        }
+        class A002ViewHolder {
+            TextView deviceNameTextView,  idTextView,  dateTextView, rssiTextView,modelTextView,hardwareTextView,softwareTextView;
+            Button configBtn;
         }
     }
 }

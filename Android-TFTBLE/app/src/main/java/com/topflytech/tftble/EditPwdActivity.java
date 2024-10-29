@@ -12,6 +12,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.topflytech.tftble.data.SingleClickListener;
+
 
 public class EditPwdActivity extends AppCompatActivity {
 
@@ -41,15 +43,15 @@ public class EditPwdActivity extends AppCompatActivity {
         backButton = (ImageView) customView.findViewById(R.id.command_list_bar_back_id);
         rightButton =(ImageView) customView.findViewById(R.id.img_btn_right);
         rightButton.setVisibility(View.INVISIBLE);
-        backButton.setOnClickListener(new View.OnClickListener() {
+        backButton.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onSingleClick(View view) {
                 finish();
             }
         });
-        btnConfirm.setOnClickListener(new View.OnClickListener() {
+        btnConfirm.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onSingleClick(View view) {
 
                 if(etOldPwd.getText() == null || etOldPwd.getText().toString().trim().length() != 6 ||
                         etNewPwd.getText() == null || etNewPwd.getText().toString().trim().length() != 6 ||

@@ -20,6 +20,7 @@ import com.borax12.materialdaterangepicker.time.RadialPickerLayout;
 import com.borax12.materialdaterangepicker.time.TimePickerDialog;
 import com.loper7.date_time_picker.dialog.CardDatePickerDialog;
 import com.topflytech.tftble.data.DateSpinnerAdapter;
+import com.topflytech.tftble.data.SingleClickListener;
 
 
 import java.text.DateFormat;
@@ -75,18 +76,18 @@ public class HistorySelectActivity extends AppCompatActivity {
         backButton = (ImageView) customView.findViewById(R.id.command_list_bar_back_id);
         rightButton =(ImageView) customView.findViewById(R.id.img_btn_right);
         rightButton.setVisibility(View.INVISIBLE);
-        backButton.setOnClickListener(new View.OnClickListener() {
+        backButton.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onSingleClick(View view) {
                 finish();
             }
         });
         initDateTexts();
         initSpinner();
     }
-    View.OnClickListener submitClick = new View.OnClickListener() {
+    View.OnClickListener submitClick = new SingleClickListener() {
         @Override
-        public void onClick(View view) {
+        public void onSingleClick(View view) {
             String textFromDate = startDateText.getText().toString();
             String textToDate = endDateText.getText().toString();
             try {
@@ -132,10 +133,10 @@ public class HistorySelectActivity extends AppCompatActivity {
         endDateText = (TextView) findViewById(R.id.text_end_date);
         startDateSpan = (LinearLayout)findViewById(R.id.span_start_date);
         endDateSpan = (LinearLayout)findViewById(R.id.span_end_date);
-        startDateSpan.setOnClickListener(new View.OnClickListener() {
+        startDateSpan.setOnClickListener(new SingleClickListener() {
 
             @Override
-            public void onClick(View v) {
+            public void onSingleClick(View v) {
                 CardDatePickerDialog datePickerDialog = new CardDatePickerDialog.Builder(HistorySelectActivity.this)
                         .setTitle(getString(R.string.start_date))
                         .setOnCancel(getString(R.string.cancel),null)
@@ -156,9 +157,9 @@ public class HistorySelectActivity extends AppCompatActivity {
             }
         });
 
-        endDateSpan.setOnClickListener(new View.OnClickListener() {
+        endDateSpan.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View v) {
+            public void onSingleClick(View v) {
                 CardDatePickerDialog datePickerDialog = new CardDatePickerDialog.Builder(HistorySelectActivity.this)
                         .setTitle(getString(R.string.end_date))
                         .setOnCancel(getString(R.string.cancel),null)

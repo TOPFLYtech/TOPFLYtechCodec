@@ -108,6 +108,93 @@ class DeviceS09Cell: UITableViewCell {
         return label
     }()
     
+
+    lazy var input0Label: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.black
+        label.font = UIFont.systemFont(ofSize: fontSize)
+        label.text = NSLocalizedString("input0", comment:"input0:")
+        return label
+    }()
+    lazy var input0ContentLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.black
+        label.font = UIFont.systemFont(ofSize: fontSize)
+        return label
+    }()
+    
+    lazy var output0Label: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.black
+        label.font = UIFont.systemFont(ofSize: fontSize)
+        label.text = NSLocalizedString("output0", comment:"output0:")
+        return label
+    }()
+    lazy var output0ContentLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.black
+        label.font = UIFont.systemFont(ofSize: fontSize)
+        return label
+    }()
+    
+    lazy var output1Label: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.black
+        label.font = UIFont.systemFont(ofSize: fontSize)
+        label.text = NSLocalizedString("output1", comment:"output1:")
+        return label
+    }()
+    lazy var output1ContentLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.black
+        label.font = UIFont.systemFont(ofSize: fontSize)
+        return label
+    }()
+    
+    
+    lazy var analog0Label: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.black
+        label.font = UIFont.systemFont(ofSize: fontSize)
+        label.text = NSLocalizedString("analogInput0", comment:"analogInput0:")
+        return label
+    }()
+    lazy var analog0ContentLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.black
+        label.font = UIFont.systemFont(ofSize: fontSize)
+        return label
+    }()
+    
+    lazy var analog1Label: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.black
+        label.font = UIFont.systemFont(ofSize: fontSize)
+        label.text = NSLocalizedString("analogInput1", comment:"analogInput1:")
+        return label
+    }()
+    lazy var analog1ContentLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.black
+        label.font = UIFont.systemFont(ofSize: fontSize)
+        return label
+    }()
+    
+    lazy var analog2Label: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.black
+        label.font = UIFont.systemFont(ofSize: fontSize)
+        label.text = NSLocalizedString("analogInput2", comment:"analogInput2:")
+        return label
+    }()
+    lazy var analog2ContentLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.black
+        label.font = UIFont.systemFont(ofSize: fontSize)
+        return label
+    }()
+    
+    
     lazy var configLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
@@ -138,7 +225,7 @@ class DeviceS09Cell: UITableViewCell {
     func initLayoutPosition(){
         let descWidth = self.bounds.size.width / 2 - 20
         let contentX = self.bounds.size.width / 2
-        self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 260)
+        self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 440)
         self.rootView.isUserInteractionEnabled=true
         self.deviceNameLabel.frame = CGRect(x: 8, y: 8, width: descWidth, height: 30)
         self.deviceNameContentLabel.frame = CGRect(x: contentX, y: 8, width: self.bounds.size.width - contentX, height: 30)
@@ -155,8 +242,21 @@ class DeviceS09Cell: UITableViewCell {
         self.softwareLabel.frame = CGRect(x: 8, y: 188, width: descWidth, height: 30)
         self.softwareContentLabel.frame = CGRect(x: contentX, y: 188, width: self.bounds.size.width - contentX, height: 30)
         
-        self.configLabel.frame = CGRect(x: 8, y: 218, width: descWidth, height: 30)
-        self.configBtn.frame = CGRect(x: contentX, y: 218, width: 80, height: 24)
+        self.input0Label.frame = CGRect(x: 8, y: 218, width: descWidth, height: 30)
+        self.input0ContentLabel.frame = CGRect(x: contentX, y: 218, width: self.bounds.size.width - contentX, height: 30)
+        self.output0Label.frame = CGRect(x: 8, y: 248, width: descWidth, height: 30)
+        self.output0ContentLabel.frame = CGRect(x: contentX, y: 248, width: self.bounds.size.width - contentX, height: 30)
+        self.output1Label.frame = CGRect(x: 8, y: 278, width: descWidth, height: 30)
+        self.output1ContentLabel.frame = CGRect(x: contentX, y: 278, width: self.bounds.size.width - contentX, height: 30)
+        self.analog0Label.frame = CGRect(x: 8, y: 308, width: descWidth, height: 30)
+        self.analog0ContentLabel.frame = CGRect(x: contentX, y: 308, width: self.bounds.size.width - contentX, height: 30)
+        self.analog1Label.frame = CGRect(x: 8, y: 338, width: descWidth, height: 30)
+        self.analog1ContentLabel.frame = CGRect(x: contentX, y: 338, width: self.bounds.size.width - contentX, height: 30)
+        self.analog2Label.frame = CGRect(x: 8, y: 368, width: descWidth, height: 30)
+        self.analog2ContentLabel.frame = CGRect(x: contentX, y: 368, width: self.bounds.size.width - contentX, height: 30)
+        
+        self.configLabel.frame = CGRect(x: 8, y: 398, width: descWidth, height: 30)
+        self.configBtn.frame = CGRect(x: contentX, y: 398, width: 80, height: 24)
         self.configBtn.setTitleShadowColor(UIColor.green,for: .highlighted)
         self.configBtn.setTitleShadowColor(UIColor.black,for: .normal)
         
@@ -183,6 +283,19 @@ class DeviceS09Cell: UITableViewCell {
         self.rootView.addSubview(hardwareContentLabel)
         self.rootView.addSubview(softwareLabel)
         self.rootView.addSubview(softwareContentLabel)
+        
+        self.rootView.addSubview(input0Label)
+        self.rootView.addSubview(input0ContentLabel)
+        self.rootView.addSubview(output0Label)
+        self.rootView.addSubview(output0ContentLabel)
+        self.rootView.addSubview(output1Label)
+        self.rootView.addSubview(output1ContentLabel)
+        self.rootView.addSubview(analog0Label)
+        self.rootView.addSubview(analog0ContentLabel)
+        self.rootView.addSubview(analog1Label)
+        self.rootView.addSubview(analog1ContentLabel)
+        self.rootView.addSubview(analog2Label)
+        self.rootView.addSubview(analog2ContentLabel)
         
         self.rootView.addSubview(configLabel)
         self.rootView.addSubview(configBtn)

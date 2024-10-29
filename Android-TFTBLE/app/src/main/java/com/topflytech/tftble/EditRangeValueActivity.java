@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import com.topflytech.tftble.data.BleDeviceData;
 import com.topflytech.tftble.data.MyUtils;
+import com.topflytech.tftble.data.SingleClickListener;
 import com.topflytech.tftble.view.SwitchButton;
 
 public class EditRangeValueActivity extends AppCompatActivity {
@@ -31,7 +32,7 @@ public class EditRangeValueActivity extends AppCompatActivity {
     private String editType;
     private String highValue,lowValue;
     private boolean highValueOpen,lowValueOpen;
-
+    private String deviceType;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,7 +49,7 @@ public class EditRangeValueActivity extends AppCompatActivity {
         lowValue = intent.getStringExtra("lowValue");
         highValueOpen = intent.getBooleanExtra("highValueOpen",false);
         lowValueOpen = intent.getBooleanExtra("lowValueOpen",false);
-
+        deviceType = intent.getStringExtra("deviceType");
 
         switchLow.setSwitchStatus(lowValueOpen);
         switchHigh.setSwitchStatus(highValueOpen);
@@ -67,10 +68,20 @@ public class EditRangeValueActivity extends AppCompatActivity {
             etHigh.setInputType(InputType.TYPE_CLASS_NUMBER);
             etLow.setInputType(InputType.TYPE_CLASS_NUMBER);
         }
-
-        btnConfirm.setOnClickListener(new View.OnClickListener() {
+        SwitchButton.OnSwitchChangeListener sbClick = new SwitchButton.OnSwitchChangeListener() {
             @Override
-            public void onClick(View view) {
+            public void onSwitchChanged(boolean open) {
+                if(!switchHigh.getSwitchStatus() && !switchLow.getSwitchStatus()){
+                    etHigh.setText("");
+                    etLow.setText("");
+                }
+            }
+        };
+        switchHigh.setOnSwitchChangeListener(sbClick);
+        switchLow.setOnSwitchChangeListener(sbClick);
+        btnConfirm.setOnClickListener(new SingleClickListener() {
+            @Override
+            public void onSingleClick(View view) {
                 if(editType.equals("temp")){
                     if(!submitTempAlarm()){
                         return;
@@ -138,17 +149,44 @@ public class EditRangeValueActivity extends AppCompatActivity {
             Toast.makeText(EditRangeValueActivity.this,R.string.high_must_great_than_low,Toast.LENGTH_SHORT).show();
             return false;
         }
-        if ((saveHighValue <= saveLowValue && saveLowValue != 4095) || (saveHighValue != 4095 && saveHighValue > 1000) ||
-                (saveLowValue != 4095 && saveLowValue < -400)){
-            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(EditRangeValueActivity.this);
-            String tempUnit = preferences.getString("tempUnit","0");
-            if(tempUnit.equals("0")){
-                Toast.makeText(EditRangeValueActivity.this,R.string.temp_range_error_warning,Toast.LENGTH_SHORT).show();
-            }else{
-                Toast.makeText(EditRangeValueActivity.this,R.string.temp_range_error_warning1,Toast.LENGTH_SHORT).show();
+        if(deviceType.equals("S08")){
+            if ((saveHighValue <= saveLowValue && saveLowValue != 4095) || (saveHighValue != 4095 && saveHighValue >= 800) ||
+                    (saveLowValue != 4095 && saveLowValue <= -300)){
+                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(EditRangeValueActivity.this);
+                String tempUnit = preferences.getString("tempUnit","0");
+                if(tempUnit.equals("0")){
+                    Toast.makeText(EditRangeValueActivity.this,R.string.s08_temp_range_error_warning,Toast.LENGTH_SHORT).show();
+                }else{
+                    Toast.makeText(EditRangeValueActivity.this,R.string.s08_temp_range_error_warning1,Toast.LENGTH_SHORT).show();
+                }
+                return false;
             }
-            return false;
+        }else if(deviceType.equals("S10")){
+            if ((saveHighValue <= saveLowValue && saveLowValue != 4095) || (saveHighValue != 4095 && saveHighValue >= 1500) ||
+                    (saveLowValue != 4095 && saveLowValue <= -550)){
+                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(EditRangeValueActivity.this);
+                String tempUnit = preferences.getString("tempUnit","0");
+                if(tempUnit.equals("0")){
+                    Toast.makeText(EditRangeValueActivity.this,R.string.s10_temp_range_error_warning,Toast.LENGTH_SHORT).show();
+                }else{
+                    Toast.makeText(EditRangeValueActivity.this,R.string.s10_temp_range_error_warning1,Toast.LENGTH_SHORT).show();
+                }
+                return false;
+            }
+        }else{
+            if ((saveHighValue <= saveLowValue && saveLowValue != 4095) || (saveHighValue != 4095 && saveHighValue >= 1000) ||
+                    (saveLowValue != 4095 && saveLowValue <= -400)){
+                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(EditRangeValueActivity.this);
+                String tempUnit = preferences.getString("tempUnit","0");
+                if(tempUnit.equals("0")){
+                    Toast.makeText(EditRangeValueActivity.this,R.string.temp_range_error_warning,Toast.LENGTH_SHORT).show();
+                }else{
+                    Toast.makeText(EditRangeValueActivity.this,R.string.temp_range_error_warning1,Toast.LENGTH_SHORT).show();
+                }
+                return false;
+            }
         }
+
         Intent intent = new Intent();
         intent.putExtra("highValue",saveHighValue);
         intent.putExtra("lowValue",saveLowValue);
@@ -208,7 +246,7 @@ public class EditRangeValueActivity extends AppCompatActivity {
             Toast.makeText(EditRangeValueActivity.this,R.string.high_must_great_than_low,Toast.LENGTH_SHORT).show();
             return false;
         }
-        if  ((saveHighValue <= saveLowValue && saveLowValue != 4095) || (saveHighValue != 4095 && saveHighValue > 1000) ||
+        if  ((saveHighValue <= saveLowValue && saveLowValue != 4095) || (saveHighValue != 4095 && saveHighValue >= 100) ||
                 (saveLowValue != 4095 && saveLowValue < 0)){
             Toast.makeText(EditRangeValueActivity.this,R.string.opt_of_range_warning,Toast.LENGTH_SHORT).show();
             return false;
@@ -230,9 +268,9 @@ public class EditRangeValueActivity extends AppCompatActivity {
         backButton = (ImageView) customView.findViewById(R.id.command_list_bar_back_id);
         rightButton =(ImageView) customView.findViewById(R.id.img_btn_right);
         rightButton.setVisibility(View.INVISIBLE);
-        backButton.setOnClickListener(new View.OnClickListener() {
+        backButton.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onSingleClick(View view) {
                 finish();
             }
         });

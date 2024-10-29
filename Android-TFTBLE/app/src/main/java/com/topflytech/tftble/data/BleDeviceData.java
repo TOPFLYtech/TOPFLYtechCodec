@@ -127,6 +127,60 @@ public class BleDeviceData {
     private String major;
     private String minor;
     private int extSensorType;
+    private String input0;
+    private String output0;
+    private String output1;
+    private String analog0;
+    private String analog1;
+    private String analog2;
+
+    public String getInput0() {
+        return input0;
+    }
+
+    public void setInput0(String input0) {
+        this.input0 = input0;
+    }
+
+    public String getOutput0() {
+        return output0;
+    }
+
+    public void setOutput0(String output0) {
+        this.output0 = output0;
+    }
+
+    public String getOutput1() {
+        return output1;
+    }
+
+    public void setOutput1(String output1) {
+        this.output1 = output1;
+    }
+
+    public String getAnalog0() {
+        return analog0;
+    }
+
+    public void setAnalog0(String analog0) {
+        this.analog0 = analog0;
+    }
+
+    public String getAnalog1() {
+        return analog1;
+    }
+
+    public void setAnalog1(String analog1) {
+        this.analog1 = analog1;
+    }
+
+    public String getAnalog2() {
+        return analog2;
+    }
+
+    public void setAnalog2(String analog2) {
+        this.analog2 = analog2;
+    }
 
     public int getExtSensorType() {
         return extSensorType;
@@ -715,6 +769,28 @@ public class BleDeviceData {
                     id = hexData.substring(14,26).toUpperCase();
                     this.modelName = "T-hub";
                     this.deviceType = "S09";
+                    this.input0 = "-";
+                    this.output0 = "-";
+                    this.output1 = "-";
+                    this.analog0 = "-";
+                    this.analog1 = "-";
+                    this.analog2 = "-";
+                    if(data.length >= 20){
+                        if(data[13] != 0xff){
+                            this.input0 = (data[13] & 0x80) == 0x80 ? context.getString(R.string.active) : context.getString(R.string.inactive);
+                            this.output0 = (data[13] & 0x40) == 0x40 ? context.getString(R.string.active) : context.getString(R.string.inactive);
+                            this.output1 = (data[13] & 0x20) == 0x20 ? context.getString(R.string.active) : context.getString(R.string.inactive);
+                        }
+                        if(!(data[14] == -1 && data[15] == -1)){
+                            this.analog0 = String.format("%d.%dV",Integer.valueOf(hexData.substring(28,30)),Integer.valueOf(hexData.substring(30,32)));
+                        }
+                        if(!(data[16] == -1 && data[17] == -1)){
+                            this.analog1 = String.format("%d.%dV",Integer.valueOf(hexData.substring(32,34)),Integer.valueOf(hexData.substring(34,36)));
+                        }
+                        if(!(data[18] == -1 && data[19] == -1)){
+                            this.analog2 = String.format("%d.%dV",Integer.valueOf(hexData.substring(36,38)),Integer.valueOf(hexData.substring(38,40)));
+                        }
+                    }
                 }else if(data[2] == 0x0a){
                     if(data.length < 13){
                         return;
@@ -773,6 +849,18 @@ public class BleDeviceData {
                         }
                     }
 
+                }else if(data[2] ==  (byte)0xa1){
+                    this.hardware = MyUtils.parseHardwareVersion(data[3]);
+                    this.software = MyUtils.parseSoftwareVersion(data,4);
+                    id = hexData.substring(14,26).toUpperCase();
+                    this.modelName = "A001";
+                    this.deviceType = "A001";
+                }else if(data[2] ==  (byte)0xa2){
+                    this.hardware = MyUtils.parseHardwareVersion(data[3]);
+                    this.software = MyUtils.parseSoftwareVersion(data,4);
+                    id = hexData.substring(14,26).toUpperCase();
+                    this.modelName = "A001";
+                    this.deviceType = "A002";
                 }else{
                     deviceType = "errorDevice";
                 }

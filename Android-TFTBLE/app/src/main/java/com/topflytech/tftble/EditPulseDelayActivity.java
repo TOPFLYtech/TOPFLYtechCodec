@@ -12,6 +12,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.topflytech.tftble.data.SingleClickListener;
+
 public class EditPulseDelayActivity extends AppCompatActivity {
     private ActionBar actionBar;
     private ImageView backButton;
@@ -30,9 +32,9 @@ public class EditPulseDelayActivity extends AppCompatActivity {
         etToggleTime = (EditText)findViewById(R.id.et_toggle_time) ;
         etRecoverTime = (EditText)findViewById(R.id.et_recover_time) ;
         btnConfirm = (Button) findViewById(R.id.btn_relay_pulse_confirm);
-        btnConfirm.setOnClickListener(new View.OnClickListener() {
+        btnConfirm.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onSingleClick(View view) {
                 String cycleTime = etCycleTime.getText().toString();
                 String initEnableTime = etInitEnableTime.getText().toString();
                 String toggleTime = etToggleTime.getText().toString();
@@ -44,15 +46,23 @@ public class EditPulseDelayActivity extends AppCompatActivity {
                     Toast.makeText(EditPulseDelayActivity.this,R.string.input_error,Toast.LENGTH_SHORT).show();
                     return;
                 }
+                if(Integer.valueOf(cycleTime) % 100 != 0){
+                    Toast.makeText(EditPulseDelayActivity.this,R.string.cycle_time_format_error,Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if(Integer.valueOf(initEnableTime) % 10 != 0){
+                    Toast.makeText(EditPulseDelayActivity.this,R.string.init_enable_time_format_error,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 int cycleTimeInt = Integer.valueOf(cycleTime) / 100 * 100;
                 int initEnableTimeInt = Integer.valueOf(initEnableTime) / 10 * 10;
                 int toggleTimeInt = Integer.valueOf(toggleTime);
                 int recoverTimeInt = Integer.valueOf(recoverTime);
-                if (cycleTimeInt <= 0 || cycleTimeInt > 65535){
+                if (cycleTimeInt <= 0 || cycleTimeInt > 65500){
                     Toast.makeText(EditPulseDelayActivity.this,R.string.cycle_time_warning,Toast.LENGTH_SHORT).show();
                     return;
                 }
-                if (initEnableTimeInt <= 0 || initEnableTimeInt > 65535){
+                if (initEnableTimeInt <= 0 || initEnableTimeInt > 65500){
                     Toast.makeText(EditPulseDelayActivity.this,R.string.init_enable_time_warning,Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -66,6 +76,10 @@ public class EditPulseDelayActivity extends AppCompatActivity {
                 }
                 if(cycleTimeInt < initEnableTimeInt){
                     Toast.makeText(EditPulseDelayActivity.this,R.string.cycle_time_error_warning,Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if(toggleTimeInt != 0 && (cycleTimeInt - initEnableTimeInt) / toggleTimeInt <= 20 ){
+                    Toast.makeText(EditPulseDelayActivity.this,R.string.pulse_Delay_multi_warning,Toast.LENGTH_SHORT).show();
                     return;
                 }
                 Intent intent = new Intent();
@@ -83,16 +97,16 @@ public class EditPulseDelayActivity extends AppCompatActivity {
         actionBar = getSupportActionBar();
         View customView = this.getLayoutInflater().inflate(R.layout.custom_activity_bar, null);
         tvHead = customView.findViewById(R.id.custom_head_title);
-        tvHead.setText(R.string.relay_pulse);
+        tvHead.setText(R.string.dynamic_pulse);
         actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
         actionBar.setDisplayShowCustomEnabled(true);
         actionBar.setCustomView(customView);
         backButton = (ImageView) customView.findViewById(R.id.command_list_bar_back_id);
         rightButton =(ImageView) customView.findViewById(R.id.img_btn_right);
         rightButton.setVisibility(View.INVISIBLE);
-        backButton.setOnClickListener(new View.OnClickListener() {
+        backButton.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onSingleClick(View view) {
                 finish();
             }
         });

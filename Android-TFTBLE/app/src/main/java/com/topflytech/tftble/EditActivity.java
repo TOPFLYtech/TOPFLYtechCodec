@@ -1,39 +1,53 @@
 package com.topflytech.tftble;
 
+import android.Manifest;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothGattService;
+import android.bluetooth.BluetoothProfile;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.InputType;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 import com.alibaba.fastjson.JSONObject;
-import com.bigkoo.pickerview.builder.OptionsPickerBuilder;
-import com.bigkoo.pickerview.listener.OnOptionsSelectListener;
-import com.bigkoo.pickerview.view.OptionsPickerView;
+//import com.bigkoo.pickerview.builder.OptionsPickerBuilder;
+//import com.bigkoo.pickerview.view.OptionsPickerView;
+import com.github.gzuliyujiang.wheelpicker.OptionPicker;
 import com.inuker.bluetooth.library.BluetoothClient;
 import com.inuker.bluetooth.library.connect.listener.BleConnectStatusListener;
-import com.inuker.bluetooth.library.connect.response.BleConnectResponse;
-import com.inuker.bluetooth.library.connect.response.BleNotifyResponse;
-import com.inuker.bluetooth.library.connect.response.BleWriteResponse;
-import com.inuker.bluetooth.library.model.BleGattProfile;
+import com.inuker.bluetooth.library.connect.options.BleConnectOptions;
+import com.topflytech.tftble.data.A001SoftwareUpgradeManager;
 import com.topflytech.tftble.data.BleDeviceData;
 import com.topflytech.tftble.data.BleHisData;
 import com.topflytech.tftble.data.DfuService;
@@ -41,6 +55,8 @@ import com.topflytech.tftble.data.DownloadFileManager;
 import com.topflytech.tftble.data.LogFileHelper;
 import com.topflytech.tftble.data.MyUtils;
 import com.topflytech.tftble.data.OpenAPI;
+import com.topflytech.tftble.data.SingleClickListener;
+import com.topflytech.tftble.data.SingleOptionSelectClickListener;
 import com.topflytech.tftble.data.WriteSensorObj;
 import com.topflytech.tftble.view.SwitchButton;
 
@@ -66,16 +82,16 @@ import static com.inuker.bluetooth.library.Code.REQUEST_SUCCESS;
 import static com.inuker.bluetooth.library.Constants.STATUS_CONNECTED;
 import static com.inuker.bluetooth.library.Constants.STATUS_DISCONNECTED;
 
-public class EditActivity extends AppCompatActivity {
+public class EditActivity extends AppCompatActivity implements A001SoftwareUpgradeManager.UpgradeStatusCallback {
     private ActionBar actionBar;
     private ImageView backButton;
     private ImageView reconnectBtn;
-    private BluetoothClient mClient;
+    //    private BluetoothClient mClient;
     private String mac;
     private String deviceType;
     private String id;
     private String software;
-    private String confirmPwd,newPwd;
+    private String confirmPwd, newPwd;
     SweetAlertDialog waitingDlg;
     SweetAlertDialog waitingCancelDlg;
     SweetAlertDialog connectWaitingCancelDlg;
@@ -83,26 +99,26 @@ public class EditActivity extends AppCompatActivity {
     private String deviceName;
     EditText pwdEdit;
     boolean connectSucc = false;
-    float tempAlarmUp,tempAlarmDown;
-    int humidityAlarmUp,humidityAlarmDown;
-    boolean humidityAlarmUpOpen,humidityAlarmDownOpen,tempAlarmUpOpen,tempAlarmDownOpen;
+    float tempAlarmUp, tempAlarmDown;
+    int humidityAlarmUp, humidityAlarmDown;
+    boolean humidityAlarmUpOpen, humidityAlarmDownOpen, tempAlarmUpOpen, tempAlarmDownOpen;
 
-    long saveCount = 0,saveAlarmCount = 0,saveInterval=0;
+    long saveCount = 0, saveAlarmCount = 0, saveInterval = 0;
     boolean isSaveRecordStatus = false;
     String serverVersion = null;
     String betaServerVersion = null;
     String upgradeLink;
     String betaUpgradeLink;
     boolean onThisView = false;
-    private OptionsPickerView pvTransmittedPower;
-    private OptionsPickerView pvSaveInterval;
-    private OptionsPickerView pvDinStatusEvent;
-    private OptionsPickerView pvPortSelect;
-    private OptionsPickerView pvOneWireWorkMode;
-    private OptionsPickerView pvRs385BaudRate;
-    private OptionsPickerView pvBroadcastType;
-    private OptionsPickerView pvBroadcastCycle;
-    private OptionsPickerView pvRelayType;
+    private OptionPicker pvTransmittedPower;
+    private OptionPicker pvSaveInterval;
+    private OptionPicker pvDinStatusEvent;
+    private OptionPicker pvPortSelect;
+    private OptionPicker pvOneWireWorkMode;
+    private OptionPicker pvRs385BaudRate;
+    private OptionPicker pvBroadcastType;
+    private OptionPicker pvBroadcastCycle;
+    private OptionPicker pvRelayType;
     public static final int REQUEST_CHANGE_PWD = 1;
     public static final int RESPONSE_CHANGE_PWD = 1;
 
@@ -131,13 +147,15 @@ public class EditActivity extends AppCompatActivity {
     public static final int REQUEST_EDIT_PULSE_DELAY = 11;
     public static final int RESPONSE_EDIT_PULSE_DELAY = 11;
 
+    public static final int REQUEST_EDIT_SECOND_PULSE_DELAY = 12;
+    public static final int RESPONSE_EDIT_SECOND_PULSE_DELAY = 12;
 
 
     private int getExtSensorTypeNextCtrl = -1;
     public static final int GET_EXT_SENSOR_TYPE_NEXT_DO_GET_HIS_DATA = 1;
     public static final int GET_EXT_SENSOR_TYPE_NEXT_DO_START_RECORD = 2;
 
-    private long startTimestamp,endTimestamp;
+    private long startTimestamp, endTimestamp;
     private int transmittedPower;
     private boolean pwdErrorWarning = false;
     private TextView relayStatusTV;
@@ -146,7 +164,24 @@ public class EditActivity extends AppCompatActivity {
     private boolean isWaitResponse = false;
     private LinkedBlockingQueue<WriteSensorObj> waitingSendMsgQueue = new LinkedBlockingQueue<>();
     private boolean isSendMsgThreadRunning = true;
-    private  ArrayList<String>  relayTypeList;
+    private ArrayList<String> relayTypeList;
+    private UUID serviceId = UUID.fromString("27760001-999C-4D6A-9FC4-C7272BE10900");
+    private UUID uuid = UUID.fromString("27763561-999C-4D6A-9FC4-C7272BE10900");
+    private BluetoothDevice bleDevice;
+    private BluetoothGatt bluetoothGatt;
+    private BluetoothGattCharacteristic cmdReadWriteCharacteristic;
+    private boolean isA001Protocol = false;
+
+    private void checkUUID() {
+        if (deviceType.equals("A001") || deviceType.equals("A002")) {
+            serviceId = A001SoftwareUpgradeManager.serviceId;
+            uuid = A001SoftwareUpgradeManager.cmdWriteNotifyUUID;
+            isA001Protocol = true;
+        }
+    }
+
+    private A001SoftwareUpgradeManager a001UpgradeManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -158,38 +193,40 @@ public class EditActivity extends AppCompatActivity {
         deviceType = intent.getStringExtra("deviceType");
         id = intent.getStringExtra("id");
         initActionbar();
-        if(deviceType.equals("S07")){
-            broadcastTypeList.set(0,"Eddystone T-button");
+        if (deviceType.equals("S07")) {
+            broadcastTypeList.set(0, "Eddystone T-button");
             broadcastTypeList.add("Eddystone UID");
             transmittedPowerList.remove(0);
-        }else if(deviceType.equals("S08")){
-            broadcastTypeList.set(0,"Eddystone T-sense");
+        } else if (deviceType.equals("S08")) {
+            broadcastTypeList.set(0, "Eddystone T-sense");
             broadcastTypeList.add("Eddystone UID");
-        }else if(deviceType.equals("S10")){
-            broadcastTypeList.set(0,"Eddystone T-one");
+        } else if (deviceType.equals("S10")) {
+            broadcastTypeList.set(0, "Eddystone T-one");
             broadcastTypeList.add("Eddystone UID");
-        }else if(deviceType.equals("S02")){
+        } else if (deviceType.equals("S02") || deviceType.equals("S04") || deviceType.equals("S05")) {
             transmittedPowerList.remove(0);
         }
-
-        mClient = new BluetoothClient(EditActivity.this);
-        portList = new ArrayList<String>(){{
+        checkUUID();
+        a001UpgradeManager = new A001SoftwareUpgradeManager(this, this);
+//        mClient = new BluetoothClient(EditActivity.this);
+        portList = new ArrayList<String>() {{
             add(getResources().getString(R.string.port) + " 0");
             add(getResources().getString(R.string.port) + " 1");
             add(getResources().getString(R.string.port) + " 2");
         }};
-        dinStatusEventList = new ArrayList<String>(){{
+        dinStatusEventList = new ArrayList<String>() {{
             add(getResources().getString(R.string.close));
             add(getResources().getString(R.string.din_status_event_rising_edge));
             add(getResources().getString(R.string.din_status_event_falling_edge));
             add(getResources().getString(R.string.din_status_event_bilateral_margin));
         }};
-        relayTypeList = new ArrayList<String>(){{
-            add(getResources().getString(R.string.normal));
+        relayTypeList = new ArrayList<String>() {{
+            add(getResources().getString(R.string.cycle_switching));
             add(getResources().getString(R.string.relay_delay));
+            add(getResources().getString(R.string.dynamic_pulse));
             add(getResources().getString(R.string.relay_pulse));
         }};
-        oneWireWorkModeList = new ArrayList<String>(){{
+        oneWireWorkModeList = new ArrayList<String>() {{
             add(getResources().getString(R.string.close));
             add(getResources().getString(R.string.conventional_pull_up));
             add(getResources().getString(R.string.strong_pull_up));
@@ -202,28 +239,32 @@ public class EditActivity extends AppCompatActivity {
     private Runnable dealSendMsgRunnable = new Runnable() {
         @Override
         public void run() {
-            while (isSendMsgThreadRunning){
+            while (isSendMsgThreadRunning) {
                 try {
-                    if(isWaitResponse){
+                    if (isWaitResponse) {
                         Thread.sleep(100);
                         continue;
                     }
-                    if(waitingSendMsgQueue.size() > 0){
+                    if (waitingSendMsgQueue.size() > 0) {
                         WriteSensorObj writeSensorObj = waitingSendMsgQueue.poll();
-                        if(mClient != null && connectSucc){
-                            LogFileHelper.getInstance(EditActivity.this).writeIntoFile(MyUtils.bytes2HexString(writeSensorObj.getContent(),0));
-                            Log.e("myLog",MyUtils.bytes2HexString(writeSensorObj.getContent(),0));
+                        if (bluetoothGatt != null && connectSucc) {
+                            LogFileHelper.getInstance(EditActivity.this).writeIntoFile(MyUtils.bytes2HexString(writeSensorObj.getContent(), 0));
+                            Log.e("tftble_log", MyUtils.bytes2HexString(writeSensorObj.getContent(), 0));
                             isWaitResponse = true;
-                            mClient.writeNoRsp(mac, serviceId, writeSensorObj.getCurUUID(), writeSensorObj.getContent(), new BleWriteResponse() {
-                                @Override
-                                public void onResponse(int code) {
-                                    if (code == REQUEST_SUCCESS) {
-
-                                    }
-                                }
-                            }); 
+//                            mClient.writeNoRsp(mac, serviceId, writeSensorObj.getCurUUID(), writeSensorObj.getContent(), new BleWriteResponse() {
+//                                @Override
+//                                public void onResponse(int code) {
+//                                    if (code == REQUEST_SUCCESS) {
+//
+//                                    }
+//                                }
+//                            });
+                            cmdReadWriteCharacteristic.setValue(writeSensorObj.getContent());
+                            if (ActivityCompat.checkSelfPermission(EditActivity.this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                            }
+                            bluetoothGatt.writeCharacteristic(cmdReadWriteCharacteristic);
                         }
-                    }else{
+                    } else {
                         Thread.sleep(1000);
                     }
                 } catch (Exception e) {
@@ -233,30 +274,32 @@ public class EditActivity extends AppCompatActivity {
         }
     };
 
-    private void showWaitingDlg(String warning){
-        if(!onThisView){
+    private void showWaitingDlg(String warning) {
+        if (!onThisView) {
             return;
         }
         waitingDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.PROGRESS_TYPE);
         waitingDlg.getProgressHelper().setBarColor(Color.parseColor("#A5DC86"));
         waitingDlg.setCancelable(false);
-        if (warning != null && !warning.isEmpty()){
+        if (warning != null && !warning.isEmpty()) {
             waitingDlg.setTitleText(warning);
             waitingDlg.show();
         }
     }
-    private void showConnectWaitingCancelDlg(String warning){
+
+    private void showConnectWaitingCancelDlg(String warning) {
         connectWaitingCancelDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.PROGRESS_TYPE);
         connectWaitingCancelDlg.getProgressHelper().setBarColor(Color.parseColor("#A5DC86"));
         connectWaitingCancelDlg.showCancelButton(true);
         connectWaitingCancelDlg.setCancelText(getResources().getString(R.string.cancel));
         connectWaitingCancelDlg.setCancelClickListener(sweetPwdCancelClick);
-        if (warning != null && !warning.isEmpty()){
+        if (warning != null && !warning.isEmpty()) {
             connectWaitingCancelDlg.setTitleText(warning);
         }
         connectWaitingCancelDlg.show();
     }
-    private void showWaitingCancelDlg(String warning){
+
+    private void showWaitingCancelDlg(String warning) {
         waitingCancelDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.PROGRESS_TYPE);
         waitingCancelDlg.getProgressHelper().setBarColor(Color.parseColor("#A5DC86"));
         waitingCancelDlg.showCancelButton(true);
@@ -268,13 +311,13 @@ public class EditActivity extends AppCompatActivity {
                 sweetAlertDialog.dismiss();
             }
         });
-        if (warning != null && !warning.isEmpty()){
+        if (warning != null && !warning.isEmpty()) {
             waitingCancelDlg.setTitleText(warning);
         }
         waitingCancelDlg.show();
     }
 
-    private void showPwdDlg(){
+    private void showPwdDlg() {
         sweetPwdDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.INPUT_TYPE);
         sweetPwdDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
         sweetPwdDlg.setTitleText(getResources().getString(R.string.input_device_password));
@@ -285,7 +328,7 @@ public class EditActivity extends AppCompatActivity {
         sweetPwdDlg.setConfirmClickListener(sweetPwdConfirmClick);
         sweetPwdDlg.setCancelClickListener(sweetPwdCancelClick);
         sweetPwdDlg.setInputText("");
-        if(MyUtils.isDebug){
+        if (MyUtils.isDebug) {
             sweetPwdDlg.setInputText("654321");
         }
         sweetPwdDlg.show();
@@ -297,54 +340,66 @@ public class EditActivity extends AppCompatActivity {
         actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
         actionBar.setDisplayShowCustomEnabled(true);
         actionBar.setCustomView(customView);
-        TextView tvHead = (TextView)findViewById(R.id.edit_command_title);
+        TextView tvHead = (TextView) findViewById(R.id.edit_command_title);
         tvHead.setText(id);
         backButton = (ImageView) findViewById(R.id.command_list_bar_back_id);
-        backButton.setOnClickListener(new View.OnClickListener() {
+        backButton.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onSingleClick(View view) {
                 finish();
             }
         });
         reconnectBtn = (ImageView) findViewById(R.id.command_edit_reconnect);
-        reconnectBtn.setOnClickListener(new View.OnClickListener() {
+        reconnectBtn.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onSingleClick(View view) {
                 doReconnect();
             }
         });
     }
 
-    private void connectFailTimeoutShow(long tick){
+    private void connectFailTimeoutShow(long tick) {
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 // 要执行的操作
-                if(!connectSucc && onThisView){
-                    if(connectWaitingCancelDlg != null){
+                if (!connectSucc && onThisView) {
+                    if (connectWaitingCancelDlg != null) {
                         connectWaitingCancelDlg.hide();
                     }
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    if (waitingDlg != null) {
+                        waitingDlg.hide();
+                    }
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                 }
             }
         }, tick);
     }
 
-    private void doReconnect(){
-        if(connectWaitingCancelDlg != null){
+    private void doReconnect() {
+        if (connectWaitingCancelDlg != null) {
             connectWaitingCancelDlg.hide();
         }
         reconnectBtn.setImageResource(R.mipmap.ic_disconnect);
-        mClient.disconnect(mac);
+//        mClient.disconnect(mac);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+        }
+        if(bluetoothGatt != null){
+            bluetoothGatt.disconnect();
+            bluetoothGatt.close();
+        }
         connectSucc = false;
+        a001UpgradeManager.stopUpgrade();
+        if (waitingDlg != null) {
+            waitingDlg.hide();
+        }
         showConnectWaitingCancelDlg(getResources().getString(R.string.reconnecting));
-        mClient.connect(mac,bleConnectResponse);
-        connectFailTimeoutShow(60000);
-        mClient.registerConnectStatusListener(mac, mBleConnectStatusListener);
+
+        connectDeviceBle();
     }
 
-    private ArrayList<String> transmittedPowerList = new ArrayList<String>(){{
+    private ArrayList<String> transmittedPowerList = new ArrayList<String>() {{
         add("8");
         add("4");
         add("0");
@@ -359,7 +414,7 @@ public class EditActivity extends AppCompatActivity {
 
     private ArrayList<String> oneWireWorkModeList;
 
-    private ArrayList<String> rs485BaudRateList = new ArrayList<String>(){{
+    private ArrayList<String> rs485BaudRateList = new ArrayList<String>() {{
         add("1200");
         add("2400");
         add("4800");
@@ -377,12 +432,12 @@ public class EditActivity extends AppCompatActivity {
         add("250000");
     }};
 
-    private ArrayList<String> broadcastTypeList = new ArrayList<String>(){{
+    private ArrayList<String> broadcastTypeList = new ArrayList<String>() {{
         add("Eddystone");
         add("Beacon");
     }};
 
-    private ArrayList<String> broadcastCycleList = new ArrayList<String>(){{
+    private ArrayList<String> broadcastCycleList = new ArrayList<String>() {{
         add("5s");
         add("10s");
         add("15s");
@@ -392,155 +447,135 @@ public class EditActivity extends AppCompatActivity {
     }};
 
 
-
+    private boolean relayStatus = false;
     private ArrayList<String> saveIntervalList = new ArrayList<>();
-    private TextView deviceNameTV,modelTV,hardwareTV,softwareTV,broadcastCycleTV,saveRecordIntervalTV,
-        tempHighAlarmTV,tempLowAlarmTV,humidityHighAlarmTV,humidityLowAlarmTV,saveCountTV,alarmCountTV,transmittedPowerTV,dinVoltageTV,dinStatusEventTV,
-            dinStatusEventTypeTV,oneWireWorkModeTV,rs485BaudRateTV,broadcastTypeTV,gSensorSensitivityTV,gSensorDetectionIntervalTV,gSensorDetectionDurationTV,
-            beaconMajorSetTV ,  beaconMinorSetTV ,  eddystoneNidSetTV, eddystoneBidSetTV;
-    private SwitchButton ledSwitch,relaySwitch, relayFlashingSwitch,lightSensorEnableSwitch,rs485EnableSwitch,longRangeEnableSwitch,gSensorEnableSwitch,doorEnableSwitch;
-    private LinearLayout saveRecordIntervalLL,humidityHighAlarmLL,humidityLowAlarmLL,recordControlLL,relayLL,relayFlashingLL,transmittedPowerLL,transmittedPowerLineLL,
-            saveRecordIntervaLineLL,humidityHighAlarmLineLL,humidityLowAlarmLineLL, recordControlLineLL,relayLineLL,relayFlashingLineLL,
-            readSaveCountLL,readSaveCountLineLL,readAlarmLL,readAlarmLineLL, clearRecordLineLL, clearRecordLL, lightSensorEnableLineLL, lightSensorEnableLL,
-            readDinVoltageLL,readDinVoltageLineLL,dinStatusEventLL,dinStatusEventLineLL,readDinStatusEventTypeLL,readDinStatusEventTypeLineLL,
-            doutStatusLL,doutStatusLineLL,readAinVoltageLL,readAinVoltageLineLL,setPositiveNegativeWarningLL,setPositiveNegativeWarningLineLL,
-            getOneWireDeviceLL,getOneWireDeviceLineLL,sendCmdSequenceLL,sendCmdSequenceLineLL,
-            sequentialLL,sequentialLineLL,sendDataLL,sendDataLineLL,rs485BaudRateLL,rs485BaudRateLineLL,rs485EnableLL,rs485EnableLineLL,
-            oneWireWorkModeLL,oneWireWorkModeLineLL,longRangeLL,longRangeLineLL,broadcastTypeLL,broadcastTypeLineLL,gSensorEnableLL,gSensorEnableLineLL,
-            tempLowAlarmLL,tempLowAlarmLineLL,tempHighAlarmLL,tempHighAlarmLineLL,ledLL,ledLineLL,broadcastCycleLL,broadcastCycleLineLL,shutdownLL,shutdownLineLL
-            ,doorEnableLL,doorEnableLineLL,gSensorDetectionDurationLL,gSensorDetectionDurationLineLL,gSensorDetectionIntervalLL,gSensorDetectionIntervalLineLL,
-            gSensorSensitivityLL,gSensorSensitivityLineLL,beaconMajorSetLL,beaconMajorSetLineLL,beaconMinorSetLL,beaconMinorSetLineLL,
-            eddystoneNidSetLL,eddystoneNidSetLineLL,eddystoneBidSetLL,eddystoneBidSetLineLL;
-    private Button btnEditDeviceName,btnEditPwd,btnEditBroadcastCycle,btnEditHighTemp,btnEditLowTemp,btnEditHumidityHigh,
-            btnEditHumidityLow,btnEditSaveRecordInterval, btnRefreshSaveCount,btnReadSaveCount,btnStartRecord,btnStopRecord,
-            btnClearRecord,btnResetFactory,btnUpgrade,btnBetaUpgrade,btnRefreshAlarmCount,btnReadAlarmCount,btnEditTransmittedPower,btnDebugUpgrade,btnConnectPwd,btnDinStatusEvent,
-            btnShowAinVoltage,btnPositiveNegativeWarning,btnGeoOneWireDevice,btnOneWireWorkMode,btnRs485BaudRate,btnBroadcastType,btnEditDoutStatus,
-            btnDinVoltageRefresh,btnSendCmdData,btnSendInstructionSequence,btnShutdown,btnGSensorSensitivity,btnGSensorDetectionInterval,btnGSensorDetectionDuration,
-            btnBeaconMajorSet, btnBeaconMinorSet, btnEddystoneNidSet, btnEddystoneBidSet;
-    private void initUI(){
-        relayStatusTV = (TextView)findViewById(R.id.tx_relay_status);
-        deviceNameTV = (TextView)findViewById(R.id.tx_device_name);
-        modelTV = (TextView)findViewById(R.id.tx_device_model);
-        hardwareTV = (TextView)findViewById(R.id.tx_hardware);
-        softwareTV = (TextView)findViewById(R.id.tx_software);
-        broadcastCycleTV = (TextView)findViewById(R.id.tx_broadcast_cycle);
-        saveRecordIntervalTV = (TextView)findViewById(R.id.tx_save_record_interval);
-        tempHighAlarmTV = (TextView)findViewById(R.id.tx_temp_high_alarm);
-        tempLowAlarmTV = (TextView)findViewById(R.id.tx_temp_low_alarm);
-        humidityHighAlarmTV = (TextView)findViewById(R.id.tx_humidity_high_alarm);
-        humidityLowAlarmTV = (TextView)findViewById(R.id.tx_humidity_low_alarm);
-        saveCountTV = (TextView)findViewById(R.id.tx_save_count);
-        alarmCountTV = (TextView)findViewById(R.id.tx_alarm_count);
-        transmittedPowerTV = (TextView)findViewById(R.id.tx_transmitted_power);
-        ledSwitch = (SwitchButton)findViewById(R.id.switch_led);
+    private TextView deviceNameTV, modelTV, hardwareTV, softwareTV, broadcastCycleTV, saveRecordIntervalTV,
+            tempHighAlarmTV, tempLowAlarmTV, humidityHighAlarmTV, humidityLowAlarmTV, saveCountTV, alarmCountTV, transmittedPowerTV, dinVoltageTV, dinStatusEventTV,
+            dinStatusEventTypeTV, oneWireWorkModeTV, rs485BaudRateTV, broadcastTypeTV, gSensorSensitivityTV, gSensorDetectionIntervalTV, gSensorDetectionDurationTV,
+            beaconMajorSetTV, beaconMinorSetTV, eddystoneNidSetTV, eddystoneBidSetTV, btnTriggerTimeTV;
+    private SwitchButton ledSwitch, relaySwitch, lightSensorEnableSwitch, rs485EnableSwitch, longRangeEnableSwitch, gSensorEnableSwitch, doorEnableSwitch;
+    private LinearLayout saveRecordIntervalLL, humidityHighAlarmLL, humidityLowAlarmLL, recordControlLL, relayLL, relayFlashingLL, transmittedPowerLL, transmittedPowerLineLL,
+            saveRecordIntervaLineLL, humidityHighAlarmLineLL, humidityLowAlarmLineLL, recordControlLineLL, relayLineLL, relayFlashingLineLL,
+            readSaveCountLL, readSaveCountLineLL, readAlarmLL, readAlarmLineLL, clearRecordLineLL, clearRecordLL, lightSensorEnableLineLL, lightSensorEnableLL,
+            readDinVoltageLL, readDinVoltageLineLL, dinStatusEventLL, dinStatusEventLineLL, readDinStatusEventTypeLL, readDinStatusEventTypeLineLL,
+            doutStatusLL, doutStatusLineLL, readAinVoltageLL, readAinVoltageLineLL, setPositiveNegativeWarningLL, setPositiveNegativeWarningLineLL,
+            getOneWireDeviceLL, getOneWireDeviceLineLL, sendCmdSequenceLL, sendCmdSequenceLineLL,
+            sequentialLL, sequentialLineLL, sendDataLL, sendDataLineLL, rs485BaudRateLL, rs485BaudRateLineLL, rs485EnableLL, rs485EnableLineLL,
+            oneWireWorkModeLL, oneWireWorkModeLineLL, longRangeLL, longRangeLineLL, broadcastTypeLL, broadcastTypeLineLL, gSensorEnableLL, gSensorEnableLineLL,
+            tempLowAlarmLL, tempLowAlarmLineLL, tempHighAlarmLL, tempHighAlarmLineLL, ledLL, ledLineLL, broadcastCycleLL, broadcastCycleLineLL, shutdownLL, shutdownLineLL, doorEnableLL, doorEnableLineLL, gSensorDetectionDurationLL, gSensorDetectionDurationLineLL, gSensorDetectionIntervalLL, gSensorDetectionIntervalLineLL,
+            gSensorSensitivityLL, gSensorSensitivityLineLL, beaconMajorSetLL, beaconMajorSetLineLL, beaconMinorSetLL, beaconMinorSetLineLL,
+            eddystoneNidSetLL, eddystoneNidSetLineLL, eddystoneBidSetLL, eddystoneBidSetLineLL, btnTriggerTimeLL, btnTriggerTimeLineLL;
+    private Button btnEditDeviceName, btnEditPwd, btnEditBroadcastCycle, btnEditHighTemp, btnEditLowTemp, btnEditHumidityHigh,
+            btnEditHumidityLow, btnEditSaveRecordInterval, btnRefreshSaveCount, btnReadSaveCount, btnStartRecord, btnStopRecord,
+            btnClearRecord, btnResetFactory, btnUpgrade, btnBetaUpgrade, btnRefreshAlarmCount, btnReadAlarmCount, btnEditTransmittedPower, btnDebugUpgrade, btnConnectPwd, btnDinStatusEvent,
+            btnShowAinVoltage, btnPositiveNegativeWarning, btnGeoOneWireDevice, btnOneWireWorkMode, btnRs485BaudRate, btnBroadcastType, btnEditDoutStatus,
+            btnDinVoltageRefresh, btnSendCmdData, btnSendInstructionSequence, btnShutdown, btnGSensorSensitivity, btnGSensorDetectionInterval, btnGSensorDetectionDuration,
+            btnBeaconMajorSet, btnBeaconMinorSet, btnEddystoneNidSet, btnEddystoneBidSet, btnSetBtnTriggerTime, btnFlashingRelay;
+
+    private void initUI() {
+        relayStatusTV = (TextView) findViewById(R.id.tx_relay_status);
+        deviceNameTV = (TextView) findViewById(R.id.tx_device_name);
+        modelTV = (TextView) findViewById(R.id.tx_device_model);
+        hardwareTV = (TextView) findViewById(R.id.tx_hardware);
+        softwareTV = (TextView) findViewById(R.id.tx_software);
+        broadcastCycleTV = (TextView) findViewById(R.id.tx_broadcast_cycle);
+        saveRecordIntervalTV = (TextView) findViewById(R.id.tx_save_record_interval);
+        tempHighAlarmTV = (TextView) findViewById(R.id.tx_temp_high_alarm);
+        tempLowAlarmTV = (TextView) findViewById(R.id.tx_temp_low_alarm);
+        humidityHighAlarmTV = (TextView) findViewById(R.id.tx_humidity_high_alarm);
+        humidityLowAlarmTV = (TextView) findViewById(R.id.tx_humidity_low_alarm);
+        saveCountTV = (TextView) findViewById(R.id.tx_save_count);
+        alarmCountTV = (TextView) findViewById(R.id.tx_alarm_count);
+        transmittedPowerTV = (TextView) findViewById(R.id.tx_transmitted_power);
+        ledSwitch = (SwitchButton) findViewById(R.id.switch_led);
         ledSwitch.setOnSwitchChangeListener(new SwitchButton.OnSwitchChangeListener() {
             @Override
             public void onSwitchChanged(boolean open) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     ledSwitch.setSwitchStatus(!ledSwitch.getSwitchStatus());
                     return;
                 }
                 writeLedOpenStatus();
             }
         });
-        lightSensorEnableSwitch = (SwitchButton)findViewById(R.id.switch_light_sensor);
+        lightSensorEnableSwitch = (SwitchButton) findViewById(R.id.switch_light_sensor);
         lightSensorEnableSwitch.setOnSwitchChangeListener(new SwitchButton.OnSwitchChangeListener() {
             @Override
             public void onSwitchChanged(boolean open) {
-                if(!connectSucc){
+                if (!connectSucc) {
                     lightSensorEnableSwitch.setSwitchStatus(!lightSensorEnableSwitch.getSwitchStatus());
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 writeLightSensorEnableStatus();
             }
         });
-        relaySwitch = (SwitchButton)findViewById(R.id.switch_relay);
+        relaySwitch = (SwitchButton) findViewById(R.id.switch_relay);
         relaySwitch.setOnSwitchChangeListener(new SwitchButton.OnSwitchChangeListener() {
             @Override
             public void onSwitchChanged(boolean open) {
-                if(!connectSucc){
+                if (!connectSucc) {
                     relaySwitch.setSwitchStatus(!relaySwitch.getSwitchStatus());
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
-                if(Integer.valueOf(software) >= 18){
-                    pvRelayType.show();
-                }else{
-                    if(MyUtils.isDebug){
-                        writeRelayStatus();
-                        return;
-                    }
-                    SweetAlertDialog confirmRelayDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.NORMAL_TYPE);
-                    confirmRelayDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
-                    confirmRelayDlg.setTitleText(getResources().getString(R.string.confirm_relay_warning));
-                    confirmRelayDlg.setCancelable(true);
-                    confirmRelayDlg.setCancelText(getResources().getString(R.string.cancel));
-                    confirmRelayDlg.setConfirmText(getResources().getString(R.string.confirm));
-                    confirmRelayDlg.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
-                        @Override
-                        public void onClick(SweetAlertDialog sweetAlertDialog) {
-                            sweetAlertDialog.hide();
-                            writeRelayStatus();
-                        }
-                    });
-                    confirmRelayDlg.show();
-                }
-            }
-        });
-        relayFlashingSwitch = (SwitchButton)findViewById(R.id.switch_flashing_relay);
-        relayFlashingSwitch.setOnSwitchChangeListener(new SwitchButton.OnSwitchChangeListener() {
-            @Override
-            public void onSwitchChanged(boolean open) {
-                if(!connectSucc){
-                    relayFlashingSwitch.setSwitchStatus(!relayFlashingSwitch.getSwitchStatus());
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                if(MyUtils.isDebug){
-                    writeFlashingRelayStatus();
+                if (MyUtils.isDebug) {
+                    writeRelayStatus();
                     return;
                 }
                 SweetAlertDialog confirmRelayDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.NORMAL_TYPE);
                 confirmRelayDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
-                confirmRelayDlg.setTitleText(getResources().getString(R.string.confirm_regular_relay_warning));
+                confirmRelayDlg.setTitleText(getResources().getString(R.string.confirm_relay_warning));
                 confirmRelayDlg.setCancelable(true);
                 confirmRelayDlg.setCancelText(getResources().getString(R.string.cancel));
                 confirmRelayDlg.setConfirmText(getResources().getString(R.string.confirm));
-                confirmRelayDlg.setCancelClickListener(new SweetAlertDialog.OnSweetClickListener() {
-                    @Override
-                    public void onClick(SweetAlertDialog sweetAlertDialog) {
-                        sweetAlertDialog.hide();
-                        relayFlashingSwitch.setSwitchStatus(!relayFlashingSwitch.getSwitchStatus());
-                    }
-                });
                 confirmRelayDlg.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
                     @Override
                     public void onClick(SweetAlertDialog sweetAlertDialog) {
                         sweetAlertDialog.hide();
-                        writeFlashingRelayStatus();
+                        writeRelayStatus();
+                    }
+                });
+                confirmRelayDlg.setCancelClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                    @Override
+                    public void onClick(SweetAlertDialog sweetAlertDialog) {
+                        sweetAlertDialog.hide();
+                        relaySwitch.setSwitchStatus(!relaySwitch.getSwitchStatus());
                     }
                 });
                 confirmRelayDlg.show();
             }
         });
-        pvRelayType = new OptionsPickerBuilder(EditActivity.this, new OnOptionsSelectListener() {
+        btnFlashingRelay = (Button) findViewById(R.id.btn_flashing_relay);
+        btnFlashingRelay.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onOptionsSelect(int options1, int option2, int options3 ,View v) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                pvRelayType.show();
+            }
+        }); 
+        pvRelayType = new OptionPicker(this);
+        pvRelayType.setData(relayTypeList);
+        pvRelayType.setOnOptionPickedListener(new SingleOptionSelectClickListener() {
+            @Override
+            public void onSingleOptionClick(int position, Object item) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 //返回的分别是三个级别的选中位置
-                if(options1 == 0){
-                    if(MyUtils.isDebug){
-                        writeRelayStatus();
+                if (position == 0) {
+                    if (MyUtils.isDebug) {
+                        writeFlashingRelayStatus();
                         return;
                     }
                     SweetAlertDialog confirmRelayDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.NORMAL_TYPE);
                     confirmRelayDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
-                    confirmRelayDlg.setTitleText(getResources().getString(R.string.confirm_relay_warning));
+                    confirmRelayDlg.setTitleText(getResources().getString(R.string.confirm_regular_relay_warning));
                     confirmRelayDlg.setCancelable(true);
                     confirmRelayDlg.setCancelText(getResources().getString(R.string.cancel));
                     confirmRelayDlg.setConfirmText(getResources().getString(R.string.confirm));
@@ -548,21 +583,20 @@ public class EditActivity extends AppCompatActivity {
                         @Override
                         public void onClick(SweetAlertDialog sweetAlertDialog) {
                             sweetAlertDialog.hide();
-                            relaySwitch.setSwitchStatus(!relaySwitch.getSwitchStatus());
                         }
                     });
                     confirmRelayDlg.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
                         @Override
                         public void onClick(SweetAlertDialog sweetAlertDialog) {
                             sweetAlertDialog.hide();
-                            writeRelayStatus();
+                            writeFlashingRelayStatus();
                         }
                     });
                     confirmRelayDlg.show();
-                }else if(options1 == 1){
+                } else if (position == 1) {
                     SweetAlertDialog confirmDelayRelayDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.INPUT_TYPE);
                     confirmDelayRelayDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
-                    confirmDelayRelayDlg.setTitleText(getResources().getString(R.string.confirm_relay_warning));
+                    confirmDelayRelayDlg.setTitleText(getResources().getString(R.string.confirm_delay_relay_warning));
                     confirmDelayRelayDlg.setCancelable(true);
                     confirmDelayRelayDlg.setInputType(InputType.TYPE_CLASS_NUMBER);
                     confirmDelayRelayDlg.setCancelText(getResources().getString(R.string.cancel));
@@ -571,51 +605,54 @@ public class EditActivity extends AppCompatActivity {
                         @Override
                         public void onClick(SweetAlertDialog sweetAlertDialog) {
                             sweetAlertDialog.hide();
-                            relaySwitch.setSwitchStatus(!relaySwitch.getSwitchStatus());
                         }
                     });
                     confirmDelayRelayDlg.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
                         @Override
                         public void onClick(SweetAlertDialog sweetAlertDialog) {
                             String delayValue = sweetAlertDialog.getInputText();
-                            if(delayValue.length() > 0){
+                            if (delayValue.length() > 0) {
                                 int delayInt = Float.valueOf(delayValue).intValue();
-                                if (delayInt >= 3 && delayInt <= 255){
+                                if (delayInt >= 1 && delayInt <= 600) {
                                     writeDelayRelayStatus(delayInt);
                                     sweetAlertDialog.hide();
-                                }else{
-                                    Toast.makeText(EditActivity.this,R.string.relay_delay_error_warning,Toast.LENGTH_SHORT).show();
+//                                    relayStatusTV.setText(R.string.relay_delay);
+                                } else {
+                                    Toast.makeText(EditActivity.this, R.string.relay_delay_error_warning, Toast.LENGTH_SHORT).show();
                                 }
-                            }else{
-                                Toast.makeText(EditActivity.this,R.string.input_error,Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(EditActivity.this, R.string.input_error, Toast.LENGTH_SHORT).show();
                             }
                         }
                     });
                     confirmDelayRelayDlg.show();
-                }else if(options1 ==2){
+                } else if (position == 2) {
                     relaySwitch.setSwitchStatus(!relaySwitch.getSwitchStatus());
-                    Intent intent = new Intent(EditActivity.this,EditPulseDelayActivity.class);
-                    startActivityForResult(intent,REQUEST_EDIT_PULSE_DELAY);
+                    Intent intent = new Intent(EditActivity.this, EditPulseDelayActivity.class);
+                    startActivityForResult(intent, REQUEST_EDIT_PULSE_DELAY);
+                }else if(position == 3){
+                    relaySwitch.setSwitchStatus(!relaySwitch.getSwitchStatus());
+                    Intent intent = new Intent(EditActivity.this, EditSecondPulseDelayActivity.class);
+                    startActivityForResult(intent, REQUEST_EDIT_SECOND_PULSE_DELAY);
                 }
             }
-        }).addOnCancelClickListener(new View.OnClickListener() {
+        });
+        pvRelayType.setOnCancelListener(new DialogInterface.OnCancelListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onCancel(DialogInterface dialogInterface) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 relaySwitch.setSwitchStatus(!relaySwitch.getSwitchStatus());
             }
-        }).build();
-
-        pvRelayType.setPicker(relayTypeList);
-        btnEditDeviceName = (Button)findViewById(R.id.btn_edit_device_name);
-        btnEditDeviceName.setOnClickListener(new View.OnClickListener() {
+        });
+        btnEditDeviceName = (Button) findViewById(R.id.btn_edit_device_name);
+        btnEditDeviceName.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 SweetAlertDialog editDeviceNameDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.INPUT_TYPE);
@@ -628,154 +665,155 @@ public class EditActivity extends AppCompatActivity {
                     @Override
                     public void onClick(SweetAlertDialog sweetAlertDialog) {
                         String deviceName = sweetAlertDialog.getInputText();
-                        if(deviceName.length() >= 3 && deviceName.length() <= 8){
+                        if (deviceName.length() >= 3 && deviceName.length() <= 8) {
                             sweetAlertDialog.hide();
                             writeDeviceName(deviceName);
-                        }else{
-                            Toast.makeText(EditActivity.this,R.string.device_name_len_error,Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(EditActivity.this, R.string.device_name_len_error, Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
                 editDeviceNameDlg.show();
             }
         });
-        btnEditPwd = (Button)findViewById(R.id.btn_edit_pwd);
-        btnEditPwd.setOnClickListener(new View.OnClickListener() {
+        btnEditPwd = (Button) findViewById(R.id.btn_edit_pwd);
+        btnEditPwd.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
-                Intent intent = new Intent( EditActivity.this, EditPwdActivity.class);
-                intent.putExtra("oldPwd",confirmPwd);
-                startActivityForResult(intent,REQUEST_CHANGE_PWD);
+                Intent intent = new Intent(EditActivity.this, EditPwdActivity.class);
+                intent.putExtra("oldPwd", confirmPwd);
+                startActivityForResult(intent, REQUEST_CHANGE_PWD);
             }
         });
-        pvBroadcastCycle = new OptionsPickerBuilder(EditActivity.this, new OnOptionsSelectListener() {
+        pvBroadcastCycle = new OptionPicker(this);
+        pvBroadcastCycle.setData(broadcastCycleList);
+        pvBroadcastCycle.setOnOptionPickedListener(new SingleOptionSelectClickListener() {
             @Override
-            public void onOptionsSelect(int options1, int option2, int options3 ,View v) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleOptionClick(int position, Object item) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 //返回的分别是三个级别的选中位置
-                int broadcastCycle = 5 * (options1 + 1);
+                int broadcastCycle = 5 * (position + 1);
                 writeBroadcastData(broadcastCycle);
             }
-        }).build();
-        pvBroadcastCycle.setPicker(broadcastCycleList);
-        btnEditBroadcastCycle = (Button)findViewById(R.id.btn_edit_broadcast_cycle);
-        btnEditBroadcastCycle.setOnClickListener(new View.OnClickListener() {
+        });
+        btnEditBroadcastCycle = (Button) findViewById(R.id.btn_edit_broadcast_cycle);
+        btnEditBroadcastCycle.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
-                pvBroadcastCycle.setSelectOptions(0);
-                if(broadcastCycleTV.getText().toString().equals("10s")){
-                    pvBroadcastCycle.setSelectOptions(1);
-                }
+//                pvBroadcastCycle.setDefaultPosition(0);
+//                if (broadcastCycleTV.getText().toString().equals("10s")) {
+//                    pvBroadcastCycle.setDefaultPosition(1);
+//                }
                 pvBroadcastCycle.show();
 
             }
         });
-        btnEditHighTemp = (Button)findViewById(R.id.btn_edit_temp_high_alarm);
-        btnEditHighTemp.setOnClickListener(new View.OnClickListener() {
+        btnEditHighTemp = (Button) findViewById(R.id.btn_edit_temp_high_alarm);
+        btnEditHighTemp.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
-                Intent intent = new Intent( EditActivity.this, EditRangeValueActivity.class);
-                intent.putExtra("highValue",BleDeviceData.getCurTemp(EditActivity.this,tempAlarmUp));
-                intent.putExtra("lowValue",BleDeviceData.getCurTemp(EditActivity.this,tempAlarmDown));
-                intent.putExtra("highValueOpen",tempAlarmUpOpen);
-                intent.putExtra("lowValueOpen",tempAlarmDownOpen);
-                intent.putExtra("editType","temp");
-                startActivityForResult(intent,REQUEST_CHANGE_TEMP);
+                Intent intent = new Intent(EditActivity.this, EditRangeValueActivity.class);
+                intent.putExtra("highValue", BleDeviceData.getCurTemp(EditActivity.this, tempAlarmUp));
+                intent.putExtra("lowValue", BleDeviceData.getCurTemp(EditActivity.this, tempAlarmDown));
+                intent.putExtra("highValueOpen", tempAlarmUpOpen);
+                intent.putExtra("lowValueOpen", tempAlarmDownOpen);
+                intent.putExtra("editType", "temp");
+                intent.putExtra("deviceType", deviceType);
+                startActivityForResult(intent, REQUEST_CHANGE_TEMP);
             }
         });
-        btnEditLowTemp = (Button)findViewById(R.id.btn_edit_temp_low_alarm);
-        btnEditLowTemp.setOnClickListener(new View.OnClickListener() {
+        btnEditLowTemp = (Button) findViewById(R.id.btn_edit_temp_low_alarm);
+        btnEditLowTemp.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
-                Intent intent = new Intent( EditActivity.this, EditRangeValueActivity.class);
-                intent.putExtra("highValue",BleDeviceData.getCurTemp(EditActivity.this,tempAlarmUp));
-                intent.putExtra("lowValue",BleDeviceData.getCurTemp(EditActivity.this,tempAlarmDown));
-                intent.putExtra("highValueOpen",tempAlarmUpOpen);
-                intent.putExtra("lowValueOpen",tempAlarmDownOpen);
-                intent.putExtra("editType","temp");
-                startActivityForResult(intent,REQUEST_CHANGE_TEMP);
+                Intent intent = new Intent(EditActivity.this, EditRangeValueActivity.class);
+                intent.putExtra("highValue", BleDeviceData.getCurTemp(EditActivity.this, tempAlarmUp));
+                intent.putExtra("lowValue", BleDeviceData.getCurTemp(EditActivity.this, tempAlarmDown));
+                intent.putExtra("highValueOpen", tempAlarmUpOpen);
+                intent.putExtra("lowValueOpen", tempAlarmDownOpen);
+                intent.putExtra("editType", "temp");
+                intent.putExtra("deviceType", deviceType);
+                startActivityForResult(intent, REQUEST_CHANGE_TEMP);
             }
         });
-        btnEditHumidityHigh = (Button)findViewById(R.id.btn_edit_humidity_high_alarm);
-        btnEditHumidityHigh.setOnClickListener(new View.OnClickListener() {
+        btnEditHumidityHigh = (Button) findViewById(R.id.btn_edit_humidity_high_alarm);
+        btnEditHumidityHigh.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
-                Intent intent = new Intent( EditActivity.this, EditRangeValueActivity.class);
-                intent.putExtra("highValue",String.valueOf(humidityAlarmUp));
-                intent.putExtra("lowValue",String.valueOf(humidityAlarmDown));
-                intent.putExtra("highValueOpen",humidityAlarmUpOpen);
-                intent.putExtra("lowValueOpen",humidityAlarmDownOpen);
-                intent.putExtra("editType","humidity");
-                startActivityForResult(intent,REQUEST_CHANGE_HUMIDITY);
+                Intent intent = new Intent(EditActivity.this, EditRangeValueActivity.class);
+                intent.putExtra("highValue", String.valueOf(humidityAlarmUp));
+                intent.putExtra("lowValue", String.valueOf(humidityAlarmDown));
+                intent.putExtra("highValueOpen", humidityAlarmUpOpen);
+                intent.putExtra("lowValueOpen", humidityAlarmDownOpen);
+                intent.putExtra("editType", "humidity");
+                intent.putExtra("deviceType", deviceType);
+                startActivityForResult(intent, REQUEST_CHANGE_HUMIDITY);
             }
         });
-        btnEditHumidityLow = (Button)findViewById(R.id.btn_edit_humidity_low_alarm);
-        btnEditHumidityLow.setOnClickListener(new View.OnClickListener() {
+        btnEditHumidityLow = (Button) findViewById(R.id.btn_edit_humidity_low_alarm);
+        btnEditHumidityLow.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
-                Intent intent = new Intent( EditActivity.this, EditRangeValueActivity.class);
-                intent.putExtra("highValue",String.valueOf(humidityAlarmUp));
-                intent.putExtra("lowValue",String.valueOf(humidityAlarmDown));
-                intent.putExtra("highValueOpen",humidityAlarmUpOpen);
-                intent.putExtra("lowValueOpen",humidityAlarmDownOpen);
-                intent.putExtra("editType","humidity");
-                startActivityForResult(intent,REQUEST_CHANGE_HUMIDITY);
+                Intent intent = new Intent(EditActivity.this, EditRangeValueActivity.class);
+                intent.putExtra("highValue", String.valueOf(humidityAlarmUp));
+                intent.putExtra("lowValue", String.valueOf(humidityAlarmDown));
+                intent.putExtra("highValueOpen", humidityAlarmUpOpen);
+                intent.putExtra("lowValueOpen", humidityAlarmDownOpen);
+                intent.putExtra("editType", "humidity");
+                intent.putExtra("deviceType", deviceType);
+                startActivityForResult(intent, REQUEST_CHANGE_HUMIDITY);
             }
         });
         saveIntervalList.clear();
-        for(int i = 6;i <= 60;i++){
+        for (int i = 6; i <= 60; i++) {
             saveIntervalList.add(String.valueOf(i * 10));
         }
-        pvSaveInterval = new OptionsPickerBuilder(EditActivity.this, new OnOptionsSelectListener() {
+        pvSaveInterval = new OptionPicker(this);
+        pvSaveInterval.setData(saveIntervalList);
+        pvSaveInterval.setOnOptionPickedListener(new SingleOptionSelectClickListener() {
             @Override
-            public void onOptionsSelect(int options1, int option2, int options3 ,View v) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleOptionClick(int position, Object item) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
-                //返回的分别是三个级别的选中位置
-//                String tx = options1Items.get(options1).getPickerViewText()
-//                        + options2Items.get(options1).get(option2)
-//                        + options3Items.get(options1).get(option2).get(options3).getPickerViewText();
-//                tvOptions.setText(tx);
-                String selected = saveIntervalList.get(options1);
+                String selected = saveIntervalList.get(position);
                 writeSaveRecordIntervalData(Integer.valueOf(selected));
             }
-        }).build();
-        pvSaveInterval.setPicker(saveIntervalList);
-        btnEditSaveRecordInterval = (Button)findViewById(R.id.btn_edit_save_record_interval);
-        btnEditSaveRecordInterval.setOnClickListener(new View.OnClickListener() {
+        });
+        btnEditSaveRecordInterval = (Button) findViewById(R.id.btn_edit_save_record_interval);
+        btnEditSaveRecordInterval.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
 //                SweetAlertDialog editSaveRecordIntervalDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.INPUT_TYPE);
@@ -803,125 +841,125 @@ public class EditActivity extends AppCompatActivity {
 //                    }
 //                });
 //                editSaveRecordIntervalDlg.show();
-                pvSaveInterval.setSelectOptions(0);
+                pvSaveInterval.setDefaultPosition(0);
                 String curItem = saveRecordIntervalTV.getText().toString().replace("s", "");
-                for(int i = 0;i < saveIntervalList.size();i++){
-                    if(curItem.equals(saveIntervalList.get(i))){
-                        pvSaveInterval.setSelectOptions(i);
+                for (int i = 0; i < saveIntervalList.size(); i++) {
+                    if (curItem.equals(saveIntervalList.get(i))) {
+                        pvSaveInterval.setDefaultPosition(i);
                     }
                 }
 
                 pvSaveInterval.show();
             }
         });
-        btnRefreshSaveCount = (Button)findViewById(R.id.btn_refresh_save_count);
-        btnRefreshSaveCount.setOnClickListener(new View.OnClickListener() {
+        btnRefreshSaveCount = (Button) findViewById(R.id.btn_refresh_save_count);
+        btnRefreshSaveCount.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 showWaitingDlg(getResources().getString(R.string.waiting));
                 readSaveCount();
             }
         });
-        btnRefreshAlarmCount = (Button)findViewById(R.id.btn_refresh_alarm_count);
-        btnRefreshAlarmCount.setOnClickListener(new View.OnClickListener() {
+        btnRefreshAlarmCount = (Button) findViewById(R.id.btn_refresh_alarm_count);
+        btnRefreshAlarmCount.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 showWaitingDlg(getResources().getString(R.string.waiting));
                 readSaveCount();
             }
         });
-        btnReadSaveCount = (Button)findViewById(R.id.btn_read_save_count);
-        btnReadSaveCount.setOnClickListener(new View.OnClickListener() {
+        btnReadSaveCount = (Button) findViewById(R.id.btn_read_save_count);
+        btnReadSaveCount.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
-                if(deviceType.equals("S10")){
+                if (deviceType.equals("S10")) {
                     getExtSensorTypeNextCtrl = GET_EXT_SENSOR_TYPE_NEXT_DO_GET_HIS_DATA;
                     readExtSensorType();
-                }else{
+                } else {
                     startHistory = false;
-                    Intent intent = new Intent(EditActivity.this,HistorySelectActivity.class);
-                    intent.putExtra("mac",mac);
-                    intent.putExtra("deviceType",deviceType);
-                    intent.putExtra("id",id);
-                    intent.putExtra("reportType","history");
-                    startActivityForResult(intent,REQUEST_READ_HISTORY_TIME);
+                    Intent intent = new Intent(EditActivity.this, HistorySelectActivity.class);
+                    intent.putExtra("mac", mac);
+                    intent.putExtra("deviceType", deviceType);
+                    intent.putExtra("id", id);
+                    intent.putExtra("reportType", "history");
+                    startActivityForResult(intent, REQUEST_READ_HISTORY_TIME);
                 }
 
             }
         });
-        btnReadAlarmCount = (Button)findViewById(R.id.btn_read_alarm_count);
-        btnReadAlarmCount.setOnClickListener(new View.OnClickListener() {
+        btnReadAlarmCount = (Button) findViewById(R.id.btn_read_alarm_count);
+        btnReadAlarmCount.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 startHistory = false;
-                Intent intent = new Intent(EditActivity.this,HistorySelectActivity.class);
-                intent.putExtra("mac",mac);
-                intent.putExtra("deviceType",deviceType);
-                intent.putExtra("id",id);
-                intent.putExtra("reportType","alarm");
-                startActivityForResult(intent,REQUEST_READ_ALARM_TIME);
+                Intent intent = new Intent(EditActivity.this, HistorySelectActivity.class);
+                intent.putExtra("mac", mac);
+                intent.putExtra("deviceType", deviceType);
+                intent.putExtra("id", id);
+                intent.putExtra("reportType", "alarm");
+                startActivityForResult(intent, REQUEST_READ_ALARM_TIME);
             }
         });
-        btnStartRecord = (Button)findViewById(R.id.btn_start_record);
-        btnStartRecord.setOnClickListener(new View.OnClickListener() {
+        btnStartRecord = (Button) findViewById(R.id.btn_start_record);
+        btnStartRecord.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
-                if(deviceType.equals("S10")){
+                if (deviceType.equals("S10")) {
                     getExtSensorTypeNextCtrl = GET_EXT_SENSOR_TYPE_NEXT_DO_START_RECORD;
                     readExtSensorType();
-                }else{
+                } else {
                     startRecord();
                 }
             }
         });
-        btnStopRecord = (Button)findViewById(R.id.btn_stop_record);
-        btnStopRecord.setOnClickListener(new View.OnClickListener() {
+        btnStopRecord = (Button) findViewById(R.id.btn_stop_record);
+        btnStopRecord.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 stopRecord();
             }
         });
-        btnClearRecord = (Button)findViewById(R.id.btn_clear_record);
-        btnClearRecord.setOnClickListener(new View.OnClickListener() {
+        btnClearRecord = (Button) findViewById(R.id.btn_clear_record);
+        btnClearRecord.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 clearRecord();
             }
         });
-        btnResetFactory = (Button)findViewById(R.id.btn_reset_factory);
-        btnResetFactory.setOnClickListener(new View.OnClickListener() {
+        btnResetFactory = (Button) findViewById(R.id.btn_reset_factory);
+        btnResetFactory.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 SweetAlertDialog confirmRelayDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.NORMAL_TYPE);
@@ -941,12 +979,12 @@ public class EditActivity extends AppCompatActivity {
 
             }
         });
-        btnUpgrade = (Button)findViewById(R.id.btn_upgrade);
-        btnUpgrade.setOnClickListener(new View.OnClickListener() {
+        btnUpgrade = (Button) findViewById(R.id.btn_upgrade);
+        btnUpgrade.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 SweetAlertDialog confirmUpgradeDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.NORMAL_TYPE);
@@ -967,12 +1005,12 @@ public class EditActivity extends AppCompatActivity {
                 confirmUpgradeDlg.show();
             }
         });
-        btnBetaUpgrade = (Button)findViewById(R.id.btn_beta_upgrade);
-        btnBetaUpgrade.setOnClickListener(new View.OnClickListener() {
+        btnBetaUpgrade = (Button) findViewById(R.id.btn_beta_upgrade);
+        btnBetaUpgrade.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 SweetAlertDialog confirmUpgradeDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.NORMAL_TYPE);
@@ -993,37 +1031,33 @@ public class EditActivity extends AppCompatActivity {
                 confirmUpgradeDlg.show();
             }
         });
-        pvTransmittedPower = new OptionsPickerBuilder(EditActivity.this, new OnOptionsSelectListener() {
+        pvTransmittedPower = new OptionPicker(this);
+        pvTransmittedPower.setData(transmittedPowerList);
+        pvTransmittedPower.setOnOptionPickedListener(new SingleOptionSelectClickListener() {
             @Override
-            public void onOptionsSelect(int options1, int option2, int options3 ,View v) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleOptionClick(int position, Object item) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
-                //返回的分别是三个级别的选中位置
-//                String tx = options1Items.get(options1).getPickerViewText()
-//                        + options2Items.get(options1).get(option2)
-//                        + options3Items.get(options1).get(option2).get(options3).getPickerViewText();
-//                tvOptions.setText(tx);
-                String selected = transmittedPowerList.get(options1);
+                String selected = transmittedPowerList.get(position);
                 writeTransmittedPower(Integer.valueOf(selected));
             }
-        }).build();
-        pvTransmittedPower.setPicker(transmittedPowerList);
+        });
 
-        btnEditTransmittedPower = (Button)findViewById(R.id.btn_edit_transmitted_power);
-        btnEditTransmittedPower.setOnClickListener(new View.OnClickListener() {
+        btnEditTransmittedPower = (Button) findViewById(R.id.btn_edit_transmitted_power);
+        btnEditTransmittedPower.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
-                pvTransmittedPower.setSelectOptions(0);
-                for(int i = 0;i < transmittedPowerList.size();i++){
-                    String item  = transmittedPowerList.get(i);
-                    if(String.valueOf(transmittedPower).equals(item)){
-                        pvTransmittedPower.setSelectOptions(i);
+                pvTransmittedPower.setDefaultPosition(0);
+                for (int i = 0; i < transmittedPowerList.size(); i++) {
+                    String item = transmittedPowerList.get(i);
+                    if (String.valueOf(transmittedPower).equals(item)) {
+                        pvTransmittedPower.setDefaultPosition(i);
                         break;
                     }
                 }
@@ -1031,14 +1065,14 @@ public class EditActivity extends AppCompatActivity {
             }
         });
         btnDebugUpgrade = (Button) findViewById(R.id.btn_debug_upgrade);
-        if (MyUtils.isDebug){
+        if (MyUtils.isDebug) {
             btnDebugUpgrade.setVisibility(View.VISIBLE);
         }
-        btnDebugUpgrade.setOnClickListener(new View.OnClickListener() {
+        btnDebugUpgrade.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View v) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View v) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 SweetAlertDialog urlDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.INPUT_TYPE);
@@ -1049,22 +1083,20 @@ public class EditActivity extends AppCompatActivity {
                 urlDlg.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
                     @Override
                     public void onClick(SweetAlertDialog sweetAlertDialog) {
-                        if (sweetAlertDialog.getInputText() != null && sweetAlertDialog.getInputText().trim() != null){
+                        if (sweetAlertDialog.getInputText() != null && sweetAlertDialog.getInputText().trim() != null) {
                             sweetAlertDialog.hide();
-                            mClient.disconnect(mac);
-                            connectSucc = false;
                             showWaitingDlg(getResources().getString(R.string.prepare_upgrade));
                             DownloadFileManager.instance().geetDebugUpdateFileUrl(EditActivity.this, sweetAlertDialog.getInputText().trim(), new DownloadFileManager.Callback() {
                                 @RequiresApi(api = Build.VERSION_CODES.O)
                                 @Override
                                 public void callback(StatusCode code, String result) {
-                                    if(StatusCode.OK == code){
-                                        updateDFU(mac,deviceName,result);
-                                    }else{
-                                        if(waitingDlg != null){
+                                    if (StatusCode.OK == code) {
+                                        updateDeviceSoftware(mac, deviceName, result);
+                                    } else {
+                                        if (waitingDlg != null) {
                                             waitingDlg.hide();
                                         }
-                                        Toast.makeText(EditActivity.this,R.string.download_file_fail,Toast.LENGTH_LONG).show();
+                                        Toast.makeText(EditActivity.this, R.string.download_file_fail, Toast.LENGTH_LONG).show();
                                     }
                                 }
                             });
@@ -1075,276 +1107,308 @@ public class EditActivity extends AppCompatActivity {
                 urlDlg.show();
             }
         });
+        ImageView flashRelayTipsImg = (ImageView) findViewById(R.id.image_flashing_relay_tips);
+        flashRelayTipsImg.setOnClickListener(new SingleClickListener() {
+            @Override
+            public void onSingleClick(View view) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(EditActivity.this);
+                builder.setTitle(R.string.warning);
+
+                // 创建一个可滚动的布局
+                ScrollView scrollView = new ScrollView(EditActivity.this);
+                TextView textView = new TextView(EditActivity.this);
+                textView.setPadding(20, 20, 20, 20); // 设置内边距
+                textView.setTextSize(16f); // 设置文本大小
+                textView.setText(R.string.flashing_relay_tips);
+                textView.setMovementMethod(ScrollingMovementMethod.getInstance()); // 允许文本滚动
+                scrollView.addView(textView);
+
+                // 将滚动视图设置为对话框的内容视图
+                builder.setView(scrollView);
+
+                // 添加按钮，如确定/取消按钮
+                builder.setPositiveButton(R.string.confirm, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss(); // 关闭对话框
+                    }
+                });
+
+                // 显示对话框
+                AlertDialog alertDialog = builder.create();
+                alertDialog.show();
+            }
+        });
 //        btnConnectPwd = (Button)findViewById(R.id.btn_edit_connect_pwd) ;
-//        btnConnectPwd.setOnClickListener(new View.OnClickListener() {
+//        btnConnectPwd.setOnClickListener(new SingleClickListener() {
 //            @Override
-//            public void onClick(View view) {
+//            public void onSingleClick(View view) {
 //                Intent intent = new Intent( EditActivity.this, EditConnectPwdActivity.class);
 //                startActivityForResult(intent,REQUEST_CHANGE_CONNECT_PWD);
 //            }
 //        });
-        dinVoltageTV = (TextView)findViewById(R.id.tx_din_voltage);
-        dinStatusEventTV = (TextView)findViewById(R.id.tx_din_status_event);
-        pvDinStatusEvent = new OptionsPickerBuilder(EditActivity.this, new OnOptionsSelectListener() {
+        dinVoltageTV = (TextView) findViewById(R.id.tx_din_voltage);
+        dinStatusEventTV = (TextView) findViewById(R.id.tx_din_status_event);
+        pvDinStatusEvent = new OptionPicker(this);
+        pvDinStatusEvent.setData(dinStatusEventList);
+        pvDinStatusEvent.setOnOptionPickedListener(new SingleOptionSelectClickListener() {
             @Override
-            public void onOptionsSelect(int options1, int option2, int options3 ,View v) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleOptionClick(int position, Object item) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
-                //返回的分别是三个级别的选中位置
-//                String tx = options1Items.get(options1).getPickerViewText()
-//                        + options2Items.get(options1).get(option2)
-//                        + options3Items.get(options1).get(option2).get(options3).getPickerViewText();
-//                tvOptions.setText(tx);
-                writeDinStatusEvent(options1);
+                writeDinStatusEvent(position);
             }
-        }).build();
-        pvDinStatusEvent.setPicker(dinStatusEventList);
-        btnDinStatusEvent = (Button)findViewById(R.id.btn_edit_din_status_event);
-        btnDinStatusEvent.setOnClickListener(new View.OnClickListener() {
+        });
+        btnDinStatusEvent = (Button) findViewById(R.id.btn_edit_din_status_event);
+        btnDinStatusEvent.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
-                pvDinStatusEvent.setSelectOptions(0);
+                pvDinStatusEvent.setDefaultPosition(0);
                 int index = dinStatusEventList.indexOf(dinStatusEventTV.getText().toString());
-                if(index >= 0 && index < dinStatusEventList.size()){
-                    pvDinStatusEvent.setSelectOptions(index);
+                if (index >= 0 && index < dinStatusEventList.size()) {
+                    pvDinStatusEvent.setDefaultPosition(index);
                 }
                 pvDinStatusEvent.show();
             }
         });
-        btnEditDoutStatus = (Button)findViewById(R.id.btn_edit_dout_status);
-        btnEditDoutStatus.setOnClickListener(new View.OnClickListener() {
+        btnEditDoutStatus = (Button) findViewById(R.id.btn_edit_dout_status);
+        btnEditDoutStatus.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 dout0 = null;
                 dout1 = null;
+                showWaitingCancelDlg(getString(R.string.waiting));
                 readDoutStatus(0);
                 readDoutStatus(1);
             }
         });
-        dinStatusEventTypeTV = (TextView)findViewById(R.id.tx_din_status_event_type);
-        btnShowAinVoltage = (Button)findViewById(R.id.btn_edit_ain_voltage);
-        btnShowAinVoltage.setOnClickListener(new View.OnClickListener() {
+        dinStatusEventTypeTV = (TextView) findViewById(R.id.tx_din_status_event_type);
+        btnShowAinVoltage = (Button) findViewById(R.id.btn_edit_ain_voltage);
+        btnShowAinVoltage.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
-                ain1=null;
-                ain2=null;
-                ain3=null;
-                vin=null;
+                ain1 = null;
+                ain2 = null;
+                ain3 = null;
+                vin = null;
                 readAinStatus(0);
                 readAinStatus(1);
                 readAinStatus(2);
                 readVinVoltage();
             }
         });
-
-        pvPortSelect = new OptionsPickerBuilder(EditActivity.this, new OnOptionsSelectListener() {
+        pvPortSelect = new OptionPicker(this);
+        pvPortSelect.setData(portList);
+        pvPortSelect.setOnOptionPickedListener(new SingleOptionSelectClickListener() {
             @Override
-            public void onOptionsSelect(int options1, int option2, int options3 ,View v) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleOptionClick(int position, Object item) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
-                readPositiveNegativeWarning(options1 );
+                readPositiveNegativeWarning(position);
             }
-        }).build();
-        pvPortSelect.setPicker(portList);
-        btnPositiveNegativeWarning = (Button)findViewById(R.id.btn_edit_positive_negative_warning);
-        btnPositiveNegativeWarning.setOnClickListener(new View.OnClickListener() {
+        });
+        btnPositiveNegativeWarning = (Button) findViewById(R.id.btn_edit_positive_negative_warning);
+        btnPositiveNegativeWarning.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 pvPortSelect.show();
             }
         });
-        btnGeoOneWireDevice = (Button)findViewById(R.id.btn_edit_one_wire_device);
-        btnGeoOneWireDevice.setOnClickListener(new View.OnClickListener() {
+        btnGeoOneWireDevice = (Button) findViewById(R.id.btn_edit_one_wire_device);
+        btnGeoOneWireDevice.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 readOneWireDevice();
             }
         });
-        oneWireWorkModeTV = (TextView)findViewById(R.id.tx_one_wire_work_mode);
-        btnOneWireWorkMode = (Button)findViewById(R.id.btn_edit_one_wire_work_mode);
-        pvOneWireWorkMode = new OptionsPickerBuilder(EditActivity.this, new OnOptionsSelectListener() {
+        oneWireWorkModeTV = (TextView) findViewById(R.id.tx_one_wire_work_mode);
+        btnOneWireWorkMode = (Button) findViewById(R.id.btn_edit_one_wire_work_mode);
+        pvOneWireWorkMode = new OptionPicker(this);
+        pvOneWireWorkMode.setData(oneWireWorkModeList);
+        pvOneWireWorkMode.setOnOptionPickedListener(new SingleOptionSelectClickListener() {
             @Override
-            public void onOptionsSelect(int options1, int option2, int options3 ,View v) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleOptionClick(int position, Object item) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 //返回的分别是三个级别的选中位置
-                writeOneWireWorkMode(options1);
+                writeOneWireWorkMode(position);
             }
-        }).build();
-        pvOneWireWorkMode.setPicker(oneWireWorkModeList);
-        btnOneWireWorkMode.setOnClickListener(new View.OnClickListener() {
+        });
+        btnOneWireWorkMode.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 int value = oneWireWorkModeList.indexOf(oneWireWorkModeTV.getText().toString().trim());
-                if(value >= 0){
-                    pvOneWireWorkMode.setSelectOptions(value);
+                if (value >= 0) {
+                    pvOneWireWorkMode.setDefaultPosition(value);
                 }
                 pvOneWireWorkMode.show();
             }
         });
-        rs485BaudRateTV =  (TextView)findViewById(R.id.tx_rs485_baud_rate);
-        pvRs385BaudRate = new OptionsPickerBuilder(EditActivity.this, new OnOptionsSelectListener() {
+        rs485BaudRateTV = (TextView) findViewById(R.id.tx_rs485_baud_rate);
+        pvRs385BaudRate = new OptionPicker(this);
+        pvRs385BaudRate.setData(rs485BaudRateList);
+        pvRs385BaudRate.setOnOptionPickedListener(new SingleOptionSelectClickListener() {
             @Override
-            public void onOptionsSelect(int options1, int option2, int options3 ,View v) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleOptionClick(int position, Object item) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 //返回的分别是三个级别的选中位置
-                writeRs485BaudRate(Integer.valueOf(rs485BaudRateList.get(options1)));
+                writeRs485BaudRate(Integer.valueOf(rs485BaudRateList.get(position)));
             }
-        }).build();
-        pvRs385BaudRate.setPicker(rs485BaudRateList);
-        btnRs485BaudRate = (Button)findViewById(R.id.btn_edit_rs485_baud_rate);
-        btnRs485BaudRate.setOnClickListener(new View.OnClickListener() {
+        });
+        btnRs485BaudRate = (Button) findViewById(R.id.btn_edit_rs485_baud_rate);
+        btnRs485BaudRate.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 int value = rs485BaudRateList.indexOf(rs485BaudRateTV.getText().toString().trim());
-                if(value >= 0){
-                    pvRs385BaudRate.setSelectOptions(value);
+                if (value >= 0) {
+                    pvRs385BaudRate.setDefaultPosition(value);
                 }
                 pvRs385BaudRate.show();
             }
         });
-        rs485EnableSwitch = (SwitchButton)findViewById(R.id.switch_rs485_enable);
+        rs485EnableSwitch = (SwitchButton) findViewById(R.id.switch_rs485_enable);
         rs485EnableSwitch.setOnSwitchChangeListener(new SwitchButton.OnSwitchChangeListener() {
             @Override
             public void onSwitchChanged(boolean open) {
-                if(!connectSucc){
+                if (!connectSucc) {
                     rs485EnableSwitch.setSwitchStatus(!rs485EnableSwitch.getSwitchStatus());
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 writeRs485EnableStatus();
             }
         });
-        broadcastTypeTV = (TextView)findViewById(R.id.tx_broadcast_type);
-        btnBroadcastType = (Button)findViewById(R.id.btn_edit_broadcast_type);
-        pvBroadcastType = new OptionsPickerBuilder(EditActivity.this, new OnOptionsSelectListener() {
+        broadcastTypeTV = (TextView) findViewById(R.id.tx_broadcast_type);
+        btnBroadcastType = (Button) findViewById(R.id.btn_edit_broadcast_type);
+        pvBroadcastType = new OptionPicker(this);
+        pvBroadcastType.setData(broadcastTypeList);
+        pvBroadcastType.setOnOptionPickedListener(new SingleOptionSelectClickListener() {
             @Override
-            public void onOptionsSelect(int options1, int option2, int options3 ,View v) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleOptionClick(int position, Object item) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 //返回的分别是三个级别的选中位置
-                writeBroadcastType(options1);
+                writeBroadcastType(position);
             }
-        }).build();
-        pvBroadcastType.setPicker(broadcastTypeList);
-        btnBroadcastType.setOnClickListener(new View.OnClickListener() {
+        });
+        btnBroadcastType.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 int value = broadcastTypeList.indexOf(broadcastTypeTV.getText().toString().trim());
-                if(value >= 0){
-                    pvBroadcastType.setSelectOptions(value);
+                if (value >= 0) {
+                    pvBroadcastType.setDefaultPosition(value);
                 }
                 pvBroadcastType.show();
             }
         });
-        longRangeEnableSwitch = (SwitchButton)findViewById(R.id.switch_long_range);
+        longRangeEnableSwitch = (SwitchButton) findViewById(R.id.switch_long_range);
         longRangeEnableSwitch.setOnSwitchChangeListener(new SwitchButton.OnSwitchChangeListener() {
             @Override
             public void onSwitchChanged(boolean open) {
-                if(!connectSucc){
+                if (!connectSucc) {
                     longRangeEnableSwitch.setSwitchStatus(!longRangeEnableSwitch.getSwitchStatus());
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 writeLongRangeEnableStatus();
             }
         });
-        gSensorEnableSwitch = (SwitchButton)findViewById(R.id.switch_gsensor_enable);
+        gSensorEnableSwitch = (SwitchButton) findViewById(R.id.switch_gsensor_enable);
         gSensorEnableSwitch.setOnSwitchChangeListener(new SwitchButton.OnSwitchChangeListener() {
             @Override
             public void onSwitchChanged(boolean open) {
-                if(!connectSucc){
+                if (!connectSucc) {
                     gSensorEnableSwitch.setSwitchStatus(!gSensorEnableSwitch.getSwitchStatus());
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 writeGSensorEnableStatus();
             }
         });
-        btnDinVoltageRefresh = (Button)findViewById(R.id.btn_edit_din_voltage_refresh);
-        btnDinVoltageRefresh.setOnClickListener(new View.OnClickListener() {
+        btnDinVoltageRefresh = (Button) findViewById(R.id.btn_edit_din_voltage_refresh);
+        btnDinVoltageRefresh.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 readDinVoltage();
             }
         });
-        btnSendCmdData = (Button)findViewById(R.id.btn_edit_send_data);
-        btnSendCmdData.setOnClickListener(new View.OnClickListener() {
+        btnSendCmdData = (Button) findViewById(R.id.btn_edit_send_data);
+        btnSendCmdData.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 Intent intent = new Intent(EditActivity.this, EditRS485CmdActivity.class);
                 startActivityForResult(intent, REQUEST_RS485_SEND_DATA);
             }
         });
-        btnSendInstructionSequence = (Button)findViewById(R.id.btn_edit_send_instruction_sequence);
-        btnSendInstructionSequence.setOnClickListener(new View.OnClickListener() {
+        btnSendInstructionSequence = (Button) findViewById(R.id.btn_edit_send_instruction_sequence);
+        btnSendInstructionSequence.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
-                Intent intent = new Intent(EditActivity.this,EditInstructionSequenceActivity.class);
-                startActivityForResult(intent,REQUEST_SEND_INSTRUCTION_SEQUENCE);
+                Intent intent = new Intent(EditActivity.this, EditInstructionSequenceActivity.class);
+                startActivityForResult(intent, REQUEST_SEND_INSTRUCTION_SEQUENCE);
             }
         });
-        btnShutdown = (Button)findViewById(R.id.btn_shutdown);
-        btnShutdown.setOnClickListener(new View.OnClickListener() {
+        btnShutdown = (Button) findViewById(R.id.btn_shutdown);
+        btnShutdown.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 SweetAlertDialog confirmRelayDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.NORMAL_TYPE);
@@ -1363,25 +1427,25 @@ public class EditActivity extends AppCompatActivity {
                 confirmRelayDlg.show();
             }
         });
-        doorEnableSwitch = (SwitchButton)findViewById(R.id.switch_door_enable);
+        doorEnableSwitch = (SwitchButton) findViewById(R.id.switch_door_enable);
         doorEnableSwitch.setOnSwitchChangeListener(new SwitchButton.OnSwitchChangeListener() {
             @Override
             public void onSwitchChanged(boolean open) {
-                if(!connectSucc){
+                if (!connectSucc) {
                     doorEnableSwitch.setSwitchStatus(!doorEnableSwitch.getSwitchStatus());
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 writeDoorEnableStatus();
             }
         });
-        gSensorSensitivityTV = (TextView)findViewById(R.id.tx_gsensor_sensitivity);
+        gSensorSensitivityTV = (TextView) findViewById(R.id.tx_gsensor_sensitivity);
         btnGSensorSensitivity = (Button) findViewById(R.id.btn_edit_gsensor_sensitivity);
-        btnGSensorSensitivity.setOnClickListener(new View.OnClickListener() {
+        btnGSensorSensitivity.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 SweetAlertDialog editGSensorSensitivityDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.INPUT_TYPE);
@@ -1395,16 +1459,16 @@ public class EditActivity extends AppCompatActivity {
                     @Override
                     public void onClick(SweetAlertDialog sweetAlertDialog) {
                         String saveGSensorSensitivityValue = sweetAlertDialog.getInputText();
-                        if(saveGSensorSensitivityValue.length() > 0){
+                        if (saveGSensorSensitivityValue.length() > 0) {
                             int gSensorSensitivity = Float.valueOf(saveGSensorSensitivityValue).intValue();
-                            if (gSensorSensitivity >= 20 && gSensorSensitivity <= 64){
+                            if (gSensorSensitivity >= 20 && gSensorSensitivity <= 64) {
                                 writeGSensorSensitivity(gSensorSensitivity);
                                 sweetAlertDialog.hide();
-                            }else{
-                                Toast.makeText(EditActivity.this,R.string.gsensor_sensitivity_error_warning,Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(EditActivity.this, R.string.gsensor_sensitivity_error_warning, Toast.LENGTH_SHORT).show();
                             }
-                        }else{
-                            Toast.makeText(EditActivity.this,R.string.input_error,Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(EditActivity.this, R.string.input_error, Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
@@ -1412,13 +1476,13 @@ public class EditActivity extends AppCompatActivity {
 
             }
         });
-        gSensorDetectionDurationTV = (TextView)findViewById(R.id.tx_gsensor_detection_duration);
+        gSensorDetectionDurationTV = (TextView) findViewById(R.id.tx_gsensor_detection_duration);
         btnGSensorDetectionDuration = (Button) findViewById(R.id.btn_edit_gsensor_detection_duration);
-        btnGSensorDetectionDuration.setOnClickListener(new View.OnClickListener() {
+        btnGSensorDetectionDuration.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 SweetAlertDialog editGSensorDetectionDurationDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.INPUT_TYPE);
@@ -1432,16 +1496,16 @@ public class EditActivity extends AppCompatActivity {
                     @Override
                     public void onClick(SweetAlertDialog sweetAlertDialog) {
                         String saveGSensorDetectionDurationValue = sweetAlertDialog.getInputText();
-                        if(saveGSensorDetectionDurationValue.length() > 0){
+                        if (saveGSensorDetectionDurationValue.length() > 0) {
                             int gSensorDetectionDuration = Float.valueOf(saveGSensorDetectionDurationValue).intValue();
-                            if (gSensorDetectionDuration >= 3 && gSensorDetectionDuration <= 10){
+                            if (gSensorDetectionDuration >= 3 && gSensorDetectionDuration <= 10) {
                                 writeGSensorDetectionDuration(gSensorDetectionDuration);
                                 sweetAlertDialog.hide();
-                            }else{
-                                Toast.makeText(EditActivity.this,R.string.gsensor_detection_duration_error_warning,Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(EditActivity.this, R.string.gsensor_detection_duration_error_warning, Toast.LENGTH_SHORT).show();
                             }
-                        }else{
-                            Toast.makeText(EditActivity.this,R.string.input_error,Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(EditActivity.this, R.string.input_error, Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
@@ -1449,13 +1513,13 @@ public class EditActivity extends AppCompatActivity {
 
             }
         });
-        gSensorDetectionIntervalTV = (TextView)findViewById(R.id.tx_gsensor_detection_interval);
+        gSensorDetectionIntervalTV = (TextView) findViewById(R.id.tx_gsensor_detection_interval);
         btnGSensorDetectionInterval = (Button) findViewById(R.id.btn_edit_gsensor_detection_interval);
-        btnGSensorDetectionInterval.setOnClickListener(new View.OnClickListener() {
+        btnGSensorDetectionInterval.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 SweetAlertDialog editGSensorDetectionIntervalDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.INPUT_TYPE);
@@ -1469,16 +1533,16 @@ public class EditActivity extends AppCompatActivity {
                     @Override
                     public void onClick(SweetAlertDialog sweetAlertDialog) {
                         String saveGSensorDetectionIntervalValue = sweetAlertDialog.getInputText();
-                        if(saveGSensorDetectionIntervalValue.length() > 0){
+                        if (saveGSensorDetectionIntervalValue.length() > 0) {
                             int gSensorDetectionInterval = Float.valueOf(saveGSensorDetectionIntervalValue).intValue();
-                            if (gSensorDetectionInterval >= 2 && gSensorDetectionInterval <= 180){
+                            if (gSensorDetectionInterval >= 2 && gSensorDetectionInterval <= 180) {
                                 writeGSensorDetectionInterval(gSensorDetectionInterval);
                                 sweetAlertDialog.hide();
-                            }else{
-                                Toast.makeText(EditActivity.this,R.string.gsensor_detection_interval_error_warning,Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(EditActivity.this, R.string.gsensor_detection_interval_error_warning, Toast.LENGTH_SHORT).show();
                             }
-                        }else{
-                            Toast.makeText(EditActivity.this,R.string.input_error,Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(EditActivity.this, R.string.input_error, Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
@@ -1487,19 +1551,21 @@ public class EditActivity extends AppCompatActivity {
             }
         });
 
-        btnBeaconMajorSet   = (Button)findViewById(R.id.btn_edit_beacon_major_set);
-        btnBeaconMinorSet   = (Button)findViewById(R.id.btn_edit_beacon_minor_set);
-        btnEddystoneNidSet  = (Button)findViewById(R.id.btn_edit_eddystone_nid_set);
-        btnEddystoneBidSet  = (Button)findViewById(R.id.btn_edit_eddystone_bid_set);
-        beaconMajorSetTV= (TextView)findViewById(R.id.tx_beacon_major_set);
-        beaconMinorSetTV= (TextView)findViewById(R.id.tx_beacon_minor_set);
-        eddystoneNidSetTV   = (TextView)findViewById(R.id.tx_eddystone_nid_set);
-        eddystoneBidSetTV   = (TextView)findViewById(R.id.tx_eddystone_bid_set);
-        btnBeaconMajorSet.setOnClickListener(new View.OnClickListener() {
+        btnBeaconMajorSet = (Button) findViewById(R.id.btn_edit_beacon_major_set);
+        btnBeaconMinorSet = (Button) findViewById(R.id.btn_edit_beacon_minor_set);
+        btnEddystoneNidSet = (Button) findViewById(R.id.btn_edit_eddystone_nid_set);
+        btnEddystoneBidSet = (Button) findViewById(R.id.btn_edit_eddystone_bid_set);
+        btnSetBtnTriggerTime = (Button) findViewById(R.id.btn_edit_btn_trigger_time);
+        beaconMajorSetTV = (TextView) findViewById(R.id.tx_beacon_major_set);
+        beaconMinorSetTV = (TextView) findViewById(R.id.tx_beacon_minor_set);
+        eddystoneNidSetTV = (TextView) findViewById(R.id.tx_eddystone_nid_set);
+        eddystoneBidSetTV = (TextView) findViewById(R.id.tx_eddystone_bid_set);
+        btnTriggerTimeTV = (TextView) findViewById(R.id.tx_btn_trigger_time);
+        btnBeaconMajorSet.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 SweetAlertDialog editBeaconMajorSetDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.INPUT_TYPE);
@@ -1513,27 +1579,27 @@ public class EditActivity extends AppCompatActivity {
                     @Override
                     public void onClick(SweetAlertDialog sweetAlertDialog) {
                         String saveBeaconMajorSetValue = sweetAlertDialog.getInputText();
-                        if(saveBeaconMajorSetValue.length() > 0){
+                        if (saveBeaconMajorSetValue.length() > 0) {
                             int beaconMajorSet = Float.valueOf(saveBeaconMajorSetValue).intValue();
-                            if (beaconMajorSet >= 0 && beaconMajorSet <= 65535){
+                            if (beaconMajorSet >= 0 && beaconMajorSet <= 65535) {
                                 writeBeaconMajorSet(beaconMajorSet);
                                 sweetAlertDialog.hide();
-                            }else{
-                                Toast.makeText(EditActivity.this,R.string.input_error,Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(EditActivity.this, R.string.input_error, Toast.LENGTH_SHORT).show();
                             }
-                        }else{
-                            Toast.makeText(EditActivity.this,R.string.input_error,Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(EditActivity.this, R.string.input_error, Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
                 editBeaconMajorSetDlg.show();
             }
         });
-        btnBeaconMinorSet.setOnClickListener(new View.OnClickListener() {
+        btnBeaconMinorSet.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 SweetAlertDialog editBeaconMinorSetDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.INPUT_TYPE);
@@ -1547,27 +1613,27 @@ public class EditActivity extends AppCompatActivity {
                     @Override
                     public void onClick(SweetAlertDialog sweetAlertDialog) {
                         String saveBeaconMinorSetValue = sweetAlertDialog.getInputText();
-                        if(saveBeaconMinorSetValue.length() > 0){
+                        if (saveBeaconMinorSetValue.length() > 0) {
                             int beaconMinorSet = Float.valueOf(saveBeaconMinorSetValue).intValue();
-                            if (beaconMinorSet >= 0 && beaconMinorSet <= 65535){
+                            if (beaconMinorSet >= 0 && beaconMinorSet <= 65535) {
                                 writeBeaconMinorSet(beaconMinorSet);
                                 sweetAlertDialog.hide();
-                            }else{
-                                Toast.makeText(EditActivity.this,R.string.input_error,Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(EditActivity.this, R.string.input_error, Toast.LENGTH_SHORT).show();
                             }
-                        }else{
-                            Toast.makeText(EditActivity.this,R.string.input_error,Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(EditActivity.this, R.string.input_error, Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
                 editBeaconMinorSetDlg.show();
             }
         });
-        btnEddystoneNidSet.setOnClickListener(new View.OnClickListener() {
+        btnEddystoneNidSet.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 SweetAlertDialog editEddystoneNidSetDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.INPUT_TYPE);
@@ -1582,33 +1648,33 @@ public class EditActivity extends AppCompatActivity {
                     @Override
                     public void onClick(SweetAlertDialog sweetAlertDialog) {
                         String saveEddystoneNidSetValue = sweetAlertDialog.getInputText().trim();
-                        saveEddystoneNidSetValue = MyUtils.replaceAll(saveEddystoneNidSetValue,"0x","");
-                        saveEddystoneNidSetValue = MyUtils.replaceAll(saveEddystoneNidSetValue,"0X","");
-                        saveEddystoneNidSetValue = MyUtils.replaceAll(saveEddystoneNidSetValue," ","");
-                        for(char c : saveEddystoneNidSetValue.toCharArray()){
-                            if( (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F') ){
+                        saveEddystoneNidSetValue = MyUtils.replaceAll(saveEddystoneNidSetValue, "0x", "");
+                        saveEddystoneNidSetValue = MyUtils.replaceAll(saveEddystoneNidSetValue, "0X", "");
+                        saveEddystoneNidSetValue = MyUtils.replaceAll(saveEddystoneNidSetValue, " ", "");
+                        for (char c : saveEddystoneNidSetValue.toCharArray()) {
+                            if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
 
-                            }else{
-                                Toast.makeText(EditActivity.this,R.string.invalidChar,Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(EditActivity.this, R.string.invalidChar, Toast.LENGTH_SHORT).show();
                                 return;
                             }
                         }
-                        if(saveEddystoneNidSetValue.length() == 20){
+                        if (saveEddystoneNidSetValue.length() == 20) {
                             writeEddystoneNidSet(saveEddystoneNidSetValue);
                             sweetAlertDialog.hide();
-                        }else{
-                            Toast.makeText(EditActivity.this,R.string.eddystone_nid_set_len_error,Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(EditActivity.this, R.string.eddystone_nid_set_len_error, Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
                 editEddystoneNidSetDlg.show();
             }
         });
-        btnEddystoneBidSet.setOnClickListener(new View.OnClickListener() {
+        btnEddystoneBidSet.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
-                if(!connectSucc){
-                    Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 SweetAlertDialog editEddystoneBidSetDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.INPUT_TYPE);
@@ -1623,72 +1689,119 @@ public class EditActivity extends AppCompatActivity {
                     @Override
                     public void onClick(SweetAlertDialog sweetAlertDialog) {
                         String saveEddystoneBidSetValue = sweetAlertDialog.getInputText().trim();
-                        saveEddystoneBidSetValue = MyUtils.replaceAll(saveEddystoneBidSetValue,"0x","");
-                        saveEddystoneBidSetValue = MyUtils.replaceAll(saveEddystoneBidSetValue,"0X","");
-                        saveEddystoneBidSetValue = MyUtils.replaceAll(saveEddystoneBidSetValue," ","");
-                        for(char c : saveEddystoneBidSetValue.toCharArray()){
-                            if( (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F') ){
+                        saveEddystoneBidSetValue = MyUtils.replaceAll(saveEddystoneBidSetValue, "0x", "");
+                        saveEddystoneBidSetValue = MyUtils.replaceAll(saveEddystoneBidSetValue, "0X", "");
+                        saveEddystoneBidSetValue = MyUtils.replaceAll(saveEddystoneBidSetValue, " ", "");
+                        for (char c : saveEddystoneBidSetValue.toCharArray()) {
+                            if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
 
-                            }else{
-                                Toast.makeText(EditActivity.this,R.string.invalidChar,Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(EditActivity.this, R.string.invalidChar, Toast.LENGTH_SHORT).show();
                                 return;
                             }
                         }
-                        if(saveEddystoneBidSetValue.length() == 12){
+                        if (saveEddystoneBidSetValue.length() == 12) {
                             writeEddystoneBidSet(saveEddystoneBidSetValue);
                             sweetAlertDialog.hide();
-                        }else{
-                            Toast.makeText(EditActivity.this,R.string.eddystone_bid_set_len_error,Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(EditActivity.this, R.string.eddystone_bid_set_len_error, Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
                 editEddystoneBidSetDlg.show();
             }
         });
+        btnSetBtnTriggerTime.setOnClickListener(new SingleClickListener() {
+            @Override
+            public void onSingleClick(View view) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                SweetAlertDialog editBtnTriggerTimeDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.INPUT_TYPE);
+                editBtnTriggerTimeDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
+                editBtnTriggerTimeDlg.setTitleText(getResources().getString(R.string.btn_trigger_time_desc));
+                editBtnTriggerTimeDlg.setCancelable(true);
+                editBtnTriggerTimeDlg.setInputType(InputType.TYPE_CLASS_NUMBER);
+                editBtnTriggerTimeDlg.setCancelText(getResources().getString(R.string.cancel));
+                editBtnTriggerTimeDlg.setConfirmText(getResources().getString(R.string.confirm));
+                editBtnTriggerTimeDlg.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                    @Override
+                    public void onClick(SweetAlertDialog sweetAlertDialog) {
+                        String saveBtnTriggerTimeValue = sweetAlertDialog.getInputText();
+                        if (saveBtnTriggerTimeValue.length() > 0) {
+                            int btnTriggerTime = Float.valueOf(saveBtnTriggerTimeValue).intValue();
+                            if (btnTriggerTime >= 0 && btnTriggerTime <= 4000) {
+                                writeBtnTriggerTime(btnTriggerTime / 100);
+                                sweetAlertDialog.hide();
+                            } else {
+                                Toast.makeText(EditActivity.this, R.string.btn_trigger_time_input_error, Toast.LENGTH_SHORT).show();
+                            }
+                        } else {
+                            Toast.makeText(EditActivity.this, R.string.input_error, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+                editBtnTriggerTimeDlg.show();
+            }
+        });
         getServerUpgradeInfo();
         initDiffUI();
     }
 
-    private void upgradeDevice(){
-        mClient.disconnect(mac);
-        connectSucc = false;
+    private void upgradeDevice() {
         DownloadFileManager.instance().geetUpdateFileUrl(EditActivity.this, upgradeLink, serverVersion, deviceType, new DownloadFileManager.Callback() {
             @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void callback(StatusCode code, String result) {
-                if(StatusCode.OK == code){
-                    updateDFU(mac,deviceName,result);
-                }else{
-                    if(waitingDlg != null){
+                if (StatusCode.OK == code) {
+                    updateDeviceSoftware(mac, deviceName, result);
+                } else {
+                    if (waitingDlg != null) {
                         waitingDlg.hide();
                     }
-                    Toast.makeText(EditActivity.this,R.string.download_file_fail,Toast.LENGTH_LONG).show();
-                }
-            }
-        });
-    }
-    private void upgradeBetaDevice(){
-        mClient.disconnect(mac);
-        connectSucc = false;
-        DownloadFileManager.instance().geetUpdateFileUrl(EditActivity.this, betaUpgradeLink, betaServerVersion, deviceType, new DownloadFileManager.Callback() {
-            @RequiresApi(api = Build.VERSION_CODES.O)
-            @Override
-            public void callback(StatusCode code, String result) {
-                if(StatusCode.OK == code){
-                    updateDFU(mac,deviceName,result);
-                }else{
-                    if(waitingDlg != null){
-                        waitingDlg.hide();
-                    }
-                    Toast.makeText(EditActivity.this,R.string.download_file_fail,Toast.LENGTH_LONG).show();
+                    Toast.makeText(EditActivity.this, R.string.download_file_fail, Toast.LENGTH_LONG).show();
                 }
             }
         });
     }
 
-    private DfuServiceController dfuServiceController;
+    private void upgradeBetaDevice() {
+        DownloadFileManager.instance().geetUpdateFileUrl(EditActivity.this, betaUpgradeLink, betaServerVersion, deviceType, new DownloadFileManager.Callback() {
+            @RequiresApi(api = Build.VERSION_CODES.O)
+            @Override
+            public void callback(StatusCode code, String result) {
+                if (StatusCode.OK == code) {
+                    updateDeviceSoftware(mac, deviceName, result);
+                } else {
+                    if (waitingDlg != null) {
+                        waitingDlg.hide();
+                    }
+                    Toast.makeText(EditActivity.this, R.string.download_file_fail, Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private void updateDFU(String mac, String name, String path){
+    private void updateDeviceSoftware(String mac, String name, String path) {
+        if (A001SoftwareUpgradeManager.deviceTypeList.contains(deviceType)) {
+            a001UpgradeManager.startUpgrade(mac, name, path, bluetoothGatt);
+        } else {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            }
+            bluetoothGatt.disconnect();
+            bluetoothGatt.close();
+            connectSucc = false;
+            a001UpgradeManager.stopUpgrade();
+            updateDFU(mac, name, path);
+        }
+    }
+
+    private DfuServiceController dfuServiceController;
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void updateDFU(String mac, String name, String path) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             DfuServiceInitiator.createDfuNotificationChannel(this);
         }
@@ -1702,6 +1815,7 @@ public class EditActivity extends AppCompatActivity {
         // We can use the controller to pause, resume or abort the DFU process.
         dfuServiceController = starter.start(EditActivity.this, DfuService.class);
     }
+
     private final BleConnectStatusListener mBleConnectStatusListener = new BleConnectStatusListener() {
 
         @Override
@@ -1709,13 +1823,20 @@ public class EditActivity extends AppCompatActivity {
             if (status == STATUS_CONNECTED) {
 
             } else if (status == STATUS_DISCONNECTED) {
-                if (onThisView){
-                    if(connectWaitingCancelDlg != null){
-                        connectWaitingCancelDlg.hide();
+                if (onThisView) {
+                    if (connectSucc || curTryConnectCount >= tryConnectCount) {
+                        if (connectWaitingCancelDlg != null) {
+                            connectWaitingCancelDlg.hide();
+                        }
+                        if (waitingDlg != null) {
+                            waitingDlg.hide();
+                        }
+                        Toast.makeText(EditActivity.this, R.string.disconnect_from_device, Toast.LENGTH_SHORT).show();
                     }
-                    Toast.makeText(EditActivity.this,R.string.disconnect_from_device,Toast.LENGTH_SHORT).show();
                 }
+                curTryConnectCount++;
                 connectSucc = false;
+                a001UpgradeManager.stopUpgrade();
                 reconnectBtn.setImageResource(R.mipmap.ic_disconnect);
             }
         }
@@ -1727,40 +1848,29 @@ public class EditActivity extends AppCompatActivity {
     private DfuProgressListener dfuProgressListener = new DfuProgressListenerAdapter() {
         @Override
         public void onDfuCompleted(String deviceAddress) {
-            Log.e("BluetoothUtils","onDfuCompleted");
-            upgradeStatus = "completed";
-            Toast.makeText(EditActivity.this,R.string.upgrade_succ,Toast.LENGTH_LONG);
-            waitingDlg.setTitleText(getResources().getString(R.string.reconnecting));
-            try {
-                Thread.sleep(3000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            mClient.connect(mac,bleConnectResponse);
-            connectFailTimeoutShow(60000);
-            mClient.registerConnectStatusListener(mac, mBleConnectStatusListener);
+            Log.e("BluetoothUtils", "onDfuCompleted");
+            upgradeSucc();
         }
 
         @Override
         public void onDfuAborted(String deviceAddress) {
-            Log.e("BluetoothUtils","onDfuAborted");
+            Log.e("BluetoothUtils", "onDfuAborted");
             upgradeStatus = "aborted";
-            if(waitingDlg != null){
+            if (waitingDlg != null) {
                 waitingDlg.hide();
             }
-            Toast.makeText(EditActivity.this,R.string.upgrade_aborted,Toast.LENGTH_LONG);
+            Toast.makeText(EditActivity.this, R.string.upgrade_aborted, Toast.LENGTH_LONG);
         }
 
         @Override
         public void onError(String deviceAddress, int error, int errorType, String message) {
-            Log.e("BluetoothUtils","onError");
+            Log.e("BluetoothUtils", "onError");
             upgradeStatus = "error";
             upgradeErrorMsg = message;
-            if(waitingDlg != null){
+            if (waitingDlg != null) {
                 waitingDlg.hide();
             }
-            Toast.makeText(EditActivity.this,message,Toast.LENGTH_LONG);
+            Toast.makeText(EditActivity.this, message, Toast.LENGTH_LONG);
         }
 
         @Override
@@ -1768,17 +1878,17 @@ public class EditActivity extends AppCompatActivity {
 //            Log.e("BluetoothUtils","onProgressChanged:"+percent);
             progressPercent = percent;
             upgradeStatus = "progressChanged";
-            if(waitingDlg != null){
-                waitingDlg.setTitleText(getResources().getString(R.string.processing)+ ":" + percent);
+            if (waitingDlg != null) {
+                waitingDlg.setTitleText(getResources().getString(R.string.processing) + ":" + percent);
             }
 
         }
 
         @Override
         public void onDfuProcessStarted(String deviceAddress) {
-            Log.e("BluetoothUtils","onDfuProcessStarted");
+            Log.e("BluetoothUtils", "onDfuProcessStarted");
             upgradeStatus = "processStarted";
-            if(waitingDlg != null){
+            if (waitingDlg != null) {
                 waitingDlg.setTitleText(getResources().getString(R.string.upgrade_process_start));
             }
 
@@ -1786,9 +1896,9 @@ public class EditActivity extends AppCompatActivity {
 
         @Override
         public void onDeviceConnecting(String deviceAddress) {
-            Log.e("BluetoothUtils","onDeviceConnecting");
+            Log.e("BluetoothUtils", "onDeviceConnecting");
             upgradeStatus = "deviceConnecting";
-            if(waitingDlg != null){
+            if (waitingDlg != null) {
                 waitingDlg.setTitleText(getResources().getString(R.string.upgrade_device_connecting));
             }
 
@@ -1796,58 +1906,71 @@ public class EditActivity extends AppCompatActivity {
 
         @Override
         public void onDeviceDisconnecting(String deviceAddress) {
-            Log.e("BluetoothUtils","onDeviceDisconnecting");
+            Log.e("BluetoothUtils", "onDeviceDisconnecting");
             upgradeStatus = "deviceDisconnected";
 
         }
     };
+
+    private void upgradeSucc() {
+        upgradeStatus = "completed";
+        Toast.makeText(EditActivity.this, R.string.upgrade_succ, Toast.LENGTH_LONG);
+        waitingDlg.setTitleText(getResources().getString(R.string.reconnecting));
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        connectDeviceBle();
+    }
+
     private void getServerUpgradeInfo() {
         String deviceTypeParam = deviceType;
-        if(deviceType.equals("S02") && Integer.valueOf(software) <= 8){
+        if (deviceType.equals("S02") && Integer.valueOf(software) <= 8) {
             deviceTypeParam = "S01";
         }
-        if(!MyUtils.isNetworkConnected(EditActivity.this)){
-            Toast.makeText(EditActivity.this,R.string.network_permission_fail,Toast.LENGTH_SHORT).show();
+        if (!MyUtils.isNetworkConnected(EditActivity.this)) {
+            Toast.makeText(EditActivity.this, R.string.network_permission_fail, Toast.LENGTH_SHORT).show();
             return;
         }
-        OpenAPI.instance().getServerVersion(deviceTypeParam,new OpenAPI.Callback() {
+        OpenAPI.instance().getServerVersion(deviceTypeParam, new OpenAPI.Callback() {
             @Override
             public void callback(StatusCode code, String result) {
-                if(code == StatusCode.OK){
+                if (code == StatusCode.OK) {
                     JSONObject resObj = JSONObject.parseObject(result);
                     int jsonCode = resObj.getInteger("code");
-                    if(jsonCode == 0){
-                        JSONObject jsonData  = resObj.getJSONObject("data");
-                        if(jsonData != null){
+                    if (jsonCode == 0) {
+                        JSONObject jsonData = resObj.getJSONObject("data");
+                        if (jsonData != null) {
                             String serverVersionStr = jsonData.getString("version");
-                            if(serverVersionStr!= null && !serverVersionStr.isEmpty()){
-                                serverVersion = serverVersionStr.replaceAll("V","").replaceAll("v","");
+                            if (serverVersionStr != null && !serverVersionStr.isEmpty()) {
+                                serverVersion = serverVersionStr.replaceAll("V", "").replaceAll("v", "");
                             }
                             upgradeLink = jsonData.getString("link");
                             showUpgradeBtn();
                         }
-                    }else{
-                        Toast.makeText(EditActivity.this,R.string.get_upgrade_info_fail,Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(EditActivity.this, R.string.get_upgrade_info_fail, Toast.LENGTH_SHORT).show();
                         return;
                     }
-                }else{
-                    Toast.makeText(EditActivity.this,R.string.get_upgrade_info_fail,Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(EditActivity.this, R.string.get_upgrade_info_fail, Toast.LENGTH_SHORT).show();
                     return;
                 }
             }
         });
-        OpenAPI.instance().getBetaServerVersion(deviceTypeParam,id,new OpenAPI.Callback() {
+        OpenAPI.instance().getBetaServerVersion(deviceTypeParam, id, new OpenAPI.Callback() {
             @Override
             public void callback(StatusCode code, String result) {
-                if(code == StatusCode.OK){
+                if (code == StatusCode.OK) {
                     JSONObject resObj = JSONObject.parseObject(result);
                     int jsonCode = resObj.getInteger("code");
-                    if(jsonCode == 0){
-                        JSONObject jsonData  = resObj.getJSONObject("data");
-                        if(jsonData != null){
+                    if (jsonCode == 0) {
+                        JSONObject jsonData = resObj.getJSONObject("data");
+                        if (jsonData != null) {
                             String serverVersionStr = jsonData.getString("version");
-                            if(serverVersionStr!= null && !serverVersionStr.isEmpty()){
-                                betaServerVersion = serverVersionStr.replaceAll("V","").replaceAll("v","");
+                            if (serverVersionStr != null && !serverVersionStr.isEmpty()) {
+                                betaServerVersion = serverVersionStr.replaceAll("V", "").replaceAll("v", "");
                             }
                             betaUpgradeLink = jsonData.getString("link");
                             showBetaUpgradeBtn();
@@ -1858,397 +1981,64 @@ public class EditActivity extends AppCompatActivity {
         });
     }
 
-    private void showUpgradeBtn(){
-        if(serverVersion != null && !serverVersion.equals(software)){
+    private void showUpgradeBtn() {
+        if (serverVersion != null && !serverVersion.equals(software)) {
             btnUpgrade.setVisibility(View.VISIBLE);
-        }else{
+        } else {
             btnUpgrade.setVisibility(View.INVISIBLE);
         }
     }
-    private void showBetaUpgradeBtn(){
-        if(betaServerVersion != null && software != null){
-            String formatBetaVersion = betaServerVersion.replace("V","").replaceAll("v","").replaceAll("\\.","");
-            String formatSoftware = software.replace("V","").replaceAll("v","").replaceAll("\\.","");
+
+    private void showBetaUpgradeBtn() {
+        if (betaServerVersion != null && software != null) {
+            String formatBetaVersion = betaServerVersion.replace("V", "").replaceAll("v", "").replaceAll("\\.", "");
+            String formatSoftware = software.replace("V", "").replaceAll("v", "").replaceAll("\\.", "");
             int result = formatBetaVersion.compareToIgnoreCase(formatSoftware);
-            if(result > 0){
+            if (result > 0) {
                 btnBetaUpgrade.setVisibility(View.VISIBLE);
-            }else{
+            } else {
                 btnBetaUpgrade.setVisibility(View.INVISIBLE);
             }
         }
     }
 
-    private void initDiffUI(){
-        saveRecordIntervalLL = (LinearLayout)findViewById(R.id.line_save_record_interval);
-        humidityLowAlarmLL = (LinearLayout)findViewById(R.id.line_humidity_low_alarm);
-        humidityHighAlarmLL = (LinearLayout)findViewById(R.id.line_humidity_high_alarm);
-        recordControlLL = (LinearLayout)findViewById(R.id.line_record_control);
-        clearRecordLL = (LinearLayout)findViewById(R.id.line_clear_record);
-        transmittedPowerLL = (LinearLayout)findViewById(R.id.line_transmitted_power);
-        transmittedPowerLineLL = (LinearLayout)findViewById(R.id.line_line_transmitted_power);
-        relayLL = (LinearLayout)findViewById(R.id.line_relay);
-        relayLineLL = (LinearLayout)findViewById(R.id.line_line_relay);
-        relayFlashingLL = (LinearLayout)findViewById(R.id.line_flashing_relay);
-        lightSensorEnableLL = (LinearLayout)findViewById(R.id.line_light_sensor);
-        saveRecordIntervalLL.setVisibility(View.GONE);
-        humidityLowAlarmLL.setVisibility(View.GONE);
-        humidityHighAlarmLL.setVisibility(View.GONE);
-        recordControlLL.setVisibility(View.GONE);
-        relayLL.setVisibility(View.GONE);
-        relayFlashingLL.setVisibility(View.GONE);
-        clearRecordLL.setVisibility(View.GONE);
-        saveRecordIntervaLineLL = (LinearLayout)findViewById(R.id.line_line_save_record_interval);
-        humidityLowAlarmLineLL = (LinearLayout)findViewById(R.id.line_line_humidity_low_alarm);
-        humidityHighAlarmLineLL = (LinearLayout)findViewById(R.id.line_line_humidity_high_alarm);
-        recordControlLineLL = (LinearLayout)findViewById(R.id.line_line_record_control);
-        relayFlashingLineLL = (LinearLayout)findViewById(R.id.line_line_flashing_relay);
-        lightSensorEnableLineLL = (LinearLayout)findViewById(R.id.line_line_light_sensor);
-        readSaveCountLL = (LinearLayout)findViewById(R.id.line_save_count);
-        readSaveCountLineLL = (LinearLayout)findViewById(R.id.line_line_save_count);
-        readAlarmLL  = (LinearLayout)findViewById(R.id.line_alarm_count);
-        readAlarmLineLL  = (LinearLayout)findViewById(R.id.line_line_alarm_count);
-        clearRecordLineLL = (LinearLayout)findViewById(R.id.line_line_clear_record) ;
-        clearRecordLineLL.setVisibility(View.GONE);
-        saveRecordIntervaLineLL.setVisibility(View.GONE);
-        humidityLowAlarmLineLL.setVisibility(View.GONE);
-        humidityHighAlarmLineLL.setVisibility(View.GONE);
-        recordControlLineLL.setVisibility(View.GONE);
-        relayLineLL.setVisibility(View.GONE);
-        relayFlashingLineLL.setVisibility(View.GONE);
-        readSaveCountLineLL.setVisibility(View.GONE);
-        readSaveCountLL.setVisibility(View.GONE);
-        readAlarmLL.setVisibility(View.GONE);
-        readAlarmLineLL.setVisibility(View.GONE);
-        lightSensorEnableLineLL.setVisibility(View.GONE);
-        lightSensorEnableLL.setVisibility(View.GONE);
-        transmittedPowerLL.setVisibility(View.GONE);
-        transmittedPowerLineLL.setVisibility(View.GONE);
-
-
-        readDinVoltageLL = (LinearLayout)findViewById(R.id.line_din_voltage);
-        readDinVoltageLineLL = (LinearLayout)findViewById(R.id.line_line_din_voltage);
-        dinStatusEventLL = (LinearLayout)findViewById(R.id.line_din_status_event);
-        dinStatusEventLineLL = (LinearLayout)findViewById(R.id.line_line_din_status_event);
-        readDinStatusEventTypeLL = (LinearLayout)findViewById(R.id.line_din_status_event_type);
-        readDinStatusEventTypeLineLL = (LinearLayout)findViewById(R.id.line_line_din_status_event_type);
-        doutStatusLL = (LinearLayout)findViewById(R.id.line_dout_status);
-        doutStatusLineLL = (LinearLayout)findViewById(R.id.line_line_dout_status);
-        readAinVoltageLL = (LinearLayout)findViewById(R.id.line_ain_voltage);
-        readAinVoltageLineLL = (LinearLayout)findViewById(R.id.line_line_ain_voltage);
-        setPositiveNegativeWarningLL = (LinearLayout)findViewById(R.id.line_positive_negative_warning);
-        setPositiveNegativeWarningLineLL = (LinearLayout)findViewById(R.id.line_line_positive_negative_warning);
-        getOneWireDeviceLL = (LinearLayout)findViewById(R.id.line_one_wire_device);
-        getOneWireDeviceLineLL = (LinearLayout)findViewById(R.id.line_line_one_wire_device);
-        sendCmdSequenceLL = (LinearLayout)findViewById(R.id.line_send_instruction_sequence);
-        sendCmdSequenceLineLL = (LinearLayout)findViewById(R.id.line_line_send_instruction_sequence);
-        sequentialLL = (LinearLayout)findViewById(R.id.line_sequential);
-        sequentialLineLL = (LinearLayout)findViewById(R.id.line_line_sequential);
-        sendDataLL = (LinearLayout)findViewById(R.id.line_send_data);
-        sendDataLineLL = (LinearLayout)findViewById(R.id.line_line_send_data);
-        rs485BaudRateLL = (LinearLayout)findViewById(R.id.line_rs485_baud_rate);
-        rs485BaudRateLineLL = (LinearLayout)findViewById(R.id.line_line_rs485_baud_rate);
-        rs485EnableLL = (LinearLayout)findViewById(R.id.line_rs485_enable);
-        rs485EnableLineLL = (LinearLayout)findViewById(R.id.line_line_rs485_enable);
-        oneWireWorkModeLL = (LinearLayout)findViewById(R.id.line_one_wire_work_mode);
-        oneWireWorkModeLineLL = (LinearLayout)findViewById(R.id.line_line_one_wire_work_mode);
-
-        readDinVoltageLL.setVisibility(View.GONE);
-        readDinVoltageLineLL.setVisibility(View.GONE);
-        dinStatusEventLL.setVisibility(View.GONE);
-        dinStatusEventLineLL.setVisibility(View.GONE);
-        readDinStatusEventTypeLL.setVisibility(View.GONE);
-        readDinStatusEventTypeLineLL.setVisibility(View.GONE);
-        doutStatusLL.setVisibility(View.GONE);
-        doutStatusLineLL.setVisibility(View.GONE);
-        readAinVoltageLL.setVisibility(View.GONE);
-        readAinVoltageLineLL.setVisibility(View.GONE);
-        setPositiveNegativeWarningLL.setVisibility(View.GONE);
-        setPositiveNegativeWarningLineLL.setVisibility(View.GONE);
-        getOneWireDeviceLL.setVisibility(View.GONE);
-        getOneWireDeviceLineLL.setVisibility(View.GONE);
-        sendCmdSequenceLL.setVisibility(View.GONE);
-        sendCmdSequenceLineLL.setVisibility(View.GONE);
-        sequentialLL.setVisibility(View.GONE);
-        sequentialLineLL.setVisibility(View.GONE);
-        sendDataLL.setVisibility(View.GONE);
-        sendDataLineLL.setVisibility(View.GONE);
-        rs485BaudRateLL.setVisibility(View.GONE);
-        rs485BaudRateLineLL.setVisibility(View.GONE);
-        rs485EnableLL.setVisibility(View.GONE);
-        rs485EnableLineLL.setVisibility(View.GONE);
-        oneWireWorkModeLL.setVisibility(View.GONE);
-        oneWireWorkModeLineLL.setVisibility(View.GONE);
-
-
-        longRangeLL = (LinearLayout)findViewById(R.id.line_long_range);
-        longRangeLineLL = (LinearLayout)findViewById(R.id.line_line_long_range);
-        broadcastTypeLL = (LinearLayout)findViewById(R.id.line_broadcast_type);
-        broadcastTypeLineLL = (LinearLayout)findViewById(R.id.line_line_broadcast_type);
-        gSensorEnableLL = (LinearLayout)findViewById(R.id.line_gsensor_enable);
-        gSensorEnableLineLL = (LinearLayout)findViewById(R.id.line_line_gsensor_enable);
-        longRangeLL.setVisibility(View.GONE);
-        longRangeLineLL.setVisibility(View.GONE);
-        broadcastTypeLL.setVisibility(View.GONE);
-        broadcastTypeLineLL.setVisibility(View.GONE);
-        gSensorEnableLL.setVisibility(View.GONE);
-        gSensorEnableLineLL.setVisibility(View.GONE);
-
-        tempLowAlarmLL = (LinearLayout)findViewById(R.id.line_temp_low_alarm);
-        tempLowAlarmLineLL = (LinearLayout)findViewById(R.id.line_line_temp_low_alarm);
-        tempHighAlarmLL = (LinearLayout)findViewById(R.id.line_temp_high_alarm);
-        tempHighAlarmLineLL = (LinearLayout)findViewById(R.id.line_line_temp_high_alarm);
-        tempLowAlarmLL.setVisibility(View.GONE);
-        tempLowAlarmLineLL.setVisibility(View.GONE);
-        tempHighAlarmLL.setVisibility(View.GONE);
-        tempHighAlarmLineLL.setVisibility(View.GONE);
-        ledLL = (LinearLayout)findViewById(R.id.line_led);
-        ledLineLL = (LinearLayout)findViewById(R.id.line_line_led);
-
-        broadcastCycleLL = (LinearLayout)findViewById(R.id.line_broadcast_cycle);
-        broadcastCycleLineLL = (LinearLayout)findViewById(R.id.line_line_broadcast_cycle);
-        shutdownLL = (LinearLayout)findViewById(R.id.line_shutdown);
-        shutdownLineLL = (LinearLayout)findViewById(R.id.line_line_shutdown);
-        shutdownLL.setVisibility(View.GONE);
-        shutdownLineLL.setVisibility(View.GONE);
-        doorEnableLL = (LinearLayout)findViewById(R.id.line_door_enable);
-        doorEnableLineLL = (LinearLayout)findViewById(R.id.line_line_door_enable);
-        doorEnableLL.setVisibility(View.GONE);
-        doorEnableLineLL.setVisibility(View.GONE);
-
-
-        gSensorDetectionDurationLL = (LinearLayout)findViewById(R.id.line_gsensor_detection_duration);
-        gSensorDetectionDurationLL.setVisibility(View.GONE);
-        gSensorDetectionDurationLineLL = (LinearLayout)findViewById(R.id.line_line_gsensor_detection_duration);
-        gSensorDetectionDurationLineLL.setVisibility(View.GONE);
-        gSensorDetectionIntervalLL = (LinearLayout)findViewById(R.id.line_gsensor_detection_interval);
-        gSensorDetectionIntervalLL.setVisibility(View.GONE);
-        gSensorDetectionIntervalLineLL = (LinearLayout)findViewById(R.id.line_line_gsensor_detection_interval);
-        gSensorDetectionIntervalLineLL.setVisibility(View.GONE);
-        gSensorSensitivityLL = (LinearLayout)findViewById(R.id.line_gsensor_sensitivity);
-        gSensorSensitivityLL.setVisibility(View.GONE);
-        gSensorSensitivityLineLL = (LinearLayout)findViewById(R.id.line_line_gsensor_sensitivity);
-        gSensorSensitivityLineLL.setVisibility(View.GONE);
-
-
-        beaconMajorSetLL=(LinearLayout)findViewById(R.id.line_beacon_major_set);
-        beaconMajorSetLineLL=(LinearLayout)findViewById(R.id.line_line_beacon_major_set);
-        beaconMinorSetLL=(LinearLayout)findViewById(R.id.line_beacon_minor_set);
-        beaconMinorSetLineLL=(LinearLayout)findViewById(R.id.line_line_beacon_minor_set);
-        eddystoneNidSetLL=(LinearLayout)findViewById(R.id.line_eddystone_nid_set);
-        eddystoneNidSetLineLL=(LinearLayout)findViewById(R.id.line_line_eddystone_nid_set);
-        eddystoneBidSetLL=(LinearLayout)findViewById(R.id.line_eddystone_bid_set);
-        eddystoneBidSetLineLL=(LinearLayout)findViewById(R.id.line_line_eddystone_bid_set);
-        beaconMajorSetLL.setVisibility(View.GONE);
-        beaconMajorSetLineLL.setVisibility(View.GONE);
-        beaconMinorSetLL.setVisibility(View.GONE);
-        beaconMinorSetLineLL.setVisibility(View.GONE);
-        eddystoneNidSetLL.setVisibility(View.GONE);
-        eddystoneNidSetLineLL.setVisibility(View.GONE);
-        eddystoneBidSetLL.setVisibility(View.GONE);
-        eddystoneBidSetLineLL.setVisibility(View.GONE);
-
-        if (deviceType.equals("S04")){
-            if(Integer.valueOf(software) >= 13){
-                transmittedPowerLL.setVisibility(View.VISIBLE);
-                transmittedPowerLineLL.setVisibility(View.VISIBLE);
-            }
-//            if(Integer.valueOf(software) > 10){
-//                recordControlLL.setVisibility(View.VISIBLE);
-//                recordControlLineLL.setVisibility(View.VISIBLE);
-//                readAlarmLL.setVisibility(View.VISIBLE);
-//                readAlarmLineLL.setVisibility(View.VISIBLE);
-//                clearRecordLL.setVisibility(View.VISIBLE);
-//                clearRecordLineLL.setVisibility(View.VISIBLE);
-//            }
-            tempLowAlarmLL.setVisibility(View.VISIBLE);
-            tempLowAlarmLineLL.setVisibility(View.VISIBLE);
-            tempHighAlarmLL.setVisibility(View.VISIBLE);
-            tempHighAlarmLineLL.setVisibility(View.VISIBLE);
-        }else if (deviceType.equals("S05")){
-            if(Integer.valueOf(software) >= 13){
-                transmittedPowerLL.setVisibility(View.VISIBLE);
-                transmittedPowerLineLL.setVisibility(View.VISIBLE);
-            }
-            relayLL.setVisibility(View.VISIBLE);
-            relayLineLL.setVisibility(View.VISIBLE);
-            if(Integer.valueOf(software) >= 18){
-                relayFlashingLL.setVisibility(View.VISIBLE);
-                relayFlashingLineLL.setVisibility(View.VISIBLE);
-            }
-            tempLowAlarmLL.setVisibility(View.VISIBLE);
-            tempLowAlarmLineLL.setVisibility(View.VISIBLE);
-            tempHighAlarmLL.setVisibility(View.VISIBLE);
-            tempHighAlarmLineLL.setVisibility(View.VISIBLE);
-        }else if (deviceType.equals("S02")){
-            if(Integer.valueOf(software) >= 13){
-                transmittedPowerLL.setVisibility(View.VISIBLE);
-                transmittedPowerLineLL.setVisibility(View.VISIBLE);
-            }
-            if(Integer.valueOf(software) > 10){
-                recordControlLineLL.setVisibility(View.VISIBLE);
-                recordControlLL.setVisibility(View.VISIBLE);
-                saveRecordIntervaLineLL.setVisibility(View.VISIBLE);
-                saveRecordIntervalLL.setVisibility(View.VISIBLE);
-                readSaveCountLineLL.setVisibility(View.VISIBLE);
-                readSaveCountLL.setVisibility(View.VISIBLE);
-                clearRecordLL.setVisibility(View.VISIBLE);
-                clearRecordLineLL.setVisibility(View.VISIBLE);
-            }
-
-            if(Integer.valueOf(software) >= 20){
-                lightSensorEnableLineLL.setVisibility(View.VISIBLE);
-                lightSensorEnableLL.setVisibility(View.VISIBLE);
-            }
-            humidityLowAlarmLL.setVisibility(View.VISIBLE);
-            humidityHighAlarmLL.setVisibility(View.VISIBLE);
-            humidityLowAlarmLineLL.setVisibility(View.VISIBLE);
-            humidityHighAlarmLineLL.setVisibility(View.VISIBLE);
-            tempLowAlarmLL.setVisibility(View.VISIBLE);
-            tempLowAlarmLineLL.setVisibility(View.VISIBLE);
-            tempHighAlarmLL.setVisibility(View.VISIBLE);
-            tempHighAlarmLineLL.setVisibility(View.VISIBLE);
-        }else if(deviceType.equals("S09")){
-            transmittedPowerLL.setVisibility(View.VISIBLE);
-            transmittedPowerLineLL.setVisibility(View.VISIBLE);
-
-
-            readDinVoltageLL.setVisibility(View.VISIBLE);
-            readDinVoltageLineLL.setVisibility(View.VISIBLE);
-            dinStatusEventLL.setVisibility(View.VISIBLE);
-            dinStatusEventLineLL.setVisibility(View.VISIBLE);
-            readDinStatusEventTypeLL.setVisibility(View.VISIBLE);
-            readDinStatusEventTypeLineLL.setVisibility(View.VISIBLE);
-            doutStatusLL.setVisibility(View.VISIBLE);
-            doutStatusLineLL.setVisibility(View.VISIBLE);
-            readAinVoltageLL.setVisibility(View.VISIBLE);
-            readAinVoltageLineLL.setVisibility(View.VISIBLE);
-            setPositiveNegativeWarningLL.setVisibility(View.VISIBLE);
-            setPositiveNegativeWarningLineLL.setVisibility(View.VISIBLE);
-            getOneWireDeviceLL.setVisibility(View.VISIBLE);
-            getOneWireDeviceLineLL.setVisibility(View.VISIBLE);
-            sendCmdSequenceLL.setVisibility(View.VISIBLE);
-            sendCmdSequenceLineLL.setVisibility(View.VISIBLE);
-//            sequentialLL.setVisibility(View.VISIBLE);
-//            sequentialLineLL.setVisibility(View.VISIBLE);
-            sendDataLL.setVisibility(View.VISIBLE);
-            sendDataLineLL.setVisibility(View.VISIBLE);
-            rs485BaudRateLL.setVisibility(View.VISIBLE);
-            rs485BaudRateLineLL.setVisibility(View.VISIBLE);
-            rs485EnableLL.setVisibility(View.VISIBLE);
-            rs485EnableLineLL.setVisibility(View.VISIBLE);
-            oneWireWorkModeLL.setVisibility(View.VISIBLE);
-            oneWireWorkModeLineLL.setVisibility(View.VISIBLE);
-            broadcastCycleLL.setVisibility(View.GONE);
-            broadcastCycleLineLL.setVisibility(View.GONE);
-
-        }else if (deviceType.equals("S08")){
-            transmittedPowerLL.setVisibility(View.VISIBLE);
-            transmittedPowerLineLL.setVisibility(View.VISIBLE);
-            recordControlLineLL.setVisibility(View.VISIBLE);
-            recordControlLL.setVisibility(View.VISIBLE);
-            saveRecordIntervaLineLL.setVisibility(View.VISIBLE);
-            saveRecordIntervalLL.setVisibility(View.VISIBLE);
-            readSaveCountLineLL.setVisibility(View.VISIBLE);
-            readSaveCountLL.setVisibility(View.VISIBLE);
-            clearRecordLL.setVisibility(View.VISIBLE);
-            clearRecordLineLL.setVisibility(View.VISIBLE);
-
-            humidityLowAlarmLL.setVisibility(View.GONE);
-            humidityHighAlarmLL.setVisibility(View.GONE);
-            humidityLowAlarmLineLL.setVisibility(View.GONE);
-            humidityHighAlarmLineLL.setVisibility(View.GONE);
-
-            broadcastTypeLL.setVisibility(View.VISIBLE);
-            broadcastTypeLineLL.setVisibility(View.VISIBLE);
-
-            tempLowAlarmLL.setVisibility(View.VISIBLE);
-            tempLowAlarmLineLL.setVisibility(View.VISIBLE);
-            tempHighAlarmLL.setVisibility(View.VISIBLE);
-            tempHighAlarmLineLL.setVisibility(View.VISIBLE);
-            shutdownLL.setVisibility(View.VISIBLE);
-            shutdownLineLL.setVisibility(View.VISIBLE);
-//            doorEnableLL.setVisibility(View.VISIBLE);
-//            doorEnableLineLL.setVisibility(View.VISIBLE);
-        }
-        else if (deviceType.equals("S10")){
-            transmittedPowerLL.setVisibility(View.VISIBLE);
-            transmittedPowerLineLL.setVisibility(View.VISIBLE);
-            recordControlLineLL.setVisibility(View.VISIBLE);
-            recordControlLL.setVisibility(View.VISIBLE);
-            saveRecordIntervaLineLL.setVisibility(View.VISIBLE);
-            saveRecordIntervalLL.setVisibility(View.VISIBLE);
-            readSaveCountLineLL.setVisibility(View.VISIBLE);
-            readSaveCountLL.setVisibility(View.VISIBLE);
-            clearRecordLL.setVisibility(View.VISIBLE);
-            clearRecordLineLL.setVisibility(View.VISIBLE);
-
-            humidityLowAlarmLL.setVisibility(View.VISIBLE);
-            humidityHighAlarmLL.setVisibility(View.VISIBLE);
-            humidityLowAlarmLineLL.setVisibility(View.VISIBLE);
-            humidityHighAlarmLineLL.setVisibility(View.VISIBLE);
-
-            broadcastTypeLL.setVisibility(View.VISIBLE);
-            broadcastTypeLineLL.setVisibility(View.VISIBLE);
-            gSensorEnableLL.setVisibility(View.GONE);
-            gSensorEnableLineLL.setVisibility(View.GONE);
-            tempLowAlarmLL.setVisibility(View.VISIBLE);
-            tempLowAlarmLineLL.setVisibility(View.VISIBLE);
-            tempHighAlarmLL.setVisibility(View.VISIBLE);
-            tempHighAlarmLineLL.setVisibility(View.VISIBLE);
-            shutdownLL.setVisibility(View.VISIBLE);
-            shutdownLineLL.setVisibility(View.VISIBLE);
-
-        }
-        else if (deviceType.equals("S07")){
-            transmittedPowerLL.setVisibility(View.VISIBLE);
-            transmittedPowerLineLL.setVisibility(View.VISIBLE);
-            humidityLowAlarmLL.setVisibility(View.GONE);
-            humidityHighAlarmLL.setVisibility(View.GONE);
-            humidityLowAlarmLineLL.setVisibility(View.GONE);
-            humidityHighAlarmLineLL.setVisibility(View.GONE);
-            broadcastTypeLL.setVisibility(View.VISIBLE);
-            broadcastTypeLineLL.setVisibility(View.VISIBLE);
-            ledLL.setVisibility(View.GONE);
-            ledLineLL.setVisibility(View.GONE);
-        }
-    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         onThisView = true;
-        if(requestCode == REQUEST_CHANGE_PWD && resultCode == RESPONSE_CHANGE_PWD){
+        if (requestCode == REQUEST_CHANGE_PWD && resultCode == RESPONSE_CHANGE_PWD) {
             newPwd = data.getStringExtra("newPwd");
-            if(newPwd != null && newPwd.length() == 6){
+            if (newPwd != null && newPwd.length() == 6) {
                 writePwd(newPwd);
             }
-        }else if(requestCode == REQUEST_CHANGE_TEMP && resultCode == RESPONSE_CHANGE_TEMP){
-            int highValue = data.getIntExtra("highValue",4095);
-            int lowValue = data.getIntExtra("lowValue",4095);
-            writeTempAlarmData(highValue,lowValue);
-        }else if(requestCode == REQUEST_CHANGE_HUMIDITY && resultCode == RESPONSE_CHANGE_HUMIDITY){
-            int highValue = data.getIntExtra("highValue",4095);
-            int lowValue = data.getIntExtra("lowValue",4095);
-            writeHumidityAlarmData(highValue,lowValue);
-        }else if(requestCode == REQUEST_READ_HISTORY_TIME && resultCode == RESPONSE_READ_HISTORY_TIME){
-            if (startHistory){
+        } else if (requestCode == REQUEST_CHANGE_TEMP && resultCode == RESPONSE_CHANGE_TEMP) {
+            int highValue = data.getIntExtra("highValue", 4095);
+            int lowValue = data.getIntExtra("lowValue", 4095);
+            writeTempAlarmData(highValue, lowValue);
+        } else if (requestCode == REQUEST_CHANGE_HUMIDITY && resultCode == RESPONSE_CHANGE_HUMIDITY) {
+            int highValue = data.getIntExtra("highValue", 4095);
+            int lowValue = data.getIntExtra("lowValue", 4095);
+            writeHumidityAlarmData(highValue, lowValue);
+        } else if (requestCode == REQUEST_READ_HISTORY_TIME && resultCode == RESPONSE_READ_HISTORY_TIME) {
+            if (startHistory) {
                 return;
             }
             historyIndex = 0;
             startHistory = true;
             originHistoryList.clear();
-            startTimestamp = data.getLongExtra("startDate",0);
-            endTimestamp = data.getLongExtra("endDate",0);
+            startTimestamp = data.getLongExtra("startDate", 0);
+            endTimestamp = data.getLongExtra("endDate", 0);
             showWaitingCancelDlg(getResources().getString(R.string.loading));
             readHistory();
-        }else if(requestCode == REQUEST_READ_ALARM_TIME && resultCode == RESPONSE_READ_ALARM_TIME){
-            if (startHistory){
+        } else if (requestCode == REQUEST_READ_ALARM_TIME && resultCode == RESPONSE_READ_ALARM_TIME) {
+            if (startHistory) {
                 return;
             }
             startHistory = true;
             showWaitingCancelDlg(getResources().getString(R.string.loading));
-            startTimestamp = data.getLongExtra("startDate",0);
-            endTimestamp = data.getLongExtra("endDate",0);
+            startTimestamp = data.getLongExtra("startDate", 0);
+            endTimestamp = data.getLongExtra("endDate", 0);
             readAlarm();
         }
 //        else if(requestCode == REQUEST_CHANGE_CONNECT_PWD && resultCode == RESPONSE_CHANGE_CONNECT_PWD){
@@ -2257,39 +2047,46 @@ public class EditActivity extends AppCompatActivity {
 //                writeConnectPwd(connectPwd);
 //            }
 //        }
-        else if(requestCode == REQUEST_CHANGE_DOUT_STATUS && resultCode == RESPONSE_CHANGE_DOUT_STATUS){
+        else if (requestCode == REQUEST_CHANGE_DOUT_STATUS && resultCode == RESPONSE_CHANGE_DOUT_STATUS) {
             String dout0 = data.getStringExtra("dout0");
             String dout1 = data.getStringExtra("dout1");
-            if(dout0 != null ){
-                writeDoutStatus(0,Integer.valueOf(dout0));
+            if (dout0 != null) {
+                writeDoutStatus(0, Integer.valueOf(dout0));
             }
-            if(dout1 != null){
-                writeDoutStatus(1,Integer.valueOf(dout1));
+            if (dout1 != null) {
+                writeDoutStatus(1, Integer.valueOf(dout1));
             }
-        }else if(requestCode == REQUEST_CHANGE_POSITIVE_NEGATIVE_WARNING && resultCode == RESPONSE_CHANGE_POSITIVE_NEGATIVE_WARNING){
-            Integer lowVoltage = data.getIntExtra("lowVoltage",-1);
-            Integer highVoltage = data.getIntExtra("highVoltage",-1);
-            Integer port = data.getIntExtra("port",-1);
-            Integer mode = data.getIntExtra("mode",-1);
-            Integer ditheringIntervalHigh = data.getIntExtra("ditheringIntervalHigh",-1);
-            Integer ditheringIntervalLow = data.getIntExtra("ditheringIntervalLow",-1);
-            Integer samplingInterval = data.getIntExtra("samplingInterval",-1);
-            writePositiveNegativeWaning(port,mode,highVoltage,
-                    lowVoltage,samplingInterval,ditheringIntervalHigh,ditheringIntervalLow);
-        }else if(requestCode == REQUEST_RS485_SEND_DATA && resultCode == RESPONSE_RS485_SEND_DATA){
+        } else if (requestCode == REQUEST_CHANGE_POSITIVE_NEGATIVE_WARNING && resultCode == RESPONSE_CHANGE_POSITIVE_NEGATIVE_WARNING) {
+            Integer lowVoltage = data.getIntExtra("lowVoltage", -1);
+            Integer highVoltage = data.getIntExtra("highVoltage", -1);
+            Integer port = data.getIntExtra("port", -1);
+            Integer mode = data.getIntExtra("mode", -1);
+            Integer ditheringIntervalHigh = data.getIntExtra("ditheringIntervalHigh", -1);
+            Integer ditheringIntervalLow = data.getIntExtra("ditheringIntervalLow", -1);
+            Integer samplingInterval = data.getIntExtra("samplingInterval", -1);
+            writePositiveNegativeWaning(port, mode, highVoltage,
+                    lowVoltage, samplingInterval, ditheringIntervalHigh, ditheringIntervalLow);
+        } else if (requestCode == REQUEST_RS485_SEND_DATA && resultCode == RESPONSE_RS485_SEND_DATA) {
             String cmd = data.getStringExtra("cmd");
             writeRS485SendData(cmd);
-        }else if(requestCode == REQUEST_SEND_INSTRUCTION_SEQUENCE && resultCode == RESPONSE_SEND_INSTRUCTION_SEQUENCE){
+        } else if (requestCode == REQUEST_SEND_INSTRUCTION_SEQUENCE && resultCode == RESPONSE_SEND_INSTRUCTION_SEQUENCE) {
             String cmd = data.getStringExtra("cmd");
             writeSendInstructionSequence(cmd);
-        }else if(requestCode == REQUEST_EDIT_PULSE_DELAY && resultCode == RESPONSE_EDIT_PULSE_DELAY){
-            Integer cycleTime = data.getIntExtra("cycleTime",-1);
-            Integer initEnableTime = data.getIntExtra("initEnableTime",-1);
-            Integer toggleTime = data.getIntExtra("toggleTime",-1);
-            Integer recoverTime = data.getIntExtra("recoverTime",-1);
-            writePulseRelayStatus(cycleTime,initEnableTime,toggleTime,recoverTime);
+        } else if (requestCode == REQUEST_EDIT_PULSE_DELAY && resultCode == RESPONSE_EDIT_PULSE_DELAY) {
+            Integer cycleTime = data.getIntExtra("cycleTime", -1);
+            Integer initEnableTime = data.getIntExtra("initEnableTime", -1);
+            Integer toggleTime = data.getIntExtra("toggleTime", -1);
+            Integer recoverTime = data.getIntExtra("recoverTime", -1);
+            writePulseRelayStatus(cycleTime, initEnableTime, toggleTime, recoverTime);
+        }else if (requestCode == REQUEST_EDIT_SECOND_PULSE_DELAY && resultCode == RESPONSE_EDIT_SECOND_PULSE_DELAY) {
+            Integer startLevel = data.getIntExtra("startLevel", -1);
+            Integer highLevelPulseWidthTime = data.getIntExtra("highLevelPulseWidthTime", -1);
+            Integer lowLevelPulseWidthTime = data.getIntExtra("lowLevelPulseWidthTime", -1);
+            Integer pulseCount = data.getIntExtra("pulseCount", -1);
+            writeSecondPulseRelayStatus(startLevel, highLevelPulseWidthTime, lowLevelPulseWidthTime, pulseCount);
         }
     }
+
     SweetAlertDialog.OnSweetClickListener sweetPwdCancelClick = new SweetAlertDialog.OnSweetClickListener() {
         @Override
         public void onClick(SweetAlertDialog sweetAlertDialog) {
@@ -2301,7 +2098,7 @@ public class EditActivity extends AppCompatActivity {
         public void onClick(SweetAlertDialog sweetAlertDialog) {
             String pwd = sweetPwdDlg.getInputText();
             pwdErrorWarning = false;
-            if(pwd.length() == 6){
+            if (pwd.length() == 6) {
                 sweetPwdDlg.hide();
                 confirmPwd = pwd;
                 readTransmittedPower();
@@ -2322,266 +2119,536 @@ public class EditActivity extends AppCompatActivity {
                 readLongRangeEnable();
                 readGSensorEnable();
                 readDinStatusEvent();
-                readDinVoltage( );
-                if( !deviceType.equals("S08")){
+                readDinVoltage();
+                readBtnTriggerTime();
+                if (!deviceType.equals("S08")) {
                     readDoorEnableStatus();
                 }
                 fixTime();
-            }else{
-                Toast.makeText(EditActivity.this,R.string.input_error,Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(EditActivity.this, R.string.input_error, Toast.LENGTH_SHORT).show();
 
             }
         }
     };
-
-    private UUID serviceId = UUID.fromString("27760001-999C-4D6A-9FC4-C7272BE10900");
-    private UUID uuid = UUID.fromString("27763561-999C-4D6A-9FC4-C7272BE10900");
-    
-    BleConnectResponse bleConnectResponse = new BleConnectResponse() {
+    private BluetoothGattCallback bluetoothGattCallback = new BluetoothGattCallback() {
         @Override
-        public void onResponse(int code, BleGattProfile data) {
-            if (code == REQUEST_SUCCESS) {
-                Log.e("bleConnect","connected");
-                mClient.notify(mac, serviceId, uuid, bleNotifyResponse); 
-            }else{
+        public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            Log.e("TFTBleService", "onCharacteristicRead");
+            // 通过gatt对象来识别设备
+            String deviceAddress = gatt.getDevice().getAddress();
+            // 处理特征值
+            byte[] data = characteristic.getValue();
+            Log.e("BluetoothNotify", MyUtils.bytes2HexString(data, 0));
+
+        }
+
+        @Override
+        public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+            Log.e("TFTBleService", "onCharacteristicChanged");
+            UUID characteristicUUID = characteristic.getUuid();
+            UUID serviceUUID = characteristic.getService().getUuid();
+            String deviceAddress = gatt.getDevice().getAddress();
+
+            if (characteristicUUID.equals(uuid) && serviceUUID.equals(serviceUUID)) {
+                // 处理特定UUID的特征值通知
+                byte[] data = characteristic.getValue();
+//                Log.e("BluetoothNotify", MyUtils.bytes2HexString(data, 0));
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        parseNotifyData(data);
+                    }
+                });
+            }
+        }
+
+        @Override
+        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            Log.e("TFTBleService", "onCharacteristicWrite");
+            // 通过gatt对象来识别设备
+            String deviceAddress = gatt.getDevice().getAddress();
+            byte[] data = characteristic.getValue();
+
+            // 处理特征值写入
+        }
+
+        @Override
+        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+
+            Log.e("TFTBleService", "onConnectionStateChange");
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (newState == BluetoothProfile.STATE_CONNECTED) {
+                        String deviceAddress = gatt.getDevice().getAddress();
+                        // 处理连接成功
+                        if (ActivityCompat.checkSelfPermission(EditActivity.this, android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+
+                        }
+
+                        gatt.discoverServices();
+                    } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                        String deviceAddress = gatt.getDevice().getAddress();
+                        // 处理断开连接
+                        if (onThisView) {
+                            if (connectSucc || curTryConnectCount >= tryConnectCount) {
+                                if (connectWaitingCancelDlg != null) {
+                                    connectWaitingCancelDlg.hide();
+                                }
+                                if (waitingDlg != null) {
+                                    waitingDlg.hide();
+                                }
+                                Toast.makeText(EditActivity.this, R.string.disconnect_from_device, Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                        curTryConnectCount++;
+                        connectSucc = false;
+                        a001UpgradeManager.stopUpgrade();
+                        reconnectBtn.setImageResource(R.mipmap.ic_disconnect);
+                    }
+                }
+            });
+        }
+
+        @Override
+        public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                String deviceAddress = gatt.getDevice().getAddress();
+
+            }
+        }
+
+        @Override
+        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+            Log.e("TFTBleService", "onServicesDiscovered");
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                String deviceAddress = gatt.getDevice().getAddress();
+                BluetoothGattService service = gatt.getService(serviceId);
+                if (service != null) {
+                    BluetoothGattCharacteristic characteristic = service.getCharacteristic(uuid);
+                    if (characteristic != null) {
+                        // 启用通知
+                        setCharacteristicNotification(gatt, characteristic, true);
+                    }
+                    if (isA001Protocol) {
+                        BluetoothGattCharacteristic dataWriteCharacteristic = service.getCharacteristic(A001SoftwareUpgradeManager.dataWriteUUID);
+                        if (dataWriteCharacteristic != null) {
+                            a001UpgradeManager.setDataWriteCharacteristic(dataWriteCharacteristic);
+                        }
+                    }
+
+                }
+            } else {
+                // 处理服务发现失败
+                if (ActivityCompat.checkSelfPermission(EditActivity.this, android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+
+                }
+                gatt.disconnect();
                 new SweetAlertDialog(EditActivity.this, SweetAlertDialog.ERROR_TYPE)
                         .setTitleText(getResources().getString(R.string.warning))
                         .setContentText(getResources().getString(R.string.connect_fail))
                         .show();
-                if(waitingDlg != null){
+                if (connectWaitingCancelDlg != null) {
+                    connectWaitingCancelDlg.hide();
+                }
+                if (waitingDlg != null) {
                     waitingDlg.hide();
                 }
             }
         }
-    };
-    BleNotifyResponse bleNotifyResponse = new BleNotifyResponse() {
+
         @Override
-        public void onNotify(UUID service, UUID character, byte[] value) {
-            reconnectBtn.setImageResource(R.mipmap.ic_refresh);
-            Log.e("myLog","resp:" + MyUtils.bytes2HexString(value,0));
-            isWaitResponse = false;
-            LogFileHelper.getInstance(EditActivity.this).writeIntoFile("resp:" + MyUtils.bytes2HexString(value,0));
-            if(value.length > 1){
-                int status = value[0];
-                int type = value[1] & 0xff;
-                if (status == 0){
-                    if(type == MyUtils.controlFunc.get("deviceName").get("read")
-                        || type == MyUtils.controlFunc.get("deviceName").get("write")){
-                        readDeviceNameParse(value);
-                    }else if(type == MyUtils.controlFunc.get("password").get("write")){
-                        Toast.makeText(EditActivity.this,R.string.password_has_been_updated,Toast.LENGTH_SHORT).show();
-                        confirmPwd = newPwd;
-                    }else if(type == MyUtils.controlFunc.get("broadcastCycle").get("read")
-                            || type == MyUtils.controlFunc.get("broadcastCycle").get("write")){
-                        readBroadcastCycleResp(value);
-                    }else if(type == MyUtils.controlFunc.get("transmittedPower").get("read")
-                            || type == MyUtils.controlFunc.get("transmittedPower").get("write")){
-                        readTransmittedPowerResp(value);
-                    }else if(type == MyUtils.controlFunc.get("saveCount").get("read")){
-                        readSaveCountResp(value);
-                        if(waitingDlg != null){
+        public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+            Log.e("TFTBleService", "onDescriptorWrite");
+            super.onDescriptorWrite(gatt, descriptor, status);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (status == BluetoothGatt.GATT_SUCCESS) {
+                        String deviceAddress = gatt.getDevice().getAddress();
+                        if (connectWaitingCancelDlg != null) {
+                            connectWaitingCancelDlg.hide();
+                        }
+                        if (waitingDlg != null) {
                             waitingDlg.hide();
                         }
-                    }else if(type == MyUtils.controlFunc.get("readOriginData").get("read")){
-                        readHistoryResp(value);
-                    }else if(type == MyUtils.controlFunc.get("readAlarm").get("read")){
-                        readAlarmResp(value);
-                    }else if(type == MyUtils.controlFunc.get("readNextAlarm").get("read")){
-                        readNextAlarmResp(value);
-                    }else if(type == MyUtils.controlFunc.get("saveInterval").get("read")
-                            || type == MyUtils.controlFunc.get("saveInterval").get("write")){
-                        readSaveIntervalResp(value);
-                    }else if(type == MyUtils.controlFunc.get("time").get("read")
-                            || type == MyUtils.controlFunc.get("time").get("write")){
-//
-                    }else if(type == MyUtils.controlFunc.get("firmware").get("read")){
-                        readVersionResp(value);
-                    }else if(type == MyUtils.controlFunc.get("humidityAlarm").get("read")
-                            || type == MyUtils.controlFunc.get("humidityAlarm").get("write")){
-                        readHumidityAlarmResp(value);
-                    }else if(type == MyUtils.controlFunc.get("tempAlarm").get("read")
-                            || type == MyUtils.controlFunc.get("tempAlarm").get("write")){
-                        readTempAlarmResp(value);
-                    }else if(type == MyUtils.controlFunc.get("startRecord").get("write")){
-                        startRecordResp(value);
-                    }else if(type == MyUtils.controlFunc.get("stopRecord").get("write")){
-                        stopRecordResp(value);
-                    }else if(type == MyUtils.controlFunc.get("clearRecord").get("write")){
-                        clearRecordResp(value);
-                    }else if(type == MyUtils.controlFunc.get("ledOpen").get("read")
-                            || type == MyUtils.controlFunc.get("ledOpen").get("write")){
-                        readLedOpenStatusResp(value);
-                    }else if(type == MyUtils.controlFunc.get("relay").get("read")
-                            || type == MyUtils.controlFunc.get("relay").get("write")){
-                        readRelayStatusResp(value);
-                    }else if(type == MyUtils.controlFunc.get("resetFactory").get("write")){
-                        Toast.makeText(EditActivity.this,R.string.factory_reset_succ,Toast.LENGTH_LONG).show();
-                        doReconnect();
-                        //read all params
-                    }else if(type == MyUtils.controlFunc.get("lightSensorOpen").get("read")
-                            || type == MyUtils.controlFunc.get("lightSensorOpen").get("write")){
-                        readLightSensorOpenStatusResp(value);
-                    }else if(type == MyUtils.controlFunc.get("readDinVoltage").get("read")){
-                        readDinVoltageResp(value);
-                    }else if(type == MyUtils.controlFunc.get("dinStatusEvent").get("read")
-                            || type == MyUtils.controlFunc.get("dinStatusEvent").get("write")){
-                        readDinStatusEventResp(value);
-                    }else if(type == MyUtils.controlFunc.get("readDinStatusEventType").get("read")){
-                        readDinStatusEventTypeResp(value);
-                    }else if(type == MyUtils.controlFunc.get("doutStatus").get("read")){
-                        readDoutStatusResp(value);
-                    }else if(type == MyUtils.controlFunc.get("doutStatus").get("write")){
-                        Toast.makeText(EditActivity.this,R.string.success,Toast.LENGTH_SHORT).show();
-                    }else if(type == MyUtils.controlFunc.get("readAinVoltage").get("read")){
-                        readAinVoltageResp(value);
-                    }else if(type == MyUtils.controlFunc.get("readVinVoltage").get("read")){
-                        readVinVoltageResp(value);
-                    }else if(type == MyUtils.controlFunc.get("setPositiveNegativeWarning").get("read")){
-                        readPositiveNegativeWarningResp(value);
-                    }else if(type == MyUtils.controlFunc.get("setPositiveNegativeWarning").get("write")){
-                        Toast.makeText(EditActivity.this,R.string.success,Toast.LENGTH_SHORT).show();
-                    }else if(type == MyUtils.controlFunc.get("getOneWireDevice").get("read")){
-                        readOneWireDeviceResp(value);
-                    }else if(type == MyUtils.controlFunc.get("oneWireWorkMode").get("read")
-                        || type == MyUtils.controlFunc.get("oneWireWorkMode").get("write")){
-                        readOneWireWorkModeResp(value);
-                    }else if(type == MyUtils.controlFunc.get("rs485BaudRate").get("read")
-                    || type == MyUtils.controlFunc.get("rs485BaudRate").get("write")){
-                        readRs485BaudRateResp(value);
-                    } else if(type == MyUtils.controlFunc.get("rs485Enable").get("read")
-                            || type == MyUtils.controlFunc.get("rs485Enable").get("write")){
-                        readRs485EnableStatusResp(value);
-                    }else if(type == MyUtils.controlFunc.get("broadcastType").get("read")
-                            || type == MyUtils.controlFunc.get("broadcastType").get("write")){
-                        readBroadcastTypeResp(value);
-                    }else if(type == MyUtils.controlFunc.get("readExtSensorType").get("read") ){
-                        readExtSensorTypeResp(value);
-                    }else if(type == MyUtils.controlFunc.get("longRangeEnable").get("read") ||
-                            type == MyUtils.controlFunc.get("longRangeEnable").get("write")){
-                        readLongRangeEnableStatusResp(value);
-                    }else if(type == MyUtils.controlFunc.get("gSensorEnable").get("read")
-                            || type == MyUtils.controlFunc.get("gSensorEnable").get("write")){
-                        readGSensorEnableStatusResp(value);
-                    }else if(type == MyUtils.controlFunc.get("sendCmdSequence").get("write")){
-                        readSendInstructionSequenceResp(value);
-                    }else if(type == MyUtils.controlFunc.get("rs485SendData").get("read")){
-                        readRS485SendDataResp(value);
-                    }else if(type == MyUtils.controlFunc.get("rs485SendData").get("write")){
-                        Toast.makeText(EditActivity.this,R.string.success,Toast.LENGTH_SHORT).show();
-                    }else if(type == MyUtils.controlFunc.get("shutdown").get("write")){
-                        Toast.makeText(EditActivity.this,R.string.success,Toast.LENGTH_SHORT).show();
-                    }else if(type == MyUtils.controlFunc.get("getAinEvent").get("read")){
-                        readAinEventResp(value);
-                    }else if(type == MyUtils.controlFunc.get("doorEnable").get("read")
-                            || type == MyUtils.controlFunc.get("doorEnable").get("write")){
-                        readDoorEnableStatusResp(value);
+                        if (!connectSucc) {
+                            showPwdDlg();
+                        }
+
+                        connectSucc = true;
+
+
+                    } else {
+                        if (ActivityCompat.checkSelfPermission(EditActivity.this, android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+
+                        }
+                        gatt.disconnect();
+                        new SweetAlertDialog(EditActivity.this, SweetAlertDialog.ERROR_TYPE)
+                                .setTitleText(getResources().getString(R.string.warning))
+                                .setContentText(getResources().getString(R.string.connect_fail))
+                                .show();
+                        if (connectWaitingCancelDlg != null) {
+                            connectWaitingCancelDlg.hide();
+                        }
+                        if (waitingDlg != null) {
+                            waitingDlg.hide();
+                        }
                     }
-                    else if(type == MyUtils.controlFunc.get("gSensorDetectionDuration").get("read")
-                            || type == MyUtils.controlFunc.get("gSensorDetectionDuration").get("write")){
-                        readGSensorDetectionDurationResp(value);
-                    }
-                    else if(type == MyUtils.controlFunc.get("gSensorSensitivity").get("read")
-                            || type == MyUtils.controlFunc.get("gSensorSensitivity").get("write")){
-                        readGSensorSensitivityResp(value);
-                    }
-                    else if(type == MyUtils.controlFunc.get("gSensorDetectionInterval").get("read")
-                            || type == MyUtils.controlFunc.get("gSensorDetectionInterval").get("write")){
-                        readGSensorDetectionIntervalResp(value);
-                    }
-                    else if(type == MyUtils.controlFunc.get("beaconMajorSet").get("read")
-                            || type == MyUtils.controlFunc.get("beaconMajorSet").get("write")){
-                        readBeaconMajorSetResp(value);
-                    }
-                    else if(type == MyUtils.controlFunc.get("beaconMinorSet").get("read")
-                            || type == MyUtils.controlFunc.get("beaconMinorSet").get("write")){
-                        readBeaconMinorSetResp(value);
-                    }
-                    else if(type == MyUtils.controlFunc.get("eddystoneNIDSet").get("read")
-                            || type == MyUtils.controlFunc.get("eddystoneNIDSet").get("write")){
-                        readEddystoneNidSetResp(value);
-                    }
-                    else if(type == MyUtils.controlFunc.get("eddystoneBIDSet").get("read")
-                            || type == MyUtils.controlFunc.get("eddystoneBIDSet").get("write")){
-                        readEddystoneBidSetResp(value);
-                    }
-                }else if (status == 1){
-                    if(waitingDlg != null){
-                        waitingDlg.hide();
-                    }
-                    if(!pwdErrorWarning){
-                        Toast.makeText(EditActivity.this,R.string.password_is_error,Toast.LENGTH_SHORT).show();
-                        pwdErrorWarning = true;
-                        showPwdDlg();
-                    }
-                }else if (status == 7){
-                    if(type == MyUtils.controlFunc.get("readAlarm").get("read")){
-                        readAlarmResp(value);
-                    }else if(type == MyUtils.controlFunc.get("readNextAlarm").get("read")){
-                        readNextAlarmResp(value);
-                    }
-                }else {
-                    if(waitingDlg != null){
-                        waitingDlg.hide();
-                    }
-                    Toast.makeText(EditActivity.this,R.string.error_please_try_again,Toast.LENGTH_SHORT).show();
                 }
-            }
+            });
+
         }
 
         @Override
-        public void onResponse(int code) {
-            if (code == REQUEST_SUCCESS) {
-                if(!connectSucc){
-                    connectWaitingCancelDlg.hide();
-                    showPwdDlg();
-                }
-                connectSucc = true;
-//                byte[] readDeviceName = {54, 53, 52, 51, 50, 49, 103, 36};
-//                mClient.write(mac, serviceId, uuid, readDeviceName, new BleWriteResponse() {
-//                    @Override
-//                    public void onResponse(int code) {
-//                        if (code == REQUEST_SUCCESS) {
-//
-//                        }
-//                    }
-//                });
+        public void onDescriptorRead(@NonNull BluetoothGatt gatt, @NonNull BluetoothGattDescriptor descriptor, int status, @NonNull byte[] value) {
+            Log.e("TFTBleService", "onDescriptorRead");
+            super.onDescriptorRead(gatt, descriptor, status, value);
+        }
 
-            }else{
-                new SweetAlertDialog(EditActivity.this, SweetAlertDialog.ERROR_TYPE)
-                        .setTitleText(getResources().getString(R.string.warning))
-                        .setContentText(getResources().getString(R.string.connect_fail))
-                        .show();
-                connectWaitingCancelDlg.hide();
-                mClient.disconnect(mac);
+        @Override
+        public void onReliableWriteCompleted(BluetoothGatt gatt, int status) {
+            Log.e("TFTBleService", "onReliableWriteCompleted");
+            super.onReliableWriteCompleted(gatt, status);
+        }
+
+        private void setCharacteristicNotification(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean enabled) {
+            if (ActivityCompat.checkSelfPermission(EditActivity.this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+
+
+            }
+            gatt.setCharacteristicNotification(characteristic, enabled);
+
+            UUID descriptorUUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"); // 通知描述符的UUID
+            BluetoothGattDescriptor descriptor = characteristic.getDescriptor(descriptorUUID);
+            if (descriptor != null) {
+                descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                gatt.writeDescriptor(descriptor);
+                String deviceAddress = gatt.getDevice().getAddress();
+                bluetoothGatt = gatt;
+                cmdReadWriteCharacteristic = characteristic;
+                a001UpgradeManager.setCmdReadWriteCharacteristic(cmdReadWriteCharacteristic);
+//                String imei = macImeiMap.get(deviceAddress);
+//                if (imei != null) {
+//                    imeiWriteObj.put(imei, characteristic);
+//                    saveConnectImeis();
+//
+//                    connectStatusCallback(imei);
+//                }
+//                isConnectingBle = false;
+//                cancelDoWarning();
+
             }
         }
     };
+
+
+//    BleConnectResponse bleConnectResponse = new BleConnectResponse() {
+//        @Override
+//        public void onResponse(int code, BleGattProfile data) {
+//            if (code == REQUEST_SUCCESS) {
+//                Log.e("bleConnect", "connected");
+//                mClient.notify(mac, serviceId, uuid, bleNotifyResponse);
+//            } else {
+//                new SweetAlertDialog(EditActivity.this, SweetAlertDialog.ERROR_TYPE)
+//                        .setTitleText(getResources().getString(R.string.warning))
+//                        .setContentText(getResources().getString(R.string.connect_fail))
+//                        .show();
+//                if (waitingDlg != null) {
+//                    waitingDlg.hide();
+//                }
+//            }
+//        }
+//    };
+//    BleNotifyResponse bleNotifyResponse = new BleNotifyResponse() {
+//        @Override
+//        public void onNotify(UUID service, UUID character, byte[] value) {
+//            parseNotifyData(value);
+//        }
+//
+//        @Override
+//        public void onResponse(int code) {
+//            if (code == REQUEST_SUCCESS) {
+//                if (connectWaitingCancelDlg != null) {
+//                    connectWaitingCancelDlg.hide();
+//                }
+//                if (waitingDlg != null) {
+//                    waitingDlg.hide();
+//                }
+//                if (!connectSucc) {
+//                    showPwdDlg();
+//                }
+//
+//                connectSucc = true;
+////                byte[] readDeviceName = {54, 53, 52, 51, 50, 49, 103, 36};
+////                mClient.write(mac, serviceId, uuid, readDeviceName, new BleWriteResponse() {
+////                    @Override
+////                    public void onResponse(int code) {
+////                        if (code == REQUEST_SUCCESS) {
+////
+////                        }
+////                    }
+////                });
+//
+//            } else {
+//                new SweetAlertDialog(EditActivity.this, SweetAlertDialog.ERROR_TYPE)
+//                        .setTitleText(getResources().getString(R.string.warning))
+//                        .setContentText(getResources().getString(R.string.connect_fail))
+//                        .show();
+//                if (connectWaitingCancelDlg != null) {
+//                    connectWaitingCancelDlg.hide();
+//                }
+//                if (waitingDlg != null) {
+//                    waitingDlg.hide();
+//                }
+//                mClient.disconnect(mac);
+//            }
+//        }
+//    };
+
+    private void parseNotifyData(byte[] value) {
+        reconnectBtn.setImageResource(R.mipmap.ic_refresh);
+        Log.e("tftble_log", "resp:" + MyUtils.bytes2HexString(value, 0));
+        isWaitResponse = false;
+        LogFileHelper.getInstance(EditActivity.this).writeIntoFile("resp:" + MyUtils.bytes2HexString(value, 0));
+        if (a001UpgradeManager.getStartUpgrade()) {
+            a001UpgradeManager.receiveCmdResp(value);
+            return;
+        }
+        if (value.length > 1) {
+            int status = value[0];
+            int type = value[1] & 0xff;
+            if (status == 0) {
+                if (type == MyUtils.controlFunc.get("deviceName").get("read")
+                        || type == MyUtils.controlFunc.get("deviceName").get("write")) {
+                    readDeviceNameParse(value);
+                } else if (type == MyUtils.controlFunc.get("password").get("write")) {
+                    Toast.makeText(EditActivity.this, R.string.password_has_been_updated, Toast.LENGTH_SHORT).show();
+                    confirmPwd = newPwd;
+                } else if (type == MyUtils.controlFunc.get("broadcastCycle").get("read")
+                        || type == MyUtils.controlFunc.get("broadcastCycle").get("write")) {
+                    readBroadcastCycleResp(value);
+                } else if (type == MyUtils.controlFunc.get("transmittedPower").get("read")
+                        || type == MyUtils.controlFunc.get("transmittedPower").get("write")) {
+                    readTransmittedPowerResp(value);
+                } else if (type == MyUtils.controlFunc.get("saveCount").get("read")) {
+                    readSaveCountResp(value);
+                    if (waitingDlg != null) {
+                        waitingDlg.hide();
+                    }
+                } else if (type == MyUtils.controlFunc.get("readOriginData").get("read")) {
+                    readHistoryResp(value);
+                } else if (type == MyUtils.controlFunc.get("readAlarm").get("read")) {
+                    readAlarmResp(value);
+                } else if (type == MyUtils.controlFunc.get("readNextAlarm").get("read")) {
+                    readNextAlarmResp(value);
+                } else if (type == MyUtils.controlFunc.get("saveInterval").get("read")
+                        || type == MyUtils.controlFunc.get("saveInterval").get("write")) {
+                    readSaveIntervalResp(value);
+                } else if (type == MyUtils.controlFunc.get("time").get("read")
+                        || type == MyUtils.controlFunc.get("time").get("write")) {
+//
+                } else if (type == MyUtils.controlFunc.get("firmware").get("read")) {
+                    readVersionResp(value);
+                } else if (type == MyUtils.controlFunc.get("humidityAlarm").get("read")
+                        || type == MyUtils.controlFunc.get("humidityAlarm").get("write")) {
+                    readHumidityAlarmResp(value);
+                } else if (type == MyUtils.controlFunc.get("tempAlarm").get("read")
+                        || type == MyUtils.controlFunc.get("tempAlarm").get("write")) {
+                    readTempAlarmResp(value);
+                } else if (type == MyUtils.controlFunc.get("startRecord").get("write")) {
+                    startRecordResp(value);
+                } else if (type == MyUtils.controlFunc.get("stopRecord").get("write")) {
+                    stopRecordResp(value);
+                } else if (type == MyUtils.controlFunc.get("clearRecord").get("write")) {
+                    clearRecordResp(value);
+                } else if (type == MyUtils.controlFunc.get("ledOpen").get("read")
+                        || type == MyUtils.controlFunc.get("ledOpen").get("write")) {
+                    readLedOpenStatusResp(value);
+                } else if (type == MyUtils.controlFunc.get("relay").get("read")
+                        || type == MyUtils.controlFunc.get("relay").get("write")) {
+                    readRelayStatusResp(value);
+                } else if (type == MyUtils.controlFunc.get("resetFactory").get("write")) {
+                    Toast.makeText(EditActivity.this, R.string.factory_reset_succ, Toast.LENGTH_LONG).show();
+                    doReconnect();
+                    //read all params
+                } else if (type == MyUtils.controlFunc.get("lightSensorOpen").get("read")
+                        || type == MyUtils.controlFunc.get("lightSensorOpen").get("write")) {
+                    readLightSensorOpenStatusResp(value);
+                } else if (type == MyUtils.controlFunc.get("readDinVoltage").get("read")) {
+                    readDinVoltageResp(value);
+                } else if (type == MyUtils.controlFunc.get("dinStatusEvent").get("read")
+                        || type == MyUtils.controlFunc.get("dinStatusEvent").get("write")) {
+                    readDinStatusEventResp(value);
+                } else if (type == MyUtils.controlFunc.get("readDinStatusEventType").get("read")) {
+                    readDinStatusEventTypeResp(value);
+                } else if (type == MyUtils.controlFunc.get("doutStatus").get("read")) {
+                    readDoutStatusResp(value);
+                } else if (type == MyUtils.controlFunc.get("doutStatus").get("write")) {
+                    Toast.makeText(EditActivity.this, R.string.success, Toast.LENGTH_SHORT).show();
+                } else if (type == MyUtils.controlFunc.get("readAinVoltage").get("read")) {
+                    readAinVoltageResp(value);
+                } else if (type == MyUtils.controlFunc.get("readVinVoltage").get("read")) {
+                    readVinVoltageResp(value);
+                } else if (type == MyUtils.controlFunc.get("setPositiveNegativeWarning").get("read")) {
+                    readPositiveNegativeWarningResp(value);
+                } else if (type == MyUtils.controlFunc.get("setPositiveNegativeWarning").get("write")) {
+                    Toast.makeText(EditActivity.this, R.string.success, Toast.LENGTH_SHORT).show();
+                } else if (type == MyUtils.controlFunc.get("getOneWireDevice").get("read")) {
+                    readOneWireDeviceResp(value);
+                } else if (type == MyUtils.controlFunc.get("oneWireWorkMode").get("read")
+                        || type == MyUtils.controlFunc.get("oneWireWorkMode").get("write")) {
+                    readOneWireWorkModeResp(value);
+                } else if (type == MyUtils.controlFunc.get("rs485BaudRate").get("read")
+                        || type == MyUtils.controlFunc.get("rs485BaudRate").get("write")) {
+                    readRs485BaudRateResp(value);
+                } else if (type == MyUtils.controlFunc.get("rs485Enable").get("read")
+                        || type == MyUtils.controlFunc.get("rs485Enable").get("write")) {
+                    readRs485EnableStatusResp(value);
+                } else if (type == MyUtils.controlFunc.get("broadcastType").get("read")
+                        || type == MyUtils.controlFunc.get("broadcastType").get("write")) {
+                    readBroadcastTypeResp(value);
+                } else if (type == MyUtils.controlFunc.get("readExtSensorType").get("read")) {
+                    readExtSensorTypeResp(value);
+                } else if (type == MyUtils.controlFunc.get("longRangeEnable").get("read") ||
+                        type == MyUtils.controlFunc.get("longRangeEnable").get("write")) {
+                    readLongRangeEnableStatusResp(value);
+                } else if (type == MyUtils.controlFunc.get("gSensorEnable").get("read")
+                        || type == MyUtils.controlFunc.get("gSensorEnable").get("write")) {
+                    readGSensorEnableStatusResp(value);
+                } else if (type == MyUtils.controlFunc.get("sendCmdSequence").get("write")) {
+                    readSendInstructionSequenceResp(value);
+                } else if (type == MyUtils.controlFunc.get("rs485SendData").get("read")) {
+                    readRS485SendDataResp(value);
+                } else if (type == MyUtils.controlFunc.get("rs485SendData").get("write")) {
+                    Toast.makeText(EditActivity.this, R.string.success, Toast.LENGTH_SHORT).show();
+                } else if (type == MyUtils.controlFunc.get("shutdown").get("write")) {
+                    Toast.makeText(EditActivity.this, R.string.success, Toast.LENGTH_SHORT).show();
+                } else if (type == MyUtils.controlFunc.get("getAinEvent").get("read")) {
+                    readAinEventResp(value);
+                } else if (type == MyUtils.controlFunc.get("doorEnable").get("read")
+                        || type == MyUtils.controlFunc.get("doorEnable").get("write")) {
+                    readDoorEnableStatusResp(value);
+                } else if (type == MyUtils.controlFunc.get("gSensorDetectionDuration").get("read")
+                        || type == MyUtils.controlFunc.get("gSensorDetectionDuration").get("write")) {
+                    readGSensorDetectionDurationResp(value);
+                } else if (type == MyUtils.controlFunc.get("gSensorSensitivity").get("read")
+                        || type == MyUtils.controlFunc.get("gSensorSensitivity").get("write")) {
+                    readGSensorSensitivityResp(value);
+                } else if (type == MyUtils.controlFunc.get("gSensorDetectionInterval").get("read")
+                        || type == MyUtils.controlFunc.get("gSensorDetectionInterval").get("write")) {
+                    readGSensorDetectionIntervalResp(value);
+                } else if (type == MyUtils.controlFunc.get("beaconMajorSet").get("read")
+                        || type == MyUtils.controlFunc.get("beaconMajorSet").get("write")) {
+                    readBeaconMajorSetResp(value);
+                } else if (type == MyUtils.controlFunc.get("beaconMinorSet").get("read")
+                        || type == MyUtils.controlFunc.get("beaconMinorSet").get("write")) {
+                    readBeaconMinorSetResp(value);
+                } else if (type == MyUtils.controlFunc.get("eddystoneNIDSet").get("read")
+                        || type == MyUtils.controlFunc.get("eddystoneNIDSet").get("write")) {
+                    readEddystoneNidSetResp(value);
+                } else if (type == MyUtils.controlFunc.get("eddystoneBIDSet").get("read")
+                        || type == MyUtils.controlFunc.get("eddystoneBIDSet").get("write")) {
+                    readEddystoneBidSetResp(value);
+                } else if (type == MyUtils.controlFunc.get("btnTriggerTime").get("read")
+                        || type == MyUtils.controlFunc.get("btnTriggerTime").get("write")) {
+                    readBtnTriggerTimeResp(value);
+                }
+            } else if (status == 1) {
+                if (waitingDlg != null) {
+                    waitingDlg.hide();
+                }
+                if (!pwdErrorWarning) {
+                    Toast.makeText(EditActivity.this, R.string.password_is_error, Toast.LENGTH_SHORT).show();
+                    pwdErrorWarning = true;
+                    showPwdDlg();
+                }
+            } else if (status == 7) {
+                if (type == MyUtils.controlFunc.get("readAlarm").get("read")) {
+                    readAlarmResp(value);
+                } else if (type == MyUtils.controlFunc.get("readNextAlarm").get("read")) {
+                    readNextAlarmResp(value);
+                }
+            } else {
+                if (waitingDlg != null) {
+                    waitingDlg.hide();
+                }
+                Toast.makeText(EditActivity.this, R.string.error_please_try_again, Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
     @Override
     protected void onStart() {
         super.onStart();
         pwdErrorWarning = false;
         onThisView = true;
-        if(!connectSucc){
+        if (!connectSucc) {
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            if(waitingDlg != null){
+            if (waitingDlg != null) {
                 waitingDlg.hide();
                 waitingDlg.dismiss();
                 waitingDlg = null;
             }
             showConnectWaitingCancelDlg(getResources().getString(R.string.connecting));
-            mClient.connect(mac, bleConnectResponse);
-            connectFailTimeoutShow(60000);
-            mClient.registerConnectStatusListener(mac, mBleConnectStatusListener);
+            connectDeviceBle();
         }
     }
+
+    private int tryConnectCount = 5;
+    private int curTryConnectCount = 0;
+    BleConnectOptions conectOptions = new BleConnectOptions.Builder().setConnectRetry(tryConnectCount).setConnectTimeout(6000).setServiceDiscoverTimeout(60000).build();
+
+    private void connectDeviceBle() {
+        curTryConnectCount = 0;
+//        mClient.connect(mac, conectOptions, bleConnectResponse);
+        connectFailTimeoutShow(60000);
+//        mClient.registerConnectStatusListener(mac, mBleConnectStatusListener);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+//            return;
+        }
+        if(bluetoothGatt != null){
+            bluetoothGatt.disconnect();
+            bluetoothGatt.close();
+        }
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+        }
+        if (bleDevice == null) {
+            BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+            if (bluetoothAdapter == null) {
+                // 设备不支持蓝牙
+                return;
+            }
+            bleDevice = bluetoothAdapter.getRemoteDevice(mac);
+            if (bleDevice == null) {
+                Toast.makeText(EditActivity.this, R.string.error_please_try_again, Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+        bleDevice.connectGatt(this, false, bluetoothGattCallback);
+    }
+
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        a001UpgradeManager.stopUpgrade();
+        a001UpgradeManager.stopService();
+        isSendMsgThreadRunning = false;
+//        mClient.disconnect(mac);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+//            return;
+        }
+        if(bluetoothGatt != null ){
+            bluetoothGatt.disconnect();
+            bluetoothGatt.close();
+        }
+        connectSucc = false;
         onThisView = false;
         pwdErrorWarning = false;
         try{
@@ -2608,9 +2675,6 @@ public class EditActivity extends AppCompatActivity {
         }catch (Exception e){
             e.printStackTrace();
         }
-        isSendMsgThreadRunning = false;
-        mClient.disconnect(mac);
-        connectSucc = false;
     }
 
     private void readDeviceName(){
@@ -2668,6 +2732,9 @@ public class EditActivity extends AppCompatActivity {
             Intent intent = new Intent(EditActivity.this,EditDoutOutputStatusActivity.class);
             intent.putExtra("oldDout0", dout0);
             intent.putExtra("oldDout1", dout1);
+            if(waitingCancelDlg != null){
+                waitingCancelDlg.hide();
+            }
             startActivityForResult(intent,REQUEST_CHANGE_DOUT_STATUS);
         }
     }
@@ -2770,15 +2837,15 @@ public class EditActivity extends AppCompatActivity {
         int value = resp[2];
         if(value < broadcastTypeList.size()){
             broadcastTypeTV.setText(broadcastTypeList.get(value));
-            if(deviceType.equals("S07") ){
-               if(value == 0){
-                   longRangeLL.setVisibility(View.GONE);
-                   longRangeLineLL.setVisibility(View.GONE);
-               }else{
-                   longRangeLL.setVisibility(View.VISIBLE);
-                   longRangeLineLL.setVisibility(View.VISIBLE);
-               }
-            }
+//            if(deviceType.equals("S07") ){
+//               if(value == 0){
+//                   longRangeLL.setVisibility(View.GONE);
+//                   longRangeLineLL.setVisibility(View.GONE);
+//               }else{
+//                   longRangeLL.setVisibility(View.VISIBLE);
+//                   longRangeLineLL.setVisibility(View.VISIBLE);
+//               }
+//            }
             beaconMajorSetLL.setVisibility(View.GONE);
             beaconMajorSetLineLL.setVisibility(View.GONE);
             beaconMinorSetLL.setVisibility(View.GONE);
@@ -2787,6 +2854,7 @@ public class EditActivity extends AppCompatActivity {
             eddystoneNidSetLineLL.setVisibility(View.GONE);
             eddystoneBidSetLL.setVisibility(View.GONE);
             eddystoneBidSetLineLL.setVisibility(View.GONE);
+
             if(deviceType.equals("S07") || deviceType.equals("S08") || deviceType.equals("S10")  ){
                 if(value == 1){
                     beaconMajorSetLL.setVisibility(View.VISIBLE);
@@ -2803,6 +2871,16 @@ public class EditActivity extends AppCompatActivity {
                     eddystoneBidSetLineLL.setVisibility(View.VISIBLE);
                     readEddystoneBidSet();
                     readEddystoneNidSet();
+                }
+            }
+            if(deviceType.equals("S07")){
+                if(value == 0){
+                    broadcastCycleLL.setVisibility(View.GONE);
+                    broadcastCycleLineLL.setVisibility(View.GONE);
+                }else{
+                    readBroadcastCycle();
+                    broadcastCycleLL.setVisibility(View.VISIBLE);
+                    broadcastCycleLineLL.setVisibility(View.VISIBLE);
                 }
             }
             if(deviceType.equals("S08")){
@@ -2827,7 +2905,7 @@ public class EditActivity extends AppCompatActivity {
                     break;
                 }
                 byte[] curDevice = Arrays.copyOfRange(resp,i * 8 + 3,i * 8 + 8 + 3);
-                String deviceDesc = "ROM" + (i + 1) + ":" + MyUtils.bytes2HexString(curDevice,0);
+                String deviceDesc = "ROM" + (i + 1) + ":" + MyUtils.bytes2HexString(curDevice,0).toUpperCase();
                 warningMsg += deviceDesc;
                 if(i != deviceCount - 1){
                     warningMsg += "\r\n";
@@ -2879,8 +2957,31 @@ public class EditActivity extends AppCompatActivity {
             int broadcast = (resp[2] << 8) + (resp[3]& 0xff);
             broadcastCycleTV.setText(String.valueOf(broadcast) + "s");
         }else{
-            int broadcast = resp[2]& 0xff;
-            broadcastCycleTV.setText(String.valueOf(broadcast) + "s");
+            if(deviceType.equals("S07") || deviceType.equals("S08")){
+                String formatSoftware = software.replace("V","").replaceAll("v","").replaceAll("\\.","");
+                int result = formatSoftware.compareToIgnoreCase("1006");
+                if(result >= 0){
+                    int broadcast = (resp[2] << 8) + (resp[3]& 0xff);
+                    broadcastCycleTV.setText(String.valueOf(broadcast) + "s");
+                }else{
+                    int broadcast = resp[2]& 0xff;
+                    broadcastCycleTV.setText(String.valueOf(broadcast) + "s");
+                }
+            }else if(deviceType.equals("S10")){
+                String formatSoftware = software.replace("V","").replaceAll("v","").replaceAll("\\.","");
+                int result = formatSoftware.compareToIgnoreCase("1005");
+                if(result >= 0){
+                    int broadcast = (resp[2] << 8) + (resp[3]& 0xff);
+                    broadcastCycleTV.setText(String.valueOf(broadcast) + "s");
+                }else{
+                    int broadcast = resp[2]& 0xff;
+                    broadcastCycleTV.setText(String.valueOf(broadcast) + "s");
+                }
+            }else{
+                int broadcast = resp[2]& 0xff;
+                broadcastCycleTV.setText(String.valueOf(broadcast) + "s");
+            }
+
         }
     }
 
@@ -3376,6 +3477,17 @@ public class EditActivity extends AppCompatActivity {
         }
     }
 
+    private void readBtnTriggerTime(){
+        if(!isCurrentDeviceTypeFunc("btnTriggerTime")){
+            return;
+        }
+        readData(MyUtils.controlFunc.get("btnTriggerTime").get("read"),uuid);
+    }
+
+    private void readBtnTriggerTimeResp(byte[] resp){
+        btnTriggerTimeTV.setText(String.valueOf((resp[2]& 0xff) * 100));
+    }
+
     private void readLedOpenStatus(){
         if(!isCurrentDeviceTypeFunc("ledOpen")){
             return;
@@ -3390,6 +3502,7 @@ public class EditActivity extends AppCompatActivity {
             ledSwitch.setSwitchStatus(true);
         }
     }
+
     private void readDoorEnableStatus(){
         if(!isCurrentDeviceTypeFunc("doorEnable")){
             return;
@@ -3415,15 +3528,16 @@ public class EditActivity extends AppCompatActivity {
     private void readRelayStatusResp(byte[] resp){
         if (resp[2] == 0){
             relayStatusTV.setText("NC");
+            relayStatus = false;
             relaySwitch.setSwitchStatus(false);
 
         }else{
             relayStatusTV.setText("NO");
+            relayStatus = true;
             relaySwitch.setSwitchStatus(true);
         }
         if(resp.length >= 5){
             relayFlashEnable = resp[3] == 0x01;
-            relayFlashingSwitch.setSwitchStatus(relayFlashEnable);
         }
 
     }
@@ -3618,6 +3732,7 @@ public class EditActivity extends AppCompatActivity {
                     }
                 }
                 if(rs485DataErrorCount > 6){
+                    rs485DataErrorCount = 0;
                     Toast.makeText(EditActivity.this,R.string.rs485_baud_set_error_warning,Toast.LENGTH_LONG).show();
                 }
             }
@@ -3790,7 +3905,26 @@ public class EditActivity extends AppCompatActivity {
         if (deviceType.equals("S02") || deviceType.equals("S05") || deviceType.equals("S04")){
             data = MyUtils.short2Bytes(value);
         }else{
-            data = new byte[]{(byte)value};
+            if(deviceType.equals("S07") || deviceType.equals("S08")){
+                String formatSoftware = software.replace("V","").replaceAll("v","").replaceAll("\\.","");
+
+                int result = formatSoftware.compareToIgnoreCase("1006");
+                if(result >= 0){
+                    data = MyUtils.short2Bytes(value);
+                }else{
+                    data = new byte[]{(byte)value};
+                }
+            }else if(deviceType.equals("S10")){
+                String formatSoftware = software.replace("V","").replaceAll("v","").replaceAll("\\.","");
+                int result = formatSoftware.compareToIgnoreCase("1005");
+                if(result >= 0){
+                    data = MyUtils.short2Bytes(value);
+                }else{
+                    data = new byte[]{(byte)value};
+                }
+            }else{
+                data = new byte[]{(byte)value};
+            }
         }
         writeArrayData(MyUtils.controlFunc.get("broadcastCycle").get("write"),data,uuid);
     }
@@ -3827,6 +3961,11 @@ public class EditActivity extends AppCompatActivity {
     private void writeEddystoneBidSet(String saveEddystoneBidSetValue){
         byte[] data = MyUtils.hexString2Bytes(saveEddystoneBidSetValue);
         writeArrayData(MyUtils.controlFunc.get("eddystoneBIDSet").get("write"),data,uuid);
+    }
+
+    private void writeBtnTriggerTime(int btnTriggerTime){
+        byte[] data = new byte[]{(byte)btnTriggerTime};
+        writeArrayData(MyUtils.controlFunc.get("btnTriggerTime").get("write"),data,uuid);
     }
 
     private void writeHumidityAlarmData(int upValue,int downValue){
@@ -3929,7 +4068,7 @@ public class EditActivity extends AppCompatActivity {
     }
     private void writeRelayStatus(){
         byte[] data;
-        if(relaySwitch.getSwitchStatus()){
+        if(!relayStatus){
             data = new byte[]{1};
         }else{
             data = new byte[]{0};
@@ -3938,13 +4077,15 @@ public class EditActivity extends AppCompatActivity {
     }
 
     private void writeDelayRelayStatus(int delayTime){
-        byte[] data = new byte[2];
-        if(relaySwitch.getSwitchStatus()){
+        byte[] data = new byte[3];
+        if(!relayStatus){
             data[0] = 0x01;
         }else{
             data[0] = 0x00;
         }
-        data[1] = (byte)delayTime;
+        byte[] relayTimeBytes = MyUtils.short2Bytes(delayTime);
+        data[1] = relayTimeBytes[0];
+        data[2] = relayTimeBytes[1];
         writeArrayData(MyUtils.controlFunc.get("relay").get("write"),data,uuid);
     }
 
@@ -3969,12 +4110,375 @@ public class EditActivity extends AppCompatActivity {
         }
     }
 
+    private void writeSecondPulseRelayStatus(int starLevel,int highLevelPulseWidthTime,int lowLevelPulseWidthTime,int PulseCount){
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try {
+            outputStream.write(0x04);
+            outputStream.write(starLevel);
+            outputStream.write(highLevelPulseWidthTime);
+            outputStream.write(lowLevelPulseWidthTime);
+            outputStream.write(MyUtils.short2Bytes(PulseCount));
+            writeArrayData(MyUtils.controlFunc.get("relay").get("write"),outputStream.toByteArray(),uuid);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void writeShutdown(){
         writeArrayData(MyUtils.controlFunc.get("shutdown").get("write"),null,uuid);
     }
 
     private void writeResetFactory(){
         writeArrayData(MyUtils.controlFunc.get("resetFactory").get("write"),null,uuid);
+    }
+
+    private void initDiffUI(){
+        saveRecordIntervalLL = (LinearLayout)findViewById(R.id.line_save_record_interval);
+        humidityLowAlarmLL = (LinearLayout)findViewById(R.id.line_humidity_low_alarm);
+        humidityHighAlarmLL = (LinearLayout)findViewById(R.id.line_humidity_high_alarm);
+        recordControlLL = (LinearLayout)findViewById(R.id.line_record_control);
+        clearRecordLL = (LinearLayout)findViewById(R.id.line_clear_record);
+        transmittedPowerLL = (LinearLayout)findViewById(R.id.line_transmitted_power);
+        transmittedPowerLineLL = (LinearLayout)findViewById(R.id.line_line_transmitted_power);
+        relayLL = (LinearLayout)findViewById(R.id.line_relay);
+        relayLineLL = (LinearLayout)findViewById(R.id.line_line_relay);
+        relayFlashingLL = (LinearLayout)findViewById(R.id.line_flashing_relay);
+        lightSensorEnableLL = (LinearLayout)findViewById(R.id.line_light_sensor);
+        saveRecordIntervalLL.setVisibility(View.GONE);
+        humidityLowAlarmLL.setVisibility(View.GONE);
+        humidityHighAlarmLL.setVisibility(View.GONE);
+        recordControlLL.setVisibility(View.GONE);
+        relayLL.setVisibility(View.GONE);
+        relayFlashingLL.setVisibility(View.GONE);
+        clearRecordLL.setVisibility(View.GONE);
+        saveRecordIntervaLineLL = (LinearLayout)findViewById(R.id.line_line_save_record_interval);
+        humidityLowAlarmLineLL = (LinearLayout)findViewById(R.id.line_line_humidity_low_alarm);
+        humidityHighAlarmLineLL = (LinearLayout)findViewById(R.id.line_line_humidity_high_alarm);
+        recordControlLineLL = (LinearLayout)findViewById(R.id.line_line_record_control);
+        relayFlashingLineLL = (LinearLayout)findViewById(R.id.line_line_flashing_relay);
+        lightSensorEnableLineLL = (LinearLayout)findViewById(R.id.line_line_light_sensor);
+        readSaveCountLL = (LinearLayout)findViewById(R.id.line_save_count);
+        readSaveCountLineLL = (LinearLayout)findViewById(R.id.line_line_save_count);
+        readAlarmLL  = (LinearLayout)findViewById(R.id.line_alarm_count);
+        readAlarmLineLL  = (LinearLayout)findViewById(R.id.line_line_alarm_count);
+        clearRecordLineLL = (LinearLayout)findViewById(R.id.line_line_clear_record) ;
+        clearRecordLineLL.setVisibility(View.GONE);
+        saveRecordIntervaLineLL.setVisibility(View.GONE);
+        humidityLowAlarmLineLL.setVisibility(View.GONE);
+        humidityHighAlarmLineLL.setVisibility(View.GONE);
+        recordControlLineLL.setVisibility(View.GONE);
+        relayLineLL.setVisibility(View.GONE);
+        relayFlashingLineLL.setVisibility(View.GONE);
+        readSaveCountLineLL.setVisibility(View.GONE);
+        readSaveCountLL.setVisibility(View.GONE);
+        readAlarmLL.setVisibility(View.GONE);
+        readAlarmLineLL.setVisibility(View.GONE);
+        lightSensorEnableLineLL.setVisibility(View.GONE);
+        lightSensorEnableLL.setVisibility(View.GONE);
+        transmittedPowerLL.setVisibility(View.GONE);
+        transmittedPowerLineLL.setVisibility(View.GONE);
+
+
+        readDinVoltageLL = (LinearLayout)findViewById(R.id.line_din_voltage);
+        readDinVoltageLineLL = (LinearLayout)findViewById(R.id.line_line_din_voltage);
+        dinStatusEventLL = (LinearLayout)findViewById(R.id.line_din_status_event);
+        dinStatusEventLineLL = (LinearLayout)findViewById(R.id.line_line_din_status_event);
+        readDinStatusEventTypeLL = (LinearLayout)findViewById(R.id.line_din_status_event_type);
+        readDinStatusEventTypeLineLL = (LinearLayout)findViewById(R.id.line_line_din_status_event_type);
+        doutStatusLL = (LinearLayout)findViewById(R.id.line_dout_status);
+        doutStatusLineLL = (LinearLayout)findViewById(R.id.line_line_dout_status);
+        readAinVoltageLL = (LinearLayout)findViewById(R.id.line_ain_voltage);
+        readAinVoltageLineLL = (LinearLayout)findViewById(R.id.line_line_ain_voltage);
+        setPositiveNegativeWarningLL = (LinearLayout)findViewById(R.id.line_positive_negative_warning);
+        setPositiveNegativeWarningLineLL = (LinearLayout)findViewById(R.id.line_line_positive_negative_warning);
+        getOneWireDeviceLL = (LinearLayout)findViewById(R.id.line_one_wire_device);
+        getOneWireDeviceLineLL = (LinearLayout)findViewById(R.id.line_line_one_wire_device);
+        sendCmdSequenceLL = (LinearLayout)findViewById(R.id.line_send_instruction_sequence);
+        sendCmdSequenceLineLL = (LinearLayout)findViewById(R.id.line_line_send_instruction_sequence);
+        sequentialLL = (LinearLayout)findViewById(R.id.line_sequential);
+        sequentialLineLL = (LinearLayout)findViewById(R.id.line_line_sequential);
+        sendDataLL = (LinearLayout)findViewById(R.id.line_send_data);
+        sendDataLineLL = (LinearLayout)findViewById(R.id.line_line_send_data);
+        rs485BaudRateLL = (LinearLayout)findViewById(R.id.line_rs485_baud_rate);
+        rs485BaudRateLineLL = (LinearLayout)findViewById(R.id.line_line_rs485_baud_rate);
+        rs485EnableLL = (LinearLayout)findViewById(R.id.line_rs485_enable);
+        rs485EnableLineLL = (LinearLayout)findViewById(R.id.line_line_rs485_enable);
+        oneWireWorkModeLL = (LinearLayout)findViewById(R.id.line_one_wire_work_mode);
+        oneWireWorkModeLineLL = (LinearLayout)findViewById(R.id.line_line_one_wire_work_mode);
+
+        readDinVoltageLL.setVisibility(View.GONE);
+        readDinVoltageLineLL.setVisibility(View.GONE);
+        dinStatusEventLL.setVisibility(View.GONE);
+        dinStatusEventLineLL.setVisibility(View.GONE);
+        readDinStatusEventTypeLL.setVisibility(View.GONE);
+        readDinStatusEventTypeLineLL.setVisibility(View.GONE);
+        doutStatusLL.setVisibility(View.GONE);
+        doutStatusLineLL.setVisibility(View.GONE);
+        readAinVoltageLL.setVisibility(View.GONE);
+        readAinVoltageLineLL.setVisibility(View.GONE);
+        setPositiveNegativeWarningLL.setVisibility(View.GONE);
+        setPositiveNegativeWarningLineLL.setVisibility(View.GONE);
+        getOneWireDeviceLL.setVisibility(View.GONE);
+        getOneWireDeviceLineLL.setVisibility(View.GONE);
+        sendCmdSequenceLL.setVisibility(View.GONE);
+        sendCmdSequenceLineLL.setVisibility(View.GONE);
+        sequentialLL.setVisibility(View.GONE);
+        sequentialLineLL.setVisibility(View.GONE);
+        sendDataLL.setVisibility(View.GONE);
+        sendDataLineLL.setVisibility(View.GONE);
+        rs485BaudRateLL.setVisibility(View.GONE);
+        rs485BaudRateLineLL.setVisibility(View.GONE);
+        rs485EnableLL.setVisibility(View.GONE);
+        rs485EnableLineLL.setVisibility(View.GONE);
+        oneWireWorkModeLL.setVisibility(View.GONE);
+        oneWireWorkModeLineLL.setVisibility(View.GONE);
+
+
+        longRangeLL = (LinearLayout)findViewById(R.id.line_long_range);
+        longRangeLineLL = (LinearLayout)findViewById(R.id.line_line_long_range);
+        broadcastTypeLL = (LinearLayout)findViewById(R.id.line_broadcast_type);
+        broadcastTypeLineLL = (LinearLayout)findViewById(R.id.line_line_broadcast_type);
+        gSensorEnableLL = (LinearLayout)findViewById(R.id.line_gsensor_enable);
+        gSensorEnableLineLL = (LinearLayout)findViewById(R.id.line_line_gsensor_enable);
+        longRangeLL.setVisibility(View.GONE);
+        longRangeLineLL.setVisibility(View.GONE);
+        broadcastTypeLL.setVisibility(View.GONE);
+        broadcastTypeLineLL.setVisibility(View.GONE);
+        gSensorEnableLL.setVisibility(View.GONE);
+        gSensorEnableLineLL.setVisibility(View.GONE);
+
+        tempLowAlarmLL = (LinearLayout)findViewById(R.id.line_temp_low_alarm);
+        tempLowAlarmLineLL = (LinearLayout)findViewById(R.id.line_line_temp_low_alarm);
+        tempHighAlarmLL = (LinearLayout)findViewById(R.id.line_temp_high_alarm);
+        tempHighAlarmLineLL = (LinearLayout)findViewById(R.id.line_line_temp_high_alarm);
+        tempLowAlarmLL.setVisibility(View.GONE);
+        tempLowAlarmLineLL.setVisibility(View.GONE);
+        tempHighAlarmLL.setVisibility(View.GONE);
+        tempHighAlarmLineLL.setVisibility(View.GONE);
+        ledLL = (LinearLayout)findViewById(R.id.line_led);
+        ledLineLL = (LinearLayout)findViewById(R.id.line_line_led);
+
+        broadcastCycleLL = (LinearLayout)findViewById(R.id.line_broadcast_cycle);
+        broadcastCycleLineLL = (LinearLayout)findViewById(R.id.line_line_broadcast_cycle);
+        shutdownLL = (LinearLayout)findViewById(R.id.line_shutdown);
+        shutdownLineLL = (LinearLayout)findViewById(R.id.line_line_shutdown);
+        shutdownLL.setVisibility(View.GONE);
+        shutdownLineLL.setVisibility(View.GONE);
+        doorEnableLL = (LinearLayout)findViewById(R.id.line_door_enable);
+        doorEnableLineLL = (LinearLayout)findViewById(R.id.line_line_door_enable);
+        doorEnableLL.setVisibility(View.GONE);
+        doorEnableLineLL.setVisibility(View.GONE);
+
+
+        gSensorDetectionDurationLL = (LinearLayout)findViewById(R.id.line_gsensor_detection_duration);
+        gSensorDetectionDurationLL.setVisibility(View.GONE);
+        gSensorDetectionDurationLineLL = (LinearLayout)findViewById(R.id.line_line_gsensor_detection_duration);
+        gSensorDetectionDurationLineLL.setVisibility(View.GONE);
+        gSensorDetectionIntervalLL = (LinearLayout)findViewById(R.id.line_gsensor_detection_interval);
+        gSensorDetectionIntervalLL.setVisibility(View.GONE);
+        gSensorDetectionIntervalLineLL = (LinearLayout)findViewById(R.id.line_line_gsensor_detection_interval);
+        gSensorDetectionIntervalLineLL.setVisibility(View.GONE);
+        gSensorSensitivityLL = (LinearLayout)findViewById(R.id.line_gsensor_sensitivity);
+        gSensorSensitivityLL.setVisibility(View.GONE);
+        gSensorSensitivityLineLL = (LinearLayout)findViewById(R.id.line_line_gsensor_sensitivity);
+        gSensorSensitivityLineLL.setVisibility(View.GONE);
+
+
+        beaconMajorSetLL=(LinearLayout)findViewById(R.id.line_beacon_major_set);
+        beaconMajorSetLineLL=(LinearLayout)findViewById(R.id.line_line_beacon_major_set);
+        beaconMinorSetLL=(LinearLayout)findViewById(R.id.line_beacon_minor_set);
+        beaconMinorSetLineLL=(LinearLayout)findViewById(R.id.line_line_beacon_minor_set);
+        eddystoneNidSetLL=(LinearLayout)findViewById(R.id.line_eddystone_nid_set);
+        eddystoneNidSetLineLL=(LinearLayout)findViewById(R.id.line_line_eddystone_nid_set);
+        eddystoneBidSetLL=(LinearLayout)findViewById(R.id.line_eddystone_bid_set);
+        eddystoneBidSetLineLL=(LinearLayout)findViewById(R.id.line_line_eddystone_bid_set);
+        btnTriggerTimeLL=(LinearLayout)findViewById(R.id.line_btn_trigger_time);
+        btnTriggerTimeLineLL=(LinearLayout)findViewById(R.id.line_line_btn_trigger_time);;
+        beaconMajorSetLL.setVisibility(View.GONE);
+        beaconMajorSetLineLL.setVisibility(View.GONE);
+        beaconMinorSetLL.setVisibility(View.GONE);
+        beaconMinorSetLineLL.setVisibility(View.GONE);
+        eddystoneNidSetLL.setVisibility(View.GONE);
+        eddystoneNidSetLineLL.setVisibility(View.GONE);
+        eddystoneBidSetLL.setVisibility(View.GONE);
+        eddystoneBidSetLineLL.setVisibility(View.GONE);
+        btnTriggerTimeLL.setVisibility(View.GONE);
+        btnTriggerTimeLineLL.setVisibility(View.GONE);
+        if (deviceType.equals("S04")){
+            if(Integer.valueOf(software) >= 13){
+                transmittedPowerLL.setVisibility(View.VISIBLE);
+                transmittedPowerLineLL.setVisibility(View.VISIBLE);
+            }
+//            if(Integer.valueOf(software) > 10){
+//                recordControlLL.setVisibility(View.VISIBLE);
+//                recordControlLineLL.setVisibility(View.VISIBLE);
+//                readAlarmLL.setVisibility(View.VISIBLE);
+//                readAlarmLineLL.setVisibility(View.VISIBLE);
+//                clearRecordLL.setVisibility(View.VISIBLE);
+//                clearRecordLineLL.setVisibility(View.VISIBLE);
+//            }
+            tempLowAlarmLL.setVisibility(View.VISIBLE);
+            tempLowAlarmLineLL.setVisibility(View.VISIBLE);
+            tempHighAlarmLL.setVisibility(View.VISIBLE);
+            tempHighAlarmLineLL.setVisibility(View.VISIBLE);
+        }else if (deviceType.equals("S05")){
+            if(Integer.valueOf(software) >= 13){
+                transmittedPowerLL.setVisibility(View.VISIBLE);
+                transmittedPowerLineLL.setVisibility(View.VISIBLE);
+            }
+            relayLL.setVisibility(View.VISIBLE);
+            relayLineLL.setVisibility(View.VISIBLE);
+            if(Integer.valueOf(software) >= 17){
+                relayFlashingLL.setVisibility(View.VISIBLE);
+                relayFlashingLineLL.setVisibility(View.VISIBLE);
+            }
+            tempLowAlarmLL.setVisibility(View.VISIBLE);
+            tempLowAlarmLineLL.setVisibility(View.VISIBLE);
+            tempHighAlarmLL.setVisibility(View.VISIBLE);
+            tempHighAlarmLineLL.setVisibility(View.VISIBLE);
+        }else if (deviceType.equals("S02")){
+            if(Integer.valueOf(software) >= 13){
+                transmittedPowerLL.setVisibility(View.VISIBLE);
+                transmittedPowerLineLL.setVisibility(View.VISIBLE);
+            }
+            if(Integer.valueOf(software) > 10){
+                recordControlLineLL.setVisibility(View.VISIBLE);
+                recordControlLL.setVisibility(View.VISIBLE);
+                saveRecordIntervaLineLL.setVisibility(View.VISIBLE);
+                saveRecordIntervalLL.setVisibility(View.VISIBLE);
+                readSaveCountLineLL.setVisibility(View.VISIBLE);
+                readSaveCountLL.setVisibility(View.VISIBLE);
+                clearRecordLL.setVisibility(View.VISIBLE);
+                clearRecordLineLL.setVisibility(View.VISIBLE);
+            }
+
+            if(Integer.valueOf(software) >= 20){
+                lightSensorEnableLineLL.setVisibility(View.VISIBLE);
+                lightSensorEnableLL.setVisibility(View.VISIBLE);
+            }
+            humidityLowAlarmLL.setVisibility(View.VISIBLE);
+            humidityHighAlarmLL.setVisibility(View.VISIBLE);
+            humidityLowAlarmLineLL.setVisibility(View.VISIBLE);
+            humidityHighAlarmLineLL.setVisibility(View.VISIBLE);
+            tempLowAlarmLL.setVisibility(View.VISIBLE);
+            tempLowAlarmLineLL.setVisibility(View.VISIBLE);
+            tempHighAlarmLL.setVisibility(View.VISIBLE);
+            tempHighAlarmLineLL.setVisibility(View.VISIBLE);
+        }else if(deviceType.equals("S09")){
+            transmittedPowerLL.setVisibility(View.VISIBLE);
+            transmittedPowerLineLL.setVisibility(View.VISIBLE);
+            longRangeLL.setVisibility(View.VISIBLE);
+            longRangeLineLL.setVisibility(View.VISIBLE);
+
+            readDinVoltageLL.setVisibility(View.VISIBLE);
+            readDinVoltageLineLL.setVisibility(View.VISIBLE);
+            dinStatusEventLL.setVisibility(View.VISIBLE);
+            dinStatusEventLineLL.setVisibility(View.VISIBLE);
+            readDinStatusEventTypeLL.setVisibility(View.VISIBLE);
+            readDinStatusEventTypeLineLL.setVisibility(View.VISIBLE);
+            doutStatusLL.setVisibility(View.VISIBLE);
+            doutStatusLineLL.setVisibility(View.VISIBLE);
+            readAinVoltageLL.setVisibility(View.VISIBLE);
+            readAinVoltageLineLL.setVisibility(View.VISIBLE);
+            setPositiveNegativeWarningLL.setVisibility(View.VISIBLE);
+            setPositiveNegativeWarningLineLL.setVisibility(View.VISIBLE);
+            getOneWireDeviceLL.setVisibility(View.VISIBLE);
+            getOneWireDeviceLineLL.setVisibility(View.VISIBLE);
+            sendCmdSequenceLL.setVisibility(View.VISIBLE);
+            sendCmdSequenceLineLL.setVisibility(View.VISIBLE);
+//            sequentialLL.setVisibility(View.VISIBLE);
+//            sequentialLineLL.setVisibility(View.VISIBLE);
+            sendDataLL.setVisibility(View.VISIBLE);
+            sendDataLineLL.setVisibility(View.VISIBLE);
+            rs485BaudRateLL.setVisibility(View.VISIBLE);
+            rs485BaudRateLineLL.setVisibility(View.VISIBLE);
+            rs485EnableLL.setVisibility(View.VISIBLE);
+            rs485EnableLineLL.setVisibility(View.VISIBLE);
+            oneWireWorkModeLL.setVisibility(View.VISIBLE);
+            oneWireWorkModeLineLL.setVisibility(View.VISIBLE);
+            broadcastCycleLL.setVisibility(View.GONE);
+            broadcastCycleLineLL.setVisibility(View.GONE);
+
+        }else if (deviceType.equals("S08")){
+            transmittedPowerLL.setVisibility(View.VISIBLE);
+            transmittedPowerLineLL.setVisibility(View.VISIBLE);
+            recordControlLineLL.setVisibility(View.VISIBLE);
+            recordControlLL.setVisibility(View.VISIBLE);
+            saveRecordIntervaLineLL.setVisibility(View.VISIBLE);
+            saveRecordIntervalLL.setVisibility(View.VISIBLE);
+            readSaveCountLineLL.setVisibility(View.VISIBLE);
+            readSaveCountLL.setVisibility(View.VISIBLE);
+            clearRecordLL.setVisibility(View.VISIBLE);
+            clearRecordLineLL.setVisibility(View.VISIBLE);
+
+            humidityLowAlarmLL.setVisibility(View.GONE);
+            humidityHighAlarmLL.setVisibility(View.GONE);
+            humidityLowAlarmLineLL.setVisibility(View.GONE);
+            humidityHighAlarmLineLL.setVisibility(View.GONE);
+
+            broadcastTypeLL.setVisibility(View.VISIBLE);
+            broadcastTypeLineLL.setVisibility(View.VISIBLE);
+
+            tempLowAlarmLL.setVisibility(View.VISIBLE);
+            tempLowAlarmLineLL.setVisibility(View.VISIBLE);
+            tempHighAlarmLL.setVisibility(View.VISIBLE);
+            tempHighAlarmLineLL.setVisibility(View.VISIBLE);
+            shutdownLL.setVisibility(View.VISIBLE);
+            shutdownLineLL.setVisibility(View.VISIBLE);
+//            doorEnableLL.setVisibility(View.VISIBLE);
+//            doorEnableLineLL.setVisibility(View.VISIBLE);
+        }
+        else if (deviceType.equals("S10")){
+            transmittedPowerLL.setVisibility(View.VISIBLE);
+            transmittedPowerLineLL.setVisibility(View.VISIBLE);
+            recordControlLineLL.setVisibility(View.VISIBLE);
+            recordControlLL.setVisibility(View.VISIBLE);
+            saveRecordIntervaLineLL.setVisibility(View.VISIBLE);
+            saveRecordIntervalLL.setVisibility(View.VISIBLE);
+            readSaveCountLineLL.setVisibility(View.VISIBLE);
+            readSaveCountLL.setVisibility(View.VISIBLE);
+            clearRecordLL.setVisibility(View.VISIBLE);
+            clearRecordLineLL.setVisibility(View.VISIBLE);
+
+            humidityLowAlarmLL.setVisibility(View.GONE);
+            humidityHighAlarmLL.setVisibility(View.GONE);
+            humidityLowAlarmLineLL.setVisibility(View.GONE);
+            humidityHighAlarmLineLL.setVisibility(View.GONE);
+
+            broadcastTypeLL.setVisibility(View.VISIBLE);
+            broadcastTypeLineLL.setVisibility(View.VISIBLE);
+            gSensorEnableLL.setVisibility(View.GONE);
+            gSensorEnableLineLL.setVisibility(View.GONE);
+            tempLowAlarmLL.setVisibility(View.VISIBLE);
+            tempLowAlarmLineLL.setVisibility(View.VISIBLE);
+            tempHighAlarmLL.setVisibility(View.VISIBLE);
+            tempHighAlarmLineLL.setVisibility(View.VISIBLE);
+            shutdownLL.setVisibility(View.VISIBLE);
+            shutdownLineLL.setVisibility(View.VISIBLE);
+
+        }
+        else if (deviceType.equals("S07")){
+            transmittedPowerLL.setVisibility(View.VISIBLE);
+            transmittedPowerLineLL.setVisibility(View.VISIBLE);
+            humidityLowAlarmLL.setVisibility(View.GONE);
+            humidityHighAlarmLL.setVisibility(View.GONE);
+            humidityLowAlarmLineLL.setVisibility(View.GONE);
+            humidityHighAlarmLineLL.setVisibility(View.GONE);
+            broadcastTypeLL.setVisibility(View.VISIBLE);
+            broadcastTypeLineLL.setVisibility(View.VISIBLE);
+            ledLL.setVisibility(View.GONE);
+            ledLineLL.setVisibility(View.GONE);
+            String formatSoftware = software.replace("V","").replaceAll("v","").replaceAll("\\.","");
+            int result = "1005".compareToIgnoreCase(formatSoftware);
+            if(result > 0){
+                btnTriggerTimeLL.setVisibility(View.GONE);
+                btnTriggerTimeLineLL.setVisibility(View.GONE);
+            }else{
+                btnTriggerTimeLL.setVisibility(View.VISIBLE);
+                btnTriggerTimeLineLL.setVisibility(View.VISIBLE);
+            }
+
+        }
     }
 
     private boolean isCurrentDeviceTypeFunc(String funcName){
@@ -4046,7 +4550,7 @@ public class EditActivity extends AppCompatActivity {
                     || funcName.equals("readDinVoltage") || funcName.equals("dinStatusEvent") || funcName.equals("doutStatus")|| funcName.equals("readVinVoltage")
                     || funcName.equals("readAinVoltage") || funcName.equals("setPositiveNegativeWarning") || funcName.equals("ainPositiveNegativeWarning") || funcName.equals("getOneWireDevice")
                     || funcName.equals("sendCmdSequence") || funcName.equals("sequential") || funcName.equals("oneWireWorkMode") || funcName.equals("rs485SendData")
-                    || funcName.equals("rs485BaudRate") || funcName.equals("rs485Enable")  || funcName.equals("getAinEvent")) {
+                    || funcName.equals("rs485BaudRate") || funcName.equals("rs485Enable")  || funcName.equals("getAinEvent")|| funcName.equals("longRangeEnable")) {
                 return true;
             }else{
                 return false;
@@ -4068,7 +4572,7 @@ public class EditActivity extends AppCompatActivity {
                     || funcName.equals("tempAlarm") || funcName.equals("ledOpen") || funcName.equals("deviceName") || funcName.equals("startRecord")
                     || funcName.equals("stopRecord") || funcName.equals("clearRecord")
                     || funcName.equals("saveCount") || funcName.equals("readAlarm") || funcName.equals("readOriginData") || funcName.equals("transmittedPower")
-                    || funcName.equals("broadcastType") ||funcName.equals("readHistory") ||funcName.equals("humidityAlarm")
+                    || funcName.equals("broadcastType") ||funcName.equals("readHistory")
                     || funcName.equals("time")   || funcName.equals("shutdown") || funcName.equals("readExtSensorType")
                     || funcName.equals("beaconMajorSet") || funcName.equals("beaconMinorSet") || funcName.equals("eddystoneNIDSet") || funcName.equals("eddystoneBIDSet")
             ){
@@ -4077,6 +4581,24 @@ public class EditActivity extends AppCompatActivity {
             return false;
         }
         else if (deviceType.equals("S07")){
+            if(funcName.equals("btnTriggerTime")){
+                String formatSoftware = software.replace("V","").replaceAll("v","").replaceAll("\\.","");
+                int result = "1005".compareToIgnoreCase(formatSoftware);
+                if(result > 0){
+                    return false;
+                }else{
+                    return true;
+                }
+            }
+            if(funcName.equals("time")){
+                String formatSoftware = software.replace("V","").replaceAll("v","").replaceAll("\\.","");
+                int result = formatSoftware.compareToIgnoreCase("1006");
+                if(result >= 0){
+                    return true;
+                }else{
+                    return false;
+                }
+            }
             if(funcName.equals("firmware") || funcName.equals("password") || funcName.equals("resetFactory") || funcName.equals("broadcastCycle")
                     ||  funcName.equals("transmittedPower") || funcName.equals("deviceName")
                     || funcName.equals("broadcastType")
@@ -4084,8 +4606,61 @@ public class EditActivity extends AppCompatActivity {
                 return true;
             }
             return false;
+        }else if (deviceType.equals("A001")){
+            if (funcName.equals("firmware") || funcName.equals("password") || funcName.equals("resetFactory")  || funcName.equals("deviceName") ) {
+                return true;
+            }else{
+                return false;
+            }
+        }else if (deviceType.equals("A002")){
+            if (funcName.equals("firmware") || funcName.equals("password") || funcName.equals("resetFactory")  || funcName.equals("deviceName") ) {
+                return true;
+            }else{
+                return false;
+            }
         }else{
             return false;
+        }
+    }
+
+
+
+    @Override
+    public void onUpgradeStatus(int status, float percent) {
+        if(status == A001SoftwareUpgradeManager.STATUS_OF_FINE_NOT_FIND){
+            if(connectWaitingCancelDlg != null){
+                connectWaitingCancelDlg.hide();
+            }
+            if(waitingDlg != null){
+                waitingDlg.hide();
+            }
+            Toast.makeText(EditActivity.this,R.string.download_file_fail,Toast.LENGTH_SHORT).show();
+        }else if(status == A001SoftwareUpgradeManager.STATUS_OF_UPGRADE_UNKNOWN_ERROR){
+            if(connectWaitingCancelDlg != null){
+                connectWaitingCancelDlg.hide();
+            }
+            if(waitingDlg != null){
+                waitingDlg.hide();
+            }
+            Toast.makeText(EditActivity.this,R.string.download_file_fail,Toast.LENGTH_SHORT).show();
+        }else if(status == A001SoftwareUpgradeManager.STATUS_OF_UPGRADE_ERROR_UPGRADE_FILE){
+            if(connectWaitingCancelDlg != null){
+                connectWaitingCancelDlg.hide();
+            }
+            if(waitingDlg != null){
+                waitingDlg.hide();
+            }
+            Toast.makeText(EditActivity.this,R.string.error_upgrade_file,Toast.LENGTH_SHORT).show();
+        }else if(status == A001SoftwareUpgradeManager.STATUS_OF_UPGRADE_WRITE_SUCC){
+            upgradeSucc();
+        }else{
+            upgradeStatus = "progressChanged";
+            if(waitingDlg != null){
+                if(percent > 100){
+                    percent = 100;
+                }
+                waitingDlg.setTitleText(getResources().getString(R.string.processing)+ ":" + String.format("%.2f%%",percent));
+            }
         }
     }
 }

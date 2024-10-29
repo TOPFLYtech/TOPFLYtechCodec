@@ -74,8 +74,9 @@ class EditRS485CmdController : UIViewController {
         self.submitBtn.addTarget(self, action: #selector(submit), for:.touchUpInside)
         self.view.addSubview(self.submitBtn)
 
-
-        isHexChecked = UserDefaults.standard.bool(forKey: "rs485_send_data_use_hex")
+        let isUseHex = UserDefaults.standard.bool(forKey: "rs485_send_data_use_hex")
+        isHexChecked = isUseHex ? isUseHex : true 
+        
         isAddLineEndChecked = UserDefaults.standard.bool(forKey: "rs485_send_data_add_line_end")
         self.cbAddLineEnd.isChecked = isAddLineEndChecked
         self.cbIsHex.isChecked = isHexChecked

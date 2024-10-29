@@ -13,9 +13,9 @@ import android.widget.Toast;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.bigkoo.pickerview.builder.OptionsPickerBuilder;
-import com.bigkoo.pickerview.listener.OnOptionsSelectListener;
-import com.bigkoo.pickerview.view.OptionsPickerView;
+import com.github.gzuliyujiang.wheelpicker.OptionPicker;
+import com.topflytech.tftble.data.SingleClickListener;
+import com.topflytech.tftble.data.SingleOptionSelectClickListener;
 
 import java.util.ArrayList;
 
@@ -29,7 +29,7 @@ public class EditPositiveNegativeWarningActivity extends AppCompatActivity {
     private ImageView rightButton;
     private TextView tvHead;
     private Integer highVoltage,lowVoltage,port, mode,samplingInterval, ditheringIntervalHigh, ditheringIntervalLow;
-    private OptionsPickerView pvMode;
+    private OptionPicker pvMode;
     private ArrayList<String> modeList;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,39 +85,35 @@ public class EditPositiveNegativeWarningActivity extends AppCompatActivity {
         backButton = (ImageView) customView.findViewById(R.id.command_list_bar_back_id);
         rightButton =(ImageView) customView.findViewById(R.id.img_btn_right);
         rightButton.setVisibility(View.INVISIBLE);
-        backButton.setOnClickListener(new View.OnClickListener() {
+        backButton.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onSingleClick(View view) {
                 finish();
             }
         });
-        pvMode = new OptionsPickerBuilder(EditPositiveNegativeWarningActivity.this, new OnOptionsSelectListener() {
+        pvMode = new OptionPicker(this);
+        pvMode.setData(modeList);
+        pvMode.setOnOptionPickedListener(new SingleOptionSelectClickListener() {
             @Override
-            public void onOptionsSelect(int options1, int option2, int options3 ,View v) {
-                //返回的分别是三个级别的选中位置
-//                String tx = options1Items.get(options1).getPickerViewText()
-//                        + options2Items.get(options1).get(option2)
-//                        + options3Items.get(options1).get(option2).get(options3).getPickerViewText();
-//                tvOptions.setText(tx);
-                mode = options1;
+            public void onSingleOptionClick(int position, Object item) {
+                mode = position;
                 etMode.setText(modeList.get(Integer.valueOf(mode)));
             }
-        }).build();
-        pvMode.setPicker(modeList);
+        });
         etMode.setFocusable(false);
-        etMode.setOnClickListener(new View.OnClickListener() {
+        etMode.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onSingleClick(View view) {
 //                InputMethodManager imm = (InputMethodManager) EditPositiveNegativeWarningActivity.this.getSystemService(EditPositiveNegativeWarningActivity.this.INPUT_METHOD_SERVICE);
 //                // 隐藏软键盘
 //                imm.hideSoftInputFromWindow(EditPositiveNegativeWarningActivity.this.getWindow().getDecorView().getWindowToken(), 0);
-                pvMode.setSelectOptions(Integer.valueOf(mode));
+                pvMode.setDefaultPosition(Integer.valueOf(mode));
                 pvMode.show();
             }
         });
-        btnConfirm.setOnClickListener(new View.OnClickListener() {
+        btnConfirm.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onSingleClick(View view) {
                 String port = etPort.getText().toString().trim();
                 String lowVoltage = etLowVoltage.getText().toString().trim();
                 String highVoltage = etHighVoltage.getText().toString().trim();
@@ -141,11 +137,15 @@ public class EditPositiveNegativeWarningActivity extends AppCompatActivity {
                     Toast.makeText(EditPositiveNegativeWarningActivity.this,R.string.high_voltage_low_voltage_error,Toast.LENGTH_SHORT).show();
                     return;
                 }
+                if(highVoltageFloat < 0 || highVoltageFloat > 32 || lowVoltageFloat < 0 || lowVoltageFloat > 32){
+                    Toast.makeText(EditPositiveNegativeWarningActivity.this,R.string.voltage_range_error_warning,Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 lowVoltageFloat = lowVoltageFloat*100;
                 highVoltageFloat = highVoltageFloat*100;
                 int ditheringIntervalHighInt = Integer.valueOf(ditheringIntervalHigh);
                 int ditheringIntervalLowInt = Integer.valueOf(ditheringIntervalLow);
-                if(ditheringIntervalHighInt < 0 || ditheringIntervalHighInt > 255 || ditheringIntervalLowInt < 0 || ditheringIntervalLowInt > 255 ){
+                if(ditheringIntervalHighInt < 0 || ditheringIntervalHighInt > 255 || ditheringIntervalLowInt < 0 || ditheringIntervalLowInt > 255  ){
                     Toast.makeText(EditPositiveNegativeWarningActivity.this,R.string.dithering_interval_error_warning,Toast.LENGTH_SHORT).show();
                     return;
                 }

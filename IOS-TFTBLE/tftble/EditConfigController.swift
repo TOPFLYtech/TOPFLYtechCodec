@@ -181,6 +181,8 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         "eddystoneNIDSet":[ "read":0x7c, "write":0x7b, ],
         "eddystoneBIDSet":[ "read":0x7e, "write":0x7d, ],
         "readExtSensorType": [ "read": 9 ],
+        "getAinEvent": [ "read": 0x9a ],
+        "btnTriggerTime":[ "read":0xc1, "write":0xc0, ],
     ]
     private var fontSize:CGFloat = Utils.fontSize
     private var waitingView:AEUIAlertView!
@@ -299,6 +301,8 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     private var eddystoneNidSetContentLabel:UILabel!
     private var eddystoneBidSetLabel:UILabel!
     private var eddystoneBidSetContentLabel:UILabel!
+    private var btnTriggerTimeLabel:UILabel!
+    private var btnTriggerTimeContentLabel:UILabel!
     private var longRangeLabel:UILabel!
     private var doorLabel:UILabel!
     private var shutdownLabel:UILabel!
@@ -325,6 +329,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     private var editEddystoneBidSetBtn:QMUIGhostButton!
     private var editShutdownBtn:QMUIGhostButton!
     private var editGSensorSensitivityBtn:QMUIGhostButton!
+    private var editBtnTriggerTimeBtn:QMUIGhostButton!
     
     private var rs485EnableSwitch:UISwitch!
     private var longRangeSwitch:UISwitch!
@@ -336,7 +341,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     private var relayLabel:UILabel!
     private var relaySwitch:UISwitch!
     private var relayFlashingLabel:UILabel!
-    private var relayFlashingSwitch:UISwitch!
+    private var relayFlashingBtn:QMUIGhostButton!
     private var relayStatusLabel:UILabel!
     private var lightSensorOpenLabel:UILabel!
     private var lightSensorOpenSwitch:UISwitch!
@@ -409,6 +414,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         self.portList.append(NSLocalizedString("port", comment: "Port") + " 2")
         self.relayTypeList.append( NSLocalizedString("normal", comment: "Normal"))
         self.relayTypeList.append( NSLocalizedString("relay_delay", comment: "Delay"))
+        self.relayTypeList.append( NSLocalizedString("dynamic_pulse", comment: "Dynamic Pulse"))
         self.relayTypeList.append( NSLocalizedString("relay_pulse", comment: "Pulse"))
         if deviceType == "S07"{
             broadcastTypeList[0] = "Eddystone T-button"
@@ -420,7 +426,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         }else if deviceType == "S10" {
             broadcastTypeList[0] = "Eddystone T-one"
             broadcastTypeList.append("Eddystone UID")
-        }else if deviceType == "S02"{
+        }else if deviceType == "S02" || deviceType == "S04" || deviceType == "S05"{
             transmittedPowerList.removeFirst()
         }
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
@@ -661,7 +667,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         if !self.connected{
             return
         }
-        if self.waitingView != nil {
+        if self.waitingView != nil && !isReadingHistory {
             self.waitingView.dismiss()
         }
         let data = characteristic.value
@@ -677,6 +683,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                         self.readDeviceNameResp(resp: bytes)
                     }else if type == UInt8(self.controlFunc["password"]?["write"] ?? 0){
                         Toast.hudBuilder.title("password has been updated!").show()
+                        Toast.hudBuilder.title(NSLocalizedString("password_has_been_updated",comment:"password has been updated!") ).show()
                         self.confirmPwd = self.newPwd ?? ""
                     }else if type == UInt8(self.controlFunc["broadcastCycle"]?["read"] ?? 0) ||
                                 type == UInt8(self.controlFunc["broadcastCycle"]?["write"] ?? 0){
@@ -719,7 +726,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                                 type == UInt8(self.controlFunc["lightSensorOpen"]?["write"] ?? 0){
                         self.readLightSensorOpenStatusResp(resp: bytes)
                     }else if type == UInt8(self.controlFunc["resetFactory"]?["write"] ?? 0){
-                        Toast.hudBuilder.title(NSLocalizedString("upgrade_success_warning",comment:"Factory Settings restored successfully, please enter the password to reconnect") ).show()
+                        Toast.hudBuilder.title(NSLocalizedString("factory_reset_succ",comment:"Factory Settings restored successfully, please enter the password to reconnect") ).show()
                         
                         self.showPwdWin()
                     }
@@ -787,7 +794,10 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                     }else if(type == UInt8(self.controlFunc["doorEnable"]?["read"] ?? 0)
                              || type == UInt8(self.controlFunc["doorEnable"]?["write"] ?? 0)){
                         readDoorEnableStatusResp(resp: bytes)
-                    } else if(type == UInt8(self.controlFunc["gSensorSensitivity"]?["read"] ?? 0)
+                    }else if(type == UInt8(self.controlFunc["btnTriggerTime"]?["read"] ?? 0)
+                             || type == UInt8(self.controlFunc["btnTriggerTime"]?["write"] ?? 0)){
+                        readBtnTriggerTimeResp(resp: bytes)
+                    }  else if(type == UInt8(self.controlFunc["gSensorSensitivity"]?["read"] ?? 0)
                               || type == UInt8(self.controlFunc["gSensorSensitivity"]?["write"] ?? 0)){
                         readGSensorSensitivityResp(resp: bytes)
                     }      else if(type == UInt8(self.controlFunc["gSensorDetectionDuration"]?["read"] ?? 0)
@@ -903,7 +913,15 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     func readDinVoltageResp(resp:[UInt8]){
         self.dinVoltageContentLabel.text = String(format:"%d",resp[2])
     }
-    
+    func readBtnTriggerTime(){
+        if !self.isCurrentDeviceTypeFunc(funcName: "btnTriggerTime"){
+            return
+        }
+        self.readData(cmdHead: self.controlFunc["btnTriggerTime"]?["read"] ?? 0)
+    }
+    func readBtnTriggerTimeResp(resp:[UInt8]){
+        self.btnTriggerTimeContentLabel.text = String(format:"%d",(Int(resp[2] & 0xff) * 100))
+    }
     
     func readDinStatusEventResp(resp:[UInt8]){
         self.dinStatusEventContentLabel.text = self.dinStatusEventList[Int(resp[2])]
@@ -926,8 +944,30 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             let broadcast = (Int(resp[2]) << 8) + Int(resp[3])
             self.broadcastCycleContentLabel.text = String(format:"%ds",broadcast)
         }else{
-            let broadcast =  Int(resp[2])
-            self.broadcastCycleContentLabel.text = String(format:"%ds",broadcast)
+            if deviceType == "S07" || deviceType == "S08"{
+                let curVersion = self.software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "").replacingOccurrences(of: ".", with: "")
+                  if  curVersion >= "1006" {
+                      let broadcast = (Int(resp[2]) << 8) + Int(resp[3])
+                      self.broadcastCycleContentLabel.text = String(format:"%ds",broadcast)
+                  }else{
+                      let broadcast =  Int(resp[2])
+                      self.broadcastCycleContentLabel.text = String(format:"%ds",broadcast)
+                  }
+            }else if deviceType == "S10"{
+                let curVersion = self.software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "").replacingOccurrences(of: ".", with: "")
+                  if  curVersion >= "1005" {
+                      let broadcast = (Int(resp[2]) << 8) + Int(resp[3])
+                      self.broadcastCycleContentLabel.text = String(format:"%ds",broadcast)
+                  }else{
+                      let broadcast =  Int(resp[2])
+                      self.broadcastCycleContentLabel.text = String(format:"%ds",broadcast)
+                  }
+            }else{
+                let broadcast =  Int(resp[2])
+                self.broadcastCycleContentLabel.text = String(format:"%ds",broadcast)
+            }
+            
+        
         }
         
     }
@@ -1038,9 +1078,11 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                 if(i * 8 + 8 + 3 >= resp.count){
                     break;
                 }
-                let curDevice: Array<UInt8>.SubSequence = resp[i * 8 + 3...i * 8 + 8 + 3]
-                var deviceDesc = "ROM" + String(i + 1) + ":" + Utils.uint8ToHexStr(value: curDevice[0])
+                let curDevice: Array<UInt8>.SubSequence = resp[i * 8 + 3...i * 8 + 7 + 3]
+                let hexString = curDevice.map { String(format: "%02X", $0) }.joined()
+                var deviceDesc = "ROM" + String(i + 1) + ":" + hexString
                 warningMsg += deviceDesc
+             
                 if i != deviceCount - 1{
                     warningMsg += "\r\n"
                 }
@@ -1057,31 +1099,30 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         }
         let upgradeConfirm = AEAlertAction(title: NSLocalizedString("confirm", comment: "Confirm"), style: .defaulted) { (action) in
             warningDlg.dismiss()
-            
         }
         warningDlg.addAction(action: upgradeCancel)
         warningDlg.addAction(action: upgradeConfirm)
         warningDlg.show()
     }
     func readSendInstructionSequenceResp(resp:[UInt8]){
-        var warningMsg = ""
+        var warningShowMsg = ""
         if resp.count >= 4{
             let msgByte = resp[2..<resp.count - 2]
             var warningMsg = Utils.uint8ArrayToHexStr(value: Array(msgByte))
             let range = warningMsg.index(warningMsg.startIndex, offsetBy: 0)..<warningMsg.endIndex
-            warningMsg = String(warningMsg[range])
+            warningShowMsg = String(warningMsg[range])
         }else{
-            warningMsg = "Error message"
+            warningShowMsg = "Error message"
         }
         let warningDlg = AEAlertView(style: .defaulted)
-        warningDlg.message = warningMsg
+        warningDlg.message = warningShowMsg
         let upgradeCancel = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
             warningDlg.dismiss()
         }
         let upgradeConfirm = AEAlertAction(title: NSLocalizedString("confirm", comment: "Confirm"), style: .defaulted) { (action) in
             warningDlg.dismiss()
             let pasteboard = UIPasteboard.general
-            pasteboard.string = warningMsg
+            pasteboard.string = warningShowMsg
             Toast.hudBuilder.title(NSLocalizedString("copy_to_clipboard",comment:"Copied to clipboard") ).show()
         }
         warningDlg.addAction(action: upgradeCancel)
@@ -1105,12 +1146,17 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         var isErrorMsg: Bool = false
         if(status == 0){
             let isUseHex = UserDefaults.standard.bool(forKey: "rs485_send_data_use_hex")
+            let isUseHexValue = isUseHex ? isUseHex : true
             if(value.count > 3){
                 let content: Array<UInt8>.SubSequence = value[3...value.count - 1]
-                if(isUseHex){
-                    warningMsg = Utils.uint8ToHexStr(value: content[0])
+                if(isUseHexValue){
+                    warningMsg =  content.map { String(format: "%02X", $0) }.joined()
                 }else{
-                    warningMsg = String(bytes: content, encoding: .utf8)!
+                    if let tempStr = String(data: Data(content), encoding: .utf8) {
+                        warningMsg = tempStr // 输出: Hello, World!
+                    } else {
+                        warningMsg = "Error msg"
+                    }
                 }
             }else{
                 warningMsg = "Error msg"
@@ -1145,6 +1191,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                     }
                 }
                 if(rs485DataErrorCount > 6){
+                    rs485DataErrorCount = 0;
                     Toast.hudBuilder.title(NSLocalizedString("rs485_baud_set_error_warning",comment:"RS485 baud rate may be set incorrectly, please check") ).show()
                 }
             }
@@ -1201,13 +1248,13 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         let value = Int(resp[2])
         if value < self.broadcastTypeList.count {
             self.broadcastTypeContentLabel.text = self.broadcastTypeList[value]
-            if self.deviceType == "S07"{
-                if value == 0{
-                    self.longRangeView.isHidden = true
-                }else{
-                    self.longRangeView.isHidden = false
-                }
-            }
+//            if self.deviceType == "S07"{
+//                if value == 0{
+//                    self.longRangeView.isHidden = true
+//                }else{
+//                    self.longRangeView.isHidden = false
+//                }
+//            }
             self.beaconMajorSetView.isHidden = true
             self.beaconMinorSetView.isHidden = true
             self.eddystoneNidSetView.isHidden = true
@@ -1224,6 +1271,14 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                     self.eddystoneBidSetView.isHidden = false
                     self.readEddystoneBidSet()
                     self.readEddystoneNidSet()
+                }
+            }
+            if self.deviceType == "S07"{
+                if value == 0{
+                    self.broadcastCycleView.isHidden = true
+                }else{
+                    self.readBroadcastCycle()
+                    self.broadcastCycleView.isHidden = false
                 }
             }
             if self.deviceType == "S08"{
@@ -1755,6 +1810,11 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         self.writeArrayData(cmdHead: self.controlFunc["eddystoneBIDSet"]?["write"] ?? 0, content: Utils.hexStringToUInt8Array(value))
     }
     
+    func writeBtnTriggerTime(value:Int){
+        var uint8Value = value < 0 ? value + 256 : value
+        let data:[UInt8] = [UInt8(uint8Value)]
+        self.writeArrayData(cmdHead: self.controlFunc["btnTriggerTime"]?["write"] ?? 0, content: data)
+    }
     
     func readLedOpenStatus(){
         if !self.isCurrentDeviceTypeFunc(funcName: "ledOpen"){
@@ -1810,10 +1870,8 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         if resp.count >= 5{
             if resp[3] == 0{
                 self.relayFlashingStatus = false;
-                self.relayFlashingSwitch.isOn = false
             }else{
                 self.relayFlashingStatus = true;
-                self.relayFlashingSwitch.isOn = true
             }
         }
     }
@@ -1855,13 +1913,13 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         if !self.isCurrentDeviceTypeFunc(funcName: "readOriginData") || self.historyIndex > 11{
             return
         }
+        self.isReadingHistory = true
         var data = [UInt8(self.historyIndex)]
         self.writeArrayData(cmdHead: self.controlFunc["readOriginData"]?["read"] ?? 0, content: data)
         self.historyIndex += 1
     }
     
-    
-    
+     
     func readHistoryResp(resp:[UInt8]){
         if self.curHistoryList.count < 17{
             let realResp = Utils.arraysCopyOfRange(src: resp, from: 2, to: resp.count - 1)
@@ -1880,6 +1938,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             self.waitingView.title = String(format:"%.2f%%",percent*100)
         }
         if self.curHistoryList.count == 17{
+            self.isReadingHistory = false
             originHistoryList.append(curHistoryList)
             let percent = Float(self.originHistoryList.count * 17) / 204.0
             self.waitingView.title = String(format:"%.2f%%",percent*100)
@@ -1931,9 +1990,10 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                     self.allBleHisData.append(bleHisDataList[i])
                     i+=1
                 }
-                self.waitingView.dismiss()
+              
                 self.isReadingHistory = false
                 if self.allBleHisData.count == 0{
+                    self.waitingView.dismiss()
                     Toast.hudBuilder.title(NSLocalizedString("not_found_data", comment: "Not found data")).show()
                     return
                 }
@@ -1942,6 +2002,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                 historyView.startDate = Int(self.startDate.timeIntervalSince1970)
                 historyView.endDate = Int(self.endDate.timeIntervalSince1970)
                 historyView.mac = self.mac
+                historyView.deviceName = self.nameContentLabel.text!
                 historyView.id = self.mac
                 historyView.showBleHisData = self.allBleHisData
                 if self.tempAlarmUpOpen{
@@ -1966,6 +2027,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                 }
                 
                 historyView.deviceType = self.deviceType
+                self.waitingView.dismiss()
                 self.navigationController?.pushViewController(historyView, animated: false)
             }
         }
@@ -2107,8 +2169,29 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             let data = self.formatHex(intValue: value, len: 2)
             self.writeArrayData(cmdHead: self.controlFunc["broadcastCycle"]?["write"] ?? 0, content: data)
         }else{
-            let data = [UInt8(value)]
-            self.writeArrayData(cmdHead: self.controlFunc["broadcastCycle"]?["write"] ?? 0, content: data)
+            if deviceType == "S07" || deviceType == "S08"{
+                let curVersion = self.software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "").replacingOccurrences(of: ".", with: "")
+                  if  curVersion >= "1006" {
+                      let data = self.formatHex(intValue: value, len: 2)
+                      self.writeArrayData(cmdHead: self.controlFunc["broadcastCycle"]?["write"] ?? 0, content: data)
+                  }else{
+                      let data = [UInt8(value)]
+                      self.writeArrayData(cmdHead: self.controlFunc["broadcastCycle"]?["write"] ?? 0, content: data)
+                  }
+            }else if deviceType == "S10"{
+                let curVersion = self.software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "").replacingOccurrences(of: ".", with: "")
+                  if  curVersion >= "1005" {
+                      let data = self.formatHex(intValue: value, len: 2)
+                      self.writeArrayData(cmdHead: self.controlFunc["broadcastCycle"]?["write"] ?? 0, content: data)
+                  }else{
+                      let data = [UInt8(value)]
+                      self.writeArrayData(cmdHead: self.controlFunc["broadcastCycle"]?["write"] ?? 0, content: data)
+                  }
+            }else{
+                let data = [UInt8(value)]
+                self.writeArrayData(cmdHead: self.controlFunc["broadcastCycle"]?["write"] ?? 0, content: data)
+            }
+            
         }
     }
     
@@ -2177,12 +2260,15 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     }
     func writeDelayRelayStatus(delayTime:Int){
         var data = [UInt8]()
-        if self.relaySwitch.isOn {
+        if !self.relaySwitch.isOn {
             data.append(UInt8(1))
         }else{
             data.append(UInt8(0))
         }
-        data.append(UInt8(delayTime))
+        var delayTimeData:[UInt8] = self.formatHex(intValue: delayTime, len: 2)
+        for byte in delayTimeData{
+            data.append(byte)
+        } 
         self.writeArrayData(cmdHead: self.controlFunc["relay"]?["write"] ?? 0, content: data)
     }
     
@@ -2214,6 +2300,21 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         data.append(UInt8(recoverTime))
         self.writeArrayData(cmdHead: self.controlFunc["relay"]?["write"] ?? 0, content: data)
     }
+    
+    func writeSecondPulseRelayStatus(startLevel:Int,highLevelPulseWidthTime:Int,lowLevelPulseWidthTime:Int,pulseCount:Int){
+        var data = [UInt8]()
+        data.append(UInt8(4))
+        data.append(UInt8(startLevel))
+        data.append(UInt8(highLevelPulseWidthTime))
+        data.append(UInt8(lowLevelPulseWidthTime))
+  
+        var pulseCountData:[UInt8] = self.formatHex(intValue: pulseCount, len: 2)
+        for byte in pulseCountData{
+            data.append(byte)
+        }
+        self.writeArrayData(cmdHead: self.controlFunc["relay"]?["write"] ?? 0, content: data)
+    }
+    
     func writeRelayStatus(){
         var data = [UInt8]()
         if self.relaySwitch.isOn {
@@ -2298,6 +2399,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         self.readGSensorEnable()
         self.readDinStatusEvent()
         self.readDinVoltage( )
+        self.readBtnTriggerTime()
         if self.deviceType != "S08"{
             self.readDoorEnableStatus()
         }
@@ -2459,6 +2561,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         editRangeValue.delegate = self
         editRangeValue.connectStatusDelegate = self
         self.editRangeValueType = "temp"
+        editRangeValue.deviceType = deviceType
         editRangeValue.type = "temp"
         print(self.tempAlarmUp)
         if self.tempAlarmUpOpen{
@@ -2484,6 +2587,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         self.leaveViewNeedDisconnect = false
         let editRangeValue = EditRangeValueController()
         editRangeValue.delegate = self
+        editRangeValue.deviceType = deviceType
         editRangeValue.connectStatusDelegate = self
         self.editRangeValueType = "humidity"
         editRangeValue.type = "humidity"
@@ -2794,7 +2898,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                 Toast.hudBuilder.title(NSLocalizedString("input_error", comment: "Input error!")).show()
                 return
             }
-            if saveBeaconMajorSetValue.count > 0{
+            if saveBeaconMajorSetValue.count > 0 && saveBeaconMajorSetValue.count < 6{
                 var beaconMajorSet:Int = Int(saveBeaconMajorSetValue) ?? 0
                 if beaconMajorSet >= 0 && beaconMajorSet <= 65535{
                     self.writeBeaconMajorSet(value: beaconMajorSet)
@@ -2829,7 +2933,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                 Toast.hudBuilder.title(NSLocalizedString("input_error", comment: "Input error!")).show()
                 return
             }
-            if saveBeaconMinorSetValue.count > 0{
+            if saveBeaconMinorSetValue.count > 0 && saveBeaconMinorSetValue.count < 6{
                 var beaconMinorSet:Int = Int(saveBeaconMinorSetValue) ?? 0
                 if beaconMinorSet >= 0 && beaconMinorSet <= 65535{
                     self.writeBeaconMinorSet(value: beaconMinorSet)
@@ -2881,6 +2985,43 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         editEddystoneNidSetAlert.addAction(action: action_two)
         editEddystoneNidSetAlert.show()
     }
+    
+    @objc private func editBtnTriggerTimeClick(){
+        if !self.connected{
+                   Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+                   return
+               }
+               let editBtnTriggerTimeAlert = AEUIAlertView(style: .textField, title: NSLocalizedString("btn_trigger_time_desc", comment: "Key trigger time(ms)"), message: nil)
+               editBtnTriggerTimeAlert.textField.placeholder = NSLocalizedString("btn_trigger_time_desc", comment: "Key trigger time(ms)")
+               
+               let action_one = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
+                   editBtnTriggerTimeAlert.dismiss()
+               }
+               let action_two = AEAlertAction(title: NSLocalizedString("confirm", comment: "Confirm"), style: .defaulted) { (action) in
+                   let saveBtnTriggerTimeValue = String(editBtnTriggerTimeAlert.textField.text ?? "")
+                   let numbCharacterSet = CharacterSet(charactersIn: "0123456789").inverted
+                   if saveBtnTriggerTimeValue.rangeOfCharacter(from: numbCharacterSet) != nil {
+                       Toast.hudBuilder.title(NSLocalizedString("input_error", comment: "Input error!")).show()
+                       return
+                   }
+                   if saveBtnTriggerTimeValue.count > 0 && saveBtnTriggerTimeValue.count < 6{
+                       var btnTriggerTime:Int = Int(saveBtnTriggerTimeValue) ?? 0
+                       if btnTriggerTime >= 0 && btnTriggerTime <= 4000{
+                           self.writeBtnTriggerTime(value: btnTriggerTime/100)
+                           editBtnTriggerTimeAlert.dismiss()
+                       }else{
+                           Toast.hudBuilder.title(NSLocalizedString("btn_trigger_time_input_error", comment: "Value is incorrect!It must between 0 and 4000.")).show()
+                       }
+                       
+                   }else{
+                       Toast.hudBuilder.title(NSLocalizedString("input_error", comment: "Input error!")).show()
+                   }
+               }
+               editBtnTriggerTimeAlert.addAction(action: action_one)
+               editBtnTriggerTimeAlert.addAction(action: action_two)
+               editBtnTriggerTimeAlert.show()
+    }
+    
     @objc private func editEddystoneBidSetClick() {
         if !self.connected{
             Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
@@ -2996,56 +3137,58 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         self.writeDoorEnableStatus()
         
     }
-    @objc func  relayFlashingSwitchAction(sender:UISwitch){
+    @objc func relayFlashingTipsClick(){
+        // 初始化一个UIAlertController实例，样式为警报（Alert）
+//               let alertController = UIAlertController(title: NSLocalizedString("warning", comment: "Warning"), message: nil, preferredStyle: .alert)
+//                let warningContent = NSLocalizedString("flashing_relay_tips", comment: "Relay periodic switching is a one-time input function. Each operation requires the input of the delay and switching cycle required for this operation.")
+//               // 添加一个空的消息，因为我们将自定义一个TextView来显示长文本
+//               alertController.setMessageTextAsLabel(with: warningContent)
+//
+//               // 添加确认按钮
+//               let okAction = UIAlertAction(title: NSLocalizedString("confirm", comment: "Confirm"), style: .default, handler: nil)
+//               alertController.addAction(okAction)
+//
+//               // 展示警报控制器
+//               self.present(alertController, animated: true, completion: nil)
+        let shutdownWarningView = AEAlertView(style: .defaulted)
+        let warningContent = NSLocalizedString("flashing_relay_tips", comment: "Relay periodic switching is a one-time input function. Each operation requires the input of the delay and switching cycle required for this operation.")
+        shutdownWarningView.message = warningContent
+        let upgradeCancel = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
+            
+            shutdownWarningView.dismiss()
+        }
+        let upgradeConfirm = AEAlertAction(title: NSLocalizedString("confirm", comment: "Confirm"), style: .defaulted) { (action) in
+            shutdownWarningView.dismiss()
+            
+        }
+        shutdownWarningView.addAction(action: upgradeCancel)
+        shutdownWarningView.addAction(action: upgradeConfirm)
+        shutdownWarningView.show()
+    }
+    
+    @objc func relayFlashingClick(){
         if !self.connected{
-            self.relayFlashingSwitch.isOn = !self.relayFlashingSwitch.isOn
            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
            return
        }
-               
-        if(Utils.isDebug){
-            self.writeFlashingRelayStatus()
-            return
-        }
-        let relayWarningView = AEAlertView(style: .defaulted)
-        relayWarningView.message = NSLocalizedString("confirm_regular_relay_warning", comment: "Try switching the relay on and off periodically?")
-        let relayCancel = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
-            self.relayFlashingSwitch.isOn = self.relayFlashingStatus
-            relayWarningView.dismiss()
-        }
-        let relayConfirm = AEAlertAction(title: NSLocalizedString("confirm", comment: "Confirm"), style: .defaulted) { (action) in
-            relayWarningView.dismiss()
-            self.writeFlashingRelayStatus()
-        }
-        relayWarningView.addAction(action: relayCancel)
-        relayWarningView.addAction(action: relayConfirm)
-        relayWarningView.show()
         
-        
-    }
-    @objc func relaySwitchAction(sender:UISwitch){
-        if !self.connected{
-            self.relaySwitch.isOn = !self.relaySwitch.isOn
-            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
-            return
-        }
         let alertController = UIAlertController(title: "", message: nil, preferredStyle: .actionSheet)
 
         // 添加操作按钮
-        let action1 = UIAlertAction(title: NSLocalizedString("normal", comment: "Normal"), style: .default) { action in
+        let action1 = UIAlertAction(title: NSLocalizedString("cycle_switching", comment: "Cycle switching"), style: .default) { action in
             if(Utils.isDebug){
-                self.writeRelayStatus()
+                self.writeFlashingRelayStatus()
                 return
             }
             let relayWarningView = AEAlertView(style: .defaulted)
-            relayWarningView.message = NSLocalizedString("confirm_relay_warning", comment: "Try to switch relay?")
+            relayWarningView.message = NSLocalizedString("confirm_regular_relay_warning", comment: "Try switching the relay on and off periodically?")
             let relayCancel = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
-                self.relaySwitch.isOn = self.relayStatus
+                
                 relayWarningView.dismiss()
             }
             let relayConfirm = AEAlertAction(title: NSLocalizedString("confirm", comment: "Confirm"), style: .defaulted) { (action) in
                 relayWarningView.dismiss()
-                self.writeRelayStatus()
+                self.writeFlashingRelayStatus()
             }
             relayWarningView.addAction(action: relayCancel)
             relayWarningView.addAction(action: relayConfirm)
@@ -3054,7 +3197,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         alertController.addAction(action1)
 
         let action2 = UIAlertAction(title: NSLocalizedString("relay_delay", comment: "Delay"), style: .default) { action in
-            let editDelayRelayAlert = AEUIAlertView(style: .number, title: NSLocalizedString("relay_delay", comment: "Delay"), message: nil)
+            let editDelayRelayAlert = AEUIAlertView(style: .number, title: NSLocalizedString("confirm_delay_relay_warning", comment: "Delay"), message: nil)
             editDelayRelayAlert.textField.placeholder = NSLocalizedString("relay_delay", comment: "Delay")
 
             let action_one = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
@@ -3065,7 +3208,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                 let delayRelay = String(editDelayRelayAlert.textField.text ?? "")
                 if delayRelay.count > 0{
                     let delayRelayInt = Int(delayRelay) ?? 0
-                    if delayRelayInt >= 3 && delayRelayInt <= 255{
+                    if delayRelayInt >= 1 && delayRelayInt <= 600{
                         self.writeDelayRelayStatus(delayTime: delayRelayInt)
                         editDelayRelayAlert.dismiss()
                     }else{
@@ -3080,7 +3223,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             editDelayRelayAlert.show()
         }
         alertController.addAction(action2)
-        let action3 = UIAlertAction(title: NSLocalizedString("relay_pulse", comment: "Pulse"), style: .default) { action in
+        let action3 = UIAlertAction(title: NSLocalizedString("dynamic_pulse", comment: "Dynamic Pulse"), style: .default) { action in
             let editForm = EditPulseRelayController()
             editForm.delegate = self
             editForm.connectStatusDelegate = self
@@ -3089,6 +3232,15 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             self.navigationController?.pushViewController(editForm, animated: false)
         }
         alertController.addAction(action3)
+        let action4 = UIAlertAction(title: NSLocalizedString("relay_pulse", comment: "Pulse"), style: .default) { action in
+            let editForm = EditSecondPulseRelayController()
+            editForm.delegate = self
+            editForm.connectStatusDelegate = self
+            self.leaveViewNeedDisconnect = false
+            self.relaySwitch.isOn = self.relayStatus
+            self.navigationController?.pushViewController(editForm, animated: false)
+        }
+        alertController.addAction(action4)
 
         let cancelAction = UIAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { action in
             // 处理取消按钮被点击的逻辑
@@ -3099,6 +3251,37 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
 
         // 在视图控制器中呈现 UIAlertController
         present(alertController, animated: true, completion: nil)
+        
+               
+       
+    }
+    
+     
+    @objc func relaySwitchAction(sender:UISwitch){
+        if !self.connected{
+            self.relaySwitch.isOn = !self.relaySwitch.isOn
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
+        
+        if(Utils.isDebug){
+            self.writeRelayStatus()
+            return
+        }
+        let relayWarningView = AEAlertView(style: .defaulted)
+        relayWarningView.message = NSLocalizedString("confirm_relay_warning", comment: "Try to switch relay?")
+        let relayCancel = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
+            self.relaySwitch.isOn = self.relayStatus
+            relayWarningView.dismiss()
+        }
+        let relayConfirm = AEAlertAction(title: NSLocalizedString("confirm", comment: "Confirm"), style: .defaulted) { (action) in
+            relayWarningView.dismiss()
+            self.writeRelayStatus()
+        }
+        relayWarningView.addAction(action: relayCancel)
+        relayWarningView.addAction(action: relayConfirm)
+        relayWarningView.show()
+        
          
     }
     
@@ -3505,6 +3688,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     var doorView:UIView!
     var shutdownView:UIView!
     var readAlarmView:UIView!
+    var btnTriggerTimeView:UIView!
     func initUI(){
         let scrollView = UIScrollView()
         scrollView.frame = self.view.bounds
@@ -3722,7 +3906,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         passwordView.addSubview(self.passwordContentLabel)
         self.editPasswordBtn = QMUIGhostButton()
         self.editPasswordBtn.titleLabel?.font = UIFont.systemFont(ofSize: fontSize)
-        self.editPasswordBtn.setTitle(NSLocalizedString(NSLocalizedString("edit", comment: "Edit"), comment: "Edit"), for: .normal)
+        self.editPasswordBtn.setTitle(NSLocalizedString("edit", comment: "Edit"), for: .normal)
         self.editPasswordBtn.ghostColor = UIColor.colorPrimary
         self.editPasswordBtn.frame = CGRect(x: btnX, y: 15, width: 60, height: btnHeight)
         self.editPasswordBtn.addTarget(self, action: #selector(editPassword), for:.touchUpInside)
@@ -3825,6 +4009,8 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         self.dinStatusEventTypeContentLabel.font = UIFont.systemFont(ofSize: fontSize)
         self.dinStatusEventTypeContentLabel.textColor = UIColor.black
         self.dinStatusEventTypeContentLabel.text = ""
+        self.dinStatusEventTypeContentLabel.lineBreakMode = NSLineBreakMode.byWordWrapping;
+        self.dinStatusEventTypeContentLabel.numberOfLines = 0;
         self.dinStatusEventTypeContentLabel.frame = CGRect(x: contentX, y: 0, width: 70, height: 60)
         dinStatusView.addSubview(self.dinStatusEventTypeContentLabel)
         
@@ -4906,6 +5092,44 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             eddystoneBidSetView.isHidden = true
         }
         
+        btnTriggerTimeView = UIView()
+        btnTriggerTimeView.heightAnchor.constraint(equalToConstant: 60).isActive = true
+        btnTriggerTimeView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
+        stackView.addArrangedSubview(btnTriggerTimeView)
+        self.btnTriggerTimeLabel = UILabel()
+        self.btnTriggerTimeLabel.font = UIFont.systemFont(ofSize: fontSize)
+        self.btnTriggerTimeLabel.textColor = UIColor.black
+        self.btnTriggerTimeLabel.lineBreakMode = NSLineBreakMode.byWordWrapping;
+        self.btnTriggerTimeLabel.numberOfLines = 0;
+        self.btnTriggerTimeLabel.text = NSLocalizedString("btn_trigger_time_desc", comment: "Key trigger time(ms)")
+        self.btnTriggerTimeLabel.lineBreakMode = NSLineBreakMode.byWordWrapping;
+        self.btnTriggerTimeLabel.numberOfLines = 0;
+        self.btnTriggerTimeLabel.frame = CGRect(x: 15, y: 0, width: descWidth, height: 60)
+        btnTriggerTimeView.addSubview(self.btnTriggerTimeLabel)
+        self.btnTriggerTimeContentLabel = UILabel()
+        self.btnTriggerTimeContentLabel.font = UIFont.systemFont(ofSize: fontSize)
+        self.btnTriggerTimeContentLabel.textColor = UIColor.black
+        self.btnTriggerTimeContentLabel.text = ""
+        self.btnTriggerTimeContentLabel.frame = CGRect(x: contentX+15, y: 0, width: 55, height: 60)
+        btnTriggerTimeView.addSubview(self.btnTriggerTimeContentLabel)
+        self.editBtnTriggerTimeBtn = QMUIGhostButton()
+        self.editBtnTriggerTimeBtn.titleLabel?.font = UIFont.systemFont(ofSize: fontSize)
+        self.editBtnTriggerTimeBtn.setTitle(NSLocalizedString("edit", comment: "Edit"), for: .normal)
+        self.editBtnTriggerTimeBtn.ghostColor = UIColor.colorPrimary
+        self.editBtnTriggerTimeBtn.frame = CGRect(x: btnX, y: 15, width: 60, height: btnHeight)
+        self.editBtnTriggerTimeBtn.addTarget(self, action: #selector(editBtnTriggerTimeClick), for:.touchUpInside)
+        btnTriggerTimeView.addSubview(self.editBtnTriggerTimeBtn)
+        let btnTriggerTimeLine = UIView()
+        btnTriggerTimeLine.backgroundColor = UIColor.gray
+        btnTriggerTimeLine.frame = CGRect(x: 0, y: Double(60), width: Double(KSize.width), height: 0.5)
+        btnTriggerTimeView.addSubview(btnTriggerTimeLine)
+        
+        if self.isCurrentDeviceTypeFunc(funcName: "btnTriggerTime"){
+            btnTriggerTimeView.isHidden = false
+        }else{
+            btnTriggerTimeView.isHidden = true
+        }
+        
         longRangeView = UIView()
         longRangeView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         longRangeView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
@@ -4979,18 +5203,37 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         self.relayFlashingLabel.text = NSLocalizedString("flashing_relay", comment:"Relay periodic switching")
         self.relayFlashingLabel.frame = CGRect(x: 15, y: 0, width: descWidth, height: 60)
         relayFlashingView.addSubview(self.relayFlashingLabel)
-        self.relayFlashingSwitch = UISwitch()
-        self.relayFlashingSwitch.frame = CGRect(x: contentX, y: 10, width: 70, height: 45)
-        self.relayFlashingSwitch.addTarget(self, action: #selector(relayFlashingSwitchAction),
-                                           for:UIControl.Event.valueChanged)
-        relayFlashingView.addSubview(self.relayFlashingSwitch)
+  
+        self.relayFlashingBtn = QMUIGhostButton()
+            self.relayFlashingBtn.titleLabel?.font = UIFont.systemFont(ofSize: fontSize)
+            self.relayFlashingBtn.setTitle(NSLocalizedString("edit", comment: "Edit"), for: .normal)
+            self.relayFlashingBtn.ghostColor = UIColor.colorPrimary
+            self.relayFlashingBtn.frame =  CGRect(x: contentX + 53, y: 15, width: 77, height: btnHeight)
+            self.relayFlashingBtn.addTarget(self, action: #selector(relayFlashingClick), for:.touchUpInside)
+        relayFlashingView.addSubview(self.relayFlashingBtn)
+        
+        let imageButton = UIButton(type: .custom)
+
+        // 设置按钮的frame，你可以根据需要调整这些值
+        imageButton.frame = CGRect(x: btnX+40, y: 20, width: 20, height: 20)
+
+        // 加载并设置按钮的背景图片，假设图片名为 "buttonImage.png"
+        if let buttonImage = UIImage(named: "ic_help.png") {
+            
+            imageButton.setImage(buttonImage, for: .normal)
+            imageButton.contentMode = .scaleAspectFit
+        }
+      
+        // 设置按钮的点击事件
+        imageButton.addTarget(self, action: #selector(relayFlashingTipsClick), for: .touchUpInside)
+        relayFlashingView.addSubview(imageButton)
         let relayFlashingLine = UIView()
         relayFlashingLine.backgroundColor = UIColor.gray
         relayFlashingLine.frame = CGRect(x: 0, y: Double(60), width: Double(KSize.width), height: 0.5)
         relayFlashingView.addSubview(relayFlashingLine)
         let curVersion = self.software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "")
         var curVerionInt = Int(curVersion) ?? 0
-        if self.isCurrentDeviceTypeFunc(funcName: "relay") && curVerionInt >= 18{
+        if self.isCurrentDeviceTypeFunc(funcName: "relay") && curVerionInt >= 17{
             relayFlashingView.isHidden = false
         }else{
             relayFlashingView.isHidden = true
@@ -5125,7 +5368,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         resetFactoryView.addSubview(self.resetFactoryLabel)
         self.editResetFactoryBtn = QMUIGhostButton()
         self.editResetFactoryBtn.titleLabel?.font = UIFont.systemFont(ofSize: fontSize)
-        self.editResetFactoryBtn.setTitle(NSLocalizedString("reset_factory", comment:"Reset factory"), for: .normal)
+        self.editResetFactoryBtn.setTitle(NSLocalizedString("reset_factory_btn", comment:"Reset factory"), for: .normal)
         self.editResetFactoryBtn.ghostColor = UIColor.colorPrimary
         self.editResetFactoryBtn.addTarget(self, action: #selector(resetFactoryClick), for:.touchUpInside)
         self.editResetFactoryBtn.frame = CGRect(x: contentX, y: 15, width: 120, height: btnHeight)
@@ -5294,7 +5537,8 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             }
         }else  if deviceType == "S05"{
             if funcName == "transmittedPower"{
-                if Int(software) ?? 0 >= 13{
+                let curVersion = self.software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "").replacingOccurrences(of: ".", with: "")
+                if Int(curVersion) ?? 0 >= 13{
                     return true;
                 }else{
                     return false;
@@ -5308,21 +5552,22 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                 return false;
             }
         }else if deviceType == "S02"{
+            let curVersion = self.software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "").replacingOccurrences(of: ".", with: "")
             if funcName == "transmittedPower"{
-                if Int(software) ?? 0 >= 13 {
+                if Int(curVersion) ?? 0 >= 13 {
                     return true;
                 }else{
                     return false;
                 }
             }
             if funcName == "lightSensorOpen"{
-                if Int(software) ?? 0 >= 20{
+                if Int(curVersion) ?? 0 >= 20{
                     return true;
                 }else{
                     return false;
                 }
             }
-            if Int(software) ?? 0 < 11 && (funcName == "saveInterval" || funcName == "readHistory"
+            if Int(curVersion) ?? 0 < 11 && (funcName == "saveInterval" || funcName == "readHistory"
                                            || funcName == "saveCount" || funcName == "readAlarm" || funcName == "readOriginData"  || funcName == "startRecord"){
                 return false;
             }
@@ -5341,7 +5586,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                 || funcName == "readDinVoltage" || funcName == "dinStatusEvent" || funcName == "doutStatus" || funcName == "readVinVoltage"
                 || funcName == "readAinVoltage" || funcName == "setPositiveNegativeWarning" || funcName == "ainPositiveNegativeWarning" || funcName == "getOneWireDevice"
                 || funcName == "sendCmdSequence" || funcName == "oneWireWorkMode" || funcName == "rs485SendData"
-                || funcName == "rs485BaudRate" || funcName == "rs485Enable" || funcName == "getAinEvent" {
+                || funcName == "rs485BaudRate" || funcName == "rs485Enable" || funcName == "getAinEvent" || funcName == "longRangeEnable" || funcName == "readDinStatusEventType" {
                 return true;
             }else{
                 return false;
@@ -5362,7 +5607,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                 || funcName == "tempAlarm" || funcName == "ledOpen" || funcName == "deviceName" || funcName == "startRecord"
                 || funcName == "stopRecord" || funcName == "clearRecord"
                 || funcName == "saveCount"  || funcName == "readOriginData" || funcName == "transmittedPower"
-                || funcName == "broadcastType" || funcName == "readHistory" || funcName == "humidityAlarm"
+                || funcName == "broadcastType" || funcName == "readHistory"
                 || funcName == "time"   || funcName == "shutdown"   || funcName == "readExtSensorType"
                 || funcName == "beaconMajorSet" || funcName == "beaconMinorSet" || funcName == "eddystoneNIDSet" || funcName == "eddystoneBIDSet"
             {
@@ -5371,6 +5616,22 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             return false;
         }
         else if deviceType == "S07"{
+            if funcName == "btnTriggerTime"{
+                let curVersion = self.software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "").replacingOccurrences(of: ".", with: "")
+                   if  curVersion >= "1005" {
+                       return true;
+                   }else{
+                       return false;
+                   }
+            }
+            if funcName == "time"{
+                let curVersion = self.software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "").replacingOccurrences(of: ".", with: "")
+                   if  curVersion >= "1006" {
+                       return true;
+                   }else{
+                       return false;
+                   }
+            }
             if funcName == "firmware" || funcName == "password" || funcName == "resetFactory" || funcName == "broadcastCycle"
                 ||  funcName == "transmittedPower" || funcName == "deviceName"
                 || funcName == "broadcastType"
@@ -5415,6 +5676,13 @@ extension EditConfigController:EditPulseRelayDelegate{
         self.writePulseRelayStatus(cycleTime: cycleTime, initEnableTime: initEnableTime, toggleTime: toggleTime, recoverTime: recoverTime)
     }
 }
+
+extension EditConfigController:EditSecondPulseRelayDelegate{
+    func setSecondPulseRelayValue(startLevel:Int,highLevelPulseWidthTime:Int,lowLevelPulseWidthTime:Int,pulseCount:Int){
+        self.writeSecondPulseRelayStatus(startLevel: startLevel, highLevelPulseWidthTime: highLevelPulseWidthTime, lowLevelPulseWidthTime: lowLevelPulseWidthTime, pulseCount: pulseCount)
+    }
+}
+
 
 extension EditConfigController:EditRangeValueDelegate{
     func setRangeValue(high: Int, low: Int) {
@@ -5462,3 +5730,4 @@ extension EditConfigController:SetConnectStatusDelegate{
         self.leaveViewNeedDisconnect = true
     }
 }
+ 

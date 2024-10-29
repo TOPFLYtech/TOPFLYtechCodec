@@ -12,6 +12,8 @@ import android.widget.Toast;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.topflytech.tftble.data.SingleClickListener;
+
 public class EditInstructionSequenceActivity extends AppCompatActivity {
     private ActionBar actionBar;
     private ImageView backButton;
@@ -33,17 +35,17 @@ public class EditInstructionSequenceActivity extends AppCompatActivity {
         backButton = (ImageView) customView.findViewById(R.id.command_list_bar_back_id);
         rightButton =(ImageView) customView.findViewById(R.id.img_btn_right);
         rightButton.setVisibility(View.INVISIBLE);
-        backButton.setOnClickListener(new View.OnClickListener() {
+        backButton.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onSingleClick(View view) {
                 finish();
             }
         });
         etCmd = (EditText)findViewById(R.id.et_instruction_sequence);
         btnConfirm = (Button)findViewById(R.id.btn_send_instruction_sequence_confirm);
-        btnConfirm.setOnClickListener(new View.OnClickListener() {
+        btnConfirm.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onSingleClick(View view) {
                 String cmd = etCmd.getText().toString().trim();
                 if(cmd.length() <= 0){
                     Toast.makeText(EditInstructionSequenceActivity.this,R.string.fixInput,Toast.LENGTH_SHORT).show();

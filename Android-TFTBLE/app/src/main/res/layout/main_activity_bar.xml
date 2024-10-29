@@ -30,7 +30,16 @@
             android:textSize="@dimen/text_size" />
 
     </RelativeLayout>
-
+    <ImageView
+        android:id="@+id/main_bar_info"
+        android:layout_toLeftOf="@+id/main_right_fuzzy_search"
+        android:layout_height="@dimen/tab_action_bar_right_imgbtn_size"
+        android:layout_width="@dimen/tab_action_bar_right_imgbtn_size"
+        android:layout_centerVertical="true"
+        android:src="@mipmap/ic_info"
+        android:padding="5dp"
+        android:gravity="center"
+        />
     <ImageView
         android:id="@+id/main_right_fuzzy_search"
         android:layout_alignParentRight="true"

@@ -417,7 +417,7 @@
                     android:layout_marginBottom="1dp"
                     android:layout_marginRight="1dp"
                     android:id="@+id/tx_din_status_event_type"
-                    android:text="0"
+                    android:text=""
                     android:textColor="@color/tx_black"
                     android:textSize="@dimen/btn_size" />
                 <LinearLayout
@@ -1992,10 +1992,64 @@
                     </com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton>
                 </LinearLayout>
             </LinearLayout>　
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:id="@+id/line_line_eddystone_bid_set"
+                android:background="@color/frame_lightgrey"
+                android:orientation="horizontal"
+                android:gravity="center"
+                ></LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/edit_item_high"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:id="@+id/line_btn_trigger_time"
+                >
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/bg_color_white"
+                    android:text="@string/btn_trigger_time_desc"
+                    android:layout_marginRight="1dp"
+                    android:layout_marginBottom="1dp"
+                    android:layout_marginLeft="@dimen/list_item_margin_left"
+                    android:layout_weight="3"
+                    android:textColor="@color/tx_black"
+                    android:textSize="@dimen/btn_size" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/bg_color_white"
+                    android:layout_weight="3"
+                    android:layout_marginBottom="1dp"
+                    android:layout_marginRight="1dp"
+                    android:id="@+id/tx_btn_trigger_time"
+                    android:textColor="@color/tx_black"
+                    android:textSize="@dimen/btn_size" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_weight="3"
+                    android:layout_height="match_parent"
+                    android:gravity="center">
+                    <com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton
+                        android:textAllCaps="false"
+                        android:layout_width="80dp"
+                        android:layout_height="30dp"
+                        android:layout_margin="7dp"
+                        android:id="@+id/btn_edit_btn_trigger_time"
+                        android:text="@string/edit"
+                        android:textSize="@dimen/btn_size">
+                    </com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton>
+                </LinearLayout>
+            </LinearLayout>　
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:id="@+id/line_line_btn_trigger_time"
                 android:background="@color/frame_lightgrey"
                 android:orientation="horizontal"
                 android:gravity="center"
@@ -2224,16 +2278,17 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_weight="3"
+                    android:gravity="center"
                     android:layout_height="match_parent">
-                    <com.topflytech.tftble.view.SwitchButton
-                        android:id="@+id/switch_flashing_relay"
-                        android:layout_width="@dimen/switch_btn_width"
-                        android:layout_height="@dimen/switch_btn_height"
-                        android:layout_alignParentRight="true"
-                        android:layout_gravity="center"
-                        android:layout_marginRight="17dp"
-                        />
-
+                    <com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton
+                        android:textAllCaps="false"
+                        android:layout_width="80dp"
+                        android:layout_height="30dp"
+                        android:layout_margin="7dp"
+                        android:id="@+id/btn_flashing_relay"
+                        android:text="@string/edit"
+                        android:textSize="@dimen/btn_size">
+                    </com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton>
                 </LinearLayout>
 
                 <LinearLayout
@@ -2241,7 +2296,16 @@
                     android:layout_weight="3"
                     android:layout_height="match_parent"
                     android:gravity="center">
-
+                    <ImageView
+                        android:id="@+id/image_flashing_relay_tips"
+                        android:layout_width="@dimen/tab_action_bar_img_size"
+                        android:layout_height="@dimen/tab_action_bar_img_size"
+                        android:src="@mipmap/ic_help"
+                        android:padding="5dp"
+                        android:layout_centerVertical="true"
+                        android:scaleType="centerCrop"
+                        android:clickable="true"
+                        />
                 </LinearLayout>
             </LinearLayout>　
             　 <LinearLayout

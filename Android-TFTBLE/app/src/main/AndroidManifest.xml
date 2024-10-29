@@ -21,12 +21,17 @@
     <uses-permission
         android:name="android.permission.READ_LOGS"
         tools:ignore="ProtectedPermissions" />
-
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
     <uses-feature
         android:name="android.hardware.bluetooth_le"
         android:required="true" />
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
+        android:required="true" />
+
+
 
     <application
         android:allowBackup="true"
@@ -40,6 +45,9 @@
         tools:replace="android:icon, android:theme">
         <activity
             android:name=".EditPulseDelayActivity"
+            android:exported="false" />
+        <activity
+            android:name=".EditSecondPulseDelayActivity"
             android:exported="false" />
         <activity
             android:name=".EditRS485CmdActivity"
@@ -74,6 +82,7 @@
         <activity android:name=".EditConnectPwdActivity" />
         <activity android:name=".EditDoutOutputStatusActivity" />
         <activity android:name=".EditPositiveNegativeWarningActivity" />
+        <activity android:name=".WeChatQRCodeActivity" />
         <activity
             android:name=".EditInstructionSequenceActivity"
             android:exported="false" />
@@ -83,6 +92,8 @@
         <activity
             android:name=".EditActivity"
             android:label="@string/title_activity_edit" />
+        <activity
+            android:name=".SuperPwdResetActivity" />
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize"
@@ -98,6 +109,7 @@
         <service
             android:name=".data.DfuService"
             android:exported="true"
+            android:foregroundServiceType="connectedDevice"
             android:label="DFUService">
             <intent-filter>
                 <action android:name="no.nordicsemi.android.action.DFU_UPLOAD" />
@@ -105,6 +117,8 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </service>
+
+
     </application>
 
 </manifest>

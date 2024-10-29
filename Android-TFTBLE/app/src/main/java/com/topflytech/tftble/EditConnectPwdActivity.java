@@ -12,6 +12,8 @@ import android.widget.Toast;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.topflytech.tftble.data.SingleClickListener;
+
 
 public class EditConnectPwdActivity extends AppCompatActivity {
 
@@ -27,7 +29,7 @@ public class EditConnectPwdActivity extends AppCompatActivity {
         setContentView(R.layout.activity_edit_connect_pwd);
         etNewPwd = (EditText)findViewById(R.id.et_connect_new_pwd);
         edRepeatPwd = (EditText)findViewById(R.id.et_connect_repeat_pwd);
-        btnConfirm = (Button)findViewById(R.id.btn_pwd_submit);
+        btnConfirm = (Button)findViewById(R.id.btn_connect_pwd_submit);
         actionBar = getSupportActionBar();
         View customView = this.getLayoutInflater().inflate(R.layout.custom_activity_bar, null);
         tvHead = customView.findViewById(R.id.custom_head_title);
@@ -38,15 +40,15 @@ public class EditConnectPwdActivity extends AppCompatActivity {
         backButton = (ImageView) customView.findViewById(R.id.command_list_bar_back_id);
         rightButton =(ImageView) customView.findViewById(R.id.img_btn_right);
         rightButton.setVisibility(View.INVISIBLE);
-        backButton.setOnClickListener(new View.OnClickListener() {
+        backButton.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onSingleClick(View view) {
                 finish();
             }
         });
-        btnConfirm.setOnClickListener(new View.OnClickListener() {
+        btnConfirm.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onSingleClick(View view) {
 
                 if( etNewPwd.getText() == null || etNewPwd.getText().toString().trim().length() != 6 ||
                         edRepeatPwd.getText() == null || edRepeatPwd.getText().toString().trim().length() != 6

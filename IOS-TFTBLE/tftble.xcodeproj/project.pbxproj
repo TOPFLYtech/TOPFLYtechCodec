@@ -15,10 +15,17 @@
 		915502852A0DD32E00C09DB2 /* CheckBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 915502842A0DD32E00C09DB2 /* CheckBox.swift */; };
 		915502932A0E385B00C09DB2 /* Charts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 915502902A0E384100C09DB2 /* Charts.framework */; };
 		915502942A0E385B00C09DB2 /* Charts.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 915502902A0E384100C09DB2 /* Charts.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		91856EF12BFCC79D001599F1 /* SuperPwdResetController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91856EF02BFCC79D001599F1 /* SuperPwdResetController.swift */; };
+		91856EF72BFDD94A001599F1 /* ic_refresh.png in Resources */ = {isa = PBXBuildFile; fileRef = 91856EF42BFDD94A001599F1 /* ic_refresh.png */; };
+		91856EF82BFDD94A001599F1 /* ic_info.png in Resources */ = {isa = PBXBuildFile; fileRef = 91856EF52BFDD94A001599F1 /* ic_info.png */; };
+		91856EF92BFDD94A001599F1 /* ic_search.png in Resources */ = {isa = PBXBuildFile; fileRef = 91856EF62BFDD94A001599F1 /* ic_search.png */; };
+		91856EFB2C09BE30001599F1 /* ic_help.png in Resources */ = {isa = PBXBuildFile; fileRef = 91856EFA2C09BE30001599F1 /* ic_help.png */; };
+		919BAC4D2B33C50600171822 /* QRCodeScannerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 919BAC4C2B33C50600171822 /* QRCodeScannerViewController.swift */; };
 		91B20CC129ED7DA0002CE8B8 /* DeviceS07Cell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91B20CC029ED7DA0002CE8B8 /* DeviceS07Cell.swift */; };
 		91B20CC329ED8CF3002CE8B8 /* DeviceS08Cell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91B20CC229ED8CF3002CE8B8 /* DeviceS08Cell.swift */; };
 		91B20CC529EE24BD002CE8B8 /* DeviceS09Cell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91B20CC429EE24BD002CE8B8 /* DeviceS09Cell.swift */; };
 		91B20CC729EE281D002CE8B8 /* DeviceS10Cell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91B20CC629EE281D002CE8B8 /* DeviceS10Cell.swift */; };
+		91DC0DCD2C81CA590086439C /* EditSecondPulseRelayController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91DC0DCC2C81CA590086439C /* EditSecondPulseRelayController.swift */; };
 		91E427182A85E1FF008D1095 /* DeviceDfuCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91E427172A85E1FF008D1095 /* DeviceDfuCell.swift */; };
 		91F6CA982AB98D2500F5217D /* EditPulseRelayController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91F6CA972AB98D2500F5217D /* EditPulseRelayController.swift */; };
 		E8013DA123CC940B00192B24 /* logo.png in Resources */ = {isa = PBXBuildFile; fileRef = E8013DA023CC940B00192B24 /* logo.png */; };
@@ -139,10 +146,17 @@
 		915502842A0DD32E00C09DB2 /* CheckBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckBox.swift; sourceTree = "<group>"; };
 		915502882A0E361900C09DB2 /* Charts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Charts.framework; path = System/Library/Frameworks/Charts.framework; sourceTree = SDKROOT; };
 		9155028A2A0E384100C09DB2 /* Charts.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Charts.xcodeproj; path = Charts/Charts.xcodeproj; sourceTree = "<group>"; };
+		91856EF02BFCC79D001599F1 /* SuperPwdResetController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuperPwdResetController.swift; sourceTree = "<group>"; };
+		91856EF42BFDD94A001599F1 /* ic_refresh.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_refresh.png; sourceTree = "<group>"; };
+		91856EF52BFDD94A001599F1 /* ic_info.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_info.png; sourceTree = "<group>"; };
+		91856EF62BFDD94A001599F1 /* ic_search.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_search.png; sourceTree = "<group>"; };
+		91856EFA2C09BE30001599F1 /* ic_help.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_help.png; sourceTree = "<group>"; };
+		919BAC4C2B33C50600171822 /* QRCodeScannerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRCodeScannerViewController.swift; sourceTree = "<group>"; };
 		91B20CC029ED7DA0002CE8B8 /* DeviceS07Cell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceS07Cell.swift; sourceTree = "<group>"; };
 		91B20CC229ED8CF3002CE8B8 /* DeviceS08Cell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceS08Cell.swift; sourceTree = "<group>"; };
 		91B20CC429EE24BD002CE8B8 /* DeviceS09Cell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceS09Cell.swift; sourceTree = "<group>"; };
 		91B20CC629EE281D002CE8B8 /* DeviceS10Cell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceS10Cell.swift; sourceTree = "<group>"; };
+		91DC0DCC2C81CA590086439C /* EditSecondPulseRelayController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditSecondPulseRelayController.swift; sourceTree = "<group>"; };
 		91E427172A85E1FF008D1095 /* DeviceDfuCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceDfuCell.swift; sourceTree = "<group>"; };
 		91F6CA972AB98D2500F5217D /* EditPulseRelayController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditPulseRelayController.swift; sourceTree = "<group>"; };
 		E8013DA023CC940B00192B24 /* logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = logo.png; sourceTree = "<group>"; };
@@ -291,9 +305,13 @@
 		E86DB35823A0EC7B002BAACA /* tftble */ = {
 			isa = PBXGroup;
 			children = (
+				91856EFA2C09BE30001599F1 /* ic_help.png */,
 				E8B6DB4823AAFF92001980BF /* AEAlertView */,
 				E86DB35923A0EC7B002BAACA /* AppDelegate.swift */,
 				E86DB36223A0EC8C002BAACA /* Assets.xcassets */,
+				91856EF52BFDD94A001599F1 /* ic_info.png */,
+				91856EF42BFDD94A001599F1 /* ic_refresh.png */,
+				91856EF62BFDD94A001599F1 /* ic_search.png */,
 				E8DE49522434C81D00AB0257 /* BleHisData.swift */,
 				E80509C424484FDF00ED7C75 /* Bridge.h */,
 				9155028A2A0E384100C09DB2 /* Charts.xcodeproj */,
@@ -337,6 +355,9 @@
 				E86DB36F23A1CC15002BAACA /* UIColor+Nordic.swift */,
 				E8D2A3A423ACCC9B00B42242 /* Utils.swift */,
 				E86DB35D23A0EC7B002BAACA /* ViewController.swift */,
+				919BAC4C2B33C50600171822 /* QRCodeScannerViewController.swift */,
+				91856EF02BFCC79D001599F1 /* SuperPwdResetController.swift */,
+				91DC0DCC2C81CA590086439C /* EditSecondPulseRelayController.swift */,
 			);
 			path = tftble;
 			sourceTree = "<group>";
@@ -516,7 +537,9 @@
 				E8C859D424BD4849006EE3F7 /* Localizable.strings in Resources */,
 				E8684E8F243C1ACA00D83C6D /* ic_date.png in Resources */,
 				E86DB36323A0EC8C002BAACA /* Assets.xcassets in Resources */,
+				91856EF72BFDD94A001599F1 /* ic_refresh.png in Resources */,
 				E8013DA123CC940B00192B24 /* logo.png in Resources */,
+				91856EF82BFDD94A001599F1 /* ic_info.png in Resources */,
 				E86DB3A923A335DD002BAACA /* Default-Portrait7-1366h@2x~ipad.png in Resources */,
 				E8684E8D243C0B3100D83C6D /* ic_edit.png in Resources */,
 				E82EFE6F248F195400F89E68 /* ic_btn_bg.png in Resources */,
@@ -529,6 +552,7 @@
 				E86DB3AD23A335DD002BAACA /* Default-Portrait~ipad.png in Resources */,
 				EA9AFE4B26A81E340081E8F5 /* ic_category.png in Resources */,
 				E86DB3A823A335DD002BAACA /* Default-Portrait7-1194h@2x~ipad.png in Resources */,
+				91856EFB2C09BE30001599F1 /* ic_help.png in Resources */,
 				E86DB3A523A335DD002BAACA /* Default-Landscape@2x~ipad.png in Resources */,
 				E86DB39A23A335DD002BAACA /* Default-Landscape-1112h@2x~ipad.png in Resources */,
 				E86DB3A223A335DD002BAACA /* Default-Landscape-896h@3x.png in Resources */,
@@ -542,6 +566,7 @@
 				E8F147A6244E936D003601B9 /* ic_disconnect.png in Resources */,
 				E805098B243DA5B900ED7C75 /* ic_light_open.png in Resources */,
 				E86DB39623A335DD002BAACA /* Default-736h@3x.png in Resources */,
+				91856EF92BFDD94A001599F1 /* ic_search.png in Resources */,
 				E86DB3A323A335DD002BAACA /* Default-Landscape7@2x~ipad.png in Resources */,
 				E86DB3AB23A335DD002BAACA /* Default-Portrait7~ipad.png in Resources */,
 			);
@@ -597,6 +622,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9155027F2A09D43900C09DB2 /* EditPositiveNegativeWarningController.swift in Sources */,
+				91856EF12BFCC79D001599F1 /* SuperPwdResetController.swift in Sources */,
 				91B20CC529EE24BD002CE8B8 /* DeviceS09Cell.swift in Sources */,
 				E8D7C75E23B5E64D00E67C7A /* DownLoader.swift in Sources */,
 				E8D7C75F23B5E64D00E67C7A /* FileTool.swift in Sources */,
@@ -613,7 +639,9 @@
 				E807125423D2A02800787433 /* DeviceErrorCell.swift in Sources */,
 				E8B6DB4F23AAFF92001980BF /* AEAlertAction.swift in Sources */,
 				91B20CC329ED8CF3002CE8B8 /* DeviceS08Cell.swift in Sources */,
+				91DC0DCD2C81CA590086439C /* EditSecondPulseRelayController.swift in Sources */,
 				915502812A09F55E00C09DB2 /* EditRS485CmdController.swift in Sources */,
+				919BAC4D2B33C50600171822 /* QRCodeScannerViewController.swift in Sources */,
 				E86DB35E23A0EC7B002BAACA /* ViewController.swift in Sources */,
 				E8D7C75B23B5A55800E67C7A /* MyProgress.swift in Sources */,
 				E8B6DB4723A9B970001980BF /* EditConfigController.swift in Sources */,
@@ -788,7 +816,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.0.30;
+				CURRENT_PROJECT_VERSION = 1.0.28;
 				DEVELOPMENT_TEAM = 6W672XHN78;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = tftble/Info.plist;
@@ -797,7 +825,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.23;
+				MARKETING_VERSION = 1.0.28;
 				"OTHER_CODE_SIGN_FLAGS[sdk=*]" = "--generate-entitlement-der";
 				PRODUCT_BUNDLE_IDENTIFIER = com.topflytech.tftble;
 				PRODUCT_NAME = TFTBLE;
@@ -815,7 +843,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.0.30;
+				CURRENT_PROJECT_VERSION = 1.0.28;
 				DEVELOPMENT_TEAM = 6W672XHN78;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = tftble/Info.plist;
@@ -824,7 +852,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.23;
+				MARKETING_VERSION = 1.0.28;
 				"OTHER_CODE_SIGN_FLAGS[sdk=*]" = "--generate-entitlement-der";
 				PRODUCT_BUNDLE_IDENTIFIER = com.topflytech.tftble;
 				PRODUCT_NAME = TFTBLE;

@@ -27,9 +27,17 @@ protocol EditPulseRelayDelegate{
     func setPulseRelayValue(cycleTime:Int,initEnableTime:Int,toggleTime:Int,recoverTime:Int)
 }
 
+protocol EditSecondPulseRelayDelegate{
+    func setSecondPulseRelayValue(startLevel:Int,highLevelPulseWidthTime:Int,lowLevelPulseWidthTime:Int,pulseCount:Int)
+}
+
 protocol EditInstructionSequenceDelegate{
     func setCmd(cmd:String)
 }
 protocol EditRS485CmdDelegate{
     func setRS485Cmd(cmd:String)
+}
+
+protocol QrCodeScanDelegate{
+    func setQrcodeValue(value:String)
 }

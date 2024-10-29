@@ -22,7 +22,7 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
     
     private var fontSize:CGFloat = Utils.fontSize
     public var deviceType="S04"
-    public var deviceName="TH121"
+    public var deviceName=""
     public var mac="221322112312"
     public var reportType:String! = "S04"
     public var id:String! = "221322112312"

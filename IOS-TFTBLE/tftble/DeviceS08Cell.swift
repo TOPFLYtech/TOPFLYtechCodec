@@ -339,7 +339,20 @@ class DeviceS08Cell: UITableViewCell {
         btn.ghostColor = UIColor.colorPrimary
         return btn
     }()
-    
+    lazy var resetPwdLabel: UILabel = {
+            let label = UILabel()
+            label.textColor = UIColor.black
+            label.font = UIFont.systemFont(ofSize: fontSize)
+            label.text = NSLocalizedString("forget_pwd", comment: "Forget password?")
+            return label
+        }()
+    lazy var resetPwdBtn:QMUIGhostButton = {
+        let btn = QMUIGhostButton()
+        btn.titleLabel?.font = UIFont.systemFont(ofSize: fontSize)
+       btn.setTitle(NSLocalizedString("reset", comment: "Reset"), for: .normal)
+        btn.ghostColor = UIColor.colorPrimary
+        return btn
+    }()
     var marqueeView:JXMarqueeView!
 //    override func layoutSubviews() {
 //        super.layoutSubviews()
@@ -350,7 +363,7 @@ class DeviceS08Cell: UITableViewCell {
         //        print("reset position")
         let broadcastType = bleDeviceInfo["broadcastType"] as! String ?? ""
         if broadcastType == "Eddystone UID"{
-            initUIDLayoutPosition()
+            initUIDLayoutPosition(bleDeviceInfo: bleDeviceInfo)
         }else if broadcastType == "Long range"{
             initLongRangeLayoutPosition(bleDeviceInfo: bleDeviceInfo)
         }else if broadcastType == "Beacon"{
@@ -359,7 +372,20 @@ class DeviceS08Cell: UITableViewCell {
             initLongRangeLayoutPosition(bleDeviceInfo: bleDeviceInfo)
         }
     }
-    func initUIDLayoutPosition(){
+    func initUIDLayoutPosition(bleDeviceInfo:[String:String]){
+        var software = bleDeviceInfo["software"] ?? ""
+        var supportResetPwd = false
+        let curVersion = software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "").replacingOccurrences(of: ".", with: "")
+        if  curVersion >= "1006" {
+           supportResetPwd = true;
+        }
+        if(supportResetPwd){
+            self.resetPwdBtn.isHidden = false
+            self.resetPwdLabel.isHidden = false
+        }else{
+            self.resetPwdBtn.isHidden = true
+            self.resetPwdLabel.isHidden = true
+        }
         self.nidLabel.isHidden = false
         self.nidContentLabel.isHidden = false
         self.bidLabel.isHidden = false
@@ -417,7 +443,11 @@ class DeviceS08Cell: UITableViewCell {
         warnContentLabel.isHidden = true
         let descWidth = self.bounds.size.width / 2 - 20
         let contentX = self.bounds.size.width / 2
-        self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 350)
+        if(supportResetPwd){
+            self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 380)
+        }else{
+            self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 350)
+        }
         self.rootView.isUserInteractionEnabled=true
         self.deviceNameLabel.frame = CGRect(x: 8, y: 8, width: descWidth, height: 30)
         self.deviceNameContentLabel.frame = CGRect(x: contentX, y: 8, width: self.bounds.size.width - contentX, height: 30)
@@ -443,6 +473,10 @@ class DeviceS08Cell: UITableViewCell {
          
         self.configLabel.frame = CGRect(x: 8, y: 308, width: descWidth, height: 30)
         self.configBtn.frame = CGRect(x: contentX, y: 308, width: 80, height: 24)
+        if(supportResetPwd){
+            self.resetPwdLabel.frame = CGRect(x: 8, y: 338, width: descWidth, height: 30)
+            self.resetPwdBtn.frame = CGRect(x: contentX, y: 338, width: 80, height: 24)
+        }
         self.backgroundColor = UIColor.nordicLightGray
         self.rootView.backgroundColor = UIColor.white
         self.rootView.layer.cornerRadius = 8
@@ -452,6 +486,19 @@ class DeviceS08Cell: UITableViewCell {
     }
     
     func initBeaconLayoutPosition(bleDeviceInfo:[String:String]){
+        var software = bleDeviceInfo["software"] ?? ""
+        var supportResetPwd = false
+        let curVersion = software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "").replacingOccurrences(of: ".", with: "")
+        if  curVersion >= "1006" {
+           supportResetPwd = true;
+        }
+        if(supportResetPwd){
+            self.resetPwdBtn.isHidden = false
+            self.resetPwdLabel.isHidden = false
+        }else{
+            self.resetPwdBtn.isHidden = true
+            self.resetPwdLabel.isHidden = true
+        }
         self.nidLabel.isHidden = false
         self.nidContentLabel.isHidden = false
         self.bidLabel.isHidden = false
@@ -550,6 +597,11 @@ class DeviceS08Cell: UITableViewCell {
         self.configLabel.frame = CGRect(x: 8, y: heightY, width: Int(descWidth), height: 30)
         self.configBtn.frame = CGRect(x: Int(contentX), y: heightY, width: 80, height: 24)
         heightY += 30
+        if(supportResetPwd){
+            self.resetPwdLabel.frame = CGRect(x: 8, y: heightY, width: Int(descWidth), height: 30)
+            self.resetPwdBtn.frame = CGRect(x: Int(contentX), y: heightY, width: 80, height: 24)
+            heightY += 30
+        }
         self.rootView.frame = CGRect(x: 5, y: 5, width: Int(self.bounds.size.width)-10, height: heightY+12)
         self.backgroundColor = UIColor.nordicLightGray
         self.rootView.backgroundColor = UIColor.white
@@ -564,6 +616,19 @@ class DeviceS08Cell: UITableViewCell {
     
     
     func initLongRangeLayoutPosition(bleDeviceInfo:[String:String]){
+        var software = bleDeviceInfo["software"] ?? ""
+        var supportResetPwd = false
+        let curVersion = software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "").replacingOccurrences(of: ".", with: "")
+        if  curVersion >= "1006" {
+           supportResetPwd = true;
+        }
+        if(supportResetPwd){
+            self.resetPwdBtn.isHidden = false
+            self.resetPwdLabel.isHidden = false
+        }else{
+            self.resetPwdBtn.isHidden = true
+            self.resetPwdLabel.isHidden = true
+        }
         self.nidLabel.isHidden = false
         self.nidContentLabel.isHidden = false
         self.bidLabel.isHidden = false
@@ -689,6 +754,11 @@ class DeviceS08Cell: UITableViewCell {
         self.configLabel.frame = CGRect(x: 8, y: heightY, width: descWidth, height: 30)
         self.configBtn.frame = CGRect(x: contentX, y: heightY, width: 80, height: 24)
         heightY += 30
+        if(supportResetPwd){
+            self.resetPwdLabel.frame = CGRect(x: 8, y: heightY, width: descWidth, height: 30)
+            self.resetPwdBtn.frame = CGRect(x: contentX, y: heightY, width: 80, height: 24)
+            heightY += 30
+        }
         self.rootView.frame = CGRect(x: 5, y: 5, width: Int(self.bounds.size.width)-10, height: heightY + 12)
         self.backgroundColor = UIColor.nordicLightGray
         self.rootView.backgroundColor = UIColor.white
@@ -753,6 +823,8 @@ class DeviceS08Cell: UITableViewCell {
         warnContentLabel.frame = CGRect(x: contentX, y: 608, width: self.bounds.size.width - contentX, height: 30)
         self.configLabel.frame = CGRect(x: 8, y: 638, width: descWidth, height: 30)
         self.configBtn.frame = CGRect(x: contentX, y: 638, width: 80, height: 24)
+        self.resetPwdLabel.frame = CGRect(x: 8, y: 668, width: descWidth, height: 30)
+        self.resetPwdBtn.frame = CGRect(x: contentX, y: 668, width: 80, height: 24)
         self.backgroundColor = UIColor.nordicLightGray
         self.rootView.backgroundColor = UIColor.white
         self.rootView.layer.cornerRadius = 8
@@ -815,7 +887,8 @@ class DeviceS08Cell: UITableViewCell {
         self.rootView.addSubview(configBtn)
         self.rootView.addSubview(idLabel)
         self.rootView.addSubview(idContentLabel)
-        
+        self.rootView.addSubview(resetPwdBtn)
+        self.rootView.addSubview(resetPwdLabel)
         
         marqueeView = JXMarqueeView()
         marqueeView.contentView = self.warnContentLabel

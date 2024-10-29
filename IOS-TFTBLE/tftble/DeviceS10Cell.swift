@@ -296,6 +296,21 @@ class DeviceS10Cell: UITableViewCell {
         label.font = UIFont.systemFont(ofSize: fontSize)
         return label
     }()
+    
+    lazy var resetPwdLabel: UILabel = {
+            let label = UILabel()
+            label.textColor = UIColor.black
+            label.font = UIFont.systemFont(ofSize: fontSize)
+            label.text = NSLocalizedString("forget_pwd", comment: "Forget password?")
+            return label
+        }()
+    lazy var resetPwdBtn:QMUIGhostButton = {
+        let btn = QMUIGhostButton()
+        btn.titleLabel?.font = UIFont.systemFont(ofSize: fontSize)
+       btn.setTitle(NSLocalizedString("reset", comment: "Reset"), for: .normal)
+        btn.ghostColor = UIColor.colorPrimary
+        return btn
+    }()
     var marqueeView:JXMarqueeView!
 //    override func layoutSubviews() {
 //        super.layoutSubviews()
@@ -307,6 +322,19 @@ class DeviceS10Cell: UITableViewCell {
     }
     
     func initDefineLayoutPosition(bleDeviceInfo:[String:String]){
+        var software = bleDeviceInfo["software"] ?? ""
+        var supportResetPwd = false
+        let curVersion = software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "").replacingOccurrences(of: ".", with: "")
+        if  curVersion >= "1005" {
+           supportResetPwd = true;
+        }
+        if(supportResetPwd){
+            self.resetPwdBtn.isHidden = false
+            self.resetPwdLabel.isHidden = false
+        }else{
+            self.resetPwdBtn.isHidden = true
+            self.resetPwdLabel.isHidden = true
+        }
         self.batteryLabel.isHidden = false
         self.batteryContentLabel.isHidden = false
         self.batteryPercentLabel.isHidden = false
@@ -506,6 +534,11 @@ class DeviceS10Cell: UITableViewCell {
         self.configLabel.frame = CGRect(x: 8, y: height, width: Int(descWidth), height: 30)
         self.configBtn.frame = CGRect(x: Int(contentX), y: height, width: 80, height: 24)
         height += 30
+        if(supportResetPwd){
+            self.resetPwdLabel.frame = CGRect(x: 8, y: height, width: Int(descWidth), height: 30)
+            self.resetPwdBtn.frame = CGRect(x: Int(contentX), y: height, width: 80, height: 24)
+            height += 30
+        }
         self.rootView.frame = CGRect(x: 5, y: 5, width: Int(self.bounds.size.width)-10, height: height+10)
         self.backgroundColor = UIColor.nordicLightGray
         self.rootView.backgroundColor = UIColor.white
@@ -614,7 +647,8 @@ class DeviceS10Cell: UITableViewCell {
         self.rootView.addSubview(idContentLabel)
         self.rootView.addSubview(extSensorTypeLabel)
         self.rootView.addSubview(extSensorTypeContentLabel)
-        
+        self.rootView.addSubview(resetPwdBtn)
+        self.rootView.addSubview(resetPwdLabel)
         marqueeView = JXMarqueeView()
         marqueeView.contentView = self.warnContentLabel
         marqueeView.contentMargin = 50

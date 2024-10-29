@@ -1,2 +1,4 @@
 include ':app', ':sweetAlert'
 rootProject.name='TFTBLE'
+include ':wheelview'
+include ':pickerview'

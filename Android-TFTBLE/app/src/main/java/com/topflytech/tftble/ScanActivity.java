@@ -12,6 +12,11 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.king.wechat.qrcode.WeChatQRCodeDetector;
+import com.topflytech.tftble.data.SingleClickListener;
+
+import org.opencv.OpenCV;
+
 import java.util.List;
 
 import cn.bingoogolapple.qrcode.core.QRCodeView;
@@ -34,6 +39,7 @@ public class ScanActivity extends AppCompatActivity  implements QRCodeView.Deleg
         mZXingView = findViewById(R.id.zxingview);
         mZXingView.setDelegate(this);
         requestCodeQRCodePermissions();
+
     }
     private static final int REQUEST_CODE_QRCODE_PERMISSIONS = 1;
     @AfterPermissionGranted(REQUEST_CODE_QRCODE_PERMISSIONS)
@@ -74,9 +80,9 @@ public class ScanActivity extends AppCompatActivity  implements QRCodeView.Deleg
         backButton = (ImageView) customView.findViewById(R.id.command_list_bar_back_id);
         rightButton =(ImageView) customView.findViewById(R.id.img_btn_right);
         rightButton.setVisibility(View.INVISIBLE);
-        backButton.setOnClickListener(new View.OnClickListener() {
+        backButton.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onSingleClick(View view) {
                 finish();
             }
         });

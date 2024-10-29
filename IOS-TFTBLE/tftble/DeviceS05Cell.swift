@@ -180,6 +180,25 @@ class DeviceS05Cell: UITableViewCell {
         btn.ghostColor = UIColor.colorPrimary
         return btn
     }()
+    
+    lazy var resetPwdLabel: UILabel = {
+            let label = UILabel()
+            label.textColor = UIColor.black
+            label.font = UIFont.systemFont(ofSize: fontSize)
+            label.text = NSLocalizedString("forget_pwd", comment: "Forget password?")
+            return label
+        }()
+        lazy var resetPwdBtn:QMUIGhostButton = {
+            let btn = QMUIGhostButton()
+            btn.titleLabel?.font = UIFont.systemFont(ofSize: fontSize)
+           btn.setTitle(NSLocalizedString("reset", comment: "Reset"), for: .normal)
+    //        btn.setTitleColor(UIColor.black, for: .normal)
+    //        btn.layer.cornerRadius = 6.0;//6.0是圆角的弧度，根据需求自己更改
+    //        btn.layer.borderWidth = 1.0;//设置边框宽度
+    //        btn.backgroundColor = UIColor.nordicLightGray
+            btn.ghostColor = UIColor.colorPrimary
+            return btn
+        }()
     lazy var qrCodeLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.black
@@ -212,11 +231,72 @@ class DeviceS05Cell: UITableViewCell {
         return btn
     }()
     var marqueeView:JXMarqueeView!
-    override func layoutSubviews() {
-        super.layoutSubviews()
-       self.initLayoutPosition()
+//    override func layoutSubviews() {
+//        super.layoutSubviews()
+//       self.initLayoutPosition()
+//    }
+    
+    
+     func resetPosition(version:String){
+         //        print("reset position")
+         let curVersion = version.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "").replacingOccurrences(of: ".", with: "")
+         if  Int(curVersion) ?? 0 >= 17{
+             initLayoutPositionWithResetPwd()
+         }else{
+             initLayoutPosition()
+         }
+     }
+    func initLayoutPositionWithResetPwd(){
+        self.resetPwdBtn.isHidden = false;
+        self.resetPwdLabel.isHidden = false;
+        let descWidth = self.bounds.size.width / 2 - 20
+        let contentX = self.bounds.size.width / 2
+        if Utils.isDebug{
+            self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 450)
+        }else{
+            self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 410)
+        }
+        
+        self.rootView.isUserInteractionEnabled=true
+        self.deviceNameLabel.frame = CGRect(x: 8, y: 8, width: descWidth, height: 30)
+        self.deviceNameContentLabel.frame = CGRect(x: contentX, y: 8, width: self.bounds.size.width - contentX, height: 30)
+        self.idLabel.frame = CGRect(x: 8, y: 38, width: descWidth, height: 30)
+        self.idContentLabel.frame = CGRect(x: contentX, y: 38, width: self.bounds.size.width - contentX, height: 30)
+        self.dateLabel.frame = CGRect(x: 8, y: 68, width: descWidth, height: 30)
+        self.dateContentLabel.frame = CGRect(x: contentX, y: 68, width: self.bounds.size.width - contentX, height: 30)
+        self.rssiLabel.frame = CGRect(x: 8, y: 98, width: descWidth, height: 30)
+        self.rssiContentLabel.frame = CGRect(x: contentX, y: 98, width: self.bounds.size.width - contentX, height: 30)
+        self.modelLabel.frame = CGRect(x: 8, y: 128, width: descWidth, height: 30)
+        self.modelContentLabel.frame = CGRect(x: contentX, y: 128, width: self.bounds.size.width - contentX, height: 30)
+        self.hardwareLabel.frame = CGRect(x: 8, y: 158, width: descWidth, height: 30)
+        self.hardwareContentLabel.frame = CGRect(x: contentX, y: 158, width: self.bounds.size.width - contentX, height: 30)
+        self.softwareLabel.frame = CGRect(x: 8, y: 188, width: descWidth, height: 30)
+        self.softwareContentLabel.frame = CGRect(x: contentX, y: 188, width: self.bounds.size.width - contentX, height: 30)
+        self.batteryLabel.frame = CGRect(x: 8, y: 218, width: descWidth, height: 30)
+        self.batteryContentLabel.frame = CGRect(x: contentX, y: 218, width: self.bounds.size.width - contentX, height: 30)
+        self.tempLabel.frame = CGRect(x: 8, y: 248, width: descWidth, height: 30)
+        self.tempContentLabel.frame = CGRect(x: contentX, y: 248, width: self.bounds.size.width - contentX - 70, height: 30)
+        self.switchTempUnitBtn.frame = CGRect(x: self.bounds.size.width - 70, y: 248, width: 50, height: 24)
+        self.relayLabel.frame = CGRect(x: 8, y: 278, width: descWidth, height: 30)
+        self.relayContentLabel.frame = CGRect(x: contentX, y: 278, width: self.bounds.size.width - contentX, height: 30)
+        self.warnLabel.frame = CGRect(x: 8, y: 308, width: descWidth, height: 30)
+        warnContentLabel.frame = CGRect(x: contentX, y: 308, width: self.bounds.size.width - contentX, height: 30)
+        self.configLabel.frame = CGRect(x: 8, y: 338, width: descWidth, height: 30)
+        self.configBtn.frame = CGRect(x: contentX, y: 338, width: 80, height: 24)
+        self.resetPwdLabel.frame = CGRect(x: 8, y: 368, width: descWidth, height: 30)
+        self.resetPwdBtn.frame = CGRect(x: contentX, y: 378, width: 80, height: 24)
+        self.qrCodeLabel.frame = CGRect(x: 8, y: 398, width: descWidth, height: 30)
+        self.qrCodeBtn.frame = CGRect(x: contentX, y: 408, width: 80, height: 24)
+        self.backgroundColor = UIColor.nordicLightGray
+        self.rootView.backgroundColor = UIColor.white
+        self.rootView.layer.cornerRadius = 8
+        self.rootView.layer.masksToBounds = true
+        self.rootView.layer.borderWidth = 1
+        self.rootView.layer.borderColor = UIColor.nordicLightGray.cgColor
     }
     func initLayoutPosition(){
+        self.resetPwdBtn.isHidden = true;
+        self.resetPwdLabel.isHidden = true;
         let descWidth = self.bounds.size.width / 2 - 20
         let contentX = self.bounds.size.width / 2
         if Utils.isDebug{ 
@@ -288,6 +368,8 @@ class DeviceS05Cell: UITableViewCell {
         self.rootView.addSubview(idLabel)
         self.rootView.addSubview(idContentLabel)
         self.rootView.addSubview(switchTempUnitBtn)
+        self.rootView.addSubview(self.resetPwdLabel)
+        self.rootView.addSubview(self.resetPwdBtn)
         let descWidth = self.bounds.size.width / 2 - 20
         let contentX = self.bounds.size.width / 2
         if Utils.isDebug{

@@ -17,6 +17,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.topflytech.tftble.data.SingleClickListener;
+
 import org.json.JSONObject;
 
 import java.util.Properties;
@@ -62,9 +64,9 @@ public class SmtpSettingActivity extends AppCompatActivity {
         initParams();
         btnSave.setOnClickListener(submitClick);
     }
-    View.OnClickListener submitClick = new View.OnClickListener() {
+    View.OnClickListener submitClick = new SingleClickListener() {
         @Override
-        public void onClick(View view) {
+        public void onSingleClick(View view) {
             if(etSmtpServer.getText() != null && etSmtpServer.getText().toString().length() > 0
                 && etSmtpPort.getText() != null && etSmtpPort.getText().toString().length() > 0
                     && etAccount.getText() != null && etAccount.getText().toString().length() > 0
@@ -208,9 +210,9 @@ public class SmtpSettingActivity extends AppCompatActivity {
         backButton = (ImageView) customView.findViewById(R.id.command_list_bar_back_id);
         rightButton =(ImageView) customView.findViewById(R.id.img_btn_right);
         rightButton.setVisibility(View.INVISIBLE);
-        backButton.setOnClickListener(new View.OnClickListener() {
+        backButton.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onSingleClick(View view) {
                 finish();
             }
         });

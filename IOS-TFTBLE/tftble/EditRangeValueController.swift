@@ -29,6 +29,7 @@ class EditRangeValueController:UIViewController{
     var highOpen = false
     var lowOpen = false
     var type = ""
+    var deviceType = ""
     private var fontSize:CGFloat = Utils.fontSize
     
     override func viewDidDisappear(_ animated: Bool) {
@@ -127,8 +128,21 @@ class EditRangeValueController:UIViewController{
         self.lowValueInput.text = self.low
         self.highValueSwitch.isOn = self.highOpen
         self.lowValueSwitch.isOn = self.lowOpen
+         
+        
+        self.highValueSwitch.addTarget(self, action: #selector(switchClickClick),
+                                   for:UIControl.Event.valueChanged)
+        self.lowValueSwitch.addTarget(self, action: #selector(switchClickClick),
+                                   for:UIControl.Event.valueChanged)
     }
-    
+    @objc func switchClickClick(sender:UISwitch){
+        let highValueOpen = self.highValueSwitch.isOn
+        let lowValueOpen = self.lowValueSwitch.isOn
+        if !highValueOpen && !lowValueOpen{
+            self.highValueInput.text = ""
+            self.lowValueInput.text = ""
+        }
+    }
     override func viewDidAppear(_ animated: Bool) {
         
 //        self.highValueLabel.text = NSLocalizedString("high_desc", comment: "High:")
@@ -152,9 +166,7 @@ class EditRangeValueController:UIViewController{
             self.submitTempAlarm()
         }else if type == "humidity"{
             self.submitHumidityAlarm()
-        }
-        
-        
+        } 
     }
     
     func submitHumidityAlarm(){
@@ -200,7 +212,7 @@ class EditRangeValueController:UIViewController{
             Toast.hudBuilder.title(NSLocalizedString("high_must_great_than_low", comment: "The highest value must be greater than the lowest value")).show()
                        return
         }
-        if  (saveHighValue < saveLowValue && saveLowValue != 4095) || (saveHighValue != 4095 && saveHighValue > 1000) ||
+        if  (saveHighValue < saveLowValue && saveLowValue != 4095) || (saveHighValue != 4095 && saveHighValue >= 100) ||
             (saveLowValue != 4095 && saveLowValue < 0){
             Toast.hudBuilder.title(NSLocalizedString("value_incorrect_out_of_range", comment: "Value is incorrect!It is out of range.")).show()
                        return
@@ -254,15 +266,40 @@ class EditRangeValueController:UIViewController{
             Toast.hudBuilder.title(NSLocalizedString("high_must_great_than_low", comment: "The highest value must be greater than the lowest value")).show()
                        return
         }
-        if (saveHighValue < saveLowValue && saveLowValue != 4095) || (saveHighValue != 4095 && saveHighValue > 1000) ||
-            (saveLowValue != 4095 && saveLowValue < -400){
-            let tempUnit = UserDefaults.standard.integer(forKey: "tempUnit")
-            if tempUnit == 0{
-                Toast.hudBuilder.title(NSLocalizedString("value_incorrect_out_of_temp_range", comment: "Value is incorrect!It must between -40 and 100.")).show()
-            }else{
-                Toast.hudBuilder.title(NSLocalizedString("value_incorrect_out_of_temp_range1", comment: "Value is incorrect!It must between -40 and 212.")).show()
+        
+        if deviceType == "S08"{
+            if  (saveHighValue < saveLowValue && saveLowValue != 4095) || (saveHighValue != 4095 && saveHighValue >= 800) ||
+                (saveLowValue != 4095 && saveLowValue <= -300){
+                let tempUnit = UserDefaults.standard.integer(forKey: "tempUnit")
+                if tempUnit == 0{
+                    Toast.hudBuilder.title(NSLocalizedString("s08_value_incorrect_out_of_temp_range", comment: "Value is incorrect!It must between -29 and 79.")).show()
+                }else{
+                    Toast.hudBuilder.title(NSLocalizedString("s08_value_incorrect_out_of_temp_range1", comment: "Value is incorrect!It must between -20 and 174.")).show()
+                }
+                return
             }
-            return
+        }else if deviceType == "S10"{
+            if  (saveHighValue < saveLowValue && saveLowValue != 4095) || (saveHighValue != 4095 && saveHighValue >= 1500) ||
+                (saveLowValue != 4095 && saveLowValue <= -550){
+                let tempUnit = UserDefaults.standard.integer(forKey: "tempUnit")
+                if tempUnit == 0{
+                    Toast.hudBuilder.title(NSLocalizedString("s10_value_incorrect_out_of_temp_range", comment: "Value is incorrect!It must between -54 and 149.")).show()
+                }else{
+                    Toast.hudBuilder.title(NSLocalizedString("s10_value_incorrect_out_of_temp_range1", comment: "Value is incorrect!It must between -65 and 300.")).show()
+                }
+                return
+            }
+        }else{
+            if  (saveHighValue < saveLowValue && saveLowValue != 4095) || (saveHighValue != 4095 && saveHighValue >= 1000) ||
+                (saveLowValue != 4095 && saveLowValue <= -400){
+                let tempUnit = UserDefaults.standard.integer(forKey: "tempUnit")
+                if tempUnit == 0{
+                    Toast.hudBuilder.title(NSLocalizedString("value_incorrect_out_of_temp_range", comment: "Value is incorrect!It must between -39 and 99.")).show()
+                }else{
+                    Toast.hudBuilder.title(NSLocalizedString("value_incorrect_out_of_temp_range1", comment: "Value is incorrect!It must between -38 and 210.")).show()
+                }
+                return
+            }
         }
         self.delegate?.setRangeValue(high: saveHighValue, low: saveLowValue)
         self.navigationController?.popViewController(animated: false)

@@ -15,6 +15,8 @@ import android.widget.Toast;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.topflytech.tftble.data.SingleClickListener;
+
 
 public class EditDoutOutputStatusActivity extends AppCompatActivity {
 
@@ -71,15 +73,15 @@ public class EditDoutOutputStatusActivity extends AppCompatActivity {
         backButton = (ImageView) customView.findViewById(R.id.command_list_bar_back_id);
         rightButton =(ImageView) customView.findViewById(R.id.img_btn_right);
         rightButton.setVisibility(View.INVISIBLE);
-        backButton.setOnClickListener(new View.OnClickListener() {
+        backButton.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onSingleClick(View view) {
                 finish();
             }
         });
-        btnConfirm.setOnClickListener(new View.OnClickListener() {
+        btnConfirm.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onSingleClick(View view) {
 
                 if( etDout0.getText() == null || !(etDout0.getText().toString().trim().equals("0") || etDout0.getText().toString().trim().equals("1")) ||
                         edDout1.getText() == null || !(edDout1.getText().toString().trim().equals("0") || edDout1.getText().toString().trim().equals("1"))

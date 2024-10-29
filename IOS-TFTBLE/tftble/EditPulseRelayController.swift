@@ -176,16 +176,26 @@ class EditPulseRelayController : UIViewController,UITextFieldDelegate {
             Toast.hudBuilder.title(errorMessage).show()
             return
         }
+        if cycleTimeInt % 100 != 0{
+            let warningMessage = NSLocalizedString("cycle_time_format_error", comment: "Cycle time must be a multiple of 100.")
+            Toast.hudBuilder.title(warningMessage).show()
+            return
+        }
+        if initEnableTimeInt % 10 != 0{
+            let warningMessage = NSLocalizedString("init_enable_time_format_error", comment: "Init enable time must be a multiple of 10.")
+            Toast.hudBuilder.title(warningMessage).show()
+            return
+        }
         cycleTimeInt = cycleTimeInt / 100 * 100
-        initEnableTimeInt = initEnableTimeInt / 100 * 100
-        if cycleTimeInt <= 0 || cycleTimeInt > 65535 {
-            let warningMessage = NSLocalizedString("cycle_time_warning", comment: "Value must be between 100 and 65535.")
+        initEnableTimeInt = initEnableTimeInt / 10 * 10
+        if cycleTimeInt <= 0 || cycleTimeInt > 65500 {
+            let warningMessage = NSLocalizedString("cycle_time_warning", comment: "Value must be between 100 and 65500.")
             Toast.hudBuilder.title(warningMessage).show()
             return
         }
 
-        if initEnableTimeInt <= 0 || initEnableTimeInt > 65535 {
-            let warningMessage = NSLocalizedString("init_enable_time_warning", comment: "Value must be between 10 and 65535.")
+        if initEnableTimeInt <= 0 || initEnableTimeInt > 65500 {
+            let warningMessage = NSLocalizedString("init_enable_time_warning", comment: "Value must be between 10 and 65500.")
             Toast.hudBuilder.title(warningMessage).show()
             return
         }
@@ -206,6 +216,11 @@ class EditPulseRelayController : UIViewController,UITextFieldDelegate {
             Toast.hudBuilder.title(warningMessage).show()
             return
         }
+        if(toggleTimeInt != 0 && (cycleTimeInt - initEnableTimeInt) / toggleTimeInt <= 20 ){
+            let warningMessage = NSLocalizedString("pulse_Delay_multi_warning",comment: "Must meet the conditions of (cycle duration - first light duration) / number of flips >20")
+            Toast.hudBuilder.title(warningMessage).show()
+              return;
+          }
         self.delegate?.setPulseRelayValue(cycleTime: cycleTimeInt, initEnableTime: initEnableTimeInt, toggleTime: toggleTimeInt, recoverTime: recoverTimeInt)
         self.navigationController?.popViewController(animated: false)
     }

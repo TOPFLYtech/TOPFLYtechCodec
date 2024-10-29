@@ -16,7 +16,7 @@ class Utils{
         if hardware != nil{
             hardwareF = Double(hardware) as! Double
         }
-        if hardwareF > 10.0 {
+        if hardwareF >= 10.0 {
             let result = hardwareF / 10.0
             return String.init(format:"V%.1f",result)
         }else{
@@ -79,7 +79,7 @@ class Utils{
         if sourceTemp == -999{
             return sourceTemp
         }
-        let tempUnit = UserDefaults.standard.integer(forKey: "tempUnit")
+        let tempUnit = UserDefaults.standard.integer(forKey: "tempUnit") 
         if tempUnit == 0{
             return sourceTemp
         }else{

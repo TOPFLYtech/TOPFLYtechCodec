@@ -227,6 +227,186 @@
         </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:text="@string/input0"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_weight="3"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:layout_weight="2"
+                android:layout_marginBottom="1dp"
+                android:layout_marginRight="1dp"
+                android:id="@+id/tx_input0"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:text="@string/output0"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_weight="3"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:layout_weight="2"
+                android:layout_marginBottom="1dp"
+                android:layout_marginRight="1dp"
+                android:id="@+id/tx_output0"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:text="@string/output1"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_weight="3"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:layout_weight="2"
+                android:layout_marginBottom="1dp"
+                android:layout_marginRight="1dp"
+                android:id="@+id/tx_output1"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:text="@string/analogInput0"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_weight="3"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:layout_weight="2"
+                android:layout_marginBottom="1dp"
+                android:layout_marginRight="1dp"
+                android:id="@+id/tx_analog_input_0"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:text="@string/analogInput1"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_weight="3"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:layout_weight="2"
+                android:layout_marginBottom="1dp"
+                android:layout_marginRight="1dp"
+                android:id="@+id/tx_analog_input_1"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:text="@string/analogInput2"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_weight="3"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:layout_weight="2"
+                android:layout_marginBottom="1dp"
+                android:layout_marginRight="1dp"
+                android:id="@+id/tx_analog_input_2"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="40dp"
             android:orientation="horizontal"
             android:gravity="center"

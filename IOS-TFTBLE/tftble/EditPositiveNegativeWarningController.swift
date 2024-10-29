@@ -289,6 +289,10 @@ class EditPositiveNegativeWarningController : UIViewController{
             Toast.hudBuilder.title(NSLocalizedString("high_voltage_low_voltage_error", comment: "The high voltage must be 0.5V higher than the low voltage")).show() 
             return
         }
+        if lowVoltageFloat < 0 || highVoltageFloat < 0 || lowVoltageFloat > 32 || highVoltageFloat > 32{
+            Toast.hudBuilder.title(NSLocalizedString("voltage_range_error_warning", comment: "The voltage must be between 0 and 32")).show()
+            return
+        }
         lowVoltageFloat = lowVoltageFloat*100
         highVoltageFloat = highVoltageFloat*100
         var ditheringIntervalHighInt = Int(ditheringIntervalHighStr ?? "-1") ?? -1

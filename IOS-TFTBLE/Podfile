@@ -16,4 +16,5 @@ pod 'PDFGenerator', :git => 'https://github.com/sgr-ksmt/PDFGenerator.git'
 pod 'libxlsxwriter'
 pod 'swiftScan', :git => 'https://github.com/MxABC/swiftScan.git'
 pod 'QMUIKit'
+pod 'IQKeyboardManagerSwift'
 end

@@ -77,6 +77,7 @@ import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.topflytech.tftble.data.BleDeviceData;
 import com.topflytech.tftble.data.BleHisData;
+import com.topflytech.tftble.data.SingleClickListener;
 import com.topflytech.tftble.view.popmenu.DropPopMenu;
 import com.topflytech.tftble.view.popmenu.MenuItem;
 
@@ -189,7 +190,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
         endDate = intent.getLongExtra("endDate",0);
         initActionbar();
 //        Button btnSavePic = findViewById(R.id.btn_save_pic);
-//        btnSavePic.setOnClickListener(new View.OnClickListener() {
+//        btnSavePic.setOnClickListener(new SingleClickListener() {
 //            @Override
 //            public void onClick(View view) {
 //                if (ContextCompat.checkSelfPermission(HistoryReportActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
@@ -231,10 +232,35 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
         }
         waitingDlg.show();
     }
+
+    private void initVirtualData(){
+        Date now = new Date();
+        mac = "ABCDEF123456";
+        reportType = "temp";
+        deviceType = "S02";
+        tempAlarmUp = 4095;
+        tempAlarmDown = 4095;
+        humidityAlarmUp = 4095;
+        humidityAlarmDown = 4095;
+        deviceName = "thsld";
+        id = "ABCDEF123456";
+        startDate = now.getTime();
+        endDate = now.getTime();
+        for(int i = 0;i < 30;i++){
+            BleHisData bleHisData = new BleHisData();
+            bleHisData.setTemp(25);
+            bleHisData.setHumidity(30);
+            bleHisData.setBattery(100);
+            bleHisData.setDate(new Date(now.getTime() + i * 3000));
+            showBleHisData.add(bleHisData);
+        }
+    }
+
     private void initData() {
         orignHistoryList.clear();
         showBleHisData.clear();
         showBleHisData = EditActivity.allBleHisData;
+//        initVirtualData();
         BleHisData beginItem = showBleHisData.get(0);
         BleHisData endItem = showBleHisData.get(showBleHisData.size() - 1);
 //        startDate = beginItem.getDate().getTime();
@@ -567,18 +593,22 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
                 out.flush();
                 out.close();
                 long size = (new File(filePath)).length();
-                ContentValues values = new ContentValues(8);
-                values.put("title", fileName);
-                values.put("_display_name", fileName);
-                values.put("date_added", currentTime);
-                values.put("mime_type", mimeType);
-                values.put("description", fileDescription);
-                values.put("orientation", 0);
-                values.put("_data", filePath);
-                values.put("_size", size);
-                return HistoryReportActivity.this.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values) != null;
+//                ContentValues values = new ContentValues(8);
+//                values.put("title", fileName);
+//                values.put("_display_name", fileName);
+//                values.put("date_added", currentTime);
+//                values.put("mime_type", mimeType);
+//                values.put("description", fileDescription);
+//                values.put("orientation", 0);
+//                values.put("_data", filePath);
+//                values.put("_size", size);
+//                return HistoryReportActivity.this.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values) != null;
+                return true;
             } catch (IOException var16) {
                 var16.printStackTrace();
+                return false;
+            }catch (Exception e) {
+                e.printStackTrace();
                 return false;
             }
 
@@ -1215,7 +1245,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
                 convertView = View.inflate(HistoryReportActivity.this, R.layout.spinner_simple_daropdown_item, null);
             }
             String value = (String)getItem(position);
-            ((TextView) convertView.findViewById(R.id.main_title)).setText(value); 
+            ((TextView) convertView.findViewById(R.id.main_title)).setText(value);
             return convertView;
         }
     }
@@ -1231,9 +1261,9 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
         backButton = (ImageView) customView.findViewById(R.id.command_list_bar_back_id);
         rightButton =(ImageView) customView.findViewById(R.id.img_btn_right);
         rightButton.setImageResource(R.mipmap.ic_category);
-        backButton.setOnClickListener(new View.OnClickListener() {
+        backButton.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onSingleClick(View view) {
                 finish();
             }
         });
@@ -1261,9 +1291,9 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
             }
         });
         mDropPopMenu.setMenuList(getMenuList());
-        rightButton.setOnClickListener(new View.OnClickListener() {
+        rightButton.setOnClickListener(new SingleClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onSingleClick(View view) {
                     mDropPopMenu.show(view);
             }
         });
@@ -1371,6 +1401,8 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
                 attach.setFileName(dh.getName());
             } catch (MessagingException e) {
                 e.printStackTrace();
+            }catch (Exception e) {
+                e.printStackTrace();
             }
         }
 
@@ -1404,6 +1436,8 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
                     callback.callback(Callback.StatusCode.OK);
                 } catch (MessagingException e) {
                     callback.callback(Callback.StatusCode.ERROR);
+                    e.printStackTrace();
+                }catch (Exception e) {
                     e.printStackTrace();
                 }
                 return null;
@@ -1474,6 +1508,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
         }else {
             ActivityCompat.requestPermissions(HistoryReportActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
         }
+
         return false;
     }
 
@@ -1871,6 +1906,8 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        }catch (Exception e) {
+            e.printStackTrace();
         }
         return datatable;
     }
@@ -1996,6 +2033,8 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
                     bw=null;
                 } catch (IOException e) {
                     e.printStackTrace();
+                }catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
             if(osw!=null){
@@ -2004,6 +2043,8 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
                     osw=null;
                 } catch (IOException e) {
                     e.printStackTrace();
+                }catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
             if(out!=null){
@@ -2011,6 +2052,8 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
                     out.close();
                     out=null;
                 } catch (IOException e) {
+                    e.printStackTrace();
+                }catch (Exception e) {
                     e.printStackTrace();
                 }
             }

@@ -19,9 +19,9 @@ android {
     defaultConfig {
         applicationId "com.topflytech.tftble"
         minSdkVersion 23
-        targetSdkVersion 33
-        versionCode 50
-        versionName "1.0.47"
+        targetSdkVersion 34
+        versionCode 55
+        versionName "1.0.52"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         ndk {
             // 设置支持的SO库架构
@@ -50,6 +50,10 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation fileTree(dir: 'libs', include: ['*.aar', '*.jar'], exclude: [])
+    implementation("com.google.code.gson:gson:2.10.1")
+
+
     implementation 'androidx.appcompat:appcompat:1.1.0'
     //    compile 'com.android.support:appcompat-v7:26.0.0-alpha1'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
@@ -58,7 +62,7 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
     implementation 'com.alibaba:fastjson:1.1.46.android'
-    implementation 'com.inuker.bluetooth:library:1.4.0'
+//    implementation 'com.inuker.bluetooth:library:1.4.0'
     implementation 'com.liulishuo.filedownloader:library:1.7.7'
     implementation project(path: ':sweetAlert')
     implementation 'com.borax12.materialdaterangepicker:library:2.0'
@@ -69,16 +73,38 @@ dependencies {
     implementation 'pub.devrel:easypermissions:1.0.1'
     implementation 'com.sun.mail:android-mail:1.6.0'
     implementation 'net.sourceforge.jexcelapi:jxl:2.6.12'
-//    implementation project(path: ':dfu')
     implementation 'com.tencent.bugly:crashreport:latest.release'
     implementation 'com.tencent.bugly:nativecrashreport:latest.release'
-    implementation 'com.contrarywind:Android-PickerView:4.1.9'
+//    implementation 'com.contrarywind:Android-PickerView:4.1.9'
     implementation 'com.qmuiteam:qmui:2.0.0-alpha10'
     implementation 'androidx.core:core:1.9.0'
     implementation 'androidx.annotation:annotation-experimental:1.3.0'
-    implementation 'no.nordicsemi.android:dfu:2.3.0'
+//    implementation 'no.nordicsemi.android:dfu:2.5.0'
 //    implementation 'androidx.work:work-runtime:2.7.1'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.github.loper7:DateTimePicker:0.6.2'
+
+
+    implementation 'com.github.gzu-liyujiang.AndroidPicker:Common:4.1.12'
+    implementation 'com.github.gzu-liyujiang.AndroidPicker:WheelView:4.1.12'
+    implementation 'com.github.gzu-liyujiang.AndroidPicker:WheelPicker:4.1.12'
+    // OpenCV基础库（*必须）
+    implementation 'com.github.jenly1314.WeChatQRCode:opencv:2.0.1'
+    implementation 'com.github.jenly1314.WeChatQRCode:opencv-armv7a:2.0.1'
+
+// OpenCV的其他ABI（可选），根据你的需要选择想要支持的SO库架构
+    implementation 'com.github.jenly1314.WeChatQRCode:opencv-armv64:2.0.1'
+    implementation 'com.github.jenly1314.WeChatQRCode:opencv-x86:2.0.1'
+    implementation 'com.github.jenly1314.WeChatQRCode:opencv-x86_64:2.0.1'
+
+//// OpenCV二维码识别功能（可选）
+//    implementation 'com.github.jenly1314.WeChatQRCode:opencv-qrcode:2.0.1'
+//// OpenCV二维码扫码功能（可选）
+//    implementation 'com.github.jenly1314.WeChatQRCode:opencv-qrcode-scanning:2.0.1'
+
+// 微信二维码识别功能（可选）
+    implementation 'com.github.jenly1314.WeChatQRCode:wechat-qrcode:2.0.1'
+// 微信二维码扫码功能（可选）
+    implementation 'com.github.jenly1314.WeChatQRCode:wechat-qrcode-scanning:2.0.1'
 
 }

@@ -248,7 +248,20 @@ class DeviceS07Cell: UITableViewCell {
         return btn
     }()
     
-    
+    lazy var resetPwdLabel: UILabel = {
+            let label = UILabel()
+            label.textColor = UIColor.black
+            label.font = UIFont.systemFont(ofSize: fontSize)
+            label.text = NSLocalizedString("forget_pwd", comment: "Forget password?")
+            return label
+        }()
+    lazy var resetPwdBtn:QMUIGhostButton = {
+        let btn = QMUIGhostButton()
+        btn.titleLabel?.font = UIFont.systemFont(ofSize: fontSize)
+       btn.setTitle(NSLocalizedString("reset", comment: "Reset"), for: .normal)
+        btn.ghostColor = UIColor.colorPrimary
+        return btn
+    }()
     
     
     var marqueeView:JXMarqueeView!
@@ -256,20 +269,32 @@ class DeviceS07Cell: UITableViewCell {
     //        super.layoutSubviews()
     //        self.initLayoutPosition()
     //    }
-    func resetPosition(broadcastType:String){
+    func resetPosition(broadcastType:String,version:String){
         //        print("reset position")
         if broadcastType == "Eddystone UID"{
-            initUIDLayoutPosition()
+            initUIDLayoutPosition(version: version)
         }else if broadcastType == "Long range"{
-            initLongRangeLayoutPosition()
+            initLongRangeLayoutPosition(version: version)
         }else if broadcastType == "Beacon"{
-            initBeaconLayoutPosition()
+            initBeaconLayoutPosition(version: version)
         }else{
-            initNormalLayoutPosition()
+            initNormalLayoutPosition(version: version)
         }
         
     }
-    func initLongRangeLayoutPosition(){
+    func initLongRangeLayoutPosition(version:String){
+        var supportResetPwd = false
+        let curVersion = version.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "").replacingOccurrences(of: ".", with: "")
+        if  curVersion >= "1006" {
+           supportResetPwd = true;
+        }
+        if(supportResetPwd){
+            self.resetPwdBtn.isHidden = false
+            self.resetPwdLabel.isHidden = false
+        }else{
+            self.resetPwdBtn.isHidden = true
+            self.resetPwdLabel.isHidden = true
+        }
         self.batteryLabel.isHidden = false
         self.batteryContentLabel.isHidden = false
         self.batteryPercentLabel.isHidden = false
@@ -289,7 +314,11 @@ class DeviceS07Cell: UITableViewCell {
         self.minorContentLabel.isHidden = true
         let descWidth = self.bounds.size.width / 2 - 20
         let contentX = self.bounds.size.width / 2
-        self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 410)
+        if(supportResetPwd){
+            self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 440)
+        }else{
+            self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 410)
+        } 
         self.rootView.isUserInteractionEnabled=true
         self.deviceNameLabel.frame = CGRect(x: 8, y: 8, width: descWidth, height: 30)
         self.deviceNameContentLabel.frame = CGRect(x: contentX, y: 8, width: self.bounds.size.width - contentX, height: 30)
@@ -318,7 +347,8 @@ class DeviceS07Cell: UITableViewCell {
         warnContentLabel.frame = CGRect(x: contentX, y: 338, width: self.bounds.size.width - contentX, height: 30)
         self.configLabel.frame = CGRect(x: 8, y: 368, width: descWidth, height: 30)
         self.configBtn.frame = CGRect(x: contentX, y: 368, width: 80, height: 24)
-        
+        self.resetPwdLabel.frame = CGRect(x: 8, y: 398, width: descWidth, height: 30)
+        self.resetPwdBtn.frame = CGRect(x: contentX, y: 398, width: 80, height: 24)
         self.backgroundColor = UIColor.nordicLightGray
         self.rootView.backgroundColor = UIColor.white
         self.rootView.layer.cornerRadius = 8
@@ -326,7 +356,19 @@ class DeviceS07Cell: UITableViewCell {
         self.rootView.layer.borderWidth = 1
         self.rootView.layer.borderColor = UIColor.nordicLightGray.cgColor
     }
-    func initUIDLayoutPosition(){
+    func initUIDLayoutPosition(version:String){
+        var supportResetPwd = false
+        let curVersion = version.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "").replacingOccurrences(of: ".", with: "")
+        if  curVersion >= "1006" {
+           supportResetPwd = true;
+        }
+        if(supportResetPwd){
+            self.resetPwdBtn.isHidden = false
+            self.resetPwdLabel.isHidden = false
+        }else{
+            self.resetPwdBtn.isHidden = true
+            self.resetPwdLabel.isHidden = true
+        }
         self.batteryLabel.isHidden = true
         self.batteryContentLabel.isHidden = true
         self.batteryPercentLabel.isHidden = true
@@ -348,7 +390,11 @@ class DeviceS07Cell: UITableViewCell {
         
         let descWidth = self.bounds.size.width / 2 - 20
         let contentX = self.bounds.size.width / 2
-        self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 350)
+        if(supportResetPwd){
+            self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 380)
+        }else{
+            self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 350)
+        }
         self.rootView.isUserInteractionEnabled=true
         self.deviceNameLabel.frame = CGRect(x: 8, y: 8, width: descWidth, height: 30)
         self.deviceNameContentLabel.frame = CGRect(x: contentX, y: 8, width: self.bounds.size.width - contentX, height: 30)
@@ -374,6 +420,8 @@ class DeviceS07Cell: UITableViewCell {
         
         self.configLabel.frame = CGRect(x: 8, y: 308, width: descWidth, height: 30)
         self.configBtn.frame = CGRect(x: contentX, y: 308, width: 80, height: 24)
+        self.resetPwdLabel.frame = CGRect(x: 8, y: 338, width: descWidth, height: 30)
+        self.resetPwdBtn.frame = CGRect(x: contentX, y: 338, width: 80, height: 24)
         self.backgroundColor = UIColor.nordicLightGray
         self.rootView.backgroundColor = UIColor.white
         self.rootView.layer.cornerRadius = 8
@@ -381,7 +429,19 @@ class DeviceS07Cell: UITableViewCell {
         self.rootView.layer.borderWidth = 1
         self.rootView.layer.borderColor = UIColor.nordicLightGray.cgColor
     }
-    func initNormalLayoutPosition(){
+    func initNormalLayoutPosition(version:String){
+        var supportResetPwd = false
+        let curVersion = version.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "").replacingOccurrences(of: ".", with: "")
+        if  curVersion >= "1006" {
+           supportResetPwd = true;
+        }
+        if(supportResetPwd){
+            self.resetPwdBtn.isHidden = false
+            self.resetPwdLabel.isHidden = false
+        }else{
+            self.resetPwdBtn.isHidden = true
+            self.resetPwdLabel.isHidden = true
+        }
         self.batteryLabel.isHidden = false
         self.batteryContentLabel.isHidden = false
         self.batteryPercentLabel.isHidden = false
@@ -402,7 +462,11 @@ class DeviceS07Cell: UITableViewCell {
         self.minorContentLabel.isHidden = true
         let descWidth = self.bounds.size.width / 2 - 20
         let contentX = self.bounds.size.width / 2
-        self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 410)
+        if(supportResetPwd){
+            self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 440)
+        }else{
+            self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 410)
+        }
         self.rootView.isUserInteractionEnabled=true
         self.deviceNameLabel.frame = CGRect(x: 8, y: 8, width: descWidth, height: 30)
         self.deviceNameContentLabel.frame = CGRect(x: contentX, y: 8, width: self.bounds.size.width - contentX, height: 30)
@@ -431,7 +495,8 @@ class DeviceS07Cell: UITableViewCell {
         warnContentLabel.frame = CGRect(x: contentX, y: 338, width: self.bounds.size.width - contentX, height: 30)
         self.configLabel.frame = CGRect(x: 8, y: 368, width: descWidth, height: 30)
         self.configBtn.frame = CGRect(x: contentX, y: 368, width: 80, height: 24)
-        
+        self.resetPwdLabel.frame = CGRect(x: 8, y: 398, width: descWidth, height: 30)
+        self.resetPwdBtn.frame = CGRect(x: contentX, y: 398, width: 80, height: 24)
         self.backgroundColor = UIColor.nordicLightGray
         self.rootView.backgroundColor = UIColor.white
         self.rootView.layer.cornerRadius = 8
@@ -442,7 +507,19 @@ class DeviceS07Cell: UITableViewCell {
     }
     
     
-    func initBeaconLayoutPosition(){
+    func initBeaconLayoutPosition(version:String){
+        var supportResetPwd = false
+        let curVersion = version.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "").replacingOccurrences(of: ".", with: "")
+        if  curVersion >= "1006" {
+           supportResetPwd = true;
+        }
+        if(supportResetPwd){
+            self.resetPwdBtn.isHidden = false
+            self.resetPwdLabel.isHidden = false
+        }else{
+            self.resetPwdBtn.isHidden = true
+            self.resetPwdLabel.isHidden = true
+        }
         self.majorLabel.isHidden = true
         self.majorContentLabel.isHidden = true
         self.minorLabel.isHidden = true
@@ -462,7 +539,11 @@ class DeviceS07Cell: UITableViewCell {
         warnContentLabel.isHidden = true
         let descWidth = self.bounds.size.width / 2 - 20
         let contentX = self.bounds.size.width / 2
-        self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 290)
+        if(supportResetPwd){
+            self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 320)
+        }else{
+            self.rootView.frame = CGRect(x: 5, y: 5, width: self.bounds.size.width-10, height: 290)
+        }
         self.rootView.isUserInteractionEnabled=true
         self.deviceNameLabel.frame = CGRect(x: 8, y: 8, width: descWidth, height: 30)
         self.deviceNameContentLabel.frame = CGRect(x: contentX, y: 8, width: self.bounds.size.width - contentX, height: 30)
@@ -489,7 +570,8 @@ class DeviceS07Cell: UITableViewCell {
         
         self.configLabel.frame = CGRect(x: 8, y: 248, width: descWidth, height: 30)
         self.configBtn.frame = CGRect(x: contentX, y: 248, width: 80, height: 24)
-        
+        self.resetPwdLabel.frame = CGRect(x: 8, y: 278, width: descWidth, height: 30)
+        self.resetPwdBtn.frame = CGRect(x: contentX, y: 278, width: 80, height: 24)
         self.backgroundColor = UIColor.nordicLightGray
         self.rootView.backgroundColor = UIColor.white
         self.rootView.layer.cornerRadius = 8
@@ -536,7 +618,8 @@ class DeviceS07Cell: UITableViewCell {
         warnContentLabel.frame = CGRect(x: contentX, y: 458, width: self.bounds.size.width - contentX, height: 30)
         self.configLabel.frame = CGRect(x: 8, y: 488, width: descWidth, height: 30)
         self.configBtn.frame = CGRect(x: contentX, y: 488, width: 80, height: 24)
-        
+        self.resetPwdLabel.frame = CGRect(x: 8, y: 518, width: descWidth, height: 30)
+        self.resetPwdBtn.frame = CGRect(x: contentX, y: 518, width: 80, height: 24)
         self.backgroundColor = UIColor.nordicLightGray
         self.rootView.backgroundColor = UIColor.white
         self.rootView.layer.cornerRadius = 8
@@ -583,14 +666,14 @@ class DeviceS07Cell: UITableViewCell {
         self.rootView.addSubview(configBtn)
         self.rootView.addSubview(idLabel)
         self.rootView.addSubview(idContentLabel)
-        
-        
+        self.rootView.addSubview(resetPwdBtn)
+        self.rootView.addSubview(resetPwdLabel)
         marqueeView = JXMarqueeView()
         marqueeView.contentView = self.warnContentLabel
         marqueeView.contentMargin = 50
         marqueeView.marqueeType = .left
         self.rootView.addSubview(warnContentLabel)
-        self.initNormalLayoutPosition()
+        self.initNormalLayoutPosition(version:"1.0.0.6")
         
     }
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
