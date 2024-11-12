@@ -54,11 +54,29 @@ public class NetworkInfoMessage extends Message {
         this.iccid = iccid;
     }
 
+    public String getWifiMac() {
+        return wifiMac;
+    }
+
+    public void setWifiMac(String wifiMac) {
+        this.wifiMac = wifiMac;
+    }
+
+    public String getWifiSsid() {
+        return wifiSsid;
+    }
+
+    public void setWifiSsid(String wifiSsid) {
+        this.wifiSsid = wifiSsid;
+    }
+
     private String networkOperator;
     private String accessTechnology;
     private String band;
     private String imsi;
     private Date date;
     private String iccid;
+    private String wifiSsid;
+    private String wifiMac;
 
 }

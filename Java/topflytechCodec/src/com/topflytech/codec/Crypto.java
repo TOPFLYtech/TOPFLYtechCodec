@@ -70,6 +70,14 @@ public class Crypto {
             return null;
         }
     }
+
+    public static int getAesInMsgLength(int packageLength) {
+        if (packageLength <= 17){
+            return packageLength;
+        }
+        return ((packageLength - 17) / 16 + 1) * 16 + 17;
+    }
+
     public static int getAesLength(int packageLength) {
         if (packageLength <= 15){
             return packageLength;
@@ -91,6 +99,51 @@ public class Crypto {
         }else if(encryptType == MessageEncryptType.AES){
             byte[] head = Arrays.copyOfRange(data,0,15);
             byte[] aesData = Arrays.copyOfRange(data,15,data.length);
+            if (aesData == null || aesData.length == 0){
+                return data;
+            }
+            byte[] realData = null;
+            try {
+                realData = Crypto.aesDecrypt(aesData, aesKey);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            if (realData == null){
+                return null;
+            }
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            try {
+                try {
+                    outputStream.write(head);
+                    outputStream.write(realData);
+                    return outputStream.toByteArray();
+                } finally {
+                    outputStream.close();
+                }
+            }catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }else {
+            return data;
+        }
+    }
+
+    public static byte[] decryptEncryptKeyInData(byte[] data, int encryptType, String aesKey){
+        if (encryptType == MessageEncryptType.MD5){
+            byte[] realData = Arrays.copyOfRange(data, 0, data.length - 8);
+            byte[] md5Data = Arrays.copyOfRange(data, data.length - 8, data.length);
+            byte[] pathMd5 = Crypto.MD5(realData);
+            if (pathMd5 == null){
+                return null;
+            }
+            if (!Arrays.equals(pathMd5,md5Data)){
+                return null;
+            }
+            return realData;
+        }else if(encryptType == MessageEncryptType.AES){
+            byte[] head = Arrays.copyOfRange(data,0,17);
+            byte[] aesData = Arrays.copyOfRange(data,17,data.length);
             if (aesData == null || aesData.length == 0){
                 return data;
             }

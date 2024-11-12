@@ -592,7 +592,7 @@ public class LocationMessage extends Message{
      *
      * @return the sampling interval acc on
      */
-    public Integer getSamplingIntervalAccOn() {
+    public Long getSamplingIntervalAccOn() {
         return samplingIntervalAccOn;
     }
 
@@ -601,7 +601,7 @@ public class LocationMessage extends Message{
      *
      * @param samplingIntervalAccOn the sampling interval acc on
      */
-    public void setSamplingIntervalAccOn(Integer samplingIntervalAccOn) {
+    public void setSamplingIntervalAccOn(Long samplingIntervalAccOn) {
         this.samplingIntervalAccOn = samplingIntervalAccOn;
     }
 
@@ -610,7 +610,7 @@ public class LocationMessage extends Message{
      *
      * @return the sampling interval acc off
      */
-    public Integer getSamplingIntervalAccOff() {
+    public Long getSamplingIntervalAccOff() {
         return samplingIntervalAccOff;
     }
 
@@ -619,7 +619,7 @@ public class LocationMessage extends Message{
      *
      * @param samplingIntervalAccOff the sampling interval acc off
      */
-    public void setSamplingIntervalAccOff(Integer samplingIntervalAccOff) {
+    public void setSamplingIntervalAccOff(Long samplingIntervalAccOff) {
         this.samplingIntervalAccOff = samplingIntervalAccOff;
     }
 
@@ -1035,7 +1035,7 @@ public class LocationMessage extends Message{
     private  Integer dragThreshold = 0;
 
     private Float externalPowerVoltage = 0f;
-    private Integer originalAlarmCode;
+    private Integer originalAlarmCode = 0;
 
 
 //    protected Integer relaySpeedLimit = 0;
@@ -1047,10 +1047,10 @@ public class LocationMessage extends Message{
     private Boolean isManagerConfigured4 = false;
     private Integer gSensorSensitivity = 0;
     private Boolean isHistoryData = false;
-    private Integer satelliteNumber;
+    private Integer satelliteNumber = 0;
     private Integer overSpeedLimit = 0;
-    private Integer samplingIntervalAccOn = 0;
-    private Integer samplingIntervalAccOff = 0;
+    private Long samplingIntervalAccOn = 0l;
+    private Long samplingIntervalAccOff = 0l;
     private Integer angleCompensation = 0;
     private Integer distanceCompensation = 0;
 
@@ -1080,8 +1080,8 @@ public class LocationMessage extends Message{
     private Float solarVoltage;
     private Boolean isUsbCharging;
     private Boolean isSolarCharging;
-    private String smartPowerSettingStatus;
-    private String smartPowerOpenStatus;
+    private String smartPowerSettingStatus = "disable";
+    private String smartPowerOpenStatus = "close";
 
     private int speakerStatus = 0;
     private int rs232PowerOf5V = 0;
@@ -1091,15 +1091,23 @@ public class LocationMessage extends Message{
     private int input2 = 0;
     private int input3 = 0;
     private int input4 = 0;
+    private int input5 = 0;
+    private int input6 = 0;
+    private int input7 = 0;
+    private int input8 = 0;
 
     private int output1 = 0;
     private int output2;
     private int output3;
+    private int output4;
+    private int output5;
+    private int output6;
+    private int output7;
+    private int output8;
 
     private Float analogInput3 = 0f;
 
-    private int input5 = 0;
-    private int input6 = 0;
+
 
     private Boolean output12V;
     private Boolean outputVout;
@@ -1132,6 +1140,7 @@ public class LocationMessage extends Message{
     private int jammerDetectionStatus = 0;
     private boolean isLockSim = false;
     private boolean isLockDevice = false;
+    private boolean isLockApn = false;
     private boolean AGPSEphemerisDataDownloadSettingStatus = false;
     private boolean gSensorSettingStatus = false;
     private boolean frontSensorSettingStatus = false;
@@ -1160,6 +1169,300 @@ public class LocationMessage extends Message{
 
     private Long lastMileageDiff = 0l;
 
+    //obd electric car
+    private Integer remainPower;
+    private Boolean isCarCharge;
+    private Integer dashboardSpeed;
+    private Integer acceleratorPedalPosition;
+    private Long remainPowerMinDistance;
+    private Long remainPowerMaxDistance;
+    private Float carChargeVoltage;// V
+    private Long carChargeElectricCurrent;//mA
+    private Long carChargePower;//mW
+    private Long fullRemainingTime; //s
+    private Long carBatteryEffectiveCapacity;//Wh
+    private Long carBatteryInitialCapacity;//Wh
+    private Long carTotalPowerConsumption;//Wh
+
+    private String selfMac;
+    private String ap1Mac;
+    private int ap1RSSI;
+    private String ap2Mac;
+    private int ap2RSSI;
+    private String ap3Mac;
+    private int ap3RSSI;
+
+    private Boolean batteryCanRecharge ;
+    private Boolean gpsEnable = true;
+
+    private Integer lightIntensityValue ;
+
+    private Float externalTemp;
+    private Float externalHumidity;
+
+    public Float getExternalTemp() {
+        return externalTemp;
+    }
+
+    public void setExternalTemp(Float externalTemp) {
+        this.externalTemp = externalTemp;
+    }
+
+    public Float getExternalHumidity() {
+        return externalHumidity;
+    }
+
+    public void setExternalHumidity(Float externalHumidity) {
+        this.externalHumidity = externalHumidity;
+    }
+
+    public Integer getLightIntensityValue() {
+        return lightIntensityValue;
+    }
+
+    public void setLightIntensityValue(Integer lightIntensityValue) {
+        this.lightIntensityValue = lightIntensityValue;
+    }
+
+    public Boolean getGpsEnable() {
+        return gpsEnable;
+    }
+
+    public void setGpsEnable(Boolean gpsEnable) {
+        this.gpsEnable = gpsEnable;
+    }
+
+    public Boolean getBatteryCanRecharge() {
+        return batteryCanRecharge;
+    }
+
+    public void setBatteryCanRecharge(Boolean batteryCanRecharge) {
+        this.batteryCanRecharge = batteryCanRecharge;
+    }
+
+    public int getInput7() {
+        return input7;
+    }
+
+    public void setInput7(int input7) {
+        this.input7 = input7;
+    }
+
+    public int getInput8() {
+        return input8;
+    }
+
+    public void setInput8(int input8) {
+        this.input8 = input8;
+    }
+
+    public int getOutput4() {
+        return output4;
+    }
+
+    public void setOutput4(int output4) {
+        this.output4 = output4;
+    }
+
+    public int getOutput5() {
+        return output5;
+    }
+
+    public void setOutput5(int output5) {
+        this.output5 = output5;
+    }
+
+    public int getOutput6() {
+        return output6;
+    }
+
+    public void setOutput6(int output6) {
+        this.output6 = output6;
+    }
+
+    public int getOutput7() {
+        return output7;
+    }
+
+    public void setOutput7(int output7) {
+        this.output7 = output7;
+    }
+
+    public int getOutput8() {
+        return output8;
+    }
+
+    public void setOutput8(int output8) {
+        this.output8 = output8;
+    }
+
+    public String getSelfMac() {
+        return selfMac;
+    }
+
+    public void setSelfMac(String selfMac) {
+        this.selfMac = selfMac;
+    }
+
+    public String getAp1Mac() {
+        return ap1Mac;
+    }
+
+    public void setAp1Mac(String ap1Mac) {
+        this.ap1Mac = ap1Mac;
+    }
+
+    public int getAp1RSSI() {
+        return ap1RSSI;
+    }
+
+    public void setAp1RSSI(int ap1RSSI) {
+        this.ap1RSSI = ap1RSSI;
+    }
+
+    public String getAp2Mac() {
+        return ap2Mac;
+    }
+
+    public void setAp2Mac(String ap2Mac) {
+        this.ap2Mac = ap2Mac;
+    }
+
+    public int getAp2RSSI() {
+        return ap2RSSI;
+    }
+
+    public void setAp2RSSI(int ap2RSSI) {
+        this.ap2RSSI = ap2RSSI;
+    }
+
+    public String getAp3Mac() {
+        return ap3Mac;
+    }
+
+    public void setAp3Mac(String ap3Mac) {
+        this.ap3Mac = ap3Mac;
+    }
+
+    public int getAp3RSSI() {
+        return ap3RSSI;
+    }
+
+    public void setAp3RSSI(int ap3RSSI) {
+        this.ap3RSSI = ap3RSSI;
+    }
+
+    public boolean isLockApn() {
+        return isLockApn;
+    }
+
+    public void setIsLockApn(boolean lockApn) {
+        isLockApn = lockApn;
+    }
+
+    public Integer getRemainPower() {
+        return remainPower;
+    }
+
+    public void setRemainPower(Integer remainPower) {
+        this.remainPower = remainPower;
+    }
+
+    public Boolean getCarCharge() {
+        return isCarCharge;
+    }
+
+    public void setCarCharge(Boolean carCharge) {
+        isCarCharge = carCharge;
+    }
+
+    public Integer getDashboardSpeed() {
+        return dashboardSpeed;
+    }
+
+    public void setDashboardSpeed(Integer dashboardSpeed) {
+        this.dashboardSpeed = dashboardSpeed;
+    }
+
+    public Integer getAcceleratorPedalPosition() {
+        return acceleratorPedalPosition;
+    }
+
+    public void setAcceleratorPedalPosition(Integer acceleratorPedalPosition) {
+        this.acceleratorPedalPosition = acceleratorPedalPosition;
+    }
+
+    public Long getRemainPowerMinDistance() {
+        return remainPowerMinDistance;
+    }
+
+    public void setRemainPowerMinDistance(Long remainPowerMinDistance) {
+        this.remainPowerMinDistance = remainPowerMinDistance;
+    }
+
+    public Long getRemainPowerMaxDistance() {
+        return remainPowerMaxDistance;
+    }
+
+    public void setRemainPowerMaxDistance(Long remainPowerMaxDistance) {
+        this.remainPowerMaxDistance = remainPowerMaxDistance;
+    }
+
+    public Float getCarChargeVoltage() {
+        return carChargeVoltage;
+    }
+
+    public void setCarChargeVoltage(Float carChargeVoltage) {
+        this.carChargeVoltage = carChargeVoltage;
+    }
+
+    public Long getCarChargeElectricCurrent() {
+        return carChargeElectricCurrent;
+    }
+
+    public void setCarChargeElectricCurrent(Long carChargeElectricCurrent) {
+        this.carChargeElectricCurrent = carChargeElectricCurrent;
+    }
+
+    public Long getCarChargePower() {
+        return carChargePower;
+    }
+
+    public void setCarChargePower(Long carChargePower) {
+        this.carChargePower = carChargePower;
+    }
+
+    public Long getFullRemainingTime() {
+        return fullRemainingTime;
+    }
+
+    public void setFullRemainingTime(Long fullRemainingTime) {
+        this.fullRemainingTime = fullRemainingTime;
+    }
+
+    public Long getCarBatteryEffectiveCapacity() {
+        return carBatteryEffectiveCapacity;
+    }
+
+    public void setCarBatteryEffectiveCapacity(Long carBatteryEffectiveCapacity) {
+        this.carBatteryEffectiveCapacity = carBatteryEffectiveCapacity;
+    }
+
+    public Long getCarBatteryInitialCapacity() {
+        return carBatteryInitialCapacity;
+    }
+
+    public void setCarBatteryInitialCapacity(Long carBatteryInitialCapacity) {
+        this.carBatteryInitialCapacity = carBatteryInitialCapacity;
+    }
+
+    public Long getCarTotalPowerConsumption() {
+        return carTotalPowerConsumption;
+    }
+
+    public void setCarTotalPowerConsumption(Long carTotalPowerConsumption) {
+        this.carTotalPowerConsumption = carTotalPowerConsumption;
+    }
     public Long getLastMileageDiff() {
         return lastMileageDiff;
     }

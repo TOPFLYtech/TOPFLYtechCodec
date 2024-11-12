@@ -118,6 +118,26 @@ namespace TopflytechCodec
             return "20" + BytesUtils.Bytes2HexString(dateBytes, 0);
         }
 
+        public static byte TftCrc8(byte[] ptr)
+        {
+            byte crc = 0xff;
+            int i;
+            int index = 0;
+            while (index < ptr.Length)
+            {
+                crc ^= ptr[index];
+                for (i = 0; i < 8; i++)
+                {
+                    if ((crc & 0x80) != 0)
+                        crc = (byte)((crc << 1) ^ 0x31);
+                    else
+                        crc <<= 1;
+                }
+                index++;
+            }
+            return crc;
+        }
+
         public static class IMEI
         {
             public static string Decode(byte[] bytes, int index)

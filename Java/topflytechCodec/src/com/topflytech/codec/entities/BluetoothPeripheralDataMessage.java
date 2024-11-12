@@ -170,6 +170,7 @@ public class BluetoothPeripheralDataMessage extends Message{
     public static int MESSAGE_TYPE_CTRL = 5;
     public static int MESSAGE_TYPE_FUEL = 6;
     public static int MESSAGE_TYPE_Customer2397 = 7;
+    public static int MESSAGE_TYPE_MIX = 8;
 
     private Boolean is_4g_lbs = false;
     private Integer mcc_4g;

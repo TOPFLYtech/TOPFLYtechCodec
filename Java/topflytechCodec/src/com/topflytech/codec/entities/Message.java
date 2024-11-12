@@ -58,13 +58,13 @@ public abstract class Message {
     public void setOrignBytes(byte[] orignBytes) {
         this.orignBytes = orignBytes;
     }
-//    public boolean isNeedResp() {
-//        return isNeedResp;
-//    }
-//
-//    public void setIsNeedResp(boolean isNeedResp) {
-//        this.isNeedResp = isNeedResp;
-//    }
+    public boolean isNeedResp() {
+        return isNeedResp;
+    }
+
+    public void setIsNeedResp(boolean isNeedResp) {
+        this.isNeedResp = isNeedResp;
+    }
     public int getProtocolHeadType() {
         return protocolHeadType;
     }
@@ -73,9 +73,18 @@ public abstract class Message {
         this.protocolHeadType = protocolHeadType;
     }
 
+    public int getEncryptType() {
+        return encryptType;
+    }
+
+    public void setEncryptType(int encryptType) {
+        this.encryptType = encryptType;
+    }
+
     private String imei;
     private int serialNo;
     private byte[] orignBytes;
-//    private boolean isNeedResp = true;
+    private boolean isNeedResp = true;
     private int protocolHeadType;
+    private int encryptType = MessageEncryptType.NONE;
 }

@@ -2,3 +2,9 @@ F:\trunk-2\server\tool\TopflytechCodec\TopflytechCodec\bin\Debug\TopflytechCodec
 F:\trunk-2\server\tool\TopflytechCodec\TopflytechCodec\bin\Debug\TopflytechCodec.pdb
 F:\trunk-2\server\tool\TopflytechCodec\TopflytechCodec\obj\Debug\TopflytechCodec.dll
 F:\trunk-2\server\tool\TopflytechCodec\TopflytechCodec\obj\Debug\TopflytechCodec.pdb
+D:\truck\other-tool\DecoderLib\TopflytechCodec\TopflytechCodec\bin\Debug\TopflytechCodec.dll
+D:\truck\other-tool\DecoderLib\TopflytechCodec\TopflytechCodec\bin\Debug\TopflytechCodec.pdb
+D:\truck\other-tool\DecoderLib\TopflytechCodec\TopflytechCodec\obj\Debug\TopflytechCodec.csproj.AssemblyReference.cache
+D:\truck\other-tool\DecoderLib\TopflytechCodec\TopflytechCodec\obj\Debug\TopflytechCodec.csproj.CoreCompileInputs.cache
+D:\truck\other-tool\DecoderLib\TopflytechCodec\TopflytechCodec\obj\Debug\TopflytechCodec.dll
+D:\truck\other-tool\DecoderLib\TopflytechCodec\TopflytechCodec\obj\Debug\TopflytechCodec.pdb

@@ -23,6 +23,13 @@ namespace TopflytechCodec
             this.encryptType = messageEncryptType;
             this.aesKey = aesKey;
         }
+        public PTTDecoder(int messageEncryptType, String aesKey, int buffSize)
+        { 
+            this.encryptType = messageEncryptType;
+            this.aesKey = aesKey;
+            this.decoderBuf = new TopflytechByteBuf(buffSize);
+        }
+
 
         private TopflytechByteBuf decoderBuf = new TopflytechByteBuf();
 

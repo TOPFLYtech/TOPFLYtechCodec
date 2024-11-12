@@ -1,7 +1,7 @@
 var CryptoTool = require("./CryptoTool")
 var ByteUtils = require("./ByteUtils")
 const TopflytechByteBuf = require("./TopflytechByteBuf")
-
+TopflytechByteBuf.resetBuf(10240)
 var PTTDecoder = {
     HEADER_LENGTH:3,
     HEARTBEAT :  [0x28, 0x28, 0x03],
@@ -72,7 +72,7 @@ var PTTDecoder = {
     build:function(bytes){
         if (bytes != null && bytes.length > this.HEADER_LENGTH
             && ((bytes[0] == 0x28 && bytes[1] == 0x28))) {
-            switch (bytes[2]) { 
+            switch (bytes[2]) {
                 case 0x03:
                     var heartbeatMessage = this.parseHeartbeat(bytes);
                     return heartbeatMessage;
@@ -136,7 +136,7 @@ var PTTDecoder = {
         var voiceLen = ByteUtils.byteToShort(bytes,16);
         if(bytes.length >= 18 + voiceLen){
             var voiceData = ByteUtils.arrayOfRange(bytes,18,18 + voiceLen)
-            voiceMessage.voiceData = voiceData 
+            voiceMessage.voiceData = voiceData
         }
         return voiceMessage
     },

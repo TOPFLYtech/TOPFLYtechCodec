@@ -84,6 +84,20 @@ var ByteUtils = {
         }
         return result;
     },
+    tftCrc8:function (buffer) {
+        let crc = 0xff;
+        for (let index = 0; index < buffer.length; index++) {
+            crc ^= buffer[index];
+            for (let i = 0; i < 8; i++) {
+                if ((crc & 0x80) !== 0) {
+                    crc = ((crc << 1) ^ 0x31) & 0xff;
+                } else {
+                    crc <<= 1;
+                }
+            }
+        }
+        return crc;
+    },
     strToBytes:function(str,encoding){
         var bytes = [];
         var buff = new Buffer(str, encoding);
@@ -102,6 +116,17 @@ var ByteUtils = {
             return;
         }
         return input[index + 1] + (input[index] << 8);
+    },
+    byteToShortSigned: function (input, index) {
+        if (input.length < index + 1) {
+            return;
+        }
+        let result = (input[index + 1] & 0xFF) + ((input[index] & 0xFF) << 8);
+
+        if (result & 0x8000) {
+            result = result - 0x10000;
+        }
+        return result;
     },
     arrayOfRange: function (source, from, to) {
         var result = []

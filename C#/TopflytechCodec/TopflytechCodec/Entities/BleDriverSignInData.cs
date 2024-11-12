@@ -100,17 +100,17 @@ namespace TopflytechCodec.Entities
             get { return mnc_4g; }
             set { mnc_4g = value; }
         }
-        private Int64 ci_4g;
-        public Int64 Ci_4g
+        private Int64 eci_4g;
+        public Int64 Eci_4g
         {
-            get { return ci_4g; }
-            set { ci_4g = value; }
+            get { return eci_4g; }
+            set { eci_4g = value; }
         }
-        private Int32 earfcn_4g_1;
-        public Int32 Earfcn_4g_1
+        private Int32 tac;
+        public Int32 TAC
         {
-            get { return earfcn_4g_1; }
-            set { earfcn_4g_1 = value; }
+            get { return tac; }
+            set { tac = value; }
         }
         private Int32 pcid_4g_1;
         public Int32 Pcid_4g_1
@@ -118,17 +118,17 @@ namespace TopflytechCodec.Entities
             get { return pcid_4g_1; }
             set { pcid_4g_1 = value; }
         }
-        private Int32 earfcn_4g_2;
-        public Int32 Earfcn_4g_2
-        {
-            get { return earfcn_4g_2; }
-            set { earfcn_4g_2 = value; }
-        }
         private Int32 pcid_4g_2;
         public Int32 Pcid_4g_2
         {
             get { return pcid_4g_2; }
             set { pcid_4g_2 = value; }
+        }
+        private Int32 pcid_4g_3;
+        public Int32 Pcid_4g_3
+        {
+            get { return pcid_4g_3; }
+            set { pcid_4g_3 = value; }
         }
 
 

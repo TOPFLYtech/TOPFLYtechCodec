@@ -49,5 +49,18 @@ namespace TopflytechCodec.Entities
             get { return iccid; }
             set { iccid = value; }
         }
+
+        private String wifiSsid;
+        public String WifiSsid
+        {
+            get { return wifiSsid; }
+            set { wifiSsid = value; }
+        }
+        private String wifiMac;
+        public String WifiMac
+        {
+            get { return wifiMac; }
+            set { wifiMac = value; }
+        }
     }
 }

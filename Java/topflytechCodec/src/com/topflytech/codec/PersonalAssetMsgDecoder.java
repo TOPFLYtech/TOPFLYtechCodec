@@ -36,6 +36,8 @@ public class PersonalAssetMsgDecoder {
     private static final byte[] BLUETOOTH_SECOND_DATA =  {0x27, 0x27, (byte)0x12};
 
     private static final byte[] DEVICE_TEMP_COLLECTION_DATA =  {0x27, 0x27, (byte)0x26};
+    private static final byte[] INDEFINITE_LOCATION_DATA =  {0x27, 0x27, (byte)0x62};
+    private static final byte[] INDEFINITE_LOCATION_ALARM_DATA =  {0x27, 0x27, (byte)0x64};
 
     private int encryptType = 0;
     private String aesKey;
@@ -43,6 +45,13 @@ public class PersonalAssetMsgDecoder {
         assert messageEncryptType < 0 || messageEncryptType >= 3 : "Message encrypt type error!";
         this.encryptType = messageEncryptType;
         this.aesKey = aesKey;
+    }
+
+    public PersonalAssetMsgDecoder(int messageEncryptType,String aesKey,int buffSize){
+        assert messageEncryptType < 0 || messageEncryptType >= 3 : "Message encrypt type error!";
+        this.encryptType = messageEncryptType;
+        this.aesKey = aesKey;
+        this.decoderBuf = new TopflytechByteBuf(buffSize);
     }
 
     private static boolean match(byte[] bytes) {
@@ -60,16 +69,18 @@ public class PersonalAssetMsgDecoder {
                 || Arrays.equals(WIFI_WITH_DEVICE_INFO_DATA,bytes)
                 || Arrays.equals(WIFI_ALARM_WITH_DEVICE_INFO_DATA,bytes)
                 || Arrays.equals(DEVICE_TEMP_COLLECTION_DATA,bytes)
-                || Arrays.equals(NETWORK_INFO_DATA,bytes);
+                || Arrays.equals(NETWORK_INFO_DATA,bytes)
+                || Arrays.equals(INDEFINITE_LOCATION_DATA,bytes)
+                || Arrays.equals(INDEFINITE_LOCATION_ALARM_DATA,bytes);
     }
 
-    /**
-     * Decode.  decoder.You can get the message one by one from the callback.
-     *
-     * @param buf      the buf
-     * @param callback the callback
-     */
-    public void decode(byte[] buf,Callback callback) {
+    private boolean matchNewCryptData(byte[] bytes){
+        assert bytes.length >= HEADER_LENGTH : "command match: length is not 3!";
+        return  Arrays.equals(INDEFINITE_LOCATION_DATA,bytes)
+                || Arrays.equals(INDEFINITE_LOCATION_ALARM_DATA,bytes);
+    }
+    private TopflytechByteBuf decoderBuf = new TopflytechByteBuf();
+    public void decode(byte[] buf, Callback callback) {
         decoderBuf.putBuf(buf);
         if (decoderBuf.getReadableBytes() < (HEADER_LENGTH + 2)){
             callback.receiveErrorMessage("Error Message");
@@ -87,29 +98,81 @@ public class PersonalAssetMsgDecoder {
                 decoderBuf.skipBytes(HEADER_LENGTH);
                 byte[] lengthBytes = decoderBuf.readBytes(2);
                 int packageLength = BytesUtils.bytes2Short(lengthBytes, 0);
-                if (encryptType == MessageEncryptType.MD5){
-                    packageLength = packageLength + 8;
-                }else if(encryptType == MessageEncryptType.AES){
-                    packageLength = Crypto.getAesLength(packageLength);
-                }
-                decoderBuf.resetReaderIndex();
-                if(packageLength <= 0){
-                    callback.receiveErrorMessage("Error Message");
-                    return;
-                }
-                if (packageLength > decoderBuf.getReadableBytes()){
-                    callback.receiveErrorMessage("Error Message");
-                    return;
-                }
-                byte[] data = decoderBuf.readBytes(packageLength);
-                data = Crypto.decryptData(data, encryptType, aesKey);
-                if (data != null){
-                    try {
-                        build(data,callback);
-                    }catch (ParseException e){
-                        callback.receiveErrorMessage(e.getMessage());
+                if(matchNewCryptData(bytes)){
+                    if(decoderBuf.getReadableBytes() <= 12){
+                        decoderBuf.resetReaderIndex();
+                        callback.receiveErrorMessage("Error Message");
+                        return;
+                    }
+                    decoderBuf.skipBytes(10);
+                    byte[] msgInfoBytes = decoderBuf.readBytes(2);
+                    byte msgInfo = msgInfoBytes[1];
+                    int msgEncryptType =  MessageEncryptType.NONE;
+                    if((msgInfo & 0x30) == 0 ){
+                        msgEncryptType = MessageEncryptType.NONE;
+                    }else if((msgInfo & 0x10) == 0x10){
+                        msgEncryptType = MessageEncryptType.MD5;
+                    }else if((msgInfo & 0x20) == 0x20){
+                        msgEncryptType = MessageEncryptType.AES;
+                    }
+                    if(msgEncryptType == MessageEncryptType.AES){
+                        packageLength = Crypto.getAesInMsgLength(packageLength);
+                    }else if(msgEncryptType == MessageEncryptType.MD5){
+                        packageLength = packageLength + 8;
+                    }
+                    decoderBuf.resetReaderIndex();
+                    if(packageLength <= 0){
+                        callback.receiveErrorMessage("Error Message");
+                        return;
+                    }
+                    if (packageLength > decoderBuf.getReadableBytes()){
+                        callback.receiveErrorMessage("Error Message");
+                        return;
+                    }
+                    byte[] data = decoderBuf.readBytes(packageLength);
+                    byte checkSum = msgInfoBytes[0];
+                    byte[] realData = Crypto.decryptEncryptKeyInData(data, msgEncryptType, aesKey);
+                    if (realData != null){
+                        byte[] calCheckSumBytes = Arrays.copyOfRange(realData,16,realData.length);
+                        byte crc8Value = BytesUtils.tftCrc8(calCheckSumBytes);
+                        if(checkSum != crc8Value){
+                            decoderBuf.skipBytes(1);
+                            callback.receiveErrorMessage("Error Message");
+                            return;
+                        }
+
+                        try {
+                            build(data,realData,callback);
+                        }catch (ParseException e){
+                            callback.receiveErrorMessage(e.getMessage());
+                        }
+                    }
+                }else{
+                    if (encryptType == MessageEncryptType.MD5){
+                        packageLength = packageLength + 8;
+                    }else if(encryptType == MessageEncryptType.AES){
+                        packageLength = Crypto.getAesLength(packageLength);
+                    }
+                    decoderBuf.resetReaderIndex();
+                    if(packageLength <= 0){
+                        callback.receiveErrorMessage("Error Message");
+                        return;
+                    }
+                    if (packageLength > decoderBuf.getReadableBytes()){
+                        callback.receiveErrorMessage("Error Message");
+                        return;
+                    }
+                    byte[] data = decoderBuf.readBytes(packageLength);
+                    byte[] realData = Crypto.decryptData(data, encryptType, aesKey);
+                    if (realData != null){
+                        try {
+                            build(data,realData,callback);
+                        }catch (ParseException e){
+                            callback.receiveErrorMessage(e.getMessage());
+                        }
                     }
                 }
+
             }else{
                 decoderBuf.skipBytes(1);
             }
@@ -118,9 +181,6 @@ public class PersonalAssetMsgDecoder {
             callback.receiveErrorMessage("Error Message");
         }
     }
-
-
-    private TopflytechByteBuf decoderBuf = new TopflytechByteBuf();
 
     /**
      * Docode list. You can get all message at once.
@@ -145,29 +205,81 @@ public class PersonalAssetMsgDecoder {
                 decoderBuf.skipBytes(HEADER_LENGTH);
                 byte[] lengthBytes = decoderBuf.readBytes(2);
                 int packageLength = BytesUtils.bytes2Short(lengthBytes, 0);
-                if (encryptType == MessageEncryptType.MD5){
-                    packageLength = packageLength + 8;
-                }else if(encryptType == MessageEncryptType.AES){
-                    packageLength = Crypto.getAesLength(packageLength);
-                }
-                decoderBuf.resetReaderIndex();
-                if(packageLength <= 0){
-                    decoderBuf.skipBytes(5);
-                    break;
-                }
-                if (packageLength > decoderBuf.getReadableBytes()){
-                    break;
-                }
-                byte[] data = decoderBuf.readBytes(packageLength);
-                data = Crypto.decryptData(data, encryptType, aesKey);
-                if (data != null){
-                    try {
-                        Message message = build(data);
-                        if (message != null){
-                            messages.add(message);
+
+                if(matchNewCryptData(bytes)){
+                    if(decoderBuf.getReadableBytes() <= 12){
+                        decoderBuf.resetReaderIndex();
+                        break;
+                    }
+                    decoderBuf.skipBytes(10);
+                    byte[] msgInfoBytes = decoderBuf.readBytes(2);
+                    byte msgInfo = msgInfoBytes[1];
+                    int msgEncryptType =  MessageEncryptType.NONE;
+                    if((msgInfo & 0x30) == 0 ){
+                        msgEncryptType = MessageEncryptType.NONE;
+                    }else if((msgInfo & 0x10) == 0x10){
+                        msgEncryptType = MessageEncryptType.MD5;
+                    }else if((msgInfo & 0x20) == 0x20){
+                        msgEncryptType = MessageEncryptType.AES;
+                    }
+                    if(msgEncryptType == MessageEncryptType.AES){
+                        packageLength = Crypto.getAesInMsgLength(packageLength);
+                    }else if(msgEncryptType == MessageEncryptType.MD5){
+                        packageLength = packageLength + 8;
+                    }
+                    decoderBuf.resetReaderIndex();
+                    if(packageLength <= 0){
+                        break;
+                    }
+                    if (packageLength > decoderBuf.getReadableBytes()){
+                        break;
+                    }
+                    byte[] data = decoderBuf.readBytes(packageLength);
+                    byte checkSum = msgInfoBytes[0];
+                    byte[] realData = Crypto.decryptEncryptKeyInData(data, msgEncryptType, aesKey);
+                    if (realData != null){
+                        byte[] calCheckSumBytes = Arrays.copyOfRange(realData,16,realData.length);
+                        byte crc8Value = BytesUtils.tftCrc8(calCheckSumBytes);
+                        if(checkSum != crc8Value){
+                            decoderBuf.skipBytes(1);
+                            break;
                         }
-                    }catch (ParseException e){
-                        System.out.println(e.getMessage());
+                        try {
+                            Message message = build(realData);
+                            if (message != null){
+                                message.setOrignBytes(data);
+                                messages.add(message);
+                            }
+                        }catch (ParseException e){
+                            System.out.println(e.getMessage());
+                        }
+                    }
+                }else{
+                    if (encryptType == MessageEncryptType.MD5){
+                        packageLength = packageLength + 8;
+                    }else if(encryptType == MessageEncryptType.AES){
+                        packageLength = Crypto.getAesLength(packageLength);
+                    }
+                    decoderBuf.resetReaderIndex();
+                    if(packageLength <= 0){
+                        decoderBuf.skipBytes(5);
+                        break;
+                    }
+                    if (packageLength > decoderBuf.getReadableBytes()){
+                        break;
+                    }
+                    byte[] data = decoderBuf.readBytes(packageLength);
+                    byte[] realData = Crypto.decryptData(data, encryptType, aesKey);
+                    if (realData != null){
+                        try {
+                            Message message = build(realData);
+                            if (message != null){
+                                message.setOrignBytes(data);
+                                messages.add(message);
+                            }
+                        }catch (ParseException e){
+                            System.out.println(e.getMessage());
+                        }
                     }
                 }
             }else{
@@ -176,7 +288,6 @@ public class PersonalAssetMsgDecoder {
         }
         return messages;
     }
-
 
     public Message build(byte[] bytes) throws ParseException{
         if (bytes != null && bytes.length > HEADER_LENGTH
@@ -217,6 +328,10 @@ public class PersonalAssetMsgDecoder {
                 case 0x26:
                     Message deviceTempCollectionMessage = parseDeviceTempCollectionMessage(bytes);
                     return deviceTempCollectionMessage;
+                case 0x62:
+                case 0x64:
+                    Message indefiniteLocationMessage = DecoderHelper.parseLocationMessage(bytes);
+                    return indefiniteLocationMessage;
                 case (byte)0x81:
                     Message message =  parseInteractMessage(bytes);
                     return message;
@@ -239,7 +354,7 @@ public class PersonalAssetMsgDecoder {
             int tempCount = valueLen / 2;
             List<Float> tempList = new ArrayList<>();
             for(int i = 0;i < tempCount;i++){
-                int tempInt = BytesUtils.bytes2Short(bytes,24 + i * 2);
+                int tempInt = BytesUtils.byte2SignedShort(bytes,24 + i * 2);
                 tempList.add(tempInt * 0.01f);
             }
             deviceTempCollectionMessage.setTempList(tempList);
@@ -511,8 +626,8 @@ public class PersonalAssetMsgDecoder {
             locationMessage.setImei(imei);
             locationMessage.setIsSolarCharging(isSolarCharging);
             locationMessage.setIsUsbCharging(isUsbCharging);
-            locationMessage.setSamplingIntervalAccOn(accOnInterval);
-            locationMessage.setSamplingIntervalAccOff(accOffInterval);
+            locationMessage.setSamplingIntervalAccOn((long)accOnInterval);
+            locationMessage.setSamplingIntervalAccOff((long)accOffInterval);
             locationMessage.setAngleCompensation(angleCompensation);
             locationMessage.setDistanceCompensation(distanceCompensation);
             locationMessage.setGpsWorking(isGpsWorking);
@@ -589,6 +704,7 @@ public class PersonalAssetMsgDecoder {
         bluetoothPeripheralDataMessage.setProtocolHeadType(0x12);
         bluetoothPeripheralDataMessage.setDate(TimeUtils.getGTM0Date(bytes, 15));
         bluetoothPeripheralDataMessage.setOrignBytes(bytes);
+        bluetoothPeripheralDataMessage.setIsHistoryData((bytes[15] & 0x80) != 0x00);
 //        boolean isNeedResp = (serialNo & 0x8000) != 0x8000;
         bluetoothPeripheralDataMessage.setSerialNo(serialNo);
 //        bluetoothPeripheralDataMessage.setIsNeedResp(isNeedResp);
@@ -602,19 +718,17 @@ public class PersonalAssetMsgDecoder {
         double latitude = latlngValid ? BytesUtils.bytes2Float(bytes, 31) : 0.0;
         int azimuth = latlngValid ? BytesUtils.bytes2Short(bytes, 37) : 0;
         Float speedf = 0.0f;
-        if(latlngValid){
-            try{
-                byte[] bytesSpeed = Arrays.copyOfRange(bytes, 35, 37);
-                String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
-                if(strSp.contains("f")){
-                    speedf = -1f;
-                }else {
-                    speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
-                }
-            }catch (Exception e){
-                System.out.println("Imei : " + imei);
-                e.printStackTrace();
+        try{
+            byte[] bytesSpeed = Arrays.copyOfRange(bytes, 35, 37);
+            String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
+            if(strSp.contains("f")){
+                speedf = -1f;
+            }else {
+                speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
             }
+        }catch (Exception e){
+            System.out.println("Imei : " + imei);
+            e.printStackTrace();
         }
         Boolean is_4g_lbs = false;
         Integer mcc_4g = null;
@@ -684,357 +798,222 @@ public class PersonalAssetMsgDecoder {
         bluetoothPeripheralDataMessage.setPcid_4g_2(pcid_4g_2);
         bluetoothPeripheralDataMessage.setPcid_4g_3(pcid_4g_3);
         byte[] bleData = Arrays.copyOfRange(bytes,39,bytes.length);
-        if (bleData.length <= 0){
+        if (bleData.length <= 2){
             System.out.println("Error len ble Data:" +BytesUtils.bytes2HexString(bytes,0));
             return bluetoothPeripheralDataMessage;
         }
         List<BleData> bleDataList = new ArrayList<BleData>();
-        if(bleData[0] == 0x00 && bleData[1] == 0x01){
+        DecimalFormat decimalFormat = new DecimalFormat("0.00");
+        if(bleData[0] == 0x00 && bleData[1] == 0x00){
+            bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_MIX);
+            int positionIndex = 2;
+            while (positionIndex + 2 < bleData.length ){
+                if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x01){
+                    positionIndex+=2;
+                    if(positionIndex + 10 <= bleData.length){
+                        BleTireData bleTireData = getBleTireData(bleData, positionIndex);
+                        bleDataList.add(bleTireData);
+                        positionIndex += 10;
+                        continue;
+                    }else{
+                        break;
+                    }
+
+                }else if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x02){
+                    positionIndex+=2;
+                    if(positionIndex + 8 <= bleData.length){
+                        BleAlertData bleAlertData = getBleAlertDataWithoutLocation(imei, latlngValid, isHisData, altitude, longitude, latitude, azimuth, speedf, is_4g_lbs, mcc_4g, mnc_4g, eci_4g, tac, pcid_4g_1, pcid_4g_2, pcid_4g_3, is_2g_lbs, mcc_2g, mnc_2g, lac_2g_1, ci_2g_1, lac_2g_2, ci_2g_2, lac_2g_3, ci_2g_3, bleData);
+                        bleDataList.add(bleAlertData);
+                        positionIndex += 8;
+                        continue;
+                    }else{
+                        break;
+                    }
+                }else if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x03){
+                    positionIndex+=2;
+                    if(positionIndex + 8 <= bleData.length){
+                        BleDriverSignInData bleDriverSignInData = getBleDriverSignInDataWithoutLocation(imei, latlngValid, isHisData, altitude, longitude, latitude, azimuth, speedf, is_4g_lbs, mcc_4g, mnc_4g, eci_4g, tac, pcid_4g_1, pcid_4g_2, pcid_4g_3, is_2g_lbs, mcc_2g, mnc_2g, lac_2g_1, ci_2g_1, lac_2g_2, ci_2g_2, lac_2g_3, ci_2g_3, bleData);
+                        bleDataList.add(bleDriverSignInData);
+                        positionIndex += 8;
+                        continue;
+                    }else{
+                        break;
+                    }
+                }else if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x04){
+                    positionIndex+=2;
+                    if(positionIndex + 15 <= bleData.length){
+                        BleTempData bleTempData = getBleTempData(bleData, positionIndex, decimalFormat);
+                        bleDataList.add(bleTempData);
+                        positionIndex += 15;
+                        continue;
+                    }else{
+                        break;
+                    }
+                }else if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x05){
+                    positionIndex+=2;
+                    if(positionIndex + 12 <= bleData.length){
+                        BleDoorData bleDoorData = getBleDoorData(bleData, positionIndex, decimalFormat);
+                        bleDataList.add(bleDoorData);
+                        positionIndex += 12;
+                        continue;
+                    }else{
+                        break;
+                    }
+                }else if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x06){
+                    positionIndex+=2;
+                    if(positionIndex + 12 <= bleData.length){
+                        BleCtrlData bleCtrlData = getBleCtrlData(bleData, positionIndex, decimalFormat);
+                        bleDataList.add(bleCtrlData);
+                        positionIndex += 12;
+                        continue;
+                    }else{
+                        break;
+                    }
+                }else if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x07){
+                    positionIndex+=2;
+                    if(positionIndex + 15 <= bleData.length){
+                        BleFuelData bleFuelData = getBleFuelData(bleData, positionIndex, decimalFormat);
+                        bleDataList.add(bleFuelData);
+                        positionIndex += 15;
+                        continue;
+                    }else{
+                        break;
+                    }
+                }else{
+                    break;
+                }
+            }
+
+        }
+        else if(bleData[0] == 0x00 && bleData[1] == 0x01){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_TIRE);
             for (int i = 2;i+10 <= bleData.length;i+=10){
-                BleTireData bleTireData = new BleTireData();
-                byte[] macArray = Arrays.copyOfRange(bleData, i, i + 6);
-                String mac = BytesUtils.bytes2HexString(macArray, 0);
-                int voltageTmp = (int) bleData[i + 6] < 0 ? (int) bleData[i + 6] + 256 : (int) bleData[i + 6];
-                double voltage;
-                if(voltageTmp == 255){
-                    voltage = -999;
-                }else{
-                    voltage = 1.22 + 0.01 * voltageTmp;
-                }
-                int airPressureTmp = (int) bleData[i + 7] < 0 ? (int) bleData[i + 7] + 256 : (int) bleData[i + 7];
-                double airPressure;
-                if(airPressureTmp == 255){
-                    airPressure = -999;
-                }else{
-                    airPressure = 1.572 * 2 * airPressureTmp;
-                }
-                int airTempTmp = (int) bleData[i + 8] < 0 ? (int) bleData[i + 8] + 256 : (int) bleData[i + 8];
-                int airTemp;
-                if(airTempTmp == 255){
-                    airTemp = -999;
-                }else{
-                    airTemp = airTempTmp - 55;
-                }
-//            boolean isTireLeaks = (bleData[i+5] == 0x01);
-                bleTireData.setMac(mac);
-                bleTireData.setVoltage(voltage);
-                bleTireData.setAirPressure(airPressure);
-                bleTireData.setAirTemp(airTemp);
-//            bleTireData.setIsTireLeaks(isTireLeaks);
-                int alarm = (int) bleData[i + 9];
-                if(alarm == -1){
-                    alarm = 0;
-                }
-                bleTireData.setStatus(alarm);
+                BleTireData bleTireData = getBleTireData(bleData, i);
                 bleDataList.add(bleTireData);
             }
         }else if (bleData[0] == 0x00 && bleData[1] == 0x02){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_SOS);
-            BleAlertData bleAlertData = new BleAlertData();
-            byte[] macArray = Arrays.copyOfRange(bleData, 2, 8);
-            String mac = BytesUtils.bytes2HexString(macArray, 0);
-            String voltageStr = BytesUtils.bytes2HexString(bleData,8).substring(0, 2);
-            float voltage = 0;
-            try {
-                voltage = Float.valueOf(voltageStr) / 10;
-            }catch (Exception e){
-                System.out.println("imei :" + imei + " ble sos voltage error : " + voltageStr);
-            }
-            byte alertByte = bleData[9];
-            int alert = alertByte == 0x01 ? BleAlertData.ALERT_TYPE_LOW_BATTERY : BleAlertData.ALERT_TYPE_SOS;
-
-            bleAlertData.setAlertType(alert);
-            bleAlertData.setAltitude(altitude);
-            bleAlertData.setAzimuth(azimuth);
-            bleAlertData.setInnerVoltage(voltage);
-            bleAlertData.setIsHistoryData(isHisData);
-            bleAlertData.setLatitude(latitude);
-            bleAlertData.setLatlngValid(latlngValid);
-            bleAlertData.setLongitude(longitude);
-            bleAlertData.setMac(mac);
-            bleAlertData.setSpeed(speedf);
-            bleAlertData.setIs_4g_lbs(is_4g_lbs);
-            bleAlertData.setIs_2g_lbs(is_2g_lbs);
-            bleAlertData.setMcc_2g(mcc_2g);
-            bleAlertData.setMnc_2g(mnc_2g);
-            bleAlertData.setLac_2g_1(lac_2g_1);
-            bleAlertData.setCi_2g_1(ci_2g_1);
-            bleAlertData.setLac_2g_2(lac_2g_2);
-            bleAlertData.setCi_2g_2(ci_2g_2);
-            bleAlertData.setLac_2g_3(lac_2g_3);
-            bleAlertData.setCi_2g_3(ci_2g_3);
-            bleAlertData.setMcc_4g(mcc_4g);
-            bleAlertData.setMnc_4g(mnc_4g);
-            bleAlertData.setEci_4g(eci_4g);
-            bleAlertData.setTac(tac);
-            bleAlertData.setPcid_4g_1(pcid_4g_1);
-            bleAlertData.setPcid_4g_2(pcid_4g_2);
-            bleAlertData.setPcid_4g_3(pcid_4g_3);
+            BleAlertData bleAlertData = getBleAlertDataWithoutLocation(imei, latlngValid, isHisData, altitude, longitude, latitude, azimuth, speedf, is_4g_lbs, mcc_4g, mnc_4g, eci_4g, tac, pcid_4g_1, pcid_4g_2, pcid_4g_3, is_2g_lbs, mcc_2g, mnc_2g, lac_2g_1, ci_2g_1, lac_2g_2, ci_2g_2, lac_2g_3, ci_2g_3, bleData);
             bleDataList.add(bleAlertData);
         }else if (bleData[0] == 0x00 && bleData[1] == 0x03){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_DRIVER);
-            BleDriverSignInData bleDriverSignInData = new BleDriverSignInData();
-            byte[] macArray = Arrays.copyOfRange(bleData, 2,8);
-            String mac = BytesUtils.bytes2HexString(macArray, 0);
-            String voltageStr = BytesUtils.bytes2HexString(bleData,8).substring(0, 2);
-            float voltage = 0;
-            try {
-                voltage = Float.valueOf(voltageStr) / 10;
-            }catch (Exception e){
-                System.out.println("imei :" + imei + " ble sos voltage error : " + voltageStr);
-            }
-            byte alertByte = bleData[9];
-            int alert = alertByte == 0x01 ? BleDriverSignInData.ALERT_TYPE_LOW_BATTERY : BleDriverSignInData.ALERT_TYPE_DRIVER;
-
-            bleDriverSignInData.setAlert(alert);
-            bleDriverSignInData.setAltitude(altitude);
-            bleDriverSignInData.setAzimuth(azimuth);
-            bleDriverSignInData.setVoltage(voltage);
-            bleDriverSignInData.setIsHistoryData(isHisData);
-            bleDriverSignInData.setLatitude(latitude);
-            bleDriverSignInData.setLatlngValid(latlngValid);
-            bleDriverSignInData.setLongitude(longitude);
-            bleDriverSignInData.setMac(mac);
-            bleDriverSignInData.setSpeed(speedf);
-            bleDriverSignInData.setIs_4g_lbs(is_4g_lbs);
-            bleDriverSignInData.setIs_2g_lbs(is_2g_lbs);
-            bleDriverSignInData.setMcc_2g(mcc_2g);
-            bleDriverSignInData.setMnc_2g(mnc_2g);
-            bleDriverSignInData.setLac_2g_1(lac_2g_1);
-            bleDriverSignInData.setCi_2g_1(ci_2g_1);
-            bleDriverSignInData.setLac_2g_2(lac_2g_2);
-            bleDriverSignInData.setCi_2g_2(ci_2g_2);
-            bleDriverSignInData.setLac_2g_3(lac_2g_3);
-            bleDriverSignInData.setCi_2g_3(ci_2g_3);
-            bleDriverSignInData.setMcc_4g(mcc_4g);
-            bleDriverSignInData.setMnc_4g(mnc_4g);
-            bleDriverSignInData.setEci_4g(eci_4g);
-            bleDriverSignInData.setTac(tac);
-            bleDriverSignInData.setPcid_4g_1(pcid_4g_1);
-            bleDriverSignInData.setPcid_4g_2(pcid_4g_2);
-            bleDriverSignInData.setPcid_4g_3(pcid_4g_3);
+            BleDriverSignInData bleDriverSignInData = getBleDriverSignInDataWithoutLocation(imei, latlngValid, isHisData, altitude, longitude, latitude, azimuth, speedf, is_4g_lbs, mcc_4g, mnc_4g, eci_4g, tac, pcid_4g_1, pcid_4g_2, pcid_4g_3, is_2g_lbs, mcc_2g, mnc_2g, lac_2g_1, ci_2g_1, lac_2g_2, ci_2g_2, lac_2g_3, ci_2g_3, bleData);
             bleDataList.add(bleDriverSignInData);
         }else if (bleData[0] == 0x00 && bleData[1] == 0x04){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_TEMP);
-            DecimalFormat decimalFormat = new DecimalFormat("0.00");
             for (int i = 2;i+15 <= bleData.length;i+=15){
-                BleTempData bleTempData = new BleTempData();
-                byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
-                String mac = BytesUtils.bytes2HexString(macArray, 0);
-                if(mac.startsWith("0000")){
-                    mac = mac.substring(4,12);
-                }
-                int voltageTmp = (int) bleData[i + 6] < 0 ? (int) bleData[i + 6] + 256 : (int) bleData[i + 6];
-                float voltage;
-                if(voltageTmp == 255){
-                    voltage = -999;
-                }else{
-                    voltage = 2 + 0.01f * voltageTmp;
-                }
-                int batteryPercentTemp = (int) bleData[i + 7] < 0 ? (int) bleData[i + 7] + 256 : (int) bleData[i + 7];
-                int batteryPercent;
-                if(batteryPercentTemp == 255){
-                    batteryPercent = -999;
-                }else{
-                    batteryPercent = batteryPercentTemp;
-                }
-                int temperatureTemp = BytesUtils.bytes2Short(bleData,i+8);
-                int tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
-                float temperature;
-                if(temperatureTemp == 65535){
-                    temperature = -999;
-                }else{
-                    temperature = (temperatureTemp & 0x7fff) * 0.01f * tempPositive;
-                }
-                int humidityTemp = BytesUtils.bytes2Short(bleData,i+10);
-                float humidity;
-                if(humidityTemp == 65535){
-                    humidity = -999;
-                }else{
-                    humidity = humidityTemp * 0.01f;
-                }
-                int lightTemp = BytesUtils.bytes2Short(bleData,i+12);
-                int lightIntensity ;
-                if(lightTemp == 65535){
-                    lightIntensity = -999;
-                }else{
-                    lightIntensity = lightTemp & 0x0001;
-                }
-                int rssiTemp = (int) bleData[i + 14] < 0 ? (int) bleData[i + 14] + 256 : (int) bleData[i + 14];
-                int rssi;
-                if(rssiTemp == 255){
-                    rssi = -999;
-                }else{
-                    rssi = rssiTemp - 128;
-                }
-                bleTempData.setRssi(rssi);
-                bleTempData.setMac(mac);
-                bleTempData.setLightIntensity(lightIntensity);
-                bleTempData.setHumidity(Float.valueOf(decimalFormat.format(humidity)));
-                bleTempData.setVoltage(Float.valueOf(decimalFormat.format(voltage)));
-                bleTempData.setBatteryPercent(batteryPercent);
-                bleTempData.setTemp(Float.valueOf(decimalFormat.format(temperature)));
+                BleTempData bleTempData = getBleTempData(bleData, i, decimalFormat);
                 bleDataList.add(bleTempData);
             }
         }else if (bleData[0] == 0x00 && bleData[1] == 0x05){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_DOOR);
-            DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            for (int i = 2;i +12 <= bleData.length;i+=12){
-                BleDoorData bleDoorData = new BleDoorData();
-                byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
-                String mac = BytesUtils.bytes2HexString(macArray, 0);
-                int voltageTmp = (int) bleData[i + 6] < 0 ? (int) bleData[i + 6] + 256 : (int) bleData[i + 6];
-                float voltage;
-                if(voltageTmp == 255){
-                    voltage = -999;
-                }else{
-                    voltage = 2 + 0.01f * voltageTmp;
-                }
-                int batteryPercentTemp = (int) bleData[i + 7] < 0 ? (int) bleData[i + 7] + 256 : (int) bleData[i + 7];
-                int batteryPercent;
-                if(batteryPercentTemp == 255){
-                    batteryPercent = -999;
-                }else{
-                    batteryPercent = batteryPercentTemp;
-                }
-                int temperatureTemp = BytesUtils.bytes2Short(bleData,i+8);
-                int tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
-                float temperature;
-                if(temperatureTemp == 65535){
-                    temperature = -999;
-                }else{
-                    temperature = (temperatureTemp & 0x7fff) * 0.01f * tempPositive;
-                }
-                int doorStatus = (int) bleData[i+10] < 0 ? (int) bleData[i+10] + 256 : (int) bleData[i+10];
-                int online = 1;
-                if(doorStatus == 255){
-                    doorStatus = -999;
-                    online = 0;
-                }
-
-                int rssiTemp = (int) bleData[i + 11] < 0 ? (int) bleData[i + 11] + 256 : (int) bleData[i + 11];
-                int rssi;
-                if(rssiTemp == 255){
-                    rssi = -999;
-                }else{
-                    rssi = rssiTemp - 128;
-                }
-                bleDoorData.setRssi(rssi);
-                bleDoorData.setMac(mac);
-                bleDoorData.setOnline(online);
-                bleDoorData.setDoorStatus(doorStatus);
-                bleDoorData.setVoltage(Float.valueOf(decimalFormat.format(voltage)));
-                bleDoorData.setBatteryPercent(batteryPercent);
-                bleDoorData.setTemp(Float.valueOf(decimalFormat.format(temperature)));
+            for (int i = 2;i+12 <= bleData.length;i+=12){
+                BleDoorData bleDoorData = getBleDoorData(bleData, i, decimalFormat);
                 bleDataList.add(bleDoorData);
             }
         }else if (bleData[0] == 0x00 && bleData[1] == 0x06){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_CTRL);
-            DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            for (int i = 2;i + 12 <= bleData.length;i+=12){
-                BleCtrlData bleCtrlData = new BleCtrlData();
-                byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
-                String mac = BytesUtils.bytes2HexString(macArray, 0);
-                int voltageTmp = (int) bleData[i + 6] < 0 ? (int) bleData[i + 6] + 256 : (int) bleData[i + 6];
-                float voltage;
-                if(voltageTmp == 255){
-                    voltage = -999;
-                }else{
-                    voltage = 2 + 0.01f * voltageTmp;
-                }
-                int batteryPercentTemp = (int) bleData[i + 7] < 0 ? (int) bleData[i + 7] + 256 : (int) bleData[i + 7];
-                int batteryPercent;
-                if(batteryPercentTemp == 255){
-                    batteryPercent = -999;
-                }else{
-                    batteryPercent = batteryPercentTemp;
-                }
-                int temperatureTemp = BytesUtils.bytes2Short(bleData,i+8);
-                int tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
-                float temperature;
-                if(temperatureTemp == 65535){
-                    temperature = -999;
-                }else{
-                    temperature = (temperatureTemp & 0x7fff) * 0.01f * tempPositive;
-                }
-                int CtrlStatus =(int) bleData[i+10] < 0 ? (int) bleData[i+10] + 256 : (int) bleData[i+10];
-                int online = 1;
-                if(CtrlStatus == 255){
-                    CtrlStatus = -999;
-                    online = 0;
-                }
-
-                int rssiTemp = (int) bleData[i + 11] < 0 ? (int) bleData[i + 11] + 256 : (int) bleData[i + 11];
-                int rssi;
-                if(rssiTemp == 255){
-                    rssi = -999;
-                }else{
-                    rssi = rssiTemp - 128;
-                }
-                bleCtrlData.setRssi(rssi);
-                bleCtrlData.setMac(mac);
-                bleCtrlData.setOnline(online);
-                bleCtrlData.setCtrlStatus(CtrlStatus);
-                bleCtrlData.setVoltage(Float.valueOf(decimalFormat.format(voltage)));
-                bleCtrlData.setBatteryPercent(batteryPercent);
-                bleCtrlData.setTemp(Float.valueOf(decimalFormat.format(temperature)));
+            for (int i = 2;i+12 <= bleData.length;i+=12){
+                BleCtrlData bleCtrlData = getBleCtrlData(bleData, i, decimalFormat);
                 bleDataList.add(bleCtrlData);
             }
         }else if (bleData[0] == 0x00 && bleData[1] == 0x07){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_FUEL);
-            DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            for (int i = 2;i+15 <= bleData.length;i+=15){
-                BleFuelData bleFuelData = new BleFuelData();
-                byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
-                String mac = BytesUtils.bytes2HexString(macArray, 0);
-                int voltageTmp = (int) bleData[i + 6] < 0 ? (int) bleData[i + 6] + 256 : (int) bleData[i + 6];
-                float voltage;
-                if(voltageTmp == 255){
-                    voltage = -999;
-                }else{
-                    voltage = 2 + 0.01f * voltageTmp;
-                }
-                int valueTemp = BytesUtils.bytes2Short(bleData,i+7);
-                int value;
-                if(valueTemp == 65535){
-                    value = -999;
-                }else{
-                    value = valueTemp;
-                }
-                int temperatureTemp = BytesUtils.bytes2Short(bleData,i+9);
-                int tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
-                float temperature;
-                if(temperatureTemp == 65535){
-                    temperature = -999;
-                }else{
-                    temperature = (temperatureTemp & 0x7fff) * 0.01f * tempPositive;
-                }
-                int status =(int) bleData[i+13] < 0 ? (int) bleData[i+13] + 256 : (int) bleData[i+13];
-                int online = 1;
-                if(status == 255){
-                    status = 0;
-                    online = 0;
-                }
-                int rssiTemp = (int) bleData[i + 14] < 0 ? (int) bleData[i + 14] + 256 : (int) bleData[i + 14];
-                int rssi;
-                if(rssiTemp == 255){
-                    rssi = -999;
-                }else{
-                    rssi = rssiTemp - 128;
-                }
-                bleFuelData.setRssi(rssi);
-                bleFuelData.setMac(mac);
-                bleFuelData.setOnline(online);
-                bleFuelData.setAlarm(status);
-                bleFuelData.setVoltage(Float.valueOf(decimalFormat.format(voltage)));
-                bleFuelData.setValue(value);
-                bleFuelData.setTemp(Float.valueOf(decimalFormat.format(temperature)));
+            for (int i = 2;i +15 <= bleData.length;i+=15){
+                BleFuelData bleFuelData = getBleFuelData(bleData, i, decimalFormat);
                 bleDataList.add(bleFuelData);
             }
         }
         bluetoothPeripheralDataMessage.setBleDataList(bleDataList);
         return bluetoothPeripheralDataMessage;
+    }
+
+    private BleDriverSignInData getBleDriverSignInDataWithoutLocation(String imei, boolean latlngValid, boolean isHisData, double altitude, double longitude, double latitude, int azimuth, Float speedf, Boolean is_4g_lbs, Integer mcc_4g, Integer mnc_4g, Long eci_4g, Integer tac, Integer pcid_4g_1, Integer pcid_4g_2, Integer pcid_4g_3, Boolean is_2g_lbs, Integer mcc_2g, Integer mnc_2g, Integer lac_2g_1, Integer ci_2g_1, Integer lac_2g_2, Integer ci_2g_2, Integer lac_2g_3, Integer ci_2g_3, byte[] bleData) {
+        BleDriverSignInData bleDriverSignInData = new BleDriverSignInData();
+        byte[] macArray = Arrays.copyOfRange(bleData, 2,8);
+        String mac = BytesUtils.bytes2HexString(macArray, 0);
+        String voltageStr = BytesUtils.bytes2HexString(bleData,8).substring(0, 2);
+        float voltage = 0;
+        try {
+            voltage = Float.valueOf(voltageStr) / 10;
+        }catch (Exception e){
+            System.out.println("imei :" + imei + " ble sos voltage error : " + voltageStr);
+        }
+        byte alertByte = bleData[9];
+        int alert = alertByte == 0x01 ? BleDriverSignInData.ALERT_TYPE_LOW_BATTERY : BleDriverSignInData.ALERT_TYPE_DRIVER;
+
+        bleDriverSignInData.setAlert(alert);
+        bleDriverSignInData.setAltitude(altitude);
+        bleDriverSignInData.setAzimuth(azimuth);
+        bleDriverSignInData.setVoltage(voltage);
+        bleDriverSignInData.setIsHistoryData(isHisData);
+        bleDriverSignInData.setLatitude(latitude);
+        bleDriverSignInData.setLatlngValid(latlngValid);
+        bleDriverSignInData.setLongitude(longitude);
+        bleDriverSignInData.setMac(mac);
+        bleDriverSignInData.setSpeed(speedf);
+        bleDriverSignInData.setIs_4g_lbs(is_4g_lbs);
+        bleDriverSignInData.setIs_2g_lbs(is_2g_lbs);
+        bleDriverSignInData.setMcc_2g(mcc_2g);
+        bleDriverSignInData.setMnc_2g(mnc_2g);
+        bleDriverSignInData.setLac_2g_1(lac_2g_1);
+        bleDriverSignInData.setCi_2g_1(ci_2g_1);
+        bleDriverSignInData.setLac_2g_2(lac_2g_2);
+        bleDriverSignInData.setCi_2g_2(ci_2g_2);
+        bleDriverSignInData.setLac_2g_3(lac_2g_3);
+        bleDriverSignInData.setCi_2g_3(ci_2g_3);
+        bleDriverSignInData.setMcc_4g(mcc_4g);
+        bleDriverSignInData.setMnc_4g(mnc_4g);
+        bleDriverSignInData.setEci_4g(eci_4g);
+        bleDriverSignInData.setTac(tac);
+        bleDriverSignInData.setPcid_4g_1(pcid_4g_1);
+        bleDriverSignInData.setPcid_4g_2(pcid_4g_2);
+        bleDriverSignInData.setPcid_4g_3(pcid_4g_3);
+        return bleDriverSignInData;
+    }
+
+    private BleAlertData getBleAlertDataWithoutLocation(String imei, boolean latlngValid, boolean isHisData, double altitude, double longitude, double latitude, int azimuth, Float speedf, Boolean is_4g_lbs, Integer mcc_4g, Integer mnc_4g, Long eci_4g, Integer tac, Integer pcid_4g_1, Integer pcid_4g_2, Integer pcid_4g_3, Boolean is_2g_lbs, Integer mcc_2g, Integer mnc_2g, Integer lac_2g_1, Integer ci_2g_1, Integer lac_2g_2, Integer ci_2g_2, Integer lac_2g_3, Integer ci_2g_3, byte[] bleData) {
+        BleAlertData bleAlertData = new BleAlertData();
+        byte[] macArray = Arrays.copyOfRange(bleData, 2, 8);
+        String mac = BytesUtils.bytes2HexString(macArray, 0);
+        String voltageStr = BytesUtils.bytes2HexString(bleData,8).substring(0, 2);
+        float voltage = 0;
+        try {
+            voltage = Float.valueOf(voltageStr) / 10;
+        }catch (Exception e){
+            System.out.println("imei :" + imei + " ble sos voltage error : " + voltageStr);
+        }
+        byte alertByte = bleData[9];
+        int alert = alertByte == 0x01 ? BleAlertData.ALERT_TYPE_LOW_BATTERY : BleAlertData.ALERT_TYPE_SOS;
+
+        bleAlertData.setAlertType(alert);
+        bleAlertData.setAltitude(altitude);
+        bleAlertData.setAzimuth(azimuth);
+        bleAlertData.setInnerVoltage(voltage);
+        bleAlertData.setIsHistoryData(isHisData);
+        bleAlertData.setLatitude(latitude);
+        bleAlertData.setLatlngValid(latlngValid);
+        bleAlertData.setLongitude(longitude);
+        bleAlertData.setMac(mac);
+        bleAlertData.setSpeed(speedf);
+        bleAlertData.setIs_4g_lbs(is_4g_lbs);
+        bleAlertData.setIs_2g_lbs(is_2g_lbs);
+        bleAlertData.setMcc_2g(mcc_2g);
+        bleAlertData.setMnc_2g(mnc_2g);
+        bleAlertData.setLac_2g_1(lac_2g_1);
+        bleAlertData.setCi_2g_1(ci_2g_1);
+        bleAlertData.setLac_2g_2(lac_2g_2);
+        bleAlertData.setCi_2g_2(ci_2g_2);
+        bleAlertData.setLac_2g_3(lac_2g_3);
+        bleAlertData.setCi_2g_3(ci_2g_3);
+        bleAlertData.setMcc_4g(mcc_4g);
+        bleAlertData.setMnc_4g(mnc_4g);
+        bleAlertData.setEci_4g(eci_4g);
+        bleAlertData.setTac(tac);
+        bleAlertData.setPcid_4g_1(pcid_4g_1);
+        bleAlertData.setPcid_4g_2(pcid_4g_2);
+        bleAlertData.setPcid_4g_3(pcid_4g_3);
+        return bleAlertData;
     }
 
 
@@ -1112,513 +1091,597 @@ public class PersonalAssetMsgDecoder {
             return bluetoothPeripheralDataMessage;
         }
         List<BleData> bleDataList = new ArrayList<BleData>();
-        if(bleData[0] == 0x00 && bleData[1] == 0x01){
+        DecimalFormat decimalFormat = new DecimalFormat("0.00");
+        if(bleData[0] == 0x00 && bleData[1] == 0x00){
+            bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_MIX);
+            int positionIndex = 2;
+            while (positionIndex + 2 < bleData.length ){
+                if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x01){
+                    positionIndex+=2;
+                    if(positionIndex + 10 <= bleData.length){
+                        BleTireData bleTireData = getBleTireData(bleData, positionIndex);
+                        bleDataList.add(bleTireData);
+                        positionIndex += 10;
+                        continue;
+                    }else{
+                        break;
+                    }
+
+                }else if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x02){
+                    positionIndex+=2;
+                    if(positionIndex + 25 <= bleData.length){
+                        BleAlertData bleAlertData = getBleAlertData(imei, bleData);
+                        bleDataList.add(bleAlertData);
+                        positionIndex += 25;
+                        continue;
+                    }else{
+                        break;
+                    }
+                }else if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x03){
+                    positionIndex+=2;
+                    if(positionIndex + 25 <= bleData.length){
+                        BleDriverSignInData bleDriverSignInData = getBleDriverSignInData(imei, bleData);
+                        bleDataList.add(bleDriverSignInData);
+                        positionIndex += 25;
+                        continue;
+                    }else{
+                        break;
+                    }
+                }else if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x04){
+                    positionIndex+=2;
+                    if(positionIndex + 15 <= bleData.length){
+                        BleTempData bleTempData = getBleTempData(bleData, positionIndex, decimalFormat);
+                        bleDataList.add(bleTempData);
+                        positionIndex += 15;
+                        continue;
+                    }else{
+                        break;
+                    }
+                }else if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x05){
+                    positionIndex+=2;
+                    if(positionIndex + 12 <= bleData.length){
+                        BleDoorData bleDoorData = getBleDoorData(bleData, positionIndex, decimalFormat);
+                        bleDataList.add(bleDoorData);
+                        positionIndex += 12;
+                        continue;
+                    }else{
+                        break;
+                    }
+                }else if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x06){
+                    positionIndex+=2;
+                    if(positionIndex + 12 <= bleData.length){
+                        BleCtrlData bleCtrlData = getBleCtrlData(bleData, positionIndex, decimalFormat);
+                        bleDataList.add(bleCtrlData);
+                        positionIndex += 12;
+                        continue;
+                    }else{
+                        break;
+                    }
+                }else if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x07){
+                    positionIndex+=2;
+                    if(positionIndex + 15 <= bleData.length){
+                        BleFuelData bleFuelData = getBleFuelData(bleData, positionIndex, decimalFormat);
+                        bleDataList.add(bleFuelData);
+                        positionIndex += 15;
+                        continue;
+                    }else{
+                        break;
+                    }
+                }else{
+                    break;
+                }
+            }
+
+        }
+        else if(bleData[0] == 0x00 && bleData[1] == 0x01){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_TIRE);
             for (int i = 2;i+10 <= bleData.length;i+=10){
-                BleTireData bleTireData = new BleTireData();
-                byte[] macArray = Arrays.copyOfRange(bleData, i, i + 6);
-                String mac = BytesUtils.bytes2HexString(macArray, 0);
-                int voltageTmp = (int) bleData[i + 6] < 0 ? (int) bleData[i + 6] + 256 : (int) bleData[i + 6];
-                double voltage;
-                if(voltageTmp == 255){
-                    voltage = -999;
-                }else{
-                    voltage = 1.22 + 0.01 * voltageTmp;
-                }
-                int airPressureTmp = (int) bleData[i + 7] < 0 ? (int) bleData[i + 7] + 256 : (int) bleData[i + 7];
-                double airPressure;
-                if(airPressureTmp == 255){
-                    airPressure = -999;
-                }else{
-                    airPressure = 1.572 * 2 * airPressureTmp;
-                }
-                int airTempTmp = (int) bleData[i + 8] < 0 ? (int) bleData[i + 8] + 256 : (int) bleData[i + 8];
-                int airTemp;
-                if(airTempTmp == 255){
-                    airTemp = -999;
-                }else{
-                    airTemp = airTempTmp - 55;
-                }
-//            boolean isTireLeaks = (bleData[i+5] == 0x01);
-                bleTireData.setMac(mac);
-                bleTireData.setVoltage(voltage);
-                bleTireData.setAirPressure(airPressure);
-                bleTireData.setAirTemp(airTemp);
-//            bleTireData.setIsTireLeaks(isTireLeaks);
-                int alarm = (int) bleData[i + 9];
-                if(alarm == -1){
-                    alarm = 0;
-                }
-                bleTireData.setStatus(alarm);
+                BleTireData bleTireData = getBleTireData(bleData, i);
                 bleDataList.add(bleTireData);
             }
         }else if (bleData[0] == 0x00 && bleData[1] == 0x02){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_SOS);
-            BleAlertData bleAlertData = new BleAlertData();
-            byte[] macArray = Arrays.copyOfRange(bleData, 2, 8);
-            String mac = BytesUtils.bytes2HexString(macArray, 0);
-            String voltageStr = BytesUtils.bytes2HexString(bleData,8).substring(0, 2);
-            float voltage = 0;
-            try {
-                voltage = Float.valueOf(voltageStr) / 10;
-            }catch (Exception e){
-                System.out.println("imei :" + imei + " ble sos voltage error : " + voltageStr);
-            }
-            byte alertByte = bleData[9];
-            int alert = alertByte == 0x01 ? BleAlertData.ALERT_TYPE_LOW_BATTERY : BleAlertData.ALERT_TYPE_SOS;
-            boolean isHistoryData = (bleData[10] & 0x80) != 0x00;
-            boolean latlngValid = (bleData[10] & 0x40) != 0x00;
-            int satelliteNumber = bleData[10] & 0x1F;
-            double altitude = latlngValid? BytesUtils.bytes2Float(bleData, 11) : 0.0;
-            double longitude = latlngValid ? BytesUtils.bytes2Float(bleData, 15) : 0.0;
-            double latitude = latlngValid ? BytesUtils.bytes2Float(bleData, 19) : 0.0;
-            int azimuth = latlngValid ? BytesUtils.bytes2Short(bleData, 25) : 0;
-            Float speedf = 0.0f;
-            if (latlngValid){
-                try{
-                    byte[] bytesSpeed = Arrays.copyOfRange(bleData, 23, 25);
-                    String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
-                    if(strSp.contains("f")){
-                        speedf = -1f;
-                    }else {
-                        speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
-                    }
-                }catch (Exception e){
-                    System.out.println("Imei : " + imei);
-                    e.printStackTrace();
-                }
-            }
-            Boolean is_4g_lbs = false;
-            Integer mcc_4g = null;
-            Integer mnc_4g = null;
-            Long eci_4g = null;
-            Integer tac = null;
-            Integer pcid_4g_1 = null;
-            Integer pcid_4g_2 = null;
-            Integer pcid_4g_3 = null;
-            Boolean is_2g_lbs = false;
-            Integer mcc_2g = null;
-            Integer mnc_2g = null;
-            Integer lac_2g_1 = null;
-            Integer ci_2g_1 = null;
-            Integer lac_2g_2 = null;
-            Integer ci_2g_2 = null;
-            Integer lac_2g_3 = null;
-            Integer ci_2g_3 = null;
-            if (!latlngValid){
-                byte lbsByte = bleData[11];
-                if ((lbsByte & 0x80) == 0x80){
-                    is_4g_lbs = true;
-                }else{
-                    is_2g_lbs = true;
-                }
-            }
-            if (is_2g_lbs){
-                mcc_2g = BytesUtils.bytes2Short(bleData,11);
-                mnc_2g = BytesUtils.bytes2Short(bleData,13);
-                lac_2g_1 = BytesUtils.bytes2Short(bleData,15);
-                ci_2g_1 = BytesUtils.bytes2Short(bleData,17);
-                lac_2g_2 = BytesUtils.bytes2Short(bleData,19);
-                ci_2g_2 = BytesUtils.bytes2Short(bleData,21);
-                lac_2g_3 = BytesUtils.bytes2Short(bleData,23);
-                ci_2g_3 = BytesUtils.bytes2Short(bleData,25);
-            }
-            if (is_4g_lbs){
-                mcc_4g = BytesUtils.bytes2Short(bleData,11) & 0x7FFF;
-                mnc_4g = BytesUtils.bytes2Short(bleData,13);
-                eci_4g = BytesUtils.unsigned4BytesToInt(bleData, 15);
-                tac = BytesUtils.bytes2Short(bleData, 19);
-                pcid_4g_1 = BytesUtils.bytes2Short(bleData, 21);
-                pcid_4g_2 = BytesUtils.bytes2Short(bleData, 23);
-                pcid_4g_3 = BytesUtils.bytes2Short(bleData,25);
-            }
-            bleAlertData.setAlertType(alert);
-            bleAlertData.setAltitude(altitude);
-            bleAlertData.setAzimuth(azimuth);
-            bleAlertData.setInnerVoltage(voltage);
-            bleAlertData.setIsHistoryData(isHistoryData);
-            bleAlertData.setLatitude(latitude);
-            bleAlertData.setLatlngValid(latlngValid);
-            bleAlertData.setSatelliteCount(satelliteNumber);
-            bleAlertData.setLongitude(longitude);
-            bleAlertData.setMac(mac);
-            bleAlertData.setSpeed(speedf);
-            bleAlertData.setIs_4g_lbs(is_4g_lbs);
-            bleAlertData.setIs_2g_lbs(is_2g_lbs);
-            bleAlertData.setMcc_2g(mcc_2g);
-            bleAlertData.setMnc_2g(mnc_2g);
-            bleAlertData.setLac_2g_1(lac_2g_1);
-            bleAlertData.setCi_2g_1(ci_2g_1);
-            bleAlertData.setLac_2g_2(lac_2g_2);
-            bleAlertData.setCi_2g_2(ci_2g_2);
-            bleAlertData.setLac_2g_3(lac_2g_3);
-            bleAlertData.setCi_2g_3(ci_2g_3);
-            bleAlertData.setMcc_4g(mcc_4g);
-            bleAlertData.setMnc_4g(mnc_4g);
-            bleAlertData.setEci_4g(eci_4g);
-            bleAlertData.setTac(tac);
-            bleAlertData.setPcid_4g_1(pcid_4g_1);
-            bleAlertData.setPcid_4g_2(pcid_4g_2);
-            bleAlertData.setPcid_4g_3(pcid_4g_3);
+            BleAlertData bleAlertData = getBleAlertData(imei, bleData);
             bleDataList.add(bleAlertData);
         }else if (bleData[0] == 0x00 && bleData[1] == 0x03){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_DRIVER);
-            BleDriverSignInData bleDriverSignInData = new BleDriverSignInData();
-            byte[] macArray = Arrays.copyOfRange(bleData, 2,8);
-            String mac = BytesUtils.bytes2HexString(macArray, 0);
-            String voltageStr = BytesUtils.bytes2HexString(bleData,8).substring(0, 2);
-            float voltage = 0;
-            try {
-                voltage = Float.valueOf(voltageStr) / 10;
-            }catch (Exception e){
-                System.out.println("imei :" + imei + " ble sos voltage error : " + voltageStr);
-            }
-            byte alertByte = bleData[9];
-            int alert = alertByte == 0x01 ? BleDriverSignInData.ALERT_TYPE_LOW_BATTERY : BleDriverSignInData.ALERT_TYPE_DRIVER;
-            boolean isHistoryData = (bleData[10] & 0x80) != 0x00;
-            boolean latlngValid = (bleData[10] & 0x40) != 0x00;
-            int satelliteNumber = bleData[10] & 0x1F;
-            double altitude = latlngValid? BytesUtils.bytes2Float(bleData, 11) : 0.0;
-            double longitude = latlngValid ? BytesUtils.bytes2Float(bleData, 15) : 0.0;
-            double latitude = latlngValid ? BytesUtils.bytes2Float(bleData, 19) : 0.0;
-            int azimuth = latlngValid ? BytesUtils.bytes2Short(bleData, 25) : 0;
-            Float speedf = 0.0f;
-            if (latlngValid){
-                try{
-                    byte[] bytesSpeed = Arrays.copyOfRange(bleData, 23, 25);
-                    String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
-                    if(strSp.contains("f")){
-                        speedf = -1f;
-                    }else {
-                        speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
-                    }
-                }catch (Exception e){
-                    System.out.println("Imei : " + imei);
-                    e.printStackTrace();
-                }
-            }
-            Boolean is_4g_lbs = false;
-            Integer mcc_4g = null;
-            Integer mnc_4g = null;
-            Long eci_4g = null;
-            Integer tac = null;
-            Integer pcid_4g_1 = null;
-            Integer pcid_4g_2 = null;
-            Integer pcid_4g_3 = null;
-            Boolean is_2g_lbs = false;
-            Integer mcc_2g = null;
-            Integer mnc_2g = null;
-            Integer lac_2g_1 = null;
-            Integer ci_2g_1 = null;
-            Integer lac_2g_2 = null;
-            Integer ci_2g_2 = null;
-            Integer lac_2g_3 = null;
-            Integer ci_2g_3 = null;
-            if (!latlngValid){
-                byte lbsByte = bleData[11];
-                if ((lbsByte & 0x8) == 0x8){
-                    is_4g_lbs = true;
-                }else{
-                    is_2g_lbs = true;
-                }
-            }
-            if (is_2g_lbs){
-                mcc_2g = BytesUtils.bytes2Short(bleData,11);
-                mnc_2g = BytesUtils.bytes2Short(bleData,13);
-                lac_2g_1 = BytesUtils.bytes2Short(bleData,15);
-                ci_2g_1 = BytesUtils.bytes2Short(bleData,17);
-                lac_2g_2 = BytesUtils.bytes2Short(bleData,19);
-                ci_2g_2 = BytesUtils.bytes2Short(bleData,21);
-                lac_2g_3 = BytesUtils.bytes2Short(bleData,23);
-                ci_2g_3 = BytesUtils.bytes2Short(bleData,25);
-            }
-            if (is_4g_lbs){
-                mcc_4g = BytesUtils.bytes2Short(bleData,11) & 0x7FFF;
-                mnc_4g = BytesUtils.bytes2Short(bleData,13);
-                eci_4g = BytesUtils.unsigned4BytesToInt(bleData, 15);
-                tac = BytesUtils.bytes2Short(bleData, 19);
-                pcid_4g_1 = BytesUtils.bytes2Short(bleData, 21);
-                pcid_4g_2 = BytesUtils.bytes2Short(bleData, 23);
-                pcid_4g_3 = BytesUtils.bytes2Short(bleData,25);
-            }
-            bleDriverSignInData.setAlert(alert);
-            bleDriverSignInData.setAltitude(altitude);
-            bleDriverSignInData.setAzimuth(azimuth);
-            bleDriverSignInData.setVoltage(voltage);
-            bleDriverSignInData.setIsHistoryData(isHistoryData);
-            bleDriverSignInData.setLatitude(latitude);
-            bleDriverSignInData.setLatlngValid(latlngValid);
-            bleDriverSignInData.setSatelliteCount(satelliteNumber);
-            bleDriverSignInData.setLongitude(longitude);
-            bleDriverSignInData.setMac(mac);
-            bleDriverSignInData.setSpeed(speedf);
-            bleDriverSignInData.setIs_4g_lbs(is_4g_lbs);
-            bleDriverSignInData.setIs_2g_lbs(is_2g_lbs);
-            bleDriverSignInData.setMcc_2g(mcc_2g);
-            bleDriverSignInData.setMnc_2g(mnc_2g);
-            bleDriverSignInData.setLac_2g_1(lac_2g_1);
-            bleDriverSignInData.setCi_2g_1(ci_2g_1);
-            bleDriverSignInData.setLac_2g_2(lac_2g_2);
-            bleDriverSignInData.setCi_2g_2(ci_2g_2);
-            bleDriverSignInData.setLac_2g_3(lac_2g_3);
-            bleDriverSignInData.setCi_2g_3(ci_2g_3);
-            bleDriverSignInData.setMcc_4g(mcc_4g);
-            bleDriverSignInData.setMnc_4g(mnc_4g);
-            bleDriverSignInData.setEci_4g(eci_4g);
-            bleDriverSignInData.setTac(tac);
-            bleDriverSignInData.setPcid_4g_1(pcid_4g_1);
-            bleDriverSignInData.setPcid_4g_2(pcid_4g_2);
-            bleDriverSignInData.setPcid_4g_3(pcid_4g_3);
+            BleDriverSignInData bleDriverSignInData = getBleDriverSignInData(imei, bleData);
             bleDataList.add(bleDriverSignInData);
         }else if (bleData[0] == 0x00 && bleData[1] == 0x04){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_TEMP);
-            DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            for (int i = 2;i+15 <= bleData.length;i+=15){
-                BleTempData bleTempData = new BleTempData();
-                byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
-                String mac = BytesUtils.bytes2HexString(macArray, 0);
-                if(mac.startsWith("0000")){
-                    mac = mac.substring(4,12);
-                }
-                int voltageTmp = (int) bleData[i + 6] < 0 ? (int) bleData[i + 6] + 256 : (int) bleData[i + 6];
-                float voltage;
-                if(voltageTmp == 255){
-                    voltage = -999;
-                }else{
-                    voltage = 2 + 0.01f * voltageTmp;
-                }
-                int batteryPercentTemp = (int) bleData[i + 7] < 0 ? (int) bleData[i + 7] + 256 : (int) bleData[i + 7];
-                int batteryPercent;
-                if(batteryPercentTemp == 255){
-                    batteryPercent = -999;
-                }else{
-                    batteryPercent = batteryPercentTemp;
-                }
-                int temperatureTemp = BytesUtils.bytes2Short(bleData,i+8);
-                int tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
-                float temperature;
-                if(temperatureTemp == 65535){
-                    temperature = -999;
-                }else{
-                    temperature = (temperatureTemp & 0x7fff) * 0.01f * tempPositive;
-                }
-                int humidityTemp = BytesUtils.bytes2Short(bleData,i+10);
-                float humidity;
-                if(humidityTemp == 65535){
-                    humidity = -999;
-                }else{
-                    humidity = humidityTemp * 0.01f;
-                }
-                int lightTemp = BytesUtils.bytes2Short(bleData,i+12);
-                int lightIntensity ;
-                if(lightTemp == 65535){
-                    lightIntensity = -999;
-                }else{
-                    lightIntensity = lightTemp & 0x0001;
-                }
-                int rssiTemp = (int) bleData[i + 14] < 0 ? (int) bleData[i + 14] + 256 : (int) bleData[i + 14];
-                int rssi;
-                if(rssiTemp == 255){
-                    rssi = -999;
-                }else{
-                    rssi = rssiTemp - 128;
-                }
-                bleTempData.setRssi(rssi);
-                bleTempData.setMac(mac);
-                bleTempData.setLightIntensity(lightIntensity);
-                bleTempData.setHumidity(Float.valueOf(decimalFormat.format(humidity)));
-                bleTempData.setVoltage(Float.valueOf(decimalFormat.format(voltage)));
-                bleTempData.setBatteryPercent(batteryPercent);
-                bleTempData.setTemp(Float.valueOf(decimalFormat.format(temperature)));
+            for (int i = 2;i +15 <= bleData.length;i+=15){
+                BleTempData bleTempData = getBleTempData(bleData, i, decimalFormat);
                 bleDataList.add(bleTempData);
             }
         }else if (bleData[0] == 0x00 && bleData[1] == 0x05){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_DOOR);
-            DecimalFormat decimalFormat = new DecimalFormat("0.00");
             for (int i = 2;i+12 <= bleData.length;i+=12){
-                BleDoorData bleDoorData = new BleDoorData();
-                byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
-                String mac = BytesUtils.bytes2HexString(macArray, 0);
-                int voltageTmp = (int) bleData[i + 6] < 0 ? (int) bleData[i + 6] + 256 : (int) bleData[i + 6];
-                float voltage;
-                if(voltageTmp == 255){
-                    voltage = -999;
-                }else{
-                    voltage = 2 + 0.01f * voltageTmp;
-                }
-                int batteryPercentTemp = (int) bleData[i + 7] < 0 ? (int) bleData[i + 7] + 256 : (int) bleData[i + 7];
-                int batteryPercent;
-                if(batteryPercentTemp == 255){
-                    batteryPercent = -999;
-                }else{
-                    batteryPercent = batteryPercentTemp;
-                }
-                int temperatureTemp = BytesUtils.bytes2Short(bleData,i+8);
-                int tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
-                float temperature;
-                if(temperatureTemp == 65535){
-                    temperature = -999;
-                }else{
-                    temperature = (temperatureTemp & 0x7fff) * 0.01f * tempPositive;
-                }
-                int doorStatus = (int) bleData[i+10] < 0 ? (int) bleData[i+10] + 256 : (int) bleData[i+10];
-                int online = 1;
-                if(doorStatus == 255){
-                    doorStatus = -999;
-                    online = 0;
-                }
-
-                int rssiTemp = (int) bleData[i + 11] < 0 ? (int) bleData[i + 11] + 256 : (int) bleData[i + 11];
-                int rssi;
-                if(rssiTemp == 255){
-                    rssi = -999;
-                }else{
-                    rssi = rssiTemp - 128;
-                }
-                bleDoorData.setRssi(rssi);
-                bleDoorData.setMac(mac);
-                bleDoorData.setOnline(online);
-                bleDoorData.setDoorStatus(doorStatus);
-                bleDoorData.setVoltage(Float.valueOf(decimalFormat.format(voltage)));
-                bleDoorData.setBatteryPercent(batteryPercent);
-                bleDoorData.setTemp(Float.valueOf(decimalFormat.format(temperature)));
+                BleDoorData bleDoorData = getBleDoorData(bleData, i, decimalFormat);
                 bleDataList.add(bleDoorData);
             }
         }else if (bleData[0] == 0x00 && bleData[1] == 0x06){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_CTRL);
-            DecimalFormat decimalFormat = new DecimalFormat("0.00");
             for (int i = 2;i+12 <= bleData.length;i+=12){
-                BleCtrlData bleCtrlData = new BleCtrlData();
-                byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
-                String mac = BytesUtils.bytes2HexString(macArray, 0);
-                int voltageTmp = (int) bleData[i + 6] < 0 ? (int) bleData[i + 6] + 256 : (int) bleData[i + 6];
-                float voltage;
-                if(voltageTmp == 255){
-                    voltage = -999;
-                }else{
-                    voltage = 2 + 0.01f * voltageTmp;
-                }
-                int batteryPercentTemp = (int) bleData[i + 7] < 0 ? (int) bleData[i + 7] + 256 : (int) bleData[i + 7];
-                int batteryPercent;
-                if(batteryPercentTemp == 255){
-                    batteryPercent = -999;
-                }else{
-                    batteryPercent = batteryPercentTemp;
-                }
-                int temperatureTemp = BytesUtils.bytes2Short(bleData,i+8);
-                int tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
-                float temperature;
-                if(temperatureTemp == 65535){
-                    temperature = -999;
-                }else{
-                    temperature = (temperatureTemp & 0x7fff) * 0.01f * tempPositive;
-                }
-                int CtrlStatus = (int) bleData[i+10] < 0 ? (int) bleData[i+10] + 256 : (int) bleData[i+10];
-                int online = 1;
-                if(CtrlStatus == 255){
-                    CtrlStatus = -999;
-                    online = 0;
-                }
-
-                int rssiTemp = (int) bleData[i + 11] < 0 ? (int) bleData[i + 11] + 256 : (int) bleData[i + 11];
-                int rssi;
-                if(rssiTemp == 255){
-                    rssi = -999;
-                }else{
-                    rssi = rssiTemp - 128;
-                }
-                bleCtrlData.setRssi(rssi);
-                bleCtrlData.setMac(mac);
-                bleCtrlData.setOnline(online);
-                bleCtrlData.setCtrlStatus(CtrlStatus);
-                bleCtrlData.setVoltage(Float.valueOf(decimalFormat.format(voltage)));
-                bleCtrlData.setBatteryPercent(batteryPercent);
-                bleCtrlData.setTemp(Float.valueOf(decimalFormat.format(temperature)));
+                BleCtrlData bleCtrlData = getBleCtrlData(bleData, i, decimalFormat);
                 bleDataList.add(bleCtrlData);
             }
-        }else if (bleData[0] == 0x00 && bleData[1] == 0x07){
+        }else if (bleData[0] == 0x00 && bleData[1] == 0x07) {
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_FUEL);
-            DecimalFormat decimalFormat = new DecimalFormat("0.00");
             for (int i = 2;i+15 <= bleData.length;i+=15){
-                BleFuelData bleFuelData = new BleFuelData();
-                byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
-                String mac = BytesUtils.bytes2HexString(macArray, 0);
-                int voltageTmp = (int) bleData[i + 6] < 0 ? (int) bleData[i + 6] + 256 : (int) bleData[i + 6];
-                float voltage;
-                if(voltageTmp == 255){
-                    voltage = -999;
-                }else{
-                    voltage = 2 + 0.01f * voltageTmp;
-                }
-                int valueTemp = BytesUtils.bytes2Short(bleData,i+7);
-                int value;
-                if(valueTemp == 65535){
-                    value = -999;
-                }else{
-                    value = valueTemp;
-                }
-                int temperatureTemp = BytesUtils.bytes2Short(bleData,i+9);
-                int tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
-                float temperature;
-                if(temperatureTemp == 65535){
-                    temperature = -999;
-                }else{
-                    temperature = (temperatureTemp & 0x7fff) * 0.01f * tempPositive;
-                }
-                int status =(int) bleData[i+13] < 0 ? (int) bleData[i+13] + 256 : (int) bleData[i+13];
-                int online = 1;
-                if(status == 255){
-                    status = 0;
-                    online = 0;
-                }
-                int rssiTemp = (int) bleData[i + 14] < 0 ? (int) bleData[i + 14] + 256 : (int) bleData[i + 14];
-                int rssi;
-                if(rssiTemp == 255){
-                    rssi = -999;
-                }else{
-                    rssi = rssiTemp - 128;
-                }
-                bleFuelData.setRssi(rssi);
-                bleFuelData.setMac(mac);
-                bleFuelData.setOnline(online);
-                bleFuelData.setAlarm(status);
-                bleFuelData.setVoltage(Float.valueOf(decimalFormat.format(voltage)));
-                bleFuelData.setValue(value);
-                bleFuelData.setTemp(Float.valueOf(decimalFormat.format(temperature)));
+                BleFuelData bleFuelData = getBleFuelData(bleData, i, decimalFormat);
                 bleDataList.add(bleFuelData);
-            }
-        }else if (bleData[0] == 0x00 && bleData[1] == 0x0d){
-            bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_Customer2397);
-            int i = 2;
-            while (i + 8 < bleData.length){
-                BleCustomer2397SensorData bleCustomer2397SensorData = new BleCustomer2397SensorData();
-                byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
-                String mac = BytesUtils.bytes2HexString(macArray, 0);
-                i+=6;
-                i+=1;
-                int rawDataLen = bleData[i] < 0 ? bleData[i] + 256 : bleData[i];
-                if(i + rawDataLen >= bleData.length || rawDataLen < 1){
-                    break;
-                }
-                i += 1;
-                byte[] rawData = Arrays.copyOfRange(bleData,i,i+rawDataLen-1);
-                i += rawDataLen - 1;
-                int rssiTemp = (int) bleData[i] < 0 ? (int) bleData[i] + 256 : (int) bleData[i];
-                int rssi;
-                if(rssiTemp == 255){
-                    rssi = -999;
-                }else{
-                    rssi = rssiTemp - 128;
-                }
-                i += 1;
-                bleCustomer2397SensorData.setRawData(rawData);
-                bleCustomer2397SensorData.setMac(mac);
-                bleCustomer2397SensorData.setRssi(rssi);
-                bleDataList.add(bleCustomer2397SensorData);
             }
         }
         bluetoothPeripheralDataMessage.setBleDataList(bleDataList);
         return bluetoothPeripheralDataMessage;
+    }
+
+    private BleFuelData getBleFuelData(byte[] bleData, int i, DecimalFormat decimalFormat) {
+        BleFuelData bleFuelData = new BleFuelData();
+        byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
+        String mac = BytesUtils.bytes2HexString(macArray, 0);
+        int voltageTmp = (int) bleData[i + 6] < 0 ? (int) bleData[i + 6] + 256 : (int) bleData[i + 6];
+        float voltage;
+        if(voltageTmp == 255){
+            voltage = -999;
+        }else{
+            voltage = 2 + 0.01f * voltageTmp;
+        }
+        int valueTemp = BytesUtils.bytes2Short(bleData, i +7);
+        int value;
+        if(valueTemp == 65535){
+            value = -999;
+        }else{
+            value = valueTemp;
+        }
+        int temperatureTemp = BytesUtils.bytes2Short(bleData, i +9);
+        int tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
+        float temperature;
+        if(temperatureTemp == 65535){
+            temperature = -999;
+        }else{
+            temperature = (temperatureTemp & 0x7fff) * 0.01f * tempPositive;
+        }
+        int status =(int) bleData[i +13] < 0 ? (int) bleData[i +13] + 256 : (int) bleData[i +13];
+        int online = 1;
+        if(status == 255){
+            status = 0;
+            online = 0;
+        }
+        int rssiTemp = (int) bleData[i + 14] < 0 ? (int) bleData[i + 14] + 256 : (int) bleData[i + 14];
+        int rssi;
+        if(rssiTemp == 255){
+            rssi = -999;
+        }else{
+            rssi = rssiTemp - 128;
+        }
+        bleFuelData.setRssi(rssi);
+        bleFuelData.setMac(mac);
+        bleFuelData.setOnline(online);
+        bleFuelData.setAlarm(status);
+        bleFuelData.setVoltage(Float.valueOf(decimalFormat.format(voltage)));
+        bleFuelData.setValue(value);
+        bleFuelData.setTemp(Float.valueOf(decimalFormat.format(temperature)));
+        return bleFuelData;
+    }
+
+    private BleCtrlData getBleCtrlData(byte[] bleData, int i, DecimalFormat decimalFormat) {
+        BleCtrlData bleCtrlData = new BleCtrlData();
+        byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
+        String mac = BytesUtils.bytes2HexString(macArray, 0);
+        int voltageTmp = (int) bleData[i + 6] < 0 ? (int) bleData[i + 6] + 256 : (int) bleData[i + 6];
+        float voltage;
+        if(voltageTmp == 255){
+            voltage = -999;
+        }else{
+            voltage = 2 + 0.01f * voltageTmp;
+        }
+        int batteryPercentTemp = (int) bleData[i + 7] < 0 ? (int) bleData[i + 7] + 256 : (int) bleData[i + 7];
+        int batteryPercent;
+        if(batteryPercentTemp == 255){
+            batteryPercent = -999;
+        }else{
+            batteryPercent = batteryPercentTemp;
+        }
+        int temperatureTemp = BytesUtils.bytes2Short(bleData, i +8);
+        int tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
+        float temperature;
+        if(temperatureTemp == 65535){
+            temperature = -999;
+        }else{
+            temperature = (temperatureTemp & 0x7fff) * 0.01f * tempPositive;
+        }
+        int CtrlStatus = (int) bleData[i +10] < 0 ? (int) bleData[i +10] + 256 : (int) bleData[i +10];
+        int online = 1;
+        if(CtrlStatus == 255){
+            CtrlStatus = -999;
+            online = 0;
+        }
+
+        int rssiTemp = (int) bleData[i + 11] < 0 ? (int) bleData[i + 11] + 256 : (int) bleData[i + 11];
+        int rssi;
+        if(rssiTemp == 255){
+            rssi = -999;
+        }else{
+            rssi = rssiTemp - 128;
+        }
+        bleCtrlData.setRssi(rssi);
+        bleCtrlData.setMac(mac);
+        bleCtrlData.setOnline(online);
+        bleCtrlData.setCtrlStatus(CtrlStatus);
+        bleCtrlData.setVoltage(Float.valueOf(decimalFormat.format(voltage)));
+        bleCtrlData.setBatteryPercent(batteryPercent);
+        bleCtrlData.setTemp(Float.valueOf(decimalFormat.format(temperature)));
+        return bleCtrlData;
+    }
+
+    private BleDoorData getBleDoorData(byte[] bleData, int i, DecimalFormat decimalFormat) {
+        BleDoorData bleDoorData = new BleDoorData();
+        byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
+        String mac = BytesUtils.bytes2HexString(macArray, 0);
+        int voltageTmp = (int) bleData[i + 6] < 0 ? (int) bleData[i + 6] + 256 : (int) bleData[i + 6];
+        float voltage;
+        if(voltageTmp == 255){
+            voltage = -999;
+        }else{
+            voltage = 2 + 0.01f * voltageTmp;
+        }
+        int batteryPercentTemp = (int) bleData[i + 7] < 0 ? (int) bleData[i + 7] + 256 : (int) bleData[i + 7];
+        int batteryPercent;
+        if(batteryPercentTemp == 255){
+            batteryPercent = -999;
+        }else{
+            batteryPercent = batteryPercentTemp;
+        }
+        int temperatureTemp = BytesUtils.bytes2Short(bleData, i +8);
+        int tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
+        float temperature;
+        if(temperatureTemp == 65535){
+            temperature = -999;
+        }else{
+            temperature = (temperatureTemp & 0x7fff) * 0.01f * tempPositive;
+        }
+        int doorStatus = (int) bleData[i +10] < 0 ? (int) bleData[i +10] + 256 : (int) bleData[i +10];
+        int online = 1;
+        if(doorStatus == 255){
+            doorStatus = -999;
+            online = 0;
+        }
+
+        int rssiTemp = (int) bleData[i + 11] < 0 ? (int) bleData[i + 11] + 256 : (int) bleData[i + 11];
+        int rssi;
+        if(rssiTemp == 255){
+            rssi = -999;
+        }else{
+            rssi = rssiTemp - 128;
+        }
+        bleDoorData.setRssi(rssi);
+        bleDoorData.setMac(mac);
+        bleDoorData.setOnline(online);
+        bleDoorData.setDoorStatus(doorStatus);
+        bleDoorData.setVoltage(Float.valueOf(decimalFormat.format(voltage)));
+        bleDoorData.setBatteryPercent(batteryPercent);
+        bleDoorData.setTemp(Float.valueOf(decimalFormat.format(temperature)));
+        return bleDoorData;
+    }
+
+    private BleTempData getBleTempData(byte[] bleData, int i, DecimalFormat decimalFormat) {
+        BleTempData bleTempData = new BleTempData();
+        byte[] macArray = Arrays.copyOfRange(bleData, i + 0, i + 6);
+        String mac = BytesUtils.bytes2HexString(macArray, 0);
+        if(mac.startsWith("0000")){
+            mac = mac.substring(4,12);
+        }
+        int voltageTmp = (int) bleData[i + 6] < 0 ? (int) bleData[i + 6] + 256 : (int) bleData[i + 6];
+        float voltage;
+        if(voltageTmp == 255){
+            voltage = -999;
+        }else{
+            voltage = 2 + 0.01f * voltageTmp;
+        }
+        int batteryPercentTemp = (int) bleData[i + 7] < 0 ? (int) bleData[i + 7] + 256 : (int) bleData[i + 7];
+        int batteryPercent;
+        if(batteryPercentTemp == 255){
+            batteryPercent = -999;
+        }else{
+            batteryPercent = batteryPercentTemp;
+        }
+        int temperatureTemp = BytesUtils.bytes2Short(bleData, i +8);
+        int tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
+        float temperature;
+        if(temperatureTemp == 65535){
+            temperature = -999;
+        }else{
+            temperature = (temperatureTemp & 0x7fff) * 0.01f * tempPositive;
+        }
+        int humidityTemp = BytesUtils.bytes2Short(bleData, i +10);
+        float humidity;
+        if(humidityTemp == 65535){
+            humidity = -999;
+        }else{
+            humidity = humidityTemp * 0.01f;
+        }
+        int lightTemp = BytesUtils.bytes2Short(bleData, i +12);
+        int lightIntensity ;
+        if(lightTemp == 65535){
+            lightIntensity = -999;
+        }else{
+            lightIntensity = lightTemp & 0x0001;
+        }
+        int rssiTemp = (int) bleData[i + 14] < 0 ? (int) bleData[i + 14] + 256 : (int) bleData[i + 14];
+        int rssi;
+        if(rssiTemp == 255){
+            rssi = -999;
+        }else{
+            rssi = rssiTemp - 128;
+        }
+        bleTempData.setRssi(rssi);
+        bleTempData.setMac(mac);
+        bleTempData.setLightIntensity(lightIntensity);
+        bleTempData.setHumidity(Float.valueOf(decimalFormat.format(humidity)));
+        bleTempData.setVoltage(Float.valueOf(decimalFormat.format(voltage)));
+        bleTempData.setBatteryPercent(batteryPercent);
+        bleTempData.setTemp(Float.valueOf(decimalFormat.format(temperature)));
+        return bleTempData;
+    }
+
+    private BleDriverSignInData getBleDriverSignInData(String imei, byte[] bleData) {
+        BleDriverSignInData bleDriverSignInData = new BleDriverSignInData();
+        byte[] macArray = Arrays.copyOfRange(bleData, 2,8);
+        String mac = BytesUtils.bytes2HexString(macArray, 0);
+        String voltageStr = BytesUtils.bytes2HexString(bleData,8).substring(0, 2);
+        float voltage = 0;
+        try {
+            voltage = Float.valueOf(voltageStr) / 10;
+        }catch (Exception e){
+            System.out.println("imei :" + imei + " ble sos voltage error : " + voltageStr);
+        }
+        byte alertByte = bleData[9];
+        int alert = alertByte == 0x01 ? BleDriverSignInData.ALERT_TYPE_LOW_BATTERY : BleDriverSignInData.ALERT_TYPE_DRIVER;
+        boolean isHistoryData = (bleData[10] & 0x80) != 0x00;
+        boolean latlngValid = (bleData[10] & 0x40) != 0x00;
+        int satelliteNumber = bleData[10] & 0x1F;
+        double altitude = latlngValid? BytesUtils.bytes2Float(bleData, 11) : 0.0;
+        double longitude = latlngValid ? BytesUtils.bytes2Float(bleData, 15) : 0.0;
+        double latitude = latlngValid ? BytesUtils.bytes2Float(bleData, 19) : 0.0;
+        int azimuth = latlngValid ? BytesUtils.bytes2Short(bleData, 25) : 0;
+        Float speedf = 0.0f;
+        if (latlngValid){
+            try{
+                byte[] bytesSpeed = Arrays.copyOfRange(bleData, 23, 25);
+                String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
+                if(strSp.contains("f")){
+                    speedf = -1f;
+                }else {
+                    speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+                }
+            }catch (Exception e){
+                System.out.println("Imei : " + imei);
+                e.printStackTrace();
+            }
+        }
+        Boolean is_4g_lbs = false;
+        Integer mcc_4g = null;
+        Integer mnc_4g = null;
+        Long eci_4g = null;
+        Integer tac = null;
+        Integer pcid_4g_1 = null;
+        Integer pcid_4g_2 = null;
+        Integer pcid_4g_3 = null;
+        Boolean is_2g_lbs = false;
+        Integer mcc_2g = null;
+        Integer mnc_2g = null;
+        Integer lac_2g_1 = null;
+        Integer ci_2g_1 = null;
+        Integer lac_2g_2 = null;
+        Integer ci_2g_2 = null;
+        Integer lac_2g_3 = null;
+        Integer ci_2g_3 = null;
+        if (!latlngValid){
+            byte lbsByte = bleData[11];
+            if ((lbsByte & 0x8) == 0x8){
+                is_4g_lbs = true;
+            }else{
+                is_2g_lbs = true;
+            }
+        }
+        if (is_2g_lbs){
+            mcc_2g = BytesUtils.bytes2Short(bleData,11);
+            mnc_2g = BytesUtils.bytes2Short(bleData,13);
+            lac_2g_1 = BytesUtils.bytes2Short(bleData,15);
+            ci_2g_1 = BytesUtils.bytes2Short(bleData,17);
+            lac_2g_2 = BytesUtils.bytes2Short(bleData,19);
+            ci_2g_2 = BytesUtils.bytes2Short(bleData,21);
+            lac_2g_3 = BytesUtils.bytes2Short(bleData,23);
+            ci_2g_3 = BytesUtils.bytes2Short(bleData,25);
+        }
+        if (is_4g_lbs){
+            mcc_4g = BytesUtils.bytes2Short(bleData,11) & 0x7FFF;
+            mnc_4g = BytesUtils.bytes2Short(bleData,13);
+            eci_4g = BytesUtils.unsigned4BytesToInt(bleData, 15);
+            tac = BytesUtils.bytes2Short(bleData, 19);
+            pcid_4g_1 = BytesUtils.bytes2Short(bleData, 21);
+            pcid_4g_2 = BytesUtils.bytes2Short(bleData, 23);
+            pcid_4g_3 = BytesUtils.bytes2Short(bleData,25);
+        }
+        bleDriverSignInData.setAlert(alert);
+        bleDriverSignInData.setAltitude(altitude);
+        bleDriverSignInData.setAzimuth(azimuth);
+        bleDriverSignInData.setVoltage(voltage);
+        bleDriverSignInData.setIsHistoryData(isHistoryData);
+        bleDriverSignInData.setLatitude(latitude);
+        bleDriverSignInData.setLatlngValid(latlngValid);
+        bleDriverSignInData.setSatelliteCount(satelliteNumber);
+        bleDriverSignInData.setLongitude(longitude);
+        bleDriverSignInData.setMac(mac);
+        bleDriverSignInData.setSpeed(speedf);
+        bleDriverSignInData.setIs_4g_lbs(is_4g_lbs);
+        bleDriverSignInData.setIs_2g_lbs(is_2g_lbs);
+        bleDriverSignInData.setMcc_2g(mcc_2g);
+        bleDriverSignInData.setMnc_2g(mnc_2g);
+        bleDriverSignInData.setLac_2g_1(lac_2g_1);
+        bleDriverSignInData.setCi_2g_1(ci_2g_1);
+        bleDriverSignInData.setLac_2g_2(lac_2g_2);
+        bleDriverSignInData.setCi_2g_2(ci_2g_2);
+        bleDriverSignInData.setLac_2g_3(lac_2g_3);
+        bleDriverSignInData.setCi_2g_3(ci_2g_3);
+        bleDriverSignInData.setMcc_4g(mcc_4g);
+        bleDriverSignInData.setMnc_4g(mnc_4g);
+        bleDriverSignInData.setEci_4g(eci_4g);
+        bleDriverSignInData.setTac(tac);
+        bleDriverSignInData.setPcid_4g_1(pcid_4g_1);
+        bleDriverSignInData.setPcid_4g_2(pcid_4g_2);
+        bleDriverSignInData.setPcid_4g_3(pcid_4g_3);
+        return bleDriverSignInData;
+    }
+
+    private BleAlertData getBleAlertData(String imei, byte[] bleData) {
+        BleAlertData bleAlertData = new BleAlertData();
+        byte[] macArray = Arrays.copyOfRange(bleData, 2, 8);
+        String mac = BytesUtils.bytes2HexString(macArray, 0);
+        String voltageStr = BytesUtils.bytes2HexString(bleData,8).substring(0, 2);
+        float voltage = 0;
+        try {
+            voltage = Float.valueOf(voltageStr) / 10;
+        }catch (Exception e){
+            System.out.println("imei :" + imei + " ble sos voltage error : " + voltageStr);
+        }
+        byte alertByte = bleData[9];
+        int alert = alertByte == 0x01 ? BleAlertData.ALERT_TYPE_LOW_BATTERY : BleAlertData.ALERT_TYPE_SOS;
+        boolean isHistoryData = (bleData[10] & 0x80) != 0x00;
+        boolean latlngValid = (bleData[10] & 0x40) != 0x00;
+        int satelliteNumber = bleData[10] & 0x1F;
+        double altitude = latlngValid? BytesUtils.bytes2Float(bleData, 11) : 0.0;
+        double longitude = latlngValid ? BytesUtils.bytes2Float(bleData, 15) : 0.0;
+        double latitude = latlngValid ? BytesUtils.bytes2Float(bleData, 19) : 0.0;
+        int azimuth = latlngValid ? BytesUtils.bytes2Short(bleData, 25) : 0;
+        Float speedf = 0.0f;
+        if (latlngValid){
+            try{
+                byte[] bytesSpeed = Arrays.copyOfRange(bleData, 23, 25);
+                String strSp = BytesUtils.bytes2HexString(bytesSpeed, 0);
+                if(strSp.contains("f")){
+                    speedf = -1f;
+                }else {
+                    speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
+                }
+            }catch (Exception e){
+                System.out.println("Imei : " + imei);
+                e.printStackTrace();
+            }
+        }
+        Boolean is_4g_lbs = false;
+        Integer mcc_4g = null;
+        Integer mnc_4g = null;
+        Long eci_4g = null;
+        Integer tac = null;
+        Integer pcid_4g_1 = null;
+        Integer pcid_4g_2 = null;
+        Integer pcid_4g_3 = null;
+        Boolean is_2g_lbs = false;
+        Integer mcc_2g = null;
+        Integer mnc_2g = null;
+        Integer lac_2g_1 = null;
+        Integer ci_2g_1 = null;
+        Integer lac_2g_2 = null;
+        Integer ci_2g_2 = null;
+        Integer lac_2g_3 = null;
+        Integer ci_2g_3 = null;
+        if (!latlngValid){
+            byte lbsByte = bleData[11];
+            if ((lbsByte & 0x80) == 0x80){
+                is_4g_lbs = true;
+            }else{
+                is_2g_lbs = true;
+            }
+        }
+        if (is_2g_lbs){
+            mcc_2g = BytesUtils.bytes2Short(bleData,11);
+            mnc_2g = BytesUtils.bytes2Short(bleData,13);
+            lac_2g_1 = BytesUtils.bytes2Short(bleData,15);
+            ci_2g_1 = BytesUtils.bytes2Short(bleData,17);
+            lac_2g_2 = BytesUtils.bytes2Short(bleData,19);
+            ci_2g_2 = BytesUtils.bytes2Short(bleData,21);
+            lac_2g_3 = BytesUtils.bytes2Short(bleData,23);
+            ci_2g_3 = BytesUtils.bytes2Short(bleData,25);
+        }
+        if (is_4g_lbs){
+            mcc_4g = BytesUtils.bytes2Short(bleData,11) & 0x7FFF;
+            mnc_4g = BytesUtils.bytes2Short(bleData,13);
+            eci_4g = BytesUtils.unsigned4BytesToInt(bleData, 15);
+            tac = BytesUtils.bytes2Short(bleData, 19);
+            pcid_4g_1 = BytesUtils.bytes2Short(bleData, 21);
+            pcid_4g_2 = BytesUtils.bytes2Short(bleData, 23);
+            pcid_4g_3 = BytesUtils.bytes2Short(bleData,25);
+        }
+        bleAlertData.setAlertType(alert);
+        bleAlertData.setAltitude(altitude);
+        bleAlertData.setAzimuth(azimuth);
+        bleAlertData.setInnerVoltage(voltage);
+        bleAlertData.setIsHistoryData(isHistoryData);
+        bleAlertData.setLatitude(latitude);
+        bleAlertData.setLatlngValid(latlngValid);
+        bleAlertData.setSatelliteCount(satelliteNumber);
+        bleAlertData.setLongitude(longitude);
+        bleAlertData.setMac(mac);
+        bleAlertData.setSpeed(speedf);
+        bleAlertData.setIs_4g_lbs(is_4g_lbs);
+        bleAlertData.setIs_2g_lbs(is_2g_lbs);
+        bleAlertData.setMcc_2g(mcc_2g);
+        bleAlertData.setMnc_2g(mnc_2g);
+        bleAlertData.setLac_2g_1(lac_2g_1);
+        bleAlertData.setCi_2g_1(ci_2g_1);
+        bleAlertData.setLac_2g_2(lac_2g_2);
+        bleAlertData.setCi_2g_2(ci_2g_2);
+        bleAlertData.setLac_2g_3(lac_2g_3);
+        bleAlertData.setCi_2g_3(ci_2g_3);
+        bleAlertData.setMcc_4g(mcc_4g);
+        bleAlertData.setMnc_4g(mnc_4g);
+        bleAlertData.setEci_4g(eci_4g);
+        bleAlertData.setTac(tac);
+        bleAlertData.setPcid_4g_1(pcid_4g_1);
+        bleAlertData.setPcid_4g_2(pcid_4g_2);
+        bleAlertData.setPcid_4g_3(pcid_4g_3);
+        return bleAlertData;
+    }
+
+    private BleTireData getBleTireData(byte[] bleData, int i) {
+        BleTireData bleTireData = new BleTireData();
+        byte[] macArray = Arrays.copyOfRange(bleData, i, i + 6);
+        String mac = BytesUtils.bytes2HexString(macArray, 0);
+        int voltageTmp = (int) bleData[i + 6] < 0 ? (int) bleData[i + 6] + 256 : (int) bleData[i + 6];
+        double voltage;
+        if(voltageTmp == 255){
+            voltage = -999;
+        }else{
+            voltage = 1.22 + 0.01 * voltageTmp;
+        }
+        int airPressureTmp = (int) bleData[i + 7] < 0 ? (int) bleData[i + 7] + 256 : (int) bleData[i + 7];
+        double airPressure;
+        if(airPressureTmp == 255){
+            airPressure = -999;
+        }else{
+            airPressure = 1.572 * 2 * airPressureTmp;
+        }
+        int airTempTmp = (int) bleData[i + 8] < 0 ? (int) bleData[i + 8] + 256 : (int) bleData[i + 8];
+        int airTemp;
+        if(airTempTmp == 255){
+            airTemp = -999;
+        }else{
+            airTemp = airTempTmp - 55;
+        }
+//            boolean isTireLeaks = (bleData[i+5] == 0x01);
+        bleTireData.setMac(mac);
+        bleTireData.setVoltage(voltage);
+        bleTireData.setAirPressure(airPressure);
+        bleTireData.setAirTemp(airTemp);
+//            bleTireData.setIsTireLeaks(isTireLeaks);
+        int alarm = (int) bleData[i + 9];
+        if(alarm == -1){
+            alarm = 0;
+        }
+        bleTireData.setStatus(alarm);
+        return bleTireData;
     }
 
     private LocationMessage parseDataMessage(byte[] data) {
@@ -1786,7 +1849,7 @@ public class PersonalAssetMsgDecoder {
         if((status1 & 0x01) == 0x01){
             smartPowerOpenStatus = "open";
         }
-        byte status2 = data[66];
+        byte status2 = data[65];
         boolean isLockSim = (status2 & 0x80) == 0x80;
         boolean isLockDevice = (status2 & 0x40) == 0x40;
         boolean AGPSEphemerisDataDownloadSettingStatus = (status2 & 0x20) == 0x10;
@@ -1800,6 +1863,7 @@ public class PersonalAssetMsgDecoder {
         if((status3 & 0x80) == 0x80){
             smartPowerSettingStatus = "enable";
         }
+        boolean gpsEnable = (data[66] & 0x10) == 0x10;
         Integer lockType = null;
         if (data.length >= 71){
             lockType = (int)data[70];
@@ -1818,10 +1882,11 @@ public class PersonalAssetMsgDecoder {
 //        locationMessage.setIsNeedResp(isNeedResp);
         locationMessage.setNetworkSignal(network);
         locationMessage.setImei(imei);
+        locationMessage.setGpsEnable(gpsEnable);
         locationMessage.setIsSolarCharging(isSolarCharging);
         locationMessage.setIsUsbCharging(isUsbCharging);
-        locationMessage.setSamplingIntervalAccOn(accOnInterval);
-        locationMessage.setSamplingIntervalAccOff(accOffInterval);
+        locationMessage.setSamplingIntervalAccOn((long)accOnInterval);
+        locationMessage.setSamplingIntervalAccOff((long)accOffInterval);
         locationMessage.setAngleCompensation(angleCompensation);
         locationMessage.setDistanceCompensation(distanceCompensation);
         locationMessage.setGpsWorking(isGpsWorking);
@@ -1882,21 +1947,24 @@ public class PersonalAssetMsgDecoder {
         return locationMessage;
     }
 
-    public void build(byte[] bytes,Callback callback) throws ParseException {
+    public void build(byte[] srcData,byte[] bytes,Callback callback) throws ParseException {
         if (bytes != null && bytes.length > HEADER_LENGTH
                 && ((bytes[0] == 0x23 && bytes[1] == 0x23) || (bytes[0] == 0x25 && bytes[1] == 0x25))) {
             switch (bytes[2]) {
                 case 0x01:
                     SignInMessage signInMessage = parseLoginMessage(bytes);
+                    signInMessage.setOrignBytes(srcData);
                     callback.receiveSignInMessage(signInMessage);
                     break;
                 case 0x03:
                     HeartbeatMessage heartbeatMessage = parseHeartbeat(bytes);
+                    heartbeatMessage.setOrignBytes(srcData);
                     callback.receiveHeartbeatMessage(heartbeatMessage);
                     break;
                 case 0x02:
                 case 0x04:
                     LocationMessage locationMessage = parseDataMessage(bytes);
+                    locationMessage.setOrignBytes(srcData);
                     if (locationMessage instanceof LocationAlarmMessage){
                         callback.receiveAlarmMessage((LocationAlarmMessage)locationMessage);
                     }else if (locationMessage instanceof LocationInfoMessage) {
@@ -1905,27 +1973,33 @@ public class PersonalAssetMsgDecoder {
                     break;
                 case 0x05:
                     NetworkInfoMessage networkInfoMessage = parseNetworkInfoMessage(bytes);
+                    networkInfoMessage.setOrignBytes(srcData);
                     callback.receiveNetworkInfoMessage(networkInfoMessage);
                     break;
                 case 0x10:
                     BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = parseBluetoothDataMessage(bytes);
+                    bluetoothPeripheralDataMessage.setOrignBytes(srcData);
                     callback.receiveBluetoothDataMessage(bluetoothPeripheralDataMessage);
                     break;
                 case 0x17:
                     LockMessage lockMessage = parseLockMessage(bytes);
+                    lockMessage.setOrignBytes(srcData);
                     callback.receiveLockMessage(lockMessage);
                     break;
                 case 0x15:
                     WifiMessage wifiMessage = parseWifiMessage(bytes);
+                    wifiMessage.setOrignBytes(srcData);
                     callback.receiveWifiMessage(wifiMessage);
                     break;
                 case 0x20:
                     InnerGeoDataMessage innerGeoDataMessage = parseInnerGeoMessage(bytes);
+                    innerGeoDataMessage.setOrignBytes(srcData);
                     callback.receiveInnerGeoMessage(innerGeoDataMessage);
                     break;
                 case 0x24:
                 case 0x25:
                     Message wifiWithDeviceInfoMessage = parseWifiWithDeviceInfoMessage(bytes);
+                    wifiWithDeviceInfoMessage.setOrignBytes(srcData);
                     if (wifiWithDeviceInfoMessage instanceof LocationAlarmMessage){
                         callback.receiveAlarmMessage((LocationAlarmMessage)wifiWithDeviceInfoMessage);
                     }else if (wifiWithDeviceInfoMessage instanceof LocationInfoMessage) {
@@ -1935,14 +2009,27 @@ public class PersonalAssetMsgDecoder {
                     }
                     break;
                 case  0x26:
-                    callback.receiveDeviceTempCollectionMessage(parseDeviceTempCollectionMessage(bytes));
+                    DeviceTempCollectionMessage deviceTempCollectionMessage = parseDeviceTempCollectionMessage(bytes);
+                    deviceTempCollectionMessage.setOrignBytes(srcData);
+                    callback.receiveDeviceTempCollectionMessage(deviceTempCollectionMessage);
                     break;
                 case 0x12:
                     BluetoothPeripheralDataMessage bluetoothPeripheralDataSecondMessage = parseSecondBluetoothDataMessage(bytes);
+                    bluetoothPeripheralDataSecondMessage.setOrignBytes(srcData);
                     callback.receiveBluetoothDataMessage(bluetoothPeripheralDataSecondMessage);
                     break;
+                case 0x62:
+                case 0x64:
+                    Message indefiniteLocationMessage = DecoderHelper.parseLocationMessage(bytes);
+                    indefiniteLocationMessage.setOrignBytes(srcData);
+                    if (indefiniteLocationMessage instanceof LocationAlarmMessage){
+                        callback.receiveAlarmMessage((LocationAlarmMessage)indefiniteLocationMessage);
+                    }else if (indefiniteLocationMessage instanceof LocationInfoMessage) {
+                        callback.receiveLocationInfoMessage((LocationInfoMessage) indefiniteLocationMessage);
+                    }
                 case (byte)0x81:
                     Message message =  parseInteractMessage(bytes);
+                    message.setOrignBytes(srcData);
                     if (message instanceof ConfigMessage) {
                         callback.receiveConfigMessage((ConfigMessage)message);
                     }else if(message instanceof ForwardMessage){
@@ -2183,7 +2270,22 @@ public class PersonalAssetMsgDecoder {
                     byte[] iccidLenByte = Arrays.copyOfRange(bytes,iccidStartIndex,iccidStartIndex + iccidLen);
                     String iccid = new String(iccidLenByte);
                     networkInfoMessage.setIccid(iccid);
+                    if(msgLen > iccidStartIndex + iccidLen){
+                        int ssidLen =  bytes[iccidStartIndex + iccidLen];
+                        int ssidStartIndex = iccidStartIndex + iccidLen + 1;
+                        byte[] ssidLenByte = Arrays.copyOfRange(bytes,ssidStartIndex,ssidStartIndex + ssidLen);
+                        String ssid = new String(ssidLenByte);
+                        networkInfoMessage.setWifiSsid(ssid);
+                        if(msgLen > ssidStartIndex + ssidLen){
+                            int macLen =  bytes[ssidStartIndex + ssidLen];
+                            int macStartIndex = ssidStartIndex + ssidLen + 1;
+                            byte[] macLenByte = Arrays.copyOfRange(bytes,macStartIndex,macStartIndex + macLen);
+                            String mac = new String(macLenByte);
+                            networkInfoMessage.setWifiMac(mac);
+                        }
+                    }
                 }
+
             }
 //        boolean isNeedResp = (serialNo & 0x8000) != 0x8000;
             networkInfoMessage.setSerialNo(serialNo);

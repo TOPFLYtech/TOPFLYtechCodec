@@ -5,6 +5,10 @@ var TopflytechByteBuf = {
     writeIndex:0,
     capacity:4096,
     markerReadIndex:0,
+    resetBuf:function(newBufferSize){
+      this.capacity = newBufferSize
+      this.selfBuf = [newBufferSize]
+    },
     putBuf:function (inBuf){
         if (this.capacity - this.writeIndex >= inBuf.length){
             for (var i = 0;i < inBuf.length;i++,this.writeIndex++){
@@ -17,6 +21,10 @@ var TopflytechByteBuf = {
                     this.selfBuf[i] = this.selfBuf[this.readIndex + i];
                 }
                 this.writeIndex = currentDataLength;
+                if (this.writeIndex < 0)
+                {
+                    this.writeIndex = 0;
+                }
                 this.readIndex = 0;
                 this.markerReadIndex = 0;
                 for (var i = 0;i < inBuf.length;i++,this.writeIndex++){
@@ -31,6 +39,10 @@ var TopflytechByteBuf = {
                 this.selfBuf = tmp;
                 this.capacity = needLength;
                 this.writeIndex = this.writeIndex - this.readIndex;
+                if (this.writeIndex < 0)
+                {
+                    this.writeIndex = 0;
+                }
                 this.readIndex = 0;
                 this.markerReadIndex = 0;
                 for (var i = 0;i < inBuf.length;i++,this.writeIndex++){

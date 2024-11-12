@@ -6,7 +6,16 @@ import java.util.Arrays;
  * Created by admin on 2019/9/10.
  */
 public class TopflytechByteBuf{
-    private byte[] selfBuf = new byte[4096];
+    public TopflytechByteBuf(int capacity) {
+        this.capacity = capacity;
+        selfBuf = new byte[this.capacity];
+    }
+
+    public TopflytechByteBuf() {
+        selfBuf = new byte[4096];
+    }
+
+    private byte[] selfBuf ;
     private int readIndex = 0;
     private int writeIndex = 0;
     private int capacity = 4096;
@@ -23,6 +32,9 @@ public class TopflytechByteBuf{
                     selfBuf[i] = selfBuf[readIndex + i];
                 }
                 writeIndex = currentDataLength;
+                if(writeIndex < 0){
+                    writeIndex = 0;
+                }
                 readIndex = 0;
                 markerReadIndex = 0;
                 for (int i = 0;i < in.length;i++,writeIndex++){
@@ -37,6 +49,9 @@ public class TopflytechByteBuf{
                 selfBuf = tmp;
                 capacity = needLength;
                 writeIndex = writeIndex - readIndex;
+                if(writeIndex < 0){
+                    writeIndex = 0;
+                }
                 readIndex = 0;
                 markerReadIndex = 0;
                 for (int i = 0;i < in.length;i++,writeIndex++){

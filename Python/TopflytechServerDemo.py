@@ -296,7 +296,7 @@ def dealPersonalDeviceMessage(message,socketClient):
         socketClient.send(reply)
 
 if __name__ == "__main__":
-    HOST, PORT = "192.168.1.32", 1001
+    HOST, PORT = "127.0.0.1", 1001
     s = socket.socket()
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind((HOST, PORT))

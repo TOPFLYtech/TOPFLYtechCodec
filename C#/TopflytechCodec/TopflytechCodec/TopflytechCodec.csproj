@@ -43,6 +43,7 @@
   <ItemGroup>
     <Compile Include="BytesUtils.cs" />
     <Compile Include="Decoder.cs" />
+    <Compile Include="DecoderHelper.cs" />
     <Compile Include="Encoder.cs" />
     <Compile Include="Entities\AccelerationData.cs" />
     <Compile Include="Entities\AccelerationDriverBehaviorMessage.cs" />
@@ -74,6 +75,7 @@
     <Compile Include="Entities\MessageEncryptType.cs" />
     <Compile Include="Entities\NetworkInfoMessage.cs" />
     <Compile Include="Entities\ObdMessage.cs" />
+    <Compile Include="Entities\OneWireData.cs" />
     <Compile Include="Entities\OneWireMessage.cs" />
     <Compile Include="Entities\Rs232DeviceMessage.cs" />
     <Compile Include="Entities\Rs232FingerprintMessage.cs" />

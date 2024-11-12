@@ -106,6 +106,27 @@ class BytesUtils {
 
         throw new IllegalArgumentException("invalid bytes length!");
     }
+    /**
+     * 2字节转换为 signed short
+     * @param bytes input ,at least 2 bytes
+     * @param offset start index
+     * @return signed short
+     * @throws IllegalArgumentException  invalid bytes length!
+     */
+    public static int byte2SignedShort(byte[] bytes, int offset) {
+        if (bytes != null && bytes.length > 0 && bytes.length > offset) {
+            if ((bytes.length - offset) >= 2) {
+                short s = (short)(bytes[offset + 1] & 0xFF);
+                int value = ((int) s) | ((bytes[offset] << 8) & 0xFF00);
+                if ((value & 0x8000) > 0) {
+                    return value - 0x10000;
+                }
+                return value;
+            }
+        }
+
+        throw new IllegalArgumentException("invalid bytes length!");
+    }
 
     /**
      * Byte to integer conversion
@@ -176,4 +197,23 @@ class BytesUtils {
             return BytesUtils.hexString2Bytes("0" + imei);
         }
     }
+
+
+    public static byte tftCrc8(byte[] ptr) {
+        byte crc = (byte) 0xff;
+        int i;
+        int index = 0;
+        while (index < ptr.length) {
+            crc ^= ptr[index];
+            for (i = 0; i < 8; i++) {
+                if ((crc & 0x80) != 0)
+                    crc = (byte) ((crc << 1) ^ 0x31);
+                else
+                    crc <<= 1;
+            }
+            index++;
+        }
+        return crc;
+    }
+
 }

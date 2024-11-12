@@ -25,6 +25,13 @@ public class PTTDecoder {
         this.aesKey = aesKey;
     }
 
+    public PTTDecoder(int messageEncryptType,String aesKey,int buffSize){
+        assert messageEncryptType < 0 || messageEncryptType >= 3 : "Message encrypt type error!";
+        this.encryptType = messageEncryptType;
+        this.aesKey = aesKey;
+        this.decoderBuf = new TopflytechByteBuf(buffSize);
+    }
+
     private static boolean match(byte[] bytes) {
         assert bytes.length >= HEADER_LENGTH : "command match: length is not 3!";
         return Arrays.equals(TALK_START, bytes)

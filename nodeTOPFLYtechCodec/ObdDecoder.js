@@ -1,7 +1,7 @@
 var CryptoTool = require("./CryptoTool")
 var ByteUtils = require("./ByteUtils")
 const TopflytechByteBuf = require("./TopflytechByteBuf")
-
+var DecoderHelper = require("./DecoderHelper")
 var ObdDecoder = {
     HEADER_LENGTH:3,
     SIGNUP:[0x26, 0x26, 0x01],
@@ -23,6 +23,8 @@ var ObdDecoder = {
     LOCATION_DATA_WITH_SENSOR:[0x26, 0x26, 0x16],
     LOCATION_ALARM_WITH_SENSOR:[0x26, 0x26, 0x18],
     WIFI_DATA :  [0x26, 0x26, 0x15],
+    INDEFINITE_LOCATION_DATA:[ 0x26, 0x26, 0x62 ],
+    INDEFINITE_LOCATION_ALARM_DATA : [ 0x26, 0x26, 0x64 ],
     encryptType:0,
     aesKey:"",
     MASK_IGNITION : 0x4000,
@@ -50,6 +52,15 @@ var ObdDecoder = {
             || ByteUtils.arrayEquals(this.LOCATION_DATA_WITH_SENSOR,bytes)
             || ByteUtils.arrayEquals(this.LOCATION_ALARM_WITH_SENSOR,bytes)
             || ByteUtils.arrayEquals(this.WIFI_DATA,bytes)
+            || ByteUtils.arrayEquals(this.INDEFINITE_LOCATION_DATA,bytes)
+            || ByteUtils.arrayEquals(this.INDEFINITE_LOCATION_ALARM_DATA,bytes);
+    },
+    matchNewCryptData:function(bytes){
+        if(bytes.length != this.HEADER_LENGTH){
+            return false
+        }
+        return ByteUtils.arrayEquals(this.INDEFINITE_LOCATION_DATA,bytes)
+            || ByteUtils.arrayEquals(this.INDEFINITE_LOCATION_ALARM_DATA,bytes);
     },
     decode(buf){
         TopflytechByteBuf.putBuf(buf);
@@ -69,29 +80,79 @@ var ObdDecoder = {
                 TopflytechByteBuf.skipBytes(this.HEADER_LENGTH);
                 var lengthBytes = TopflytechByteBuf.readBytes(2);
                 var packageLength = ByteUtils.byteToShort(lengthBytes, 0);
-                if (this.encryptType == CryptoTool.MessageEncryptType.MD5){
-                    packageLength = packageLength + 8;
-                }else if(this.encryptType == CryptoTool.MessageEncryptType.AES){
-                    packageLength = CryptoTool.AES.getAesLength(packageLength);
-                }
-                TopflytechByteBuf.resetReaderIndex();
-                if(packageLength <= 0){
-                    TopflytechByteBuf.skipBytes(5);
-                    break;
-                }
-                if (packageLength > TopflytechByteBuf.getReadableBytes()){
-                    break;
-                }
-                var data = TopflytechByteBuf.readBytes(packageLength);
-                data = CryptoTool.decryptData(data, this.encryptType, this.aesKey);
-                if (data != null){
-                    try {
-                        var message = this.build(data);
-                        if (message != null){
-                            messages.push(message);
+                if(this.matchNewCryptData(bytes)){
+                    if(TopflytechByteBuf.getReadableBytes() <= 12){
+                        TopflytechByteBuf.resetReaderIndex();
+                        break;
+                    }
+                    TopflytechByteBuf.skipBytes(10);
+                    var msgInfoBytes = TopflytechByteBuf.readBytes(2);
+                    var msgInfo = msgInfoBytes[1];
+                    var msgEncryptType =  CryptoTool.MessageEncryptType.NONE;
+                    if((msgInfo & 0x30) == 0 ){
+                        msgEncryptType = CryptoTool.MessageEncryptType.NONE;
+                    }else if((msgInfo & 0x10) == 0x10){
+                        msgEncryptType = CryptoTool.MessageEncryptType.MD5;
+                    }else if((msgInfo & 0x20) == 0x20){
+                        msgEncryptType = CryptoTool.MessageEncryptType.AES;
+                    }
+                    if(msgEncryptType == CryptoTool.MessageEncryptType.AES){
+                        packageLength = CryptoTool.getAesInMsgLength(packageLength);
+                    }else if(msgEncryptType == CryptoTool.MessageEncryptType.MD5){
+                        packageLength = packageLength + 8;
+                    }
+                    TopflytechByteBuf.resetReaderIndex();
+                    if(packageLength <= 0){
+                        break;
+                    }
+                    if (packageLength > TopflytechByteBuf.getReadableBytes()){
+                        break;
+                    }
+                    var data = TopflytechByteBuf.readBytes(packageLength);
+                    var checkSum = msgInfoBytes[0];
+                    var realData = CryptoTool.decryptEncryptKeyInData(data, msgEncryptType, this.aesKey);
+                    if (realData != null){
+                        var calCheckSumBytes = ByteUtils.arrayOfRange(realData,16,realData.length);
+                        var crc8Value = ByteUtils.tftCrc8(calCheckSumBytes);
+                        if(checkSum != crc8Value){
+                            TopflytechByteBuf.skipBytes(1);
+                            break;
                         }
-                    }catch (e){
-                        console.log(e)
+                        try {
+                            var message = this.build(realData);
+                            if (message != null){
+                                message.srcBytes = data;
+                                messages.push(message);
+                            }
+                        }catch (e){
+                            console.log(e)
+                        }
+                    }
+                }else{
+                    if (this.encryptType == CryptoTool.MessageEncryptType.MD5){
+                        packageLength = packageLength + 8;
+                    }else if(this.encryptType == CryptoTool.MessageEncryptType.AES){
+                        packageLength = CryptoTool.AES.getAesLength(packageLength);
+                    }
+                    TopflytechByteBuf.resetReaderIndex();
+                    if(packageLength <= 0){
+                        TopflytechByteBuf.skipBytes(5);
+                        break;
+                    }
+                    if (packageLength > TopflytechByteBuf.getReadableBytes()){
+                        break;
+                    }
+                    var data = TopflytechByteBuf.readBytes(packageLength);
+                    data = CryptoTool.decryptData(data, this.encryptType, this.aesKey);
+                    if (data != null){
+                        try {
+                            var message = this.build(data);
+                            if (message != null){
+                                messages.push(message);
+                            }
+                        }catch (e){
+                            console.log(e)
+                        }
                     }
                 }
             }else{
@@ -138,8 +199,12 @@ var ObdDecoder = {
                     var bluetoothPeripheralDataSecondMessage = this.parseSecondBluetoothDataMessage(bytes);
                     return bluetoothPeripheralDataSecondMessage;
                 case 0x15:
-                        var  wifiMessage = this.parseWifiMessage(bytes);
+                        var wifiMessage = this.parseWifiMessage(bytes);
                         return wifiMessage;
+                case 0x62:
+                case 0x64:
+                    var indefiniteLocationMessage = DecoderHelper.parseLocationMessage(bytes);
+                    return indefiniteLocationMessage;
                 case 0x81:
                     var message =  this.parseInteractMessage(bytes);
                     return message;
@@ -291,11 +356,11 @@ var ObdDecoder = {
         var is_4g_lbs = false;
         var mcc_4g = null;
         var mnc_4g = null;
-        var ci_4g = null;
-        var earfcn_4g_1 = null;
+        var eci_4g = null;
+        var tac = null;
         var pcid_4g_1 = null;
-        var earfcn_4g_2 = null;
         var pcid_4g_2 = null;
+        var pcid_4g_3 = null;
         var is_2g_lbs = false;
         var mcc_2g = null;
         var mnc_2g = null;
@@ -326,11 +391,11 @@ var ObdDecoder = {
         if (is_4g_lbs){
             mcc_4g = ByteUtils.byteToShort(bytes,curParseIndex + 12) & 0x7FFF;
             mnc_4g = ByteUtils.byteToShort(bytes,curParseIndex + 14);
-            ci_4g = ByteUtils.byteToLong(bytes, curParseIndex + 16);
-            earfcn_4g_1 = ByteUtils.byteToShort(bytes, curParseIndex + 20);
+            eci_4g = ByteUtils.byteToLong(bytes, curParseIndex + 16);
+            tac = ByteUtils.byteToShort(bytes, curParseIndex + 20);
             pcid_4g_1 = ByteUtils.byteToShort(bytes, curParseIndex + 22);
-            earfcn_4g_2 = ByteUtils.byteToShort(bytes, curParseIndex + 24);
-            pcid_4g_2 = ByteUtils.byteToShort(bytes,curParseIndex + 26);
+            pcid_4g_2 = ByteUtils.byteToShort(bytes, curParseIndex + 24);
+            pcid_4g_3 = ByteUtils.byteToShort(bytes,curParseIndex + 26);
         }
         var rpm = ByteUtils.byteToShort(bytes, curParseIndex + 28);
         if(rpm == 65535){
@@ -349,11 +414,11 @@ var ObdDecoder = {
         acceleration.ci_2g_3 =ci_2g_3
         acceleration.mcc_4g =mcc_4g
         acceleration.mnc_4g =mnc_4g
-        acceleration.ci_4g =ci_4g
-        acceleration.earfcn_4g_1 =earfcn_4g_1
+        acceleration.eci_4g =eci_4g
+        acceleration.tac =tac
         acceleration.pcid_4g_1 =pcid_4g_1
-        acceleration.earfcn_4g_2 =earfcn_4g_2
         acceleration.pcid_4g_2 =pcid_4g_2
+        acceleration.pcid_4g_3 =pcid_4g_3
         return acceleration;
     },
     parseAccelerationAlarmMessage:function (bytes){
@@ -426,11 +491,11 @@ var ObdDecoder = {
         var is_4g_lbs = false;
         var mcc_4g = null;
         var mnc_4g = null;
-        var ci_4g = null;
-        var earfcn_4g_1 = null;
+        var eci_4g = null;
+        var tac = null;
         var pcid_4g_1 = null;
-        var earfcn_4g_2 = null;
         var pcid_4g_2 = null;
+        var pcid_4g_3 = null;
         var is_2g_lbs = false;
         var mcc_2g = null;
         var mnc_2g = null;
@@ -461,11 +526,11 @@ var ObdDecoder = {
         if (is_4g_lbs){
             mcc_4g = ByteUtils.byteToShort(bytes,curParseIndex + 12) & 0x7FFF;
             mnc_4g = ByteUtils.byteToShort(bytes,curParseIndex + 14);
-            ci_4g = ByteUtils.byteToLong(bytes, curParseIndex + 16);
-            earfcn_4g_1 = ByteUtils.byteToShort(bytes, curParseIndex + 20);
+            eci_4g = ByteUtils.byteToLong(bytes, curParseIndex + 16);
+            tac = ByteUtils.byteToShort(bytes, curParseIndex + 20);
             pcid_4g_1 = ByteUtils.byteToShort(bytes, curParseIndex + 22);
-            earfcn_4g_2 = ByteUtils.byteToShort(bytes, curParseIndex + 24);
-            pcid_4g_2 = ByteUtils.byteToShort(bytes,curParseIndex + 26);
+            pcid_4g_2 = ByteUtils.byteToShort(bytes, curParseIndex + 24);
+            pcid_4g_3 = ByteUtils.byteToShort(bytes,curParseIndex + 26);
         }
         var azimuth = 0;
         try {
@@ -494,480 +559,12 @@ var ObdDecoder = {
         acceleration.ci_2g_3 = ci_2g_3
         acceleration.mcc_4g = mcc_4g
         acceleration.mnc_4g = mnc_4g
-        acceleration.ci_4g = ci_4g
-        acceleration.earfcn_4g_1 = earfcn_4g_1
+        acceleration.eci_4g = eci_4g
+        acceleration.tac = tac
         acceleration.pcid_4g_1 = pcid_4g_1
-        acceleration.earfcn_4g_2 = earfcn_4g_2
         acceleration.pcid_4g_2 = pcid_4g_2
+        acceleration.pcid_4g_3 = pcid_4g_3
         return acceleration;
-    },
-    parseBluetoothDataMessage:function (bytes){
-        var serialNo = ByteUtils.byteToShort(bytes,5);
-        var imei = ByteUtils.IMEI.decode(bytes,7)
-        var bluetoothPeripheralDataMessage = {
-            serialNo:serialNo,
-            imei:imei,
-            srcBytes:bytes,
-            messageType:"bluetoothData",
-        }
-        bluetoothPeripheralDataMessage.isIgnition = (bytes[21] & 0x01) == 0x01
-        bluetoothPeripheralDataMessage.protocolHeadType = bytes[2]
-        bluetoothPeripheralDataMessage.date = ByteUtils.getGTM0Date(bytes, 15);
-        var bleData = ByteUtils.arrayOfRange(bytes,22,bytes.length);
-        if (bleData.length <= 0){
-            return bluetoothPeripheralDataMessage;
-        }
-        var bleDataList = []
-        if(bleData[0] == 0x00 && bleData[1] == 0x01){
-            bluetoothPeripheralDataMessage.bleMessageType = "tire"
-            for (var i = 2;i+10 <= bleData.length;i+=10){
-                var bleTireData = [];
-                var macArray = ByteUtils.arrayOfRange(bleData, i, i + 6);
-                var mac = ByteUtils.bytes2HexString(macArray, 0);
-                var voltageTmp =  bleData[i + 6] < 0 ?  bleData[i + 6] + 256 :  bleData[i + 6];
-                var voltage;
-                if(voltageTmp == 255){
-                    voltage = -999;
-                }else{
-                    voltage = 1.22 + 0.01 * voltageTmp;
-                }
-                var airPressureTmp =  bleData[i + 7] < 0 ?  bleData[i + 7] + 256 :  bleData[i + 7];
-                var airPressure;
-                if(airPressureTmp == 255){
-                    airPressure = -999;
-                }else{
-                    airPressure = 1.572 * 2 * airPressureTmp;
-                }
-                var airTempTmp =  bleData[i + 8] < 0 ? bleData[i + 8] + 256 :  bleData[i + 8];
-                var airTemp;
-                if(airTempTmp == 255){
-                    airTemp = -999;
-                }else{
-                    airTemp = airTempTmp - 55;
-                }
-//            var isTireLeaks = (bleData[i+5] == 0x01);
-                bleTireData.mac =mac
-                bleTireData.voltage =voltage
-                bleTireData.airPressure =airPressure
-                bleTireData.airTemp =airTemp
-//            bleTireData.setIsTireLeaks(isTireLeaks);
-                var alarm =  bleData[i + 9];
-                if(alarm == -1){
-                    alarm = 0;
-                }
-                bleTireData.alarm = alarm
-                bleDataList.push(bleTireData);
-            }
-        }else if (bleData[0] == 0x00 && bleData[1] == 0x02){
-            bluetoothPeripheralDataMessage.bleMessageType = "sos"
-            var bleAlertData = {}
-            var macArray = ByteUtils.arrayOfRange(bleData, 2, 8);
-            var mac = ByteUtils.bytes2HexString(macArray, 0);
-            var voltageStr = ByteUtils.bytes2HexString(bleData,8).substring(0, 2);
-            var voltage = parseFloat(voltageStr) / 10;
-            var alertByte = bleData[9];
-            var alert = alertByte == 0x01 ? "low_battery" : "sos";
-            var isHistoryData = (bleData[10] & 0x80) != 0x00;
-            var latlngValid = (bleData[10] & 0x40) != 0x00;
-            var satelliteCount = bleData[10] & 0x1F;
-            var altitude = latlngValid? ByteUtils.bytes2Float(bleData, 11) : 0.0;
-            var longitude = latlngValid ? ByteUtils.bytes2Float(bleData, 15) : 0.0;
-            var latitude = latlngValid ? ByteUtils.bytes2Float(bleData, 19) : 0.0;
-            var azimuth = latlngValid ? ByteUtils.byteToShort(bleData, 25) : 0;
-            var speedf = 0.0;
-            var bytesSpeed = ByteUtils.arrayOfRange(bleData, 23, 25);
-            var strSp = ByteUtils.bytes2HexString(bytesSpeed, 0);
-            if(strSp.indexOf("f") != -1){
-                speedf = -1;
-            }else {
-                speedf = parseFloat(strSp.substring(0, 3) +"."+ strSp.substring(3, strSp.length));
-            }
-            var is_4g_lbs = false;
-            var mcc_4g = null;
-            var mnc_4g = null;
-            var ci_4g = null;
-            var earfcn_4g_1 = null;
-            var pcid_4g_1 = null;
-            var earfcn_4g_2 = null;
-            var pcid_4g_2 = null;
-            var is_2g_lbs = false;
-            var mcc_2g = null;
-            var mnc_2g = null;
-            var lac_2g_1 = null;
-            var ci_2g_1 = null;
-            var lac_2g_2 = null;
-            var ci_2g_2 = null;
-            var lac_2g_3 = null;
-            var ci_2g_3 = null;
-            if (!latlngValid){
-                var lbsByte = bleData[11];
-                if ((lbsByte & 0x80) == 0x80){
-                    is_4g_lbs = true;
-                }else{
-                    is_2g_lbs = true;
-                }
-            }
-            if (is_2g_lbs){
-                mcc_2g = ByteUtils.byteToShort(bleData,11);
-                mnc_2g = ByteUtils.byteToShort(bleData,13);
-                lac_2g_1 = ByteUtils.byteToShort(bleData,15);
-                ci_2g_1 = ByteUtils.byteToShort(bleData,17);
-                lac_2g_2 = ByteUtils.byteToShort(bleData,19);
-                ci_2g_2 = ByteUtils.byteToShort(bleData,21);
-                lac_2g_3 = ByteUtils.byteToShort(bleData,23);
-                ci_2g_3 = ByteUtils.byteToShort(bleData,25);
-            }
-            if (is_4g_lbs){
-                mcc_4g = ByteUtils.byteToShort(bleData,11) & 0x7FFF;
-                mnc_4g = ByteUtils.byteToShort(bleData,13);
-                ci_4g = ByteUtils.byteToLong(bleData, 15);
-                earfcn_4g_1 = ByteUtils.byteToShort(bleData, 19);
-                pcid_4g_1 = ByteUtils.byteToShort(bleData, 21);
-                earfcn_4g_2 = ByteUtils.byteToShort(bleData, 23);
-                pcid_4g_2 = ByteUtils.byteToShort(bleData,25);
-            }
-            bleAlertData.alertType = alert
-            bleAlertData.altitude = altitude
-            bleAlertData.azimuth = azimuth
-            bleAlertData.innerVoltage = voltage
-            bleAlertData.isHistoryData = isHistoryData
-            bleAlertData.latitude = latitude
-            bleAlertData.latlngValid = latlngValid
-            bleAlertData.satelliteCount = satelliteCount
-            bleAlertData.longitude = longitude
-            bleAlertData.mac = mac
-            bleAlertData.speed = speedf
-            bleAlertData.is_4g_lbs = is_4g_lbs
-            bleAlertData.is_2g_lbs = is_2g_lbs
-            bleAlertData.mcc_2g = mcc_2g
-            bleAlertData.mnc_2g = mnc_2g
-            bleAlertData.lac_2g_1 = lac_2g_1
-            bleAlertData.ci_2g_1 = ci_2g_1
-            bleAlertData.lac_2g_2 = lac_2g_2
-            bleAlertData.ci_2g_2 = ci_2g_2
-            bleAlertData.lac_2g_3 = lac_2g_3
-            bleAlertData.ci_2g_3 = ci_2g_3
-            bleAlertData.mcc_4g = mcc_4g
-            bleAlertData.mnc_4g = mnc_4g
-            bleAlertData.ci_4g = ci_4g
-            bleAlertData.earfcn_4g_1 = earfcn_4g_1
-            bleAlertData.pcid_4g_1 = pcid_4g_1
-            bleAlertData.earfcn_4g_2 = earfcn_4g_2
-            bleAlertData.pcid_4g_2 = pcid_4g_2
-            bleDataList.push(bleAlertData);
-        }else if (bleData[0] == 0x00 && bleData[1] == 0x03){
-            bluetoothPeripheralDataMessage.bleMessageType = "driver"
-            var bleDriverSignInData = {}
-            var macArray = ByteUtils.arrayOfRange(bleData, 2,8);
-            var mac = ByteUtils.bytes2HexString(macArray, 0);
-            var voltageStr = ByteUtils.bytes2HexString(bleData,8).substring(0, 2);
-            var voltage = parseFloat(voltageStr) / 10;
-            var alertByte = bleData[9];
-            var alert = alertByte == 0x01 ? "low_battery" : "driver";
-            var isHistoryData = (bleData[10] & 0x80) != 0x00;
-            var latlngValid = (bleData[10] & 0x40) != 0x00;
-            var satelliteCount = bleData[10] & 0x1F;
-            var altitude = latlngValid? ByteUtils.bytes2Float(bleData, 11) : 0.0;
-            var longitude = latlngValid ? ByteUtils.bytes2Float(bleData, 15) : 0.0;
-            var latitude = latlngValid ? ByteUtils.bytes2Float(bleData, 19) : 0.0;
-            var azimuth = latlngValid ? ByteUtils.byteToShort(bleData, 25) : 0;
-            var speedf = 0.0;
-            var bytesSpeed = ByteUtils.arrayOfRange(bleData, 23, 25);
-            var strSp = ByteUtils.bytes2HexString(bytesSpeed, 0);
-            if(strSp.indexOf("f") != -1){
-                speedf = -1;
-            }else {
-                speedf = parseFloat(strSp.substring(0, 3) +"."+ strSp.substring(3, strSp.length));
-            }
-            var is_4g_lbs = false;
-            var mcc_4g = null;
-            var mnc_4g = null;
-            var ci_4g = null;
-            var earfcn_4g_1 = null;
-            var pcid_4g_1 = null;
-            var earfcn_4g_2 = null;
-            var pcid_4g_2 = null;
-            var is_2g_lbs = false;
-            var mcc_2g = null;
-            var mnc_2g = null;
-            var lac_2g_1 = null;
-            var ci_2g_1 = null;
-            var lac_2g_2 = null;
-            var ci_2g_2 = null;
-            var lac_2g_3 = null;
-            var ci_2g_3 = null;
-            if (!latlngValid){
-                var lbsByte = bleData[11];
-                if ((lbsByte & 0x80) == 0x80){
-                    is_4g_lbs = true;
-                }else{
-                    is_2g_lbs = true;
-                }
-            }
-            if (is_2g_lbs){
-                mcc_2g = ByteUtils.byteToShort(bleData,11);
-                mnc_2g = ByteUtils.byteToShort(bleData,13);
-                lac_2g_1 = ByteUtils.byteToShort(bleData,15);
-                ci_2g_1 = ByteUtils.byteToShort(bleData,17);
-                lac_2g_2 = ByteUtils.byteToShort(bleData,19);
-                ci_2g_2 = ByteUtils.byteToShort(bleData,21);
-                lac_2g_3 = ByteUtils.byteToShort(bleData,23);
-                ci_2g_3 = ByteUtils.byteToShort(bleData,25);
-            }
-            if (is_4g_lbs){
-                mcc_4g = ByteUtils.byteToShort(bleData,11) & 0x7FFF;
-                mnc_4g = ByteUtils.byteToShort(bleData,13);
-                ci_4g = ByteUtils.byteToLong(bleData, 15);
-                earfcn_4g_1 = ByteUtils.byteToShort(bleData, 19);
-                pcid_4g_1 = ByteUtils.byteToShort(bleData, 21);
-                earfcn_4g_2 = ByteUtils.byteToShort(bleData, 23);
-                pcid_4g_2 = ByteUtils.byteToShort(bleData,25);
-            }
-            bleDriverSignInData.alert = alert
-            bleDriverSignInData.altitude = altitude
-            bleDriverSignInData.azimuth = azimuth
-            bleDriverSignInData.voltage = voltage
-            bleDriverSignInData.isHistoryData = isHistoryData
-            bleDriverSignInData.latitude = latitude
-            bleDriverSignInData.latlngValid = latlngValid
-            bleDriverSignInData.satelliteCount = satelliteCount
-            bleDriverSignInData.longitude = longitude
-            bleDriverSignInData.mac = mac
-            bleDriverSignInData.speed = speedf
-            bleDriverSignInData.is_4g_lbs = is_4g_lbs
-            bleDriverSignInData.is_2g_lbs = is_2g_lbs
-            bleDriverSignInData.mcc_2g = mcc_2g
-            bleDriverSignInData.mnc_2g = mnc_2g
-            bleDriverSignInData.lac_2g_1 = lac_2g_1
-            bleDriverSignInData.ci_2g_1 = ci_2g_1
-            bleDriverSignInData.lac_2g_2 = lac_2g_2
-            bleDriverSignInData.ci_2g_2 = ci_2g_2
-            bleDriverSignInData.lac_2g_3 = lac_2g_3
-            bleDriverSignInData.ci_2g_3 = ci_2g_3
-            bleDriverSignInData.mcc_4g = mcc_4g
-            bleDriverSignInData.mnc_4g = mnc_4g
-            bleDriverSignInData.ci_4g = ci_4g
-            bleDriverSignInData.earfcn_4g_1 = earfcn_4g_1
-            bleDriverSignInData.pcid_4g_1 = pcid_4g_1
-            bleDriverSignInData.earfcn_4g_2 = earfcn_4g_2
-            bleDriverSignInData.pcid_4g_2 = pcid_4g_2
-            bleDataList.push(bleDriverSignInData);
-        }else if (bleData[0] == 0x00 && bleData[1] == 0x04){
-            bluetoothPeripheralDataMessage.bleMessageType = "temp"
-            for (var i = 2;i +15 <= bleData.length;i+=15){
-                var bleTempData = {}
-                var macArray = ByteUtils.arrayOfRange(bleData, i + 0, i + 6);
-                var mac = ByteUtils.bytes2HexString(macArray, 0);
-                if(mac.startsWith("0000")){
-                    mac = mac.substring(4,12);
-                }
-                var voltageTmp = bleData[i + 6] < 0 ? bleData[i + 6] + 256 : bleData[i + 6]
-                var voltage;
-                if(voltageTmp == 255){
-                    voltage = -999;
-                }else{
-                    voltage = parseFloat((2 + 0.01 * voltageTmp).toFixed(2));
-                }
-                var batteryPercentTemp = bleData[i + 7] < 0 ? bleData[i + 7] + 256 : bleData[i + 7];
-                var batteryPercent;
-                if(batteryPercentTemp == 255){
-                    batteryPercent = -999;
-                }else{
-                    batteryPercent = batteryPercentTemp;
-                }
-                var temperatureTemp = ByteUtils.byteToShort(bleData,i+8);
-                var tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
-                var temperature;
-                if(temperatureTemp == 65535){
-                    temperature = -999;
-                }else{
-                    temperature = parseFloat(((temperatureTemp & 0x7fff) * 0.01 * tempPositive).toFixed(2));
-                }
-                var humidityTemp = ByteUtils.byteToShort(bleData,i+10);
-                var humidity;
-                if(humidityTemp == 65535){
-                    humidity = -999;
-                }else{
-                    humidity = parseFloat((humidityTemp * 0.01).toFixed(2));
-                }
-                var lightTemp = ByteUtils.byteToShort(bleData,i+12);
-                var lightIntensity ;
-                if(lightTemp == 65535){
-                    lightIntensity = -999;
-                }else{
-                    lightIntensity = lightTemp & 0x0001;
-                }
-                var rssiTemp = bleData[i + 14] < 0 ? bleData[i + 14] + 256 : bleData[i + 14];
-                var rssi;
-                if(rssiTemp == 255){
-                    rssi = -999;
-                }else{
-                    rssi = rssiTemp - 128;
-                }
-                bleTempData.rssi =rssi
-                bleTempData.mac =mac
-                bleTempData.lightIntensity =lightIntensity
-                bleTempData.humidity =humidity
-                bleTempData.voltage =voltage
-                bleTempData.batteryPercent =batteryPercent
-                bleTempData.temp =temperature
-                bleDataList.push(bleTempData);
-            }
-        }else if (bleData[0] == 0x00 && bleData[1] == 0x05){
-            bluetoothPeripheralDataMessage.bleMessageType = "door"
-            for (var i = 2;i+12 <= bleData.length;i+=12){
-                var bleDoorData = {}
-                var macArray = ByteUtils.arrayOfRange(bleData, i + 0, i + 6);
-                var mac = ByteUtils.bytes2HexString(macArray, 0);
-                var voltageTmp = bleData[i + 6] < 0 ?  bleData[i + 6] + 256 :  bleData[i + 6];
-                var voltage;
-                if(voltageTmp == 255){
-                    voltage = -999;
-                }else{
-                    voltage = parseFloat((2 + 0.01 * voltageTmp).toFixed(2));
-                }
-                var batteryPercentTemp = bleData[i + 7] < 0 ? bleData[i + 7] + 256 : bleData[i + 7];
-                var batteryPercent;
-                if(batteryPercentTemp == 255){
-                    batteryPercent = -999;
-                }else{
-                    batteryPercent = batteryPercentTemp;
-                }
-                var temperatureTemp = ByteUtils.byteToShort(bleData,i+8);
-                var tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
-                var temperature;
-                if(temperatureTemp == 65535){
-                    temperature = -999;
-                }else{
-                    temperature = parseFloat(((temperatureTemp & 0x7fff) * 0.01 * tempPositive).toFixed(2));
-                }
-                var doorStatus = bleData[i+10] < 0 ? bleData[i+10] + 256 : bleData[i+10];
-                var online = 1;
-                if(doorStatus == 255){
-                    doorStatus = -999;
-                    online = 0;
-                }
-
-                var rssiTemp = bleData[i + 11] < 0 ? bleData[i + 11] + 256 : bleData[i + 11];
-                var rssi;
-                if(rssiTemp == 255){
-                    rssi = -999;
-                }else{
-                    rssi = rssiTemp - 128;
-                }
-                bleDoorData.rssi =rssi
-                bleDoorData.mac =mac
-                bleDoorData.online =online
-                bleDoorData.doorStatus =doorStatus
-                bleDoorData.voltage =voltage
-                bleDoorData.batteryPercent =batteryPercent
-                bleDoorData.temp =temperature
-                bleDataList.push(bleDoorData);
-            }
-        }else if (bleData[0] == 0x00 && bleData[1] == 0x06){
-            bluetoothPeripheralDataMessage.bleMessageType = "ctrl"
-            for (var i = 2;i+12 <= bleData.length;i+=12){
-                var bleCtrlData = {}
-                var macArray = ByteUtils.arrayOfRange(bleData, i + 0, i + 6);
-                var mac = ByteUtils.bytes2HexString(macArray, 0);
-                var voltageTmp = bleData[i + 6] < 0 ? bleData[i + 6] + 256 : bleData[i + 6];
-                var voltage;
-                if(voltageTmp == 255){
-                    voltage = -999;
-                }else{
-                    voltage = parseFloat((2 + 0.01 * voltageTmp).toFixed());
-                }
-                var batteryPercentTemp = bleData[i + 7] < 0 ? bleData[i + 7] + 256 : bleData[i + 7];
-                var batteryPercent;
-                if(batteryPercentTemp == 255){
-                    batteryPercent = -999;
-                }else{
-                    batteryPercent = batteryPercentTemp;
-                }
-                var temperatureTemp = ByteUtils.byteToShort(bleData,i+8);
-                var tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
-                var temperature;
-                if(temperatureTemp == 65535){
-                    temperature = -999;
-                }else{
-                    temperature = parseFloat(((temperatureTemp & 0x7fff) * 0.01 * tempPositive).toFixed(2));
-                }
-                var CtrlStatus =bleData[i+10] < 0 ? bleData[i+10] + 256 : bleData[i+10];
-                var online = 1;
-                if(CtrlStatus == 255){
-                    CtrlStatus = -999;
-                    online = 0;
-                }
-
-                var rssiTemp = bleData[i + 11] < 0 ? bleData[i + 11] + 256 : bleData[i + 11];
-                var rssi;
-                if(rssiTemp == 255){
-                    rssi = -999;
-                }else{
-                    rssi = rssiTemp - 128;
-                }
-                bleCtrlData.setRssi = rssi
-                bleCtrlData.setMac = mac
-                bleCtrlData.setOnline = online
-                bleCtrlData.setCtrlStatus = CtrlStatus
-                bleCtrlData.voltage = voltage
-                bleCtrlData.setBatteryPercent = batteryPercent
-                bleCtrlData.temp = temperature
-                bleDataList.push(bleCtrlData);
-            }
-        }else if (bleData[0] == 0x00 && bleData[1] == 0x07){
-            bluetoothPeripheralDataMessage.bleMessageType = "fuel"
-            for (var i = 2;i+15 <= bleData.length;i+=15){
-                var bleFuelData = {}
-                var macArray = ByteUtils.arrayOfRange(bleData, i + 0, i + 6);
-                var mac = ByteUtils.bytes2HexString(macArray, 0);
-                var voltageTmp = bleData[i + 6] < 0 ? bleData[i + 6] + 256 : bleData[i + 6];
-                var voltage;
-                if(voltageTmp == 255){
-                    voltage = -999;
-                }else{
-                    voltage = parseFloat((2 + 0.01 * voltageTmp).toFixed(2));
-                }
-                var valueTemp = ByteUtils.byteToShort(bleData,i+7);
-                var value;
-                if(valueTemp == 65535){
-                    value = -999;
-                }else{
-                    value = valueTemp;
-                }
-                var temperatureTemp = ByteUtils.byteToShort(bleData,i+9);
-                var tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
-                var temperature;
-                if(temperatureTemp == 65535){
-                    temperature = -999;
-                }else{
-                    temperature = parseFloat(((temperatureTemp & 0x7fff) * 0.01 * tempPositive).toFixed(2));
-                }
-                var status =bleData[i+13] < 0 ? bleData[i+13] + 256 : bleData[i+13];
-                var online = 1;
-                if(status == 255){
-                    status = 0;
-                    online = 0;
-                }
-                var rssiTemp = bleData[i + 14] < 0 ? bleData[i + 14] + 256 : bleData[i + 14];
-                var rssi;
-                if(rssiTemp == 255){
-                    rssi = -999;
-                }else{
-                    rssi = rssiTemp - 128;
-                }
-                bleFuelData.rssi = rssi
-                bleFuelData.mac = mac
-                bleFuelData.online = online
-                bleFuelData.status = status
-                bleFuelData.voltage = voltage
-                bleFuelData.value = value
-                bleFuelData.temp = temperature
-                bleDataList.push(bleFuelData);
-            }
-        }
-        bluetoothPeripheralDataMessage.bleDataList = bleDataList
-        return bluetoothPeripheralDataMessage;
     },
     parseNetworkInfoMessage:function (bytes){
         var serialNo = ByteUtils.byteToShort(bytes,5);
@@ -1012,6 +609,664 @@ var ObdDecoder = {
         networkInfoMessage.band = band
         return networkInfoMessage;
     },
+    getBleTireData: function (bleData, i) {
+        var bleTireData = {};
+        var macArray = ByteUtils.arrayOfRange(bleData, i, i + 6);
+        var mac = ByteUtils.bytes2HexString(macArray, 0);
+        var voltageTmp = bleData[i + 6] < 0 ? bleData[i + 6] + 256 : bleData[i + 6];
+        var voltage;
+        if (voltageTmp == 255) {
+            voltage = -999;
+        } else {
+            voltage = 1.22 + 0.01 * voltageTmp;
+        }
+        var airPressureTmp = bleData[i + 7] < 0 ? bleData[i + 7] + 256 : bleData[i + 7];
+        var airPressure;
+        if (airPressureTmp == 255) {
+            airPressure = -999;
+        } else {
+            airPressure = 1.572 * 2 * airPressureTmp;
+        }
+        var airTempTmp = bleData[i + 8] < 0 ? bleData[i + 8] + 256 : bleData[i + 8];
+        var airTemp;
+        if (airTempTmp == 255) {
+            airTemp = -999;
+        } else {
+            airTemp = airTempTmp - 55;
+        }
+//            var isTireLeaks = (bleData[i+5] == 0x01);
+        bleTireData.mac = mac
+        bleTireData.voltage = voltage
+        bleTireData.airPressure = airPressure
+        bleTireData.airTemp = airTemp
+//            bleTireData.setIsTireLeaks(isTireLeaks);
+        var alarm = bleData[i + 9];
+        if (alarm == -1) {
+            alarm = 0;
+        }
+        bleTireData.alarm = alarm
+        return bleTireData;
+    },
+    getBleAlertData: function (bleData) {
+        var bleAlertData = {}
+        var macArray = ByteUtils.arrayOfRange(bleData, 2, 8);
+        var mac = ByteUtils.bytes2HexString(macArray, 0);
+        var voltageStr = ByteUtils.bytes2HexString(bleData, 8).substring(0, 2);
+        var voltage = parseFloat(voltageStr) / 10;
+        var alertByte = bleData[9];
+        var alert = alertByte == 0x01 ? "low_battery" : "sos";
+        var isHistoryData = (bleData[10] & 0x80) != 0x00;
+        var latlngValid = (bleData[10] & 0x40) != 0x00;
+        var satelliteCount = bleData[10] & 0x1F;
+        var altitude = latlngValid ? ByteUtils.bytes2Float(bleData, 11) : 0.0;
+        var longitude = latlngValid ? ByteUtils.bytes2Float(bleData, 15) : 0.0;
+        var latitude = latlngValid ? ByteUtils.bytes2Float(bleData, 19) : 0.0;
+        var azimuth = latlngValid ? ByteUtils.byteToShort(bleData, 25) : 0;
+        var speedf = 0.0;
+        if (latlngValid) {
+            var bytesSpeed = ByteUtils.arrayOfRange(bleData, 23, 25);
+            var strSp = ByteUtils.bytes2HexString(bytesSpeed, 0);
+            if (strSp.indexOf("f") != -1) {
+                speedf = -1;
+            } else {
+                speedf = parseFloat(strSp.substring(0, 3) + "." + strSp.substring(3, strSp.length));
+            }
+        }
+        var is_4g_lbs = false;
+        var mcc_4g = null;
+        var mnc_4g = null;
+        var eci_4g = null;
+        var tac = null;
+        var pcid_4g_1 = null;
+        var pcid_4g_2 = null;
+        var pcid_4g_3 = null;
+        var is_2g_lbs = false;
+        var mcc_2g = null;
+        var mnc_2g = null;
+        var lac_2g_1 = null;
+        var ci_2g_1 = null;
+        var lac_2g_2 = null;
+        var ci_2g_2 = null;
+        var lac_2g_3 = null;
+        var ci_2g_3 = null;
+        if (!latlngValid) {
+            var lbsByte = bleData[11];
+            if ((lbsByte & 0x80) == 0x80) {
+                is_4g_lbs = true;
+            } else {
+                is_2g_lbs = true;
+            }
+        }
+        if (is_2g_lbs) {
+            mcc_2g = ByteUtils.byteToShort(bleData, 11);
+            mnc_2g = ByteUtils.byteToShort(bleData, 13);
+            lac_2g_1 = ByteUtils.byteToShort(bleData, 15);
+            ci_2g_1 = ByteUtils.byteToShort(bleData, 17);
+            lac_2g_2 = ByteUtils.byteToShort(bleData, 19);
+            ci_2g_2 = ByteUtils.byteToShort(bleData, 21);
+            lac_2g_3 = ByteUtils.byteToShort(bleData, 23);
+            ci_2g_3 = ByteUtils.byteToShort(bleData, 25);
+        }
+        if (is_4g_lbs) {
+            mcc_4g = ByteUtils.byteToShort(bleData, 11) & 0x7FFF;
+            mnc_4g = ByteUtils.byteToShort(bleData, 13);
+            eci_4g = ByteUtils.byteToLong(bleData, 15);
+            tac = ByteUtils.byteToShort(bleData, 19);
+            pcid_4g_1 = ByteUtils.byteToShort(bleData, 21);
+            pcid_4g_2 = ByteUtils.byteToShort(bleData, 23);
+            pcid_4g_3 = ByteUtils.byteToShort(bleData, 25);
+        }
+        bleAlertData.alertType = alert
+        bleAlertData.altitude = altitude
+        bleAlertData.azimuth = azimuth
+        bleAlertData.innerVoltage = voltage
+        bleAlertData.isHistoryData = isHistoryData
+        bleAlertData.latitude = latitude
+        bleAlertData.latlngValid = latlngValid
+        bleAlertData.satelliteCount = satelliteCount
+        bleAlertData.longitude = longitude
+        bleAlertData.mac = mac
+        bleAlertData.speed = speedf
+        bleAlertData.is_4g_lbs = is_4g_lbs
+        bleAlertData.is_2g_lbs = is_2g_lbs
+        bleAlertData.mcc_2g = mcc_2g
+        bleAlertData.mnc_2g = mnc_2g
+        bleAlertData.lac_2g_1 = lac_2g_1
+        bleAlertData.ci_2g_1 = ci_2g_1
+        bleAlertData.lac_2g_2 = lac_2g_2
+        bleAlertData.ci_2g_2 = ci_2g_2
+        bleAlertData.lac_2g_3 = lac_2g_3
+        bleAlertData.ci_2g_3 = ci_2g_3
+        bleAlertData.mcc_4g = mcc_4g
+        bleAlertData.mnc_4g = mnc_4g
+        bleAlertData.eci_4g = eci_4g
+        bleAlertData.tac = tac
+        bleAlertData.pcid_4g_1 = pcid_4g_1
+        bleAlertData.pcid_4g_2 = pcid_4g_2
+        bleAlertData.pcid_4g_3 = pcid_4g_3
+        return bleAlertData;
+    },
+    getBleDriverSignInData: function (bleData) {
+        var bleDriverSignInData = {}
+        var macArray = ByteUtils.arrayOfRange(bleData, 2, 8);
+        var mac = ByteUtils.bytes2HexString(macArray, 0);
+        var voltageStr = ByteUtils.bytes2HexString(bleData, 8).substring(0, 2);
+        var voltage = parseFloat(voltageStr) / 10;
+        var alertByte = bleData[9];
+        var alert = alertByte == 0x01 ? "low_battery" : "driver";
+        var isHistoryData = (bleData[10] & 0x80) != 0x00;
+        var latlngValid = (bleData[10] & 0x40) != 0x00;
+        var satelliteCount = bleData[10] & 0x1F;
+        var altitude = latlngValid ? ByteUtils.bytes2Float(bleData, 11) : 0.0;
+        var longitude = latlngValid ? ByteUtils.bytes2Float(bleData, 15) : 0.0;
+        var latitude = latlngValid ? ByteUtils.bytes2Float(bleData, 19) : 0.0;
+        var azimuth = latlngValid ? ByteUtils.byteToShort(bleData, 25) : 0;
+        var speedf = 0.0;
+        if (latlngValid) {
+            var bytesSpeed = ByteUtils.arrayOfRange(bleData, 23, 25);
+            var strSp = ByteUtils.bytes2HexString(bytesSpeed, 0);
+            if (strSp.indexOf("f") != -1) {
+                speedf = -1;
+            } else {
+                speedf = parseFloat(strSp.substring(0, 3) + "." + strSp.substring(3, strSp.length));
+            }
+        }
+        var is_4g_lbs = false;
+        var mcc_4g = null;
+        var mnc_4g = null;
+        var eci_4g = null;
+        var tac = null;
+        var pcid_4g_1 = null;
+        var pcid_4g_2 = null;
+        var pcid_4g_3 = null;
+        var is_2g_lbs = false;
+        var mcc_2g = null;
+        var mnc_2g = null;
+        var lac_2g_1 = null;
+        var ci_2g_1 = null;
+        var lac_2g_2 = null;
+        var ci_2g_2 = null;
+        var lac_2g_3 = null;
+        var ci_2g_3 = null;
+        if (!latlngValid) {
+            var lbsByte = bleData[11];
+            if ((lbsByte & 0x80) == 0x80) {
+                is_4g_lbs = true;
+            } else {
+                is_2g_lbs = true;
+            }
+        }
+        if (is_2g_lbs) {
+            mcc_2g = ByteUtils.byteToShort(bleData, 11);
+            mnc_2g = ByteUtils.byteToShort(bleData, 13);
+            lac_2g_1 = ByteUtils.byteToShort(bleData, 15);
+            ci_2g_1 = ByteUtils.byteToShort(bleData, 17);
+            lac_2g_2 = ByteUtils.byteToShort(bleData, 19);
+            ci_2g_2 = ByteUtils.byteToShort(bleData, 21);
+            lac_2g_3 = ByteUtils.byteToShort(bleData, 23);
+            ci_2g_3 = ByteUtils.byteToShort(bleData, 25);
+        }
+        if (is_4g_lbs) {
+            mcc_4g = ByteUtils.byteToShort(bleData, 11) & 0x7FFF;
+            mnc_4g = ByteUtils.byteToShort(bleData, 13);
+            eci_4g = ByteUtils.byteToLong(bleData, 15);
+            tac = ByteUtils.byteToShort(bleData, 19);
+            pcid_4g_1 = ByteUtils.byteToShort(bleData, 21);
+            pcid_4g_2 = ByteUtils.byteToShort(bleData, 23);
+            pcid_4g_3 = ByteUtils.byteToShort(bleData, 25);
+        }
+        bleDriverSignInData.alert = alert
+        bleDriverSignInData.altitude = altitude
+        bleDriverSignInData.azimuth = azimuth
+        bleDriverSignInData.voltage = voltage
+        bleDriverSignInData.isHistoryData = isHistoryData
+        bleDriverSignInData.latitude = latitude
+        bleDriverSignInData.latlngValid = latlngValid
+        bleDriverSignInData.satelliteCount = satelliteCount
+        bleDriverSignInData.longitude = longitude
+        bleDriverSignInData.mac = mac
+        bleDriverSignInData.speed = speedf
+        bleDriverSignInData.is_4g_lbs = is_4g_lbs
+        bleDriverSignInData.is_2g_lbs = is_2g_lbs
+        bleDriverSignInData.mcc_2g = mcc_2g
+        bleDriverSignInData.mnc_2g = mnc_2g
+        bleDriverSignInData.lac_2g_1 = lac_2g_1
+        bleDriverSignInData.ci_2g_1 = ci_2g_1
+        bleDriverSignInData.lac_2g_2 = lac_2g_2
+        bleDriverSignInData.ci_2g_2 = ci_2g_2
+        bleDriverSignInData.lac_2g_3 = lac_2g_3
+        bleDriverSignInData.ci_2g_3 = ci_2g_3
+        bleDriverSignInData.mcc_4g = mcc_4g
+        bleDriverSignInData.mnc_4g = mnc_4g
+        bleDriverSignInData.eci_4g = eci_4g
+        bleDriverSignInData.tac = tac
+        bleDriverSignInData.pcid_4g_1 = pcid_4g_1
+        bleDriverSignInData.pcid_4g_2 = pcid_4g_2
+        bleDriverSignInData.pcid_4g_3 = pcid_4g_3
+        return bleDriverSignInData;
+    },
+    getBleTempData: function (bleData, i) {
+        var bleTempData = {}
+        var macArray = ByteUtils.arrayOfRange(bleData, i + 0, i + 6);
+        var mac = ByteUtils.bytes2HexString(macArray, 0);
+        if (mac.startsWith("0000")) {
+            mac = mac.substring(4, 12);
+        }
+        var voltageTmp = bleData[i + 6] < 0 ? bleData[i + 6] + 256 : bleData[i + 6]
+        var voltage;
+        if (voltageTmp == 255) {
+            voltage = -999;
+        } else {
+            voltage = parseFloat((2 + 0.01 * voltageTmp).toFixed(2));
+        }
+        var batteryPercentTemp = bleData[i + 7] < 0 ? bleData[i + 7] + 256 : bleData[i + 7];
+        var batteryPercent;
+        if (batteryPercentTemp == 255) {
+            batteryPercent = -999;
+        } else {
+            batteryPercent = batteryPercentTemp;
+        }
+        var temperatureTemp = ByteUtils.byteToShort(bleData, i + 8);
+        var tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
+        var temperature;
+        if (temperatureTemp == 65535) {
+            temperature = -999;
+        } else {
+            temperature = parseFloat(((temperatureTemp & 0x7fff) * 0.01 * tempPositive).toFixed(2));
+        }
+        var humidityTemp = ByteUtils.byteToShort(bleData, i + 10);
+        var humidity;
+        if (humidityTemp == 65535) {
+            humidity = -999;
+        } else {
+            humidity = parseFloat((humidityTemp * 0.01).toFixed(2));
+        }
+        var lightTemp = ByteUtils.byteToShort(bleData, i + 12);
+        var lightIntensity;
+        if (lightTemp == 65535) {
+            lightIntensity = -999;
+        } else {
+            lightIntensity = lightTemp & 0x0001;
+        }
+        var rssiTemp = bleData[i + 14] < 0 ? bleData[i + 14] + 256 : bleData[i + 14];
+        var rssi;
+        if (rssiTemp == 255) {
+            rssi = -999;
+        } else {
+            rssi = rssiTemp - 128;
+        }
+        bleTempData.rssi = rssi
+        bleTempData.mac = mac
+        bleTempData.lightIntensity = lightIntensity
+        bleTempData.humidity = humidity
+        bleTempData.voltage = voltage
+        bleTempData.batteryPercent = batteryPercent
+        bleTempData.temp = temperature
+        return bleTempData;
+    },
+    getBleDoorData: function (bleData, i) {
+        var bleDoorData = {}
+        var macArray = ByteUtils.arrayOfRange(bleData, i + 0, i + 6);
+        var mac = ByteUtils.bytes2HexString(macArray, 0);
+        var voltageTmp = bleData[i + 6] < 0 ? bleData[i + 6] + 256 : bleData[i + 6];
+        var voltage;
+        if (voltageTmp == 255) {
+            voltage = -999;
+        } else {
+            voltage = parseFloat((2 + 0.01 * voltageTmp).toFixed(2));
+        }
+        var batteryPercentTemp = bleData[i + 7] < 0 ? bleData[i + 7] + 256 : bleData[i + 7];
+        var batteryPercent;
+        if (batteryPercentTemp == 255) {
+            batteryPercent = -999;
+        } else {
+            batteryPercent = batteryPercentTemp;
+        }
+        var temperatureTemp = ByteUtils.byteToShort(bleData, i + 8);
+        var tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
+        var temperature;
+        if (temperatureTemp == 65535) {
+            temperature = -999;
+        } else {
+            temperature = parseFloat(((temperatureTemp & 0x7fff) * 0.01 * tempPositive).toFixed(2));
+        }
+        var doorStatus = bleData[i + 10] < 0 ? bleData[i + 10] + 256 : bleData[i + 10];
+        var online = 1;
+        if (doorStatus == 255) {
+            doorStatus = -999;
+            online = 0;
+        }
+
+        var rssiTemp = bleData[i + 11] < 0 ? bleData[i + 11] + 256 : bleData[i + 11];
+        var rssi;
+        if (rssiTemp == 255) {
+            rssi = -999;
+        } else {
+            rssi = rssiTemp - 128;
+        }
+        bleDoorData.rssi = rssi
+        bleDoorData.mac = mac
+        bleDoorData.online = online
+        bleDoorData.doorStatus = doorStatus
+        bleDoorData.voltage = voltage
+        bleDoorData.batteryPercent = batteryPercent
+        bleDoorData.temp = temperature
+        return bleDoorData
+    },
+    getBleCtrlData: function (bleData, i) {
+        var bleCtrlData = {}
+        var macArray = ByteUtils.arrayOfRange(bleData, i + 0, i + 6);
+        var mac = ByteUtils.bytes2HexString(macArray, 0);
+        var voltageTmp = bleData[i + 6] < 0 ? bleData[i + 6] + 256 : bleData[i + 6];
+        var voltage;
+        if (voltageTmp == 255) {
+            voltage = -999;
+        } else {
+            voltage = parseFloat((2 + 0.01 * voltageTmp).toFixed());
+        }
+        var batteryPercentTemp = bleData[i + 7] < 0 ? bleData[i + 7] + 256 : bleData[i + 7];
+        var batteryPercent;
+        if (batteryPercentTemp == 255) {
+            batteryPercent = -999;
+        } else {
+            batteryPercent = batteryPercentTemp;
+        }
+        var temperatureTemp = ByteUtils.byteToShort(bleData, i + 8);
+        var tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
+        var temperature;
+        if (temperatureTemp == 65535) {
+            temperature = -999;
+        } else {
+            temperature = parseFloat(((temperatureTemp & 0x7fff) * 0.01 * tempPositive).toFixed(2));
+        }
+        var CtrlStatus = bleData[i + 10] < 0 ? bleData[i + 10] + 256 : bleData[i + 10];
+        var online = 1;
+        if (CtrlStatus == 255) {
+            CtrlStatus = -999;
+            online = 0;
+        }
+
+        var rssiTemp = bleData[i + 11] < 0 ? bleData[i + 11] + 256 : bleData[i + 11];
+        var rssi;
+        if (rssiTemp == 255) {
+            rssi = -999;
+        } else {
+            rssi = rssiTemp - 128;
+        }
+        bleCtrlData.setRssi = rssi
+        bleCtrlData.setMac = mac
+        bleCtrlData.setOnline = online
+        bleCtrlData.setCtrlStatus = CtrlStatus
+        bleCtrlData.voltage = voltage
+        bleCtrlData.setBatteryPercent = batteryPercent
+        bleCtrlData.temp = temperature
+        return bleCtrlData
+    },
+    getBleFuelData: function (bleData, i) {
+        var bleFuelData = {}
+        var macArray = ByteUtils.arrayOfRange(bleData, i + 0, i + 6);
+        var mac = ByteUtils.bytes2HexString(macArray, 0);
+        var voltageTmp = bleData[i + 6] < 0 ? bleData[i + 6] + 256 : bleData[i + 6];
+        var voltage;
+        if (voltageTmp == 255) {
+            voltage = -999;
+        } else {
+            voltage = parseFloat((2 + 0.01 * voltageTmp).toFixed(2));
+        }
+        var valueTemp = ByteUtils.byteToShort(bleData, i + 7);
+        var value;
+        if (valueTemp == 65535) {
+            value = -999;
+        } else {
+            value = valueTemp;
+        }
+        var temperatureTemp = ByteUtils.byteToShort(bleData, i + 9);
+        var tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
+        var temperature;
+        if (temperatureTemp == 65535) {
+            temperature = -999;
+        } else {
+            temperature = parseFloat(((temperatureTemp & 0x7fff) * 0.01 * tempPositive).toFixed(2));
+        }
+        var status = bleData[i + 13] < 0 ? bleData[i + 13] + 256 : bleData[i + 13];
+        var online = 1;
+        if (status == 255) {
+            status = 0;
+            online = 0;
+        }
+        var rssiTemp = bleData[i + 14] < 0 ? bleData[i + 14] + 256 : bleData[i + 14];
+        var rssi;
+        if (rssiTemp == 255) {
+            rssi = -999;
+        } else {
+            rssi = rssiTemp - 128;
+        }
+        bleFuelData.rssi = rssi
+        bleFuelData.mac = mac
+        bleFuelData.online = online
+        bleFuelData.status = status
+        bleFuelData.voltage = voltage
+        bleFuelData.value = value
+        bleFuelData.temp = temperature
+        return bleFuelData
+    },
+    parseBluetoothDataMessage:function (bytes){
+        var serialNo = ByteUtils.byteToShort(bytes,5);
+        var imei = ByteUtils.IMEI.decode(bytes,7)
+        var bluetoothPeripheralDataMessage = {
+            serialNo:serialNo,
+            imei:imei,
+            srcBytes:bytes,
+            messageType:"bluetoothData",
+        }
+        bluetoothPeripheralDataMessage.isIgnition = (bytes[21] & 0x01) == 0x01
+        bluetoothPeripheralDataMessage.protocolHeadType = bytes[2]
+        bluetoothPeripheralDataMessage.date = ByteUtils.getGTM0Date(bytes, 15);
+        var bleData = ByteUtils.arrayOfRange(bytes,22,bytes.length);
+        if (bleData.length <= 0){
+            return bluetoothPeripheralDataMessage;
+        }
+        var bleDataList = []
+        if(bleData[0] == 0x00 && bleData[1] == 0x00){
+            bluetoothPeripheralDataMessage.bleMessageType = "mix"
+            var positionIndex = 2;
+            while (positionIndex + 2 < bleData.length ){
+                if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x01){
+                    positionIndex+=2;
+                    if(positionIndex + 10 <= bleData.length){
+                        var bleTireData = this.getBleTireData(bleData, positionIndex);
+                        bleDataList.push(bleTireData);
+                        positionIndex += 10;
+                        continue;
+                    }else{
+                        break;
+                    }
+
+                }else if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x02){
+                    positionIndex+=2;
+                    if(positionIndex + 25 <= bleData.length){
+                        var bleAlertData = this.getBleAlertData(bleData);
+                        bleDataList.push(bleAlertData);
+                        positionIndex += 25;
+                        continue;
+                    }else{
+                        break;
+                    }
+                }else if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x03){
+                    positionIndex+=2;
+                    if(positionIndex + 25 <= bleData.length){
+                        var bleDriverSignInData = this.getBleDriverSignInData(bleData);
+                        bleDataList.push(bleDriverSignInData);
+                        positionIndex += 25;
+                        continue;
+                    }else{
+                        break;
+                    }
+                }else if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x04){
+                    positionIndex+=2;
+                    if(positionIndex + 15 <= bleData.length){
+                        var bleTempData = this.getBleTempData(bleData, positionIndex);
+                        bleDataList.push(bleTempData);
+                        positionIndex += 15;
+                        continue;
+                    }else{
+                        break;
+                    }
+                }else if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x05){
+                    positionIndex+=2;
+                    if(positionIndex + 12 <= bleData.length){
+                        var bleDoorData = this.getBleDoorData(bleData, positionIndex);
+                        bleDataList.push(bleDoorData);
+                        positionIndex += 12;
+                        continue;
+                    }else{
+                        break;
+                    }
+                }else if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x06){
+                    positionIndex+=2;
+                    if(positionIndex + 12 <= bleData.length){
+                        var bleCtrlData = this.getBleCtrlData(bleData, positionIndex);
+                        bleDataList.push(bleCtrlData);
+                        positionIndex += 12;
+                        continue;
+                    }else{
+                        break;
+                    }
+                }else if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x07){
+                    positionIndex+=2;
+                    if(positionIndex + 15 <= bleData.length){
+                        var bleFuelData = this.getBleFuelData(bleData, positionIndex);
+                        bleDataList.push(bleFuelData);
+                        positionIndex += 15;
+                        continue;
+                    }else{
+                        break;
+                    }
+                }else{
+                    break;
+                }
+            }
+        }
+        else if(bleData[0] == 0x00 && bleData[1] == 0x01){
+            bluetoothPeripheralDataMessage.bleMessageType = "tire"
+            for (var i = 2;i+10 <= bleData.length;i+=10){
+                var bleTireData  = this.getBleTireData(bleData, i);
+                bleDataList.push(bleTireData);
+            }
+        }else if (bleData[0] == 0x00 && bleData[1] == 0x02){
+            bluetoothPeripheralDataMessage.bleMessageType = "sos"
+            var bleAlertData = this.getBleAlertData(bleData);
+            bleDataList.push(bleAlertData);
+        }else if (bleData[0] == 0x00 && bleData[1] == 0x03){
+            bluetoothPeripheralDataMessage.bleMessageType = "driver"
+            var bleDriverSignInData = this.getBleDriverSignInData(bleData);
+            bleDataList.push(bleDriverSignInData);
+        }else if (bleData[0] == 0x00 && bleData[1] == 0x04){
+            bluetoothPeripheralDataMessage.bleMessageType = "temp"
+            for (var i = 2;i +15 <= bleData.length;i+=15){
+                var bleTempData = this.getBleTempData(bleData, i);
+                bleDataList.push(bleTempData);
+            }
+        }else if (bleData[0] == 0x00 && bleData[1] == 0x05){
+            bluetoothPeripheralDataMessage.bleMessageType = "door"
+            for (var i = 2;i+12 <= bleData.length;i+=12){
+                var bleDoorData = this.getBleDoorData(bleData, i);
+                bleDataList.push(bleDoorData);
+            }
+        }else if (bleData[0] == 0x00 && bleData[1] == 0x06){
+            bluetoothPeripheralDataMessage.bleMessageType = "ctrl"
+            for (var i = 2;i+12 <= bleData.length;i+=12){
+                var bleCtrlData  = this.getBleCtrlData(bleData, i);
+                bleDataList.push(bleCtrlData);
+            }
+        }else if (bleData[0] == 0x00 && bleData[1] == 0x07){
+            bluetoothPeripheralDataMessage.bleMessageType = "fuel"
+            for (var i = 2;i+15 <= bleData.length;i+=15){
+                var bleFuelData = this.getBleFuelData(bleData, i);
+                bleDataList.push(bleFuelData);
+            }
+        }
+        bluetoothPeripheralDataMessage.bleDataList = bleDataList
+        return bluetoothPeripheralDataMessage;
+    },
+    getBleAlertDataWithoutLocation: function (bleData, altitude, azimuth, isHisData, latitude, latlngValid, longitude, speedf, is_4g_lbs, is_2g_lbs, mcc_2g, mnc_2g, lac_2g_1, ci_2g_1, lac_2g_2, ci_2g_2, lac_2g_3, ci_2g_3, mcc_4g, mnc_4g, eci_4g, tac, pcid_4g_1, pcid_4g_2, pcid_4g_3) {
+        var bleAlertData = {}
+        var macArray = ByteUtils.arrayOfRange(bleData, 2, 8);
+        var mac = ByteUtils.bytes2HexString(macArray, 0);
+        var voltageStr = ByteUtils.bytes2HexString(bleData, 8).substring(0, 2);
+        var voltage = parseFloat(voltageStr) / 10;
+
+        var alertByte = bleData[9];
+        var alert = alertByte == 0x01 ? "low_battery" : "sos";
+
+        bleAlertData.setAlertType = alert
+        bleAlertData.altitude = altitude
+        bleAlertData.azimuth = azimuth
+        bleAlertData.innerVoltage = voltage
+        bleAlertData.isHistoryData = isHisData
+        bleAlertData.latitude = latitude
+        bleAlertData.latlngValid = latlngValid
+        bleAlertData.longitude = longitude
+        bleAlertData.mac = mac
+        bleAlertData.speed = speedf
+        bleAlertData.is_4g_lbs = is_4g_lbs
+        bleAlertData.is_2g_lbs = is_2g_lbs
+        bleAlertData.mcc_2g = mcc_2g
+        bleAlertData.mnc_2g = mnc_2g
+        bleAlertData.lac_2g_1 = lac_2g_1
+        bleAlertData.ci_2g_1 = ci_2g_1
+        bleAlertData.lac_2g_2 = lac_2g_2
+        bleAlertData.ci_2g_2 = ci_2g_2
+        bleAlertData.lac_2g_3 = lac_2g_3
+        bleAlertData.ci_2g_3 = ci_2g_3
+        bleAlertData.mcc_4g = mcc_4g
+        bleAlertData.mnc_4g = mnc_4g
+        bleAlertData.eci_4g = eci_4g
+        bleAlertData.tac = tac
+        bleAlertData.pcid_4g_1 = pcid_4g_1
+        bleAlertData.pcid_4g_2 = pcid_4g_2
+        bleAlertData.pcid_4g_3 = pcid_4g_3
+        return bleAlertData;
+    },
+    getBleDriverSignInDataWithoutLocation: function (bleData, altitude, azimuth, isHisData, latitude, latlngValid, longitude, speedf, is_4g_lbs, is_2g_lbs, mcc_2g, mnc_2g, lac_2g_1, ci_2g_1, lac_2g_2, ci_2g_2, lac_2g_3, ci_2g_3, mcc_4g, mnc_4g, eci_4g, tac, pcid_4g_1, pcid_4g_2, pcid_4g_3) {
+        var bleDriverSignInData = {}
+        var macArray = ByteUtils.arrayOfRange(bleData, 2, 8);
+        var mac = ByteUtils.bytes2HexString(macArray, 0);
+        var voltageStr = ByteUtils.bytes2HexString(bleData, 8).substring(0, 2);
+        var voltage = parseFloat(voltageStr) / 10;
+
+        var alertByte = bleData[9];
+        var alert = alertByte == 0x01 ? "low_battery" : "driver"
+
+        bleDriverSignInData.setAlert = alert
+        bleDriverSignInData.altitude = altitude
+        bleDriverSignInData.azimuth = azimuth
+        bleDriverSignInData.voltage = voltage
+        bleDriverSignInData.isHistoryData = isHisData
+        bleDriverSignInData.latitude = latitude
+        bleDriverSignInData.latlngValid = latlngValid
+        bleDriverSignInData.longitude = longitude
+        bleDriverSignInData.mac = mac
+        bleDriverSignInData.speed = speedf
+        bleDriverSignInData.is_4g_lbs = is_4g_lbs
+        bleDriverSignInData.is_2g_lbs = is_2g_lbs
+        bleDriverSignInData.mcc_2g = mcc_2g
+        bleDriverSignInData.mnc_2g = mnc_2g
+        bleDriverSignInData.lac_2g_1 = lac_2g_1
+        bleDriverSignInData.ci_2g_1 = ci_2g_1
+        bleDriverSignInData.lac_2g_2 = lac_2g_2
+        bleDriverSignInData.ci_2g_2 = ci_2g_2
+        bleDriverSignInData.lac_2g_3 = lac_2g_3
+        bleDriverSignInData.ci_2g_3 = ci_2g_3
+        bleDriverSignInData.mcc_4g = mcc_4g
+        bleDriverSignInData.mnc_4g = mnc_4g
+        bleDriverSignInData.eci_4g = eci_4g
+        bleDriverSignInData.tac = tac
+        bleDriverSignInData.pcid_4g_1 = pcid_4g_1
+        bleDriverSignInData.pcid_4g_2 = pcid_4g_2
+        bleDriverSignInData.pcid_4g_3 = pcid_4g_3
+        return bleDriverSignInData;
+    },
     parseSecondBluetoothDataMessage:function (bytes){
         var serialNo = ByteUtils.byteToShort(bytes,5);
         var imei = ByteUtils.IMEI.decode(bytes,7)
@@ -1033,21 +1288,23 @@ var ObdDecoder = {
         var latitude = latlngValid ? ByteUtils.bytes2Float(bytes, 31) : 0.0;
         var azimuth = latlngValid ? ByteUtils.byteToShort(bytes, 37) : 0;
         var speedf = 0.0;
-        var bytesSpeed = ByteUtils.arrayOfRange(bytes, 35, 37);
-        var strSp = ByteUtils.bytes2HexString(bytesSpeed, 0);
-        if(strSp.indexOf("f") != -1){
-            speedf = -999
-        }else {
-            speedf = parseFloat(strSp.substring(0, 3) +"."+ strSp.substring(3, strSp.length));
+        if(latlngValid){
+            var bytesSpeed = ByteUtils.arrayOfRange(bytes, 35, 37);
+            var strSp = ByteUtils.bytes2HexString(bytesSpeed, 0);
+            if(strSp.indexOf("f") != -1){
+                speedf = -999
+            }else {
+                speedf = parseFloat(strSp.substring(0, 3) +"."+ strSp.substring(3, strSp.length));
+            }
         }
         var is_4g_lbs = false;
         var mcc_4g = null;
         var mnc_4g = null;
-        var ci_4g = null;
-        var earfcn_4g_1 = null;
+        var eci_4g = null;
+        var tac = null;
         var pcid_4g_1 = null;
-        var earfcn_4g_2 = null;
         var pcid_4g_2 = null;
+        var pcid_4g_3 = null;
         var is_2g_lbs = false;
         var mcc_2g = null;
         var mnc_2g = null;
@@ -1078,11 +1335,11 @@ var ObdDecoder = {
         if (is_4g_lbs){
             mcc_4g = ByteUtils.byteToShort(bytes,23) & 0x7FFF;
             mnc_4g = ByteUtils.byteToShort(bytes,25);
-            ci_4g = ByteUtils.byteToLong(bytes, 27);
-            earfcn_4g_1 = ByteUtils.byteToShort(bytes, 31);
+            eci_4g = ByteUtils.byteToLong(bytes, 27);
+            tac = ByteUtils.byteToShort(bytes, 31);
             pcid_4g_1 = ByteUtils.byteToShort(bytes, 33);
-            earfcn_4g_2 = ByteUtils.byteToShort(bytes, 35);
-            pcid_4g_2 = ByteUtils.byteToShort(bytes,37);
+            pcid_4g_2 = ByteUtils.byteToShort(bytes, 35);
+            pcid_4g_3 = ByteUtils.byteToShort(bytes,37);
         }
         bluetoothPeripheralDataMessage.latitude = latitude
         bluetoothPeripheralDataMessage.longitude = longitude
@@ -1102,343 +1359,133 @@ var ObdDecoder = {
         bluetoothPeripheralDataMessage.ci_2g_3 =ci_2g_3
         bluetoothPeripheralDataMessage.mcc_4g =mcc_4g
         bluetoothPeripheralDataMessage.mnc_4g =mnc_4g
-        bluetoothPeripheralDataMessage.ci_4g =ci_4g
-        bluetoothPeripheralDataMessage.earfcn_4g_1 =earfcn_4g_1
+        bluetoothPeripheralDataMessage.eci_4g =eci_4g
+        bluetoothPeripheralDataMessage.tac =tac
         bluetoothPeripheralDataMessage.pcid_4g_1 =pcid_4g_1
-        bluetoothPeripheralDataMessage.earfcn_4g_2 =earfcn_4g_2
         bluetoothPeripheralDataMessage.pcid_4g_2 =pcid_4g_2
+        bluetoothPeripheralDataMessage.pcid_4g_3 =pcid_4g_3
         var bleData = ByteUtils.arrayOfRange(bytes,39,bytes.length);
         if (bleData.length <= 0){
             return bluetoothPeripheralDataMessage;
         }
         var bleDataList = []
-        if(bleData[0] == 0x00 && bleData[1] == 0x01){
+        if(bleData[0] == 0x00 && bleData[1] == 0x00){
+            bluetoothPeripheralDataMessage.bleMessageType = "mix"
+            var positionIndex = 2;
+            while (positionIndex + 2 < bleData.length ){
+                if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x01){
+                    positionIndex+=2;
+                    if(positionIndex + 10 <= bleData.length){
+                        var bleTireData = this.getBleTireData(bleData, positionIndex);
+                        bleDataList.push(bleTireData);
+                        positionIndex += 10;
+                        continue;
+                    }else{
+                        break;
+                    }
+
+                }else if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x02){
+                    positionIndex+=2;
+                    if(positionIndex + 8 <= bleData.length){
+                        var bleAlertData = this.getBleAlertDataWithoutLocation(bleData, altitude, azimuth, isHisData, latitude, latlngValid, longitude, speedf, is_4g_lbs, is_2g_lbs, mcc_2g, mnc_2g, lac_2g_1, ci_2g_1, lac_2g_2, ci_2g_2, lac_2g_3, ci_2g_3, mcc_4g, mnc_4g, eci_4g, tac, pcid_4g_1, pcid_4g_2, pcid_4g_3);
+                        bleDataList.push(bleAlertData);
+                        positionIndex += 8;
+                        continue;
+                    }else{
+                        break;
+                    }
+                }else if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x03){
+                    positionIndex+=2;
+                    if(positionIndex + 8 <= bleData.length){
+                        var bleDriverSignInData = this.getBleDriverSignInDataWithoutLocation(bleData, altitude, azimuth, isHisData, latitude, latlngValid, longitude, speedf, is_4g_lbs, is_2g_lbs, mcc_2g, mnc_2g, lac_2g_1, ci_2g_1, lac_2g_2, ci_2g_2, lac_2g_3, ci_2g_3, mcc_4g, mnc_4g, eci_4g, tac, pcid_4g_1, pcid_4g_2, pcid_4g_3);
+                        bleDataList.push(bleDriverSignInData);
+                        positionIndex += 8;
+                        continue;
+                    }else{
+                        break;
+                    }
+                }else if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x04){
+                    positionIndex+=2;
+                    if(positionIndex + 15 <= bleData.length){
+                        var bleTempData = this.getBleTempData(bleData, positionIndex);
+                        bleDataList.push(bleTempData);
+                        positionIndex += 15;
+                        continue;
+                    }else{
+                        break;
+                    }
+                }else if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x05){
+                    positionIndex+=2;
+                    if(positionIndex + 12 <= bleData.length){
+                        var bleDoorData = this.getBleDoorData(bleData, positionIndex);
+                        bleDataList.push(bleDoorData);
+                        positionIndex += 12;
+                        continue;
+                    }else{
+                        break;
+                    }
+                }else if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x06){
+                    positionIndex+=2;
+                    if(positionIndex + 12 <= bleData.length){
+                        var bleCtrlData = this.getBleCtrlData(bleData, positionIndex);
+                        bleDataList.push(bleCtrlData);
+                        positionIndex += 12;
+                        continue;
+                    }else{
+                        break;
+                    }
+                }else if(bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x07){
+                    positionIndex+=2;
+                    if(positionIndex + 15 <= bleData.length){
+                        var bleFuelData = this.getBleFuelData(bleData, positionIndex);
+                        bleDataList.push(bleFuelData);
+                        positionIndex += 15;
+                        continue;
+                    }else{
+                        break;
+                    }
+                }else{
+                    break;
+                }
+            }
+
+        }
+        else if(bleData[0] == 0x00 && bleData[1] == 0x01){
             bluetoothPeripheralDataMessage.bleMessageType = "tire"
             for (var i = 2;i+10 <= bleData.length;i+=10){
-                var bleTireData = {}
-                var macArray = ByteUtils.arrayOfRange(bleData, i, i + 6);
-                var mac = ByteUtils.bytes2HexString(macArray, 0);
-                var voltageTmp = bleData[i + 6] < 0 ? bleData[i + 6] + 256 : bleData[i + 6];
-                var voltage;
-                if(voltageTmp == 255){
-                    voltage = -999;
-                }else{
-                    voltage = 1.22 + 0.01 * voltageTmp;
-                }
-                var airPressureTmp = bleData[i + 7] < 0 ? bleData[i + 7] + 256 : bleData[i + 7];
-                var airPressure;
-                if(airPressureTmp == 255){
-                    airPressure = -999;
-                }else{
-                    airPressure = 1.572 * 2 * airPressureTmp;
-                }
-                var airTempTmp = bleData[i + 8] < 0 ? bleData[i + 8] + 256 : bleData[i + 8];
-                var airTemp;
-                if(airTempTmp == 255){
-                    airTemp = -999;
-                }else{
-                    airTemp = airTempTmp - 55;
-                }
-                bleTireData.mac =mac
-                bleTireData.voltage =voltage
-                bleTireData.airPressure =airPressure
-                bleTireData.airTemp =airTemp
-                var alarm = bleData[i + 9];
-                if(alarm == -1){
-                    alarm = 0;
-                }
-                bleTireData.status = alarm
+                var bleTireData  = this.getBleTireData(bleData, i);
                 bleDataList.push(bleTireData);
             }
         }else if (bleData[0] == 0x00 && bleData[1] == 0x02){
             bluetoothPeripheralDataMessage.bleMessageType = "sos"
-            var bleAlertData = {}
-            var macArray = ByteUtils.arrayOfRange(bleData, 2, 8);
-            var mac = ByteUtils.bytes2HexString(macArray, 0);
-            var voltageStr = ByteUtils.bytes2HexString(bleData,8).substring(0, 2);
-            var voltage = parseFloat(voltageStr) / 10;
-
-            var alertByte = bleData[9];
-            var alert = alertByte == 0x01 ? "low_battery" : "sos";
-
-            bleAlertData.setAlertType = alert
-            bleAlertData.altitude = altitude
-            bleAlertData.azimuth = azimuth
-            bleAlertData.innerVoltage = voltage
-            bleAlertData.isHistoryData = isHisData
-            bleAlertData.latitude = latitude
-            bleAlertData.latlngValid = latlngValid
-            bleAlertData.longitude = longitude
-            bleAlertData.mac = mac
-            bleAlertData.speed = speedf
-            bleAlertData.is_4g_lbs = is_4g_lbs
-            bleAlertData.is_2g_lbs = is_2g_lbs
-            bleAlertData.mcc_2g = mcc_2g
-            bleAlertData.mnc_2g = mnc_2g
-            bleAlertData.lac_2g_1 = lac_2g_1
-            bleAlertData.ci_2g_1 = ci_2g_1
-            bleAlertData.lac_2g_2 = lac_2g_2
-            bleAlertData.ci_2g_2 = ci_2g_2
-            bleAlertData.lac_2g_3 = lac_2g_3
-            bleAlertData.ci_2g_3 = ci_2g_3
-            bleAlertData.mcc_4g = mcc_4g
-            bleAlertData.mnc_4g = mnc_4g
-            bleAlertData.ci_4g = ci_4g
-            bleAlertData.earfcn_4g_1 = earfcn_4g_1
-            bleAlertData.pcid_4g_1 = pcid_4g_1
-            bleAlertData.earfcn_4g_2 = earfcn_4g_2
-            bleAlertData.pcid_4g_2 = pcid_4g_2
+            var bleAlertData = this.getBleAlertDataWithoutLocation(bleData, altitude, azimuth, isHisData, latitude, latlngValid, longitude, speedf, is_4g_lbs, is_2g_lbs, mcc_2g, mnc_2g, lac_2g_1, ci_2g_1, lac_2g_2, ci_2g_2, lac_2g_3, ci_2g_3, mcc_4g, mnc_4g, eci_4g, tac, pcid_4g_1, pcid_4g_2, pcid_4g_3);
             bleDataList.push(bleAlertData);
         }else if (bleData[0] == 0x00 && bleData[1] == 0x03){
             bluetoothPeripheralDataMessage.bleMessageType = "driver"
-            var bleDriverSignInData = {}
-            var macArray = ByteUtils.arrayOfRange(bleData, 2,8);
-            var mac = ByteUtils.bytes2HexString(macArray, 0);
-            var voltageStr = ByteUtils.bytes2HexString(bleData,8).substring(0, 2);
-            var voltage = parseFloat(voltageStr) / 10;
-
-            var alertByte = bleData[9];
-            var alert = alertByte == 0x01 ? "low_battery" : "driver"
-
-            bleDriverSignInData.setAlert =alert
-            bleDriverSignInData.altitude =altitude
-            bleDriverSignInData.azimuth =azimuth
-            bleDriverSignInData.voltage =voltage
-            bleDriverSignInData.isHistoryData = isHisData
-            bleDriverSignInData.latitude =latitude
-            bleDriverSignInData.latlngValid =latlngValid
-            bleDriverSignInData.longitude =longitude
-            bleDriverSignInData.mac =mac
-            bleDriverSignInData.speed = speedf
-            bleDriverSignInData.is_4g_lbs =is_4g_lbs
-            bleDriverSignInData.is_2g_lbs =is_2g_lbs
-            bleDriverSignInData.mcc_2g =mcc_2g
-            bleDriverSignInData.mnc_2g =mnc_2g
-            bleDriverSignInData.lac_2g_1 =lac_2g_1
-            bleDriverSignInData.ci_2g_1 =ci_2g_1
-            bleDriverSignInData.lac_2g_2 =lac_2g_2
-            bleDriverSignInData.ci_2g_2 =ci_2g_2
-            bleDriverSignInData.lac_2g_3 =lac_2g_3
-            bleDriverSignInData.ci_2g_3 =ci_2g_3
-            bleDriverSignInData.mcc_4g =mcc_4g
-            bleDriverSignInData.mnc_4g =mnc_4g
-            bleDriverSignInData.ci_4g =ci_4g
-            bleDriverSignInData.earfcn_4g_1 =earfcn_4g_1
-            bleDriverSignInData.pcid_4g_1 =pcid_4g_1
-            bleDriverSignInData.earfcn_4g_2 =earfcn_4g_2
-            bleDriverSignInData.pcid_4g_2 =pcid_4g_2
+            var bleDriverSignInData = this.getBleDriverSignInDataWithoutLocation(bleData, altitude, azimuth, isHisData, latitude, latlngValid, longitude, speedf, is_4g_lbs, is_2g_lbs, mcc_2g, mnc_2g, lac_2g_1, ci_2g_1, lac_2g_2, ci_2g_2, lac_2g_3, ci_2g_3, mcc_4g, mnc_4g, eci_4g, tac, pcid_4g_1, pcid_4g_2, pcid_4g_3);
             bleDataList.push(bleDriverSignInData);
         }else if (bleData[0] == 0x00 && bleData[1] == 0x04){
             bluetoothPeripheralDataMessage.bleMessageType = "temp"
             for (var i = 2;i +15 <= bleData.length;i+=15){
-                var bleTempData = {}
-                var macArray = ByteUtils.arrayOfRange(bleData, i + 0, i + 6);
-                var mac = ByteUtils.bytes2HexString(macArray, 0);
-                if(mac.startsWith("0000")){
-                    mac = mac.substring(4,12);
-                }
-                var voltageTmp = bleData[i + 6] < 0 ? bleData[i + 6] + 256 : bleData[i + 6]
-                var voltage;
-                if(voltageTmp == 255){
-                    voltage = -999;
-                }else{
-                    voltage = parseFloat((2 + 0.01 * voltageTmp).toFixed(2));
-                }
-                var batteryPercentTemp = bleData[i + 7] < 0 ? bleData[i + 7] + 256 : bleData[i + 7];
-                var batteryPercent;
-                if(batteryPercentTemp == 255){
-                    batteryPercent = -999;
-                }else{
-                    batteryPercent = batteryPercentTemp;
-                }
-                var temperatureTemp = ByteUtils.byteToShort(bleData,i+8);
-                var tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
-                var temperature;
-                if(temperatureTemp == 65535){
-                    temperature = -999;
-                }else{
-                    temperature = parseFloat(((temperatureTemp & 0x7fff) * 0.01 * tempPositive).toFixed(2));
-                }
-                var humidityTemp = ByteUtils.byteToShort(bleData,i+10);
-                var humidity;
-                if(humidityTemp == 65535){
-                    humidity = -999;
-                }else{
-                    humidity = parseFloat((humidityTemp * 0.01).toFixed(2));
-                }
-                var lightTemp = ByteUtils.byteToShort(bleData,i+12);
-                var lightIntensity ;
-                if(lightTemp == 65535){
-                    lightIntensity = -999;
-                }else{
-                    lightIntensity = lightTemp & 0x0001;
-                }
-                var rssiTemp = bleData[i + 14] < 0 ? bleData[i + 14] + 256 : bleData[i + 14];
-                var rssi;
-                if(rssiTemp == 255){
-                    rssi = -999;
-                }else{
-                    rssi = rssiTemp - 128;
-                }
-                bleTempData.rssi =rssi
-                bleTempData.mac =mac
-                bleTempData.lightIntensity =lightIntensity
-                bleTempData.humidity =humidity
-                bleTempData.voltage =voltage
-                bleTempData.batteryPercent =batteryPercent
-                bleTempData.temp =temperature
+                var bleTempData = this.getBleTempData(bleData, i);
                 bleDataList.push(bleTempData);
             }
         }else if (bleData[0] == 0x00 && bleData[1] == 0x05){
             bluetoothPeripheralDataMessage.bleMessageType = "door"
             for (var i = 2;i+12 <= bleData.length;i+=12){
-                var bleDoorData = {}
-                var macArray = ByteUtils.arrayOfRange(bleData, i + 0, i + 6);
-                var mac = ByteUtils.bytes2HexString(macArray, 0);
-                var voltageTmp = bleData[i + 6] < 0 ?  bleData[i + 6] + 256 :  bleData[i + 6];
-                var voltage;
-                if(voltageTmp == 255){
-                    voltage = -999;
-                }else{
-                    voltage = parseFloat((2 + 0.01 * voltageTmp).toFixed(2));
-                }
-                var batteryPercentTemp = bleData[i + 7] < 0 ? bleData[i + 7] + 256 : bleData[i + 7];
-                var batteryPercent;
-                if(batteryPercentTemp == 255){
-                    batteryPercent = -999;
-                }else{
-                    batteryPercent = batteryPercentTemp;
-                }
-                var temperatureTemp = ByteUtils.byteToShort(bleData,i+8);
-                var tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
-                var temperature;
-                if(temperatureTemp == 65535){
-                    temperature = -999;
-                }else{
-                    temperature = parseFloat(((temperatureTemp & 0x7fff) * 0.01 * tempPositive).toFixed(2));
-                }
-                var doorStatus = bleData[i+10] < 0 ? bleData[i+10] + 256 : bleData[i+10];
-                var online = 1;
-                if(doorStatus == 255){
-                    doorStatus = -999;
-                    online = 0;
-                }
-
-                var rssiTemp = bleData[i + 11] < 0 ? bleData[i + 11] + 256 : bleData[i + 11];
-                var rssi;
-                if(rssiTemp == 255){
-                    rssi = -999;
-                }else{
-                    rssi = rssiTemp - 128;
-                }
-                bleDoorData.rssi =rssi
-                bleDoorData.mac =mac
-                bleDoorData.online =online
-                bleDoorData.doorStatus =doorStatus
-                bleDoorData.voltage =voltage
-                bleDoorData.batteryPercent =batteryPercent
-                bleDoorData.temp =temperature
+                var bleDoorData = this.getBleDoorData(bleData, i);
                 bleDataList.push(bleDoorData);
             }
         }else if (bleData[0] == 0x00 && bleData[1] == 0x06){
             bluetoothPeripheralDataMessage.bleMessageType = "ctrl"
             for (var i = 2;i+12 <= bleData.length;i+=12){
-                var bleCtrlData = {}
-                var macArray = ByteUtils.arrayOfRange(bleData, i + 0, i + 6);
-                var mac = ByteUtils.bytes2HexString(macArray, 0);
-                var voltageTmp = bleData[i + 6] < 0 ? bleData[i + 6] + 256 : bleData[i + 6];
-                var voltage;
-                if(voltageTmp == 255){
-                    voltage = -999;
-                }else{
-                    voltage = parseFloat((2 + 0.01 * voltageTmp).toFixed());
-                }
-                var batteryPercentTemp = bleData[i + 7] < 0 ? bleData[i + 7] + 256 : bleData[i + 7];
-                var batteryPercent;
-                if(batteryPercentTemp == 255){
-                    batteryPercent = -999;
-                }else{
-                    batteryPercent = batteryPercentTemp;
-                }
-                var temperatureTemp = ByteUtils.byteToShort(bleData,i+8);
-                var tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
-                var temperature;
-                if(temperatureTemp == 65535){
-                    temperature = -999;
-                }else{
-                    temperature = parseFloat(((temperatureTemp & 0x7fff) * 0.01 * tempPositive).toFixed(2));
-                }
-                var CtrlStatus =bleData[i+10] < 0 ? bleData[i+10] + 256 : bleData[i+10];
-                var online = 1;
-                if(CtrlStatus == 255){
-                    CtrlStatus = -999;
-                    online = 0;
-                }
-
-                var rssiTemp = bleData[i + 11] < 0 ? bleData[i + 11] + 256 : bleData[i + 11];
-                var rssi;
-                if(rssiTemp == 255){
-                    rssi = -999;
-                }else{
-                    rssi = rssiTemp - 128;
-                }
-                bleCtrlData.setRssi = rssi
-                bleCtrlData.setMac = mac
-                bleCtrlData.setOnline = online
-                bleCtrlData.setCtrlStatus = CtrlStatus
-                bleCtrlData.voltage = voltage
-                bleCtrlData.setBatteryPercent = batteryPercent
-                bleCtrlData.temp = temperature
+                var bleCtrlData  = this.getBleCtrlData(bleData, i);
                 bleDataList.push(bleCtrlData);
             }
         }else if (bleData[0] == 0x00 && bleData[1] == 0x07){
             bluetoothPeripheralDataMessage.bleMessageType = "fuel"
             for (var i = 2;i+15 <= bleData.length;i+=15){
-                var bleFuelData = {}
-                var macArray = ByteUtils.arrayOfRange(bleData, i + 0, i + 6);
-                var mac = ByteUtils.bytes2HexString(macArray, 0);
-                var voltageTmp = bleData[i + 6] < 0 ? bleData[i + 6] + 256 : bleData[i + 6];
-                var voltage;
-                if(voltageTmp == 255){
-                    voltage = -999;
-                }else{
-                    voltage = parseFloat((2 + 0.01 * voltageTmp).toFixed(2));
-                }
-                var valueTemp = ByteUtils.byteToShort(bleData,i+7);
-                var value;
-                if(valueTemp == 65535){
-                    value = -999;
-                }else{
-                    value = valueTemp;
-                }
-                var temperatureTemp = ByteUtils.byteToShort(bleData,i+9);
-                var tempPositive = (temperatureTemp & 0x8000) == 0 ? 1 : -1;
-                var temperature;
-                if(temperatureTemp == 65535){
-                    temperature = -999;
-                }else{
-                    temperature = parseFloat(((temperatureTemp & 0x7fff) * 0.01 * tempPositive).toFixed(2));
-                }
-                var status =bleData[i+13] < 0 ? bleData[i+13] + 256 : bleData[i+13];
-                var online = 1;
-                if(status == 255){
-                    status = 0;
-                    online = 0;
-                }
-                var rssiTemp = bleData[i + 14] < 0 ? bleData[i + 14] + 256 : bleData[i + 14];
-                var rssi;
-                if(rssiTemp == 255){
-                    rssi = -999;
-                }else{
-                    rssi = rssiTemp - 128;
-                }
-                bleFuelData.rssi = rssi
-                bleFuelData.mac = mac
-                bleFuelData.online = online
-                bleFuelData.status = status
-                bleFuelData.voltage = voltage
-                bleFuelData.value = value
-                bleFuelData.temp = temperature
+                var bleFuelData = this.getBleFuelData(bleData, i);
                 bleDataList.push(bleFuelData);
             }
         }
@@ -1682,11 +1729,11 @@ var ObdDecoder = {
         var is_4g_lbs = false;
         var mcc_4g = null;
         var mnc_4g = null;
-        var ci_4g = null;
-        var earfcn_4g_1 = null;
+        var eci_4g = null;
+        var tac = null;
         var pcid_4g_1 = null;
-        var earfcn_4g_2 = null;
         var pcid_4g_2 = null;
+        var pcid_4g_3 = null;
         var is_2g_lbs = false;
         var mcc_2g = null;
         var mnc_2g = null;
@@ -1717,11 +1764,11 @@ var ObdDecoder = {
         if (is_4g_lbs){
             mcc_4g = ByteUtils.byteToShort(data,31) & 0x7FFF;
             mnc_4g = ByteUtils.byteToShort(data,33);
-            ci_4g = ByteUtils.byteToLong(data, 35);
-            earfcn_4g_1 = ByteUtils.byteToShort(data, 39);
+            eci_4g = ByteUtils.byteToLong(data, 35);
+            tac = ByteUtils.byteToShort(data, 39);
             pcid_4g_1 = ByteUtils.byteToShort(data, 41);
-            earfcn_4g_2 = ByteUtils.byteToShort(data, 43);
-            pcid_4g_2 = ByteUtils.byteToShort(data,45);
+            pcid_4g_2 = ByteUtils.byteToShort(data, 43);
+            pcid_4g_3 = ByteUtils.byteToShort(data,45);
         }
         var externalPowerVoltage = 0;
         var externalPowerVoltageBytes = ByteUtils.arrayOfRange(data, 47, 49);
@@ -1777,10 +1824,12 @@ var ObdDecoder = {
             throttlePosition = -999;
         }
         var remainFuelRate = data[67] & 0x7f;
+        var remainFuelUnit = (data[67] & 0x80) == 0x80 ? "L" : "%";
         if(data[67] == 255){
             remainFuelRate = -999;
+            remainFuelUnit = "";
         }
-        var remainFuelUnit = (data[67] & 0x80) == 0x80 ? "L" : "%";
+
         var protocolHead = bytes[2];
         message.protocolHeadType = protocolHead
         if ((protocolHead == 0x16 || protocolHead == 0x18) && data.length >= 80){
@@ -1882,11 +1931,11 @@ var ObdDecoder = {
         message.ci_2g_3 = ci_2g_3
         message.mcc_4g = mcc_4g
         message.mnc_4g = mnc_4g
-        message.ci_4g = ci_4g
-        message.earfcn_4g_1 = earfcn_4g_1
+        message.eci_4g = eci_4g
+        message.tac = tac
         message.pcid_4g_1 = pcid_4g_1
-        message.earfcn_4g_2 = earfcn_4g_2
         message.pcid_4g_2 = pcid_4g_2
+        message.pcid_4g_3 = pcid_4g_3
         message.isSendSmsAlarmWhenDigitalInput2Change = isSendSmsAlarmWhenDigitalInput2Change
         message.isSendSmsAlarmToManagerPhone = isSendSmsAlarmToManagerPhone
         message.jammerDetectionStatus = jammerDetectionStatus

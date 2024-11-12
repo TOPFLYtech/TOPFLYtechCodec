@@ -145,6 +145,56 @@ var cryptoTool = {
         }else{
             return data;
         }
+    },
+    getAesInMsgLength:function (packageLength) {
+        if (packageLength <= 17) {
+            return packageLength;
+        }
+        return ((packageLength - 17) / 16 + 1) * 16 + 17;
+    },
+    decryptEncryptKeyInData(data, encryptType, aesKey) {
+        if (encryptType === cryptoTool.MessageEncryptType.MD5) {
+            var realData = ByteUtils.arrayOfRange(data, 0, data.length - 8)
+            var md5Data = ByteUtils.arrayOfRange(data, data.length - 8, data.length)
+            var pathMd5 = this.md5(new Buffer(realData));
+            if (pathMd5 == null){
+                return null;
+            }
+            var pathMd5Byte = ByteUtils.hexStringToByte(pathMd5)
+            pathMd5 = ByteUtils.arrayOfRange(pathMd5Byte, 4, 12);
+            if (!ByteUtils.arrayEquals(pathMd5,md5Data)){
+                return null;
+            }
+            return realData;
+        } else if (encryptType === cryptoTool.MessageEncryptType.AES) {
+            if(!aesKey){
+                return null;
+            }
+            var head = ByteUtils.arrayOfRange(data,0,17);
+            var realData = ByteUtils.arrayOfRange(data,17,data.length);
+            if (realData == null || realData.length == 0) {
+                return data;
+            }
+            var aesData = null;
+            try{
+                aesData = this.AES.decode(realData,aesKey)
+            }catch (e){
+                console.log(e)
+            }
+            if (aesData == null){
+                return null;
+            }
+            var result = []
+            for(var i = 0;i < head.length;i++){
+                result.push(head[i])
+            }
+            for(var i = 0;i < aesData.length;i++){
+                result.push(aesData[i])
+            }
+            return result
+        } else {
+            return data;
+        }
     }
 }
 module.exports = cryptoTool;

@@ -266,20 +266,20 @@ namespace TopflytechCodec.Entities
             get { return overspeedLimit; }
             set { overspeedLimit = value; }
         }
-        private int samplingIntervalAccOn = 0;
+        private long samplingIntervalAccOn = 0;
         /// <summary>
         /// The acc on upload interval.
         /// </summary>
-        public int SamplingIntervalAccOn
+        public long SamplingIntervalAccOn
         {
             get { return samplingIntervalAccOn; }
             set { samplingIntervalAccOn = value; }
         }
-        private int samplingIntervalAccOff = 0;
+        private long samplingIntervalAccOff = 0;
         /// <summary>
         /// The acc off upload interval.
         /// </summary>
-        public int SamplingIntervalAccOff
+        public long SamplingIntervalAccOff
         {
             get { return samplingIntervalAccOff; }
             set { samplingIntervalAccOff = value; }
@@ -478,6 +478,17 @@ namespace TopflytechCodec.Entities
             get { return output3; }
             set { output3 = value; }
         }
+        private int output4;
+        public int Output4 { get => output4; set => output4 = value; }
+
+        private int output5;
+        public int Output5 { get => output5; set => output5 = value; }
+        private int output6;
+        public int Output6 { get => output6; set => output6 = value; }
+        private int output7;
+        public int Output7 { get => output7; set => output7 = value; }
+        private int output8;
+        public int Output8 { get => output8; set => output8 = value; }
         private Boolean output12V;
         public Boolean Output12V
         {
@@ -533,6 +544,18 @@ namespace TopflytechCodec.Entities
             get { return input6; }
             set { input6 = value; }
         }
+        private int input7 = 0;
+        public int Input7
+        {
+            get { return input7; }
+            set { input7 = value; }
+        }
+        private int input8 = 0;
+        public int Input8
+        {
+            get { return input8; }
+            set { input8 = value; }
+        }
 
         private long lastMileageDiff = 0;
 
@@ -573,17 +596,17 @@ namespace TopflytechCodec.Entities
             get { return mnc_4g; }
             set { mnc_4g = value; }
         }
-        private Int64 ci_4g;
-        public Int64 Ci_4g
+        private Int64 eci_4g;
+        public Int64 Eci_4g
         {
-            get { return ci_4g; }
-            set { ci_4g = value; }
+            get { return eci_4g; }
+            set { eci_4g = value; }
         }
-        private Int32 earfcn_4g_1;
-        public Int32 Earfcn_4g_1
+        private Int32 tac;
+        public Int32 TAC
         {
-            get { return earfcn_4g_1; }
-            set { earfcn_4g_1 = value; }
+            get { return tac; }
+            set { tac = value; }
         }
         private Int32 pcid_4g_1;
         public Int32 Pcid_4g_1
@@ -591,28 +614,12 @@ namespace TopflytechCodec.Entities
             get { return pcid_4g_1; }
             set { pcid_4g_1 = value; }
         }
-        private Int32 earfcn_4g_2;
-        public Int32 Earfcn_4g_2
-        {
-            get { return earfcn_4g_2; }
-            set { earfcn_4g_2 = value; }
-        }
         private Int32 pcid_4g_2;
         public Int32 Pcid_4g_2
         {
             get { return pcid_4g_2; }
             set { pcid_4g_2 = value; }
         }
-
-        
-
-        private Int32 tac;
-        public Int32 Tac
-        {
-            get { return tac; }
-            set { tac = value; }
-        }
-
         private Int32 pcid_4g_3;
         public Int32 Pcid_4g_3
         {
@@ -733,11 +740,23 @@ namespace TopflytechCodec.Entities
             get { return isLockSim; }
             set { isLockSim = value; }
         }
+        private bool gpsEnable = false;
+        public Boolean GpsEnable
+        {
+            get { return gpsEnable; }
+            set { gpsEnable = value; }
+        }
         private bool isLockDevice = false;
         public Boolean IsLockDevice
         {
             get { return isLockDevice; }
             set { isLockDevice = value; }
+        }
+        private Boolean isLockApn = false;
+        public Boolean IsLockApn
+        {
+            get { return isLockApn; }
+            set { isLockApn = value; }
         }
         private bool aGPSEphemerisDataDownloadSettingStatus = false;
         public Boolean AGPSEphemerisDataDownloadSettingStatus
@@ -849,6 +868,97 @@ namespace TopflytechCodec.Entities
         private Int32 hdop;
         private Int32 fmsSpeed;// km/h
         private Int64 fmsAccumulatingFuelConsumption;
+
+
+        private Int32 remainPower;
+        public Int32 RemainPower { get => remainPower; set => remainPower = value; }
+
+        private Boolean isCarCharge;
+        public Boolean IsCarCharge { get => isCarCharge; set => isCarCharge = value; }
+        private Int32 dashboardSpeed;
+        public Int32 DashboardSpeed { get => dashboardSpeed; set => dashboardSpeed = value; }
+        private Int32 acceleratorPedalPosition;
+        public Int32 AcceleratorPedalPosition { get => acceleratorPedalPosition; set => acceleratorPedalPosition = value; }
+        private Int64 remainPowerMinDistance;
+        public Int64 RemainPowerMinDistance { get => remainPowerMinDistance; set => remainPowerMinDistance = value; }
+        private Int64 remainPowerMaxDistance;
+        public Int64 RemainPowerMaxDistance { get => remainPowerMaxDistance; set => remainPowerMaxDistance = value; }
+
+        private float carChargeVoltage;// V
+        public float CarChargeVoltage { get => carChargeVoltage; set => carChargeVoltage = value; }
+
+        private Int64 carChargeElectricCurrent;//mA
+        public Int64 CarChargeElectricCurrent { get => carChargeElectricCurrent; set => carChargeElectricCurrent = value; }
+
+        private Int64 carChargePower;//mW
+        public Int64 CarChargePower { get => carChargePower; set => carChargePower = value; }
+
+        private Int64 fullRemainingTime; //s
+        public Int64 FullRemainingTime { get => fullRemainingTime; set => fullRemainingTime = value; }
+
+        private Int64 carBatteryEffectiveCapacity;//Wh
+        public Int64 CarBatteryEffectiveCapacity { get => carBatteryEffectiveCapacity; set => carBatteryEffectiveCapacity = value; }
+
+        private Int64 carBatteryInitialCapacity;//Wh
+        public Int64 CarBatteryInitialCapacity { get => carBatteryInitialCapacity; set => carBatteryInitialCapacity = value; }
+
+        private Int64 carTotalPowerConsumption;//Wh
+        public Int64 CarTotalPowerConsumption { get => carTotalPowerConsumption; set => carTotalPowerConsumption = value; }
+
+        private Boolean batteryCanRecharge;
+        public Boolean BatteryCanRecharge { get => batteryCanRecharge; set => batteryCanRecharge = value; }
+        private Int32 lightIntensityValue;
+        public Int32 LightIntensityValue { get => lightIntensityValue; set => lightIntensityValue = value; }
+
+        private float externalTemp;
+        public float ExternalTemp { get => externalTemp; set => externalTemp = value; }
+
+        private float externalHumidity;
+        public float ExternalHumidity { get => externalHumidity; set => externalHumidity = value; }
+
+
+        private String selfMac;
+        public String SelfMac
+        {
+            get { return selfMac; }
+            set { selfMac = value; }
+        }
+        private String ap1Mac;
+        public String Ap1Mac
+        {
+            get { return ap1Mac; }
+            set { ap1Mac = value; }
+        }
+        private int ap1RSSI;
+        public int Ap1RSSI
+        {
+            get { return ap1RSSI; }
+            set { ap1RSSI = value; }
+        }
+        private String ap2Mac;
+        public String Ap2Mac
+        {
+            get { return ap2Mac; }
+            set { ap2Mac = value; }
+        }
+        private int ap2RSSI;
+        public int Ap2RSSI
+        {
+            get { return ap2RSSI; }
+            set { ap2RSSI = value; }
+        }
+        private String ap3Mac;
+        public String Ap3Mac
+        {
+            get { return ap3Mac; }
+            set { ap3Mac = value; }
+        }
+        private int ap3RSSI;
+        public int Ap3RSSI
+        {
+            get { return ap3RSSI; }
+            set { ap3RSSI = value; }
+        }
 
     }
 }

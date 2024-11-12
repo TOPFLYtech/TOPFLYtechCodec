@@ -115,5 +115,73 @@ namespace TopflytechCodec.Entities
                 return data;
             }
         }
+
+
+        public static int GetAesInMsgLength(int packageLength)
+        {
+            if (packageLength <= 17)
+            {
+                return packageLength;
+            }
+            return ((packageLength - 17) / 16 + 1) * 16 + 17;
+        }
+
+        public static byte[] DecryptEncryptKeyInData(byte[] data, int encryptType, string aesKey)
+        {
+            if (encryptType == MessageEncryptType.MD5)
+            {
+                byte[] realData = new byte[data.Length - 8];
+                Array.Copy(data, 0, realData, 0, realData.Length);
+                byte[] md5Data = new byte[8];
+                Array.Copy(data, data.Length - 8, md5Data, 0, 8);
+                byte[] pathMd5 = Crypto.MD5(realData);
+                if (pathMd5 == null)
+                {
+                    return null;
+                }
+                if (!pathMd5.SequenceEqual(md5Data))
+                {
+                    return null;
+                }
+                return realData;
+            }
+            else if (encryptType == MessageEncryptType.AES)
+            {
+                byte[] head = new byte[17];
+                Array.Copy(data, 0, head, 0, 17);
+                byte[] aesData = new byte[data.Length - 17];
+                Array.Copy(data, 17, aesData, 0, aesData.Length);
+                if (aesData == null || aesData.Length == 0)
+                {
+                    return data;
+                }
+                byte[] realData = null;
+                try
+                {
+                    realData = Crypto.AESEncrypt(aesData, aesKey);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+                if (realData == null)
+                {
+                    return null;
+                }
+                using (MemoryStream memoryStream = new MemoryStream())
+                {
+                    using (BinaryWriter writer = new BinaryWriter(memoryStream))
+                    {
+                        writer.Write(head);
+                        writer.Write(realData);
+                        return memoryStream.ToArray();
+                    }
+                }
+            }
+            else
+            {
+                return data;
+            }
+        }
     }
 }

@@ -34,18 +34,25 @@ namespace TopflytechCodec.Entities
             get { return orignBytes; }
             set { orignBytes = value; }
         }
-        //private Boolean isNeedResp = true;
-        //public Boolean IsNeedResp
-        //{
-        //    get { return isNeedResp; }
-        //    set { isNeedResp = value; }
-        //}
+        private Boolean isNeedResp = true;
+        public Boolean IsNeedResp
+        {
+            get { return isNeedResp; }
+            set { isNeedResp = value; }
+        }
 
         private int protocolHeadType;
         public int ProtocolHeadType
         {
             get { return protocolHeadType; }
             set { protocolHeadType = value; }
+        }
+
+        private int encryptType;
+        public int EncryptType
+        {
+            get { return encryptType; }
+            set { encryptType = value; }
         }
     }
 }
