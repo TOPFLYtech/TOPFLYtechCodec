@@ -400,7 +400,11 @@ var PersonalAssetDecoder = {
             if (strSp.indexOf("f") != -1) {
                 speedf = -1;
             } else {
-                speedf = parseFloat(strSp.substring(0, 3) + "." + strSp.substring(3, strSp.length));
+                try{
+                    speedf = parseFloat(strSp.substring(0, 3) + "." + strSp.substring(3, strSp.length));
+                }catch (e){
+
+                }
             }
         }
         var is_4g_lbs = false;
@@ -499,7 +503,11 @@ var PersonalAssetDecoder = {
             if (strSp.indexOf("f") != -1) {
                 speedf = -1;
             } else {
-                speedf = parseFloat(strSp.substring(0, 3) + "." + strSp.substring(3, strSp.length));
+                try{
+                    speedf = parseFloat(strSp.substring(0, 3) + "." + strSp.substring(3, strSp.length));
+                }catch (e){
+
+                }
             }
         }
         var is_4g_lbs = false;

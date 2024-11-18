@@ -3625,7 +3625,12 @@ class Decoder:
         gpsDriverBehaviorMessage.startLongitude = bytes2Float(byteArray,26)
         gpsDriverBehaviorMessage.startLatitude = bytes2Float(byteArray,30)
         speedStr = byte2HexString(byteArray[34:36],0)
-        gpsDriverBehaviorMessage.startSpeed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+        try:
+            gpsDriverBehaviorMessage.startSpeed = (float)("{0}.{1}".format(speedStr[0:3], speedStr[3:]))
+        except:
+            print ("speed error")
+
+
         gpsDriverBehaviorMessage.startAzimuth = bytes2Short(byteArray,36)
 
         dateStr = "20" + byte2HexString(byteArray[38:44],0)
@@ -3634,7 +3639,11 @@ class Decoder:
         gpsDriverBehaviorMessage.endLongitude = bytes2Float(byteArray,48)
         gpsDriverBehaviorMessage.endLatitude = bytes2Float(byteArray,52)
         speedStr = byte2HexString(byteArray[56:58],0)
-        gpsDriverBehaviorMessage.endSpeed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+        try:
+            gpsDriverBehaviorMessage.endSpeed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+        except:
+            print ("speed error")
+
         gpsDriverBehaviorMessage.endAzimuth = bytes2Short(byteArray,58)
 
         return gpsDriverBehaviorMessage
@@ -3685,7 +3694,11 @@ class Decoder:
             acceleration.latitude = bytes2Float(byteArray,curParseIndex + 20)
             acceleration.azimuth = bytes2Short(byteArray,curParseIndex + 26)
             speedStr = byte2HexString(byteArray[curParseIndex + 24:curParseIndex + 26],0)
-            acceleration.speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+            try:
+                acceleration.speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+            except:
+                print ("speed error")
+
         else:
             if (byteArray[curParseIndex + 12] & 0x80) == 0x80:
                 is_4g_lbs = True
@@ -3786,7 +3799,11 @@ class Decoder:
             acceleration.longitude = bytes2Float(byteArray,curParseIndex + 16)
             acceleration.latitude = bytes2Float(byteArray,curParseIndex + 20)
             speedStr = byte2HexString(byteArray[curParseIndex + 24:curParseIndex + 26],0)
-            acceleration.speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+            try:
+                acceleration.speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+            except:
+                print ("speed error")
+
             acceleration.azimuth = bytes2Short(byteArray,curParseIndex + 26)
         else:
             if (byteArray[curParseIndex + 12] & 0x80) == 0x80:
@@ -3881,7 +3898,7 @@ class Decoder:
         speedLimit = limit & 0x7FFF
         if (limit & 0x8000) != 0 :
             speedLimit = speedLimit * 1.609344
-        protocolHead = bytes[2]
+        protocolHead = byteArray[2]
         networkSignal = limit & 0x7F
         isGpsWorking = (data[9] & 0x20) == 0x00
         isHistoryData = (data[9] & 0x80) != 0x00
@@ -3989,7 +4006,11 @@ class Decoder:
             longitude = bytes2Float(data,47)
             azimuth = bytes2Short(data,57)
             speedStr = byte2HexString(data[55:57],0)
-            speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+            try:
+                speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+            except:
+                print ("speed error")
+
         else:
             if (data[43] & 0x80) == 0x80:
                 is_4g_lbs = True
@@ -4303,7 +4324,10 @@ class Decoder:
             azimuth = bytes2Short(data,49)
             speedStr = byte2HexString(data[47:49],0)
             if speedStr != "ffff":
-                speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+                try:
+                    speed = (float)("{0}.{1}".format(speedStr[0:3], speedStr[3:]))
+                except:
+                    print ("speed error")
         else:
             if (data[35] & 0x80) == 0x80:
                 is_4g_lbs = True
@@ -5361,7 +5385,10 @@ class ObdDecoder:
             longitude = bytes2Float(data,35)
             azimuth = bytes2Short(data,45)
             speedStr = byte2HexString(data[49:51],0)
-            speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+            try:
+                speed = (float)("{0}.{1}".format(speedStr[0:3], speedStr[3:]))
+            except:
+                print ("speed error")
         else:
             if (data[31] & 0x80) == 0x80:
                 is_4g_lbs = True
@@ -5561,7 +5588,11 @@ class ObdDecoder:
         gpsDriverBehaviorMessage.startLongitude = bytes2Float(byteArray,26)
         gpsDriverBehaviorMessage.startLatitude = bytes2Float(byteArray,30)
         speedStr = byte2HexString(byteArray[34:36],0)
-        gpsDriverBehaviorMessage.startSpeed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+        try:
+            gpsDriverBehaviorMessage.startSpeed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+        except:
+            print ("speed error")
+
         gpsDriverBehaviorMessage.startAzimuth = bytes2Short(byteArray,36)
         rpm = bytes2Short(byteArray, 38);
         if rpm == 65535:
@@ -5574,7 +5605,10 @@ class ObdDecoder:
         gpsDriverBehaviorMessage.endLongitude = bytes2Float(byteArray,50)
         gpsDriverBehaviorMessage.endLatitude = bytes2Float(byteArray,52)
         speedStr = byte2HexString(byteArray[58:60],0)
-        gpsDriverBehaviorMessage.endSpeed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+        try:
+            gpsDriverBehaviorMessage.endSpeed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+        except:
+            print ("speed error")
         gpsDriverBehaviorMessage.endAzimuth = bytes2Short(byteArray,60)
         rpm = bytes2Short(byteArray, 62)
         if rpm == 65535:
@@ -5625,7 +5659,11 @@ class ObdDecoder:
             acceleration.longitude = bytes2Float(byteArray,curParseIndex + 16)
             acceleration.latitude = bytes2Float(byteArray,curParseIndex + 20)
             speedStr = byte2HexString(byteArray[curParseIndex + 24:curParseIndex + 26],0)
-            acceleration.speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+            try:
+                acceleration.speed = (float)("{0}.{1}".format(speedStr[0:3], speedStr[3:]))
+            except:
+                print ("speed error")
+
             acceleration.azimuth = bytes2Short(byteArray,curParseIndex + 26)
         else:
             if (byteArray[curParseIndex + 12] & 0x80) == 0x80:
@@ -5694,12 +5732,17 @@ class ObdDecoder:
         if (byteArray[curParseIndex + 10] & 0x80) == 0x80:
             axisZDirect = 1
         acceleration.axisZ = ((byteArray[curParseIndex + 10] & 0x7F & 0xff) + (((byteArray[curParseIndex + 11] & 0xf0) >> 4) & 0xff) /10.0) * axisZDirect
-        acceleration.altitude = bytes2Float(byteArray,curParseIndex + 12)
-        acceleration.longitude = bytes2Float(byteArray,curParseIndex + 16)
-        acceleration.latitude = bytes2Float(byteArray,curParseIndex + 20)
-        speedStr = byte2HexString(byteArray[curParseIndex + 24:curParseIndex + 26],0)
-        acceleration.speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
-        acceleration.azimuth = bytes2Short(byteArray,curParseIndex + 26)
+        if acceleration.latlngValid:
+            acceleration.altitude = bytes2Float(byteArray,curParseIndex + 12)
+            acceleration.longitude = bytes2Float(byteArray,curParseIndex + 16)
+            acceleration.latitude = bytes2Float(byteArray,curParseIndex + 20)
+            speedStr = byte2HexString(byteArray[curParseIndex + 24:curParseIndex + 26],0)
+            try:
+                acceleration.speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+            except:
+                print ("speed error")
+
+            acceleration.azimuth = bytes2Short(byteArray,curParseIndex + 26)
         rpm = bytes2Short(byteArray, curParseIndex + 28);
         if rpm == 65535:
             rpm = -1
@@ -7236,7 +7279,11 @@ class PersonalAssetMsgDecoder:
             longitude = bytes2Float(byteArray,30)
             azimuth = bytes2Short(byteArray,36)
             speedStr = byte2HexString(byteArray[34:36],0)
-            speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+            try:
+                speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+            except:
+                print ("speed error")
+
         else:
             if (byteArray[22] & 0x80) == 0x80:
                 is_4g_lbs = True
@@ -8814,7 +8861,10 @@ class PersonalAssetMsgDecoder:
             longitude = bytes2Float(byteArray,27)
             azimuth = bytes2Short(byteArray,37)
             speedStr = byte2HexString(byteArray[35:37],0)
-            speed = (float)("{0}.{1}".format(speedStr[0:3],speedStr[3:]))
+            try:
+                speed = (float)("{0}.{1}".format(speedStr[0:3], speedStr[3:]))
+            except:
+                print ("speed error")
         else:
             if (byteArray[23] & 0x80) == 0x80:
                 is_4g_lbs = True

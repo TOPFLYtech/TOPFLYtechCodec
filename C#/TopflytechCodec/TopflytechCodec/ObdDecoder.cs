@@ -399,7 +399,7 @@ namespace TopflytechCodec
                 String strSp = BytesUtils.Bytes2HexString(bytesSpeed, 0);
                 if (strSp.Contains("f"))
                 {
-                    speedf = -1f;
+                    speedf = -999f;
                 }
                 else
                 {
@@ -1001,7 +1001,7 @@ namespace TopflytechCodec
                 String strSp = BytesUtils.Bytes2HexString(bytesSpeed, 0);
                 if (strSp.Contains("f"))
                 {
-                    speedf = -1f;
+                    speedf = -999f;
                 }
                 else
                 {
@@ -1125,7 +1125,7 @@ namespace TopflytechCodec
                 String strSp = BytesUtils.Bytes2HexString(bytesSpeed, 0);
                 if (strSp.Contains("f"))
                 {
-                    speedf = -1f;
+                    speedf = -999f;
                 }
                 else
                 {
@@ -1928,7 +1928,23 @@ namespace TopflytechCodec
             byte[] bytesSpeed = new byte[2];
             Array.Copy(bytes, 34, bytesSpeed, 0, 2);
             String strSp = BytesUtils.Bytes2HexString(bytesSpeed, 0);
-            float speedf = (float)Convert.ToDouble(String.Format("{0}.{1}", Convert.ToInt32(strSp.Substring(0, 3)), Convert.ToInt32(strSp.Substring(3, strSp.Length - 3))));
+            float speedf = 0;
+            try
+            {
+                if (strSp.Contains("f"))
+                {
+                    speedf = -999f;
+                }
+                else
+                {
+                    speedf = (float)Convert.ToDouble(String.Format("{0}.{1}", Convert.ToInt32(strSp.Substring(0, 3)), Convert.ToInt32(strSp.Substring(3, strSp.Length - 3))));
+
+                }
+            }
+            catch (Exception e)
+            {
+
+            }
             gpsDriverBehaviorMessage.StartSpeed = speedf;
             int azimuth = BytesUtils.Bytes2Short(bytes, 36);
             gpsDriverBehaviorMessage.StartAzimuth = azimuth;
@@ -1948,7 +1964,22 @@ namespace TopflytechCodec
             gpsDriverBehaviorMessage.EndLatitude = BytesUtils.Bytes2Float(bytes, 54);
             Array.Copy(bytes, 58, bytesSpeed, 0, 2);
             strSp = BytesUtils.Bytes2HexString(bytesSpeed, 0);
-            speedf = (float)Convert.ToDouble(String.Format("{0}.{1}", Convert.ToInt32(strSp.Substring(0, 3)), Convert.ToInt32(strSp.Substring(3, strSp.Length - 3))));
+            try
+            {
+                if (strSp.Contains("f"))
+                {
+                    speedf = -999f;
+                }
+                else
+                {
+                    speedf = (float)Convert.ToDouble(String.Format("{0}.{1}", Convert.ToInt32(strSp.Substring(0, 3)), Convert.ToInt32(strSp.Substring(3, strSp.Length - 3))));
+
+                }
+            }
+            catch (Exception e)
+            {
+
+            }
             gpsDriverBehaviorMessage.EndSpeed = speedf;
             azimuth = BytesUtils.Bytes2Short(bytes, 60);
             gpsDriverBehaviorMessage.EndAzimuth = azimuth;
@@ -2030,16 +2061,34 @@ namespace TopflytechCodec
             float axisZ = ((bytes[curParseIndex + 10] & 0x7F & 0xff) + (((bytes[curParseIndex + 11] & 0xf0) >> 4) & 0xff) / 10.0f) * axisZDirect;
             acceleration.AxisZ = axisZ;
 
-            acceleration.Altitude = BytesUtils.Bytes2Float(bytes, curParseIndex + 12);
-            acceleration.Longitude = BytesUtils.Bytes2Float(bytes, curParseIndex + 16);
-            acceleration.Latitude = BytesUtils.Bytes2Float(bytes, curParseIndex + 20);
-            byte[] bytesSpeed = new byte[2];
-            Array.Copy(bytes, curParseIndex + 24, bytesSpeed, 0, 2);
-            String strSp = BytesUtils.Bytes2HexString(bytesSpeed, 0);
-            float speedf = (float)Convert.ToDouble(String.Format("{0}.{1}", Convert.ToInt32(strSp.Substring(0, 3)), Convert.ToInt32(strSp.Substring(3, strSp.Length - 3))));
-            acceleration.Speed = speedf;
-            int azimuth = BytesUtils.Bytes2Short(bytes, curParseIndex + 26);
-            acceleration.Azimuth = azimuth;
+            if (latlngValid)
+            {
+                acceleration.Altitude = BytesUtils.Bytes2Float(bytes, curParseIndex + 12);
+                acceleration.Longitude = BytesUtils.Bytes2Float(bytes, curParseIndex + 16);
+                acceleration.Latitude = BytesUtils.Bytes2Float(bytes, curParseIndex + 20);
+                byte[] bytesSpeed = new byte[2];
+                Array.Copy(bytes, curParseIndex + 24, bytesSpeed, 0, 2);
+                String strSp = BytesUtils.Bytes2HexString(bytesSpeed, 0);
+                float speedf = 0.0f;
+                try
+                {
+                    if (strSp.Contains("f"))
+                    {
+                        speedf = -999f;
+                    }
+                    else
+                    {
+                        speedf = (float)Convert.ToDouble(String.Format("{0}.{1}", Convert.ToInt32(strSp.Substring(0, 3)), Convert.ToInt32(strSp.Substring(3, strSp.Length - 3))));
+                    }
+                }
+                catch (Exception e)
+                {
+
+                }
+                acceleration.Speed = speedf;
+                int azimuth = BytesUtils.Bytes2Short(bytes, curParseIndex + 26);
+                acceleration.Azimuth = azimuth; 
+            }
 
             Boolean is_4g_lbs = false;
             Int32 mcc_4g = -1;
@@ -2253,13 +2302,21 @@ namespace TopflytechCodec
             float speedf = 0.0f;
             byte[] bytesSpeed = Utils.ArrayCopyOfRange(data, 49, 51);
             String strSp = BytesUtils.Bytes2HexString(bytesSpeed, 0);
-            if (strSp.Contains("f"))
+            try
             {
-                speedf = -1f;
+                if (strSp.Contains("f"))
+                {
+                    speedf = -999f;
+                }
+                else
+                {
+                    speedf = (float)Convert.ToDouble(String.Format("{0}.{1}", Convert.ToInt32(strSp.Substring(0, 3)), Convert.ToInt32(strSp.Substring(3, strSp.Length - 3))));
+
+                }
             }
-            else
+            catch (Exception e)
             {
-                speedf = (float)Convert.ToDouble(String.Format("{0}.{1}", Convert.ToInt32(strSp.Substring(0, 3)), Convert.ToInt32(strSp.Substring(3, strSp.Length - 3))));
+
             }
 
             long accumulatingFuelConsumption = BytesUtils.Byte2Int(data, 51);

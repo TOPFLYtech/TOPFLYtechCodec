@@ -853,7 +853,12 @@ var Decoder = {
         var strSp = ByteUtils.bytes2HexString(bytesSpeed, 0);
         var startSpeed = 0;
         if (strSp.toLowerCase() !== "ffff"){
-            startSpeed = parseFloat(strSp.substring(0, 3) + "." + strSp.substring(3, strSp.length));
+            try{
+                startSpeed = parseFloat(strSp.substring(0, 3) + "." + strSp.substring(3, strSp.length));
+            }catch (e) {
+
+            }
+
         }
         gpsDriverBehaviorMessage.startSpeed = startSpeed;
         var azimuth = ByteUtils.byteToShort(bytes, 36);
@@ -877,7 +882,11 @@ var Decoder = {
         var endSpeed = 0;
         strSp = ByteUtils.bytes2HexString(bytesSpeed, 0);
         if (strSp.toLowerCase() !== "ffff"){
-            endSpeed = parseFloat(strSp.substring(0, 3) + "." + strSp.substring(3, strSp.length));
+            try {
+                endSpeed = parseFloat(strSp.substring(0, 3) + "." + strSp.substring(3, strSp.length));
+            }catch (e){
+
+            }
         }
         gpsDriverBehaviorMessage.endSpeed = endSpeed
         azimuth = ByteUtils.byteToShort(bytes, 58);
@@ -924,29 +933,35 @@ var Decoder = {
         var axisZDirect = (bytes[curParseIndex + 10] & 0x80) == 0x80 ? 1 : -1;
         var axisZ = ((bytes[curParseIndex + 10] & 0x7F & 0xff) + (((bytes[curParseIndex + 11] & 0xf0) >> 4) & 0xff) /10.0) * axisZDirect;
         acceleration.axisZ= axisZ
+        if(acceleration.latlngValid){
+            var altitude = ByteUtils.bytes2Float(bytes, curParseIndex + 12);
+            acceleration.altitude = altitude
 
-        var altitude = ByteUtils.bytes2Float(bytes, curParseIndex + 12);
-        acceleration.altitude = altitude
+            var longitude = ByteUtils.bytes2Float(bytes, curParseIndex + 16);
+            acceleration.longitude = longitude
 
-        var longitude = ByteUtils.bytes2Float(bytes, curParseIndex + 16);
-        acceleration.longitude = longitude
+            var latitude = ByteUtils.bytes2Float(bytes, curParseIndex + 20);
+            acceleration.latitude = latitude
 
-        var latitude = ByteUtils.bytes2Float(bytes, curParseIndex + 20);
-        acceleration.latitude = latitude
+            var bytesSpeed = ByteUtils.arrayOfRange(bytes, curParseIndex + 24, curParseIndex + 26);
+            var speedf = 0;
+            var strSp = ByteUtils.bytes2HexString(bytesSpeed, 0);
+            if (strSp.toLowerCase() !== "ffff"){
+                try{
+                    speedf = parseFloat(strSp.substring(0, 3) + "." + strSp.substring(3, strSp.length));
+                }catch (e) {
 
-        var bytesSpeed = ByteUtils.arrayOfRange(bytes, curParseIndex + 24, curParseIndex + 26);
-        var speedf = 0;
-        var strSp = ByteUtils.bytes2HexString(bytesSpeed, 0);
-        if (strSp.toLowerCase() !== "ffff"){
-            speedf = parseFloat(strSp.substring(0, 3) + "." + strSp.substring(3, strSp.length))
+                }
 
+            }
+            acceleration.speed = speedf
+            var azimuth = ByteUtils.byteToShort(bytes, curParseIndex + 26);
+            if (azimuth == 255){
+                azimuth = 0;
+            }
+            acceleration.azimuth= azimuth
         }
-        acceleration.speed = speedf
-        var azimuth = ByteUtils.byteToShort(bytes, curParseIndex + 26);
-        if (azimuth == 255){
-            azimuth = 0;
-        }
-        acceleration.azimuth= azimuth
+
         var is_4g_lbs = false;
         var mcc_4g = null;
         var mnc_4g = null;
@@ -1480,7 +1495,11 @@ var Decoder = {
             if (strSp.indexOf("f") != -1) {
                 speedf = -1;
             } else {
-                speedf = parseFloat(strSp.substring(0, 3) + "." + strSp.substring(3, strSp.length));
+                try{
+                    speedf = parseFloat(strSp.substring(0, 3) + "." + strSp.substring(3, strSp.length));
+                }catch (e) {
+
+                }
             }
         }
         var is_4g_lbs = false;
@@ -1579,7 +1598,12 @@ var Decoder = {
             if (strSp.indexOf("f") != -1) {
                 speedf = -1;
             } else {
-                speedf = parseFloat(strSp.substring(0, 3) + "." + strSp.substring(3, strSp.length));
+                try{
+                    speedf = parseFloat(strSp.substring(0, 3) + "." + strSp.substring(3, strSp.length));
+                }catch (e) {
+
+                }
+
             }
         }
         var is_4g_lbs = false;
