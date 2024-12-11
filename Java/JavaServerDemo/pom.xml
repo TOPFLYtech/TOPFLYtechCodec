@@ -6,13 +6,23 @@
     <groupId>com.topflytech.demo</groupId>
     <artifactId>javaServerDemo</artifactId>
     <version>1.0-SNAPSHOT</version>
-
+    <repositories>
+        <repository>
+            <id>Eclipse Paho Repository</id>
+            <url>https://repo.eclipse.org/content/repositories/paho-releases/</url>
+        </repository>
+    </repositories>
 
     <properties>
         <netty.version>4.0.20.Final</netty.version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.eclipse.paho</groupId>
+            <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
+            <version>1.2.5</version>
+        </dependency>
         <dependency>
             <groupId>com.topflytech</groupId>
             <artifactId>topflytechCodec</artifactId>

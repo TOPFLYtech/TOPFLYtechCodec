@@ -1,9 +1,13 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34316.72
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "880XServerDemo", "880XServerDemo\880XServerDemo.csproj", "{FDAE0FEC-C904-4ECE-B708-764B6552B6E1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TopflytechCodec", "..\TopflytechCodec\TopflytechCodec\TopflytechCodec.csproj", "{8A845476-C96A-4091-BB96-DC20335C2158}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MqttExample", "MqttExample\MqttExample.csproj", "{7B228718-CF6E-443C-9133-D3124B0BE412}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,8 +39,23 @@ Global
 		{8A845476-C96A-4091-BB96-DC20335C2158}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{8A845476-C96A-4091-BB96-DC20335C2158}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{8A845476-C96A-4091-BB96-DC20335C2158}.Release|x86.ActiveCfg = Release|Any CPU
+		{7B228718-CF6E-443C-9133-D3124B0BE412}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B228718-CF6E-443C-9133-D3124B0BE412}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B228718-CF6E-443C-9133-D3124B0BE412}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{7B228718-CF6E-443C-9133-D3124B0BE412}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{7B228718-CF6E-443C-9133-D3124B0BE412}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7B228718-CF6E-443C-9133-D3124B0BE412}.Debug|x86.Build.0 = Debug|Any CPU
+		{7B228718-CF6E-443C-9133-D3124B0BE412}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B228718-CF6E-443C-9133-D3124B0BE412}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B228718-CF6E-443C-9133-D3124B0BE412}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{7B228718-CF6E-443C-9133-D3124B0BE412}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{7B228718-CF6E-443C-9133-D3124B0BE412}.Release|x86.ActiveCfg = Release|Any CPU
+		{7B228718-CF6E-443C-9133-D3124B0BE412}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2428FA9A-819E-4D53-B66B-DBE886E241E0}
 	EndGlobalSection
 EndGlobal

@@ -64,7 +64,7 @@ public class PersonalHandler extends SimpleChannelInboundHandler<Message> {
         }else if (message instanceof LocationAlarmMessage){
             LocationAlarmMessage locationAlarmMessage = (LocationAlarmMessage)message;
             System.out.println("receive location alarm message :" + locationAlarmMessage.getImei() + " Alarm is : " + locationAlarmMessage.getOriginalAlarmCode());
-            byte[] reply = personalAssetMsgEncoder.getLocationAlarmMsgReply(locationAlarmMessage.getImei(),true, locationAlarmMessage.getSerialNo(),locationAlarmMessage.getOriginalAlarmCode());
+            byte[] reply = personalAssetMsgEncoder.getLocationAlarmMsgReply(locationAlarmMessage.getImei(),true, locationAlarmMessage.getSerialNo(),locationAlarmMessage.getOriginalAlarmCode(), locationAlarmMessage.getProtocolHeadType());
             Utils.write(channel, reply, new Utils.WriteListener() {
                 @Override
                 public void messageRespond(boolean success) {
@@ -94,16 +94,6 @@ public class PersonalHandler extends SimpleChannelInboundHandler<Message> {
                 @Override
                 public void messageRespond(boolean success) {
                     System.out.println(success ? "reply wifi message success" : "reply location info fail");
-                }
-            });
-        }else if (message instanceof LockMessage){
-            LockMessage lockMessage = (LockMessage)message;
-            System.out.println("receive lock message :" + lockMessage.getImei());
-            byte[] reply = personalAssetMsgEncoder.getLockMsgReply(lockMessage.getImei(), true, lockMessage.getSerialNo(), lockMessage.getProtocolHeadType());
-            Utils.write(channel, reply, new Utils.WriteListener() {
-                @Override
-                public void messageRespond(boolean success) {
-                    System.out.println(success ? "reply lock message success" : "reply location info fail");
                 }
             });
         }else if (message instanceof LockMessage){

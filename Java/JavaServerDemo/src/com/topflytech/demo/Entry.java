@@ -14,6 +14,9 @@ public class Entry {
             new DeviceServer(ObdDevicePipelineFactory.class).startup(10002);
             //Can deal 27 27 head message server
             new DeviceServer(PersonalDevicePipelineFactory.class).startup(10003);
+            //do mqtt test
+            MqttExample example = new MqttExample();
+            example.doMqttTest();
         } catch (Exception e) {
             e.printStackTrace();
         }
