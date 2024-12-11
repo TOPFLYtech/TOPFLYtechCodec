@@ -10,8 +10,8 @@ var PersonalAssetEncoder = require("./PersonalAssetEncoder")
 var moment = require("moment")
 //创建TCP服务器
 Decoder.encryptType = CryptoTool.MessageEncryptType.NONE
-var curDecoder = PersonalAssetDecoder
-var curEncoder = PersonalAssetEncoder
+var curDecoder = Decoder
+var curEncoder = Encoder
 var socketClient = []
 const server = net.createServer(function (socket) {
     //监听data事件
