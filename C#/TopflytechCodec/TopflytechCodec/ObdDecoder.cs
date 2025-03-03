@@ -1994,6 +1994,7 @@ namespace TopflytechCodec
 
         private AccidentAccelerationMessage parseAccelerationAlarmMessage(byte[] bytes)
         {
+            int accidentAccelerationMessageLength = 30;
             int length = BytesUtils.Bytes2Short(bytes, 3);
             int serialNo = BytesUtils.Bytes2Short(bytes, 5);
             //Boolean isNeedResp = (serialNo & 0x8000) != 0x8000; 
@@ -2005,12 +2006,12 @@ namespace TopflytechCodec
             accidentAccelerationMessage.Imei = imei;
             accidentAccelerationMessage.OrignBytes = bytes;
             int dataLength = length - 16;
-            int dataCount = dataLength / 28;
+            int dataCount = dataLength / accidentAccelerationMessageLength;
             int beginIdex = 16;
             List<AccelerationData> accidentAccelerationList = new List<AccelerationData>();
             for (int i = 0; i < dataCount; i++)
             {
-                int curParseIndex = beginIdex + i * 30;
+                int curParseIndex = beginIdex + i * accidentAccelerationMessageLength;
                 AccelerationData accidentAcceleration = getAccelerationData(bytes, imei, curParseIndex);
                 accidentAccelerationList.Add(accidentAcceleration);
             }
