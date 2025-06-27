@@ -88,7 +88,7 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
         let titleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
         titleLabel.text = NSLocalizedString("report", comment: "Report")
         self.navigationItem.titleView = titleLabel
-        self.initRightBtn()
+        self.initRightBtn()		
 //                self.readFile()
         for item in showBleHisData {
             if item.temp != -999{
@@ -368,7 +368,7 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
         rowIndex+=1
         rowIndex+=1
         
-        if self.deviceType == "S02" || self.deviceType == "S10"{
+        if self.deviceType == "S02" {
             worksheet_write_string(sheet, lxw_row_t(rowIndex), 0, "", nil)
             worksheet_write_string(sheet, lxw_row_t(rowIndex), 1, txS02TempHead.text, nil)
             worksheet_write_string(sheet, lxw_row_t(rowIndex), 2, txS02HumidityHead.text, nil)
@@ -428,7 +428,7 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
             worksheet_write_string(sheet, lxw_row_t(rowIndex), 1, txS02TempOverLowTime.text, nil)
             worksheet_write_string(sheet, lxw_row_t(rowIndex), 2, txS02HumidityOverLowTime.text, nil)
             rowIndex+=1
-        }else{
+        } else{
             worksheet_write_string(sheet, lxw_row_t(rowIndex), 0, "", nil)
             worksheet_write_string(sheet, lxw_row_t(rowIndex), 1, txS04TempHead.text, nil)
             rowIndex+=1
@@ -485,9 +485,11 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
         worksheet_write_string(sheet, lxw_row_t(detailRowIndex), 0, NSLocalizedString("date1", comment: "Date"), nil)
         worksheet_write_string(sheet, lxw_row_t(detailRowIndex), 1, NSLocalizedString("battery1", comment: "Battery"), nil)
         worksheet_write_string(sheet, lxw_row_t(detailRowIndex), 2, NSLocalizedString("temp1", comment: "Temperature"), nil)
-        if deviceType == "S02" || self.deviceType == "S10"{
+        if deviceType == "S02"  {
             worksheet_write_string(sheet, lxw_row_t(detailRowIndex), 3, NSLocalizedString("humidity1", comment: "Humidity"), nil)
             worksheet_write_string(sheet, lxw_row_t(detailRowIndex), 4, NSLocalizedString("light1", comment: "Light"), nil)
+        }else if self.deviceType == "S10"{
+            
         }else{
             worksheet_write_string(sheet, lxw_row_t(detailRowIndex), 3, NSLocalizedString("door1", comment: "Door"), nil)
             if deviceType == "S04"{
@@ -509,7 +511,7 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
             }
             
             
-            if deviceType == "S02" || self.deviceType == "S10"{
+            if deviceType == "S02"  {
                 if bleHisItem.humidity == -999{
                       worksheet_write_string(sheet, lxw_row_t(detailRowIndex+index), 3, "-", nil)
                 }else{
@@ -517,6 +519,8 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
                 }
                 let prop = bleHisItem.prop == 1 ? NSLocalizedString("light1", comment: "Light") : NSLocalizedString("dark", comment: "Dark")
                 worksheet_write_string(sheet, lxw_row_t(detailRowIndex+index), 4, prop, nil)
+            }else if self.deviceType == "S10"{
+                
             }else{
                 let prop = bleHisItem.prop == 1 ? NSLocalizedString("open", comment: "Open") : NSLocalizedString("close", comment: "Close")
                 worksheet_write_string(sheet, lxw_row_t(detailRowIndex+index), 3, prop, nil)
@@ -573,10 +577,27 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
         if  self.deviceType == "S08"{
             StrItem = "\(NSLocalizedString("date1", comment: "Date")),\(NSLocalizedString("battery1", comment: "Battery")),\(NSLocalizedString("temp1", comment: "Temperature")),\(NSLocalizedString("door1", comment: "Door"))\n"
         }
+        if  self.deviceType == "S10"{
+            StrItem = "\(NSLocalizedString("date1", comment: "Date")),\(NSLocalizedString("battery1", comment: "Battery")),\(NSLocalizedString("temp1", comment: "Temperature"))\n"
+        }
         handle?.write(StrItem.data(using: String.Encoding.utf8)!)
         for var i in 0..<self.showBleHisData.count{
             let bleHisItem = self.showBleHisData[i]
-            if self.deviceType == "S02" || self.deviceType == "S10"{
+            if self.deviceType == "S02" {
+                var humidityStr = "-"
+                var tempStr = "-"
+                if bleHisItem.temp != -999{
+                    tempStr = String(format:"%.2f",Utils.getCurTemp(sourceTemp: bleHisItem.temp))
+                }
+                if bleHisItem.humidity != -999{
+                    humidityStr = String(format:"%d",bleHisItem.humidity)
+                }
+                
+                StrItem = self.dateFormatter.string(from: Date(timeIntervalSince1970: Double(bleHisItem.dateStamp))) + "," + String(format:"%d%%",bleHisItem.battery)
+                + "," + tempStr + ","
+                + humidityStr + "," + (bleHisItem.prop == 1 ? NSLocalizedString("light1", comment: "Light") : NSLocalizedString("dark", comment: "Dark"))
+                + "\n"
+            }else if self.deviceType == "S10"{
                 var humidityStr = "-"
                 var tempStr = "-"
                 if bleHisItem.temp != -999{
@@ -586,9 +607,8 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
                     humidityStr = String(format:"%d",bleHisItem.humidity)
                 }
                 StrItem = self.dateFormatter.string(from: Date(timeIntervalSince1970: Double(bleHisItem.dateStamp))) + "," + String(format:"%d%%",bleHisItem.battery)
-                    + "," + tempStr + ","
-                    + humidityStr + "," + (bleHisItem.prop == 1 ? NSLocalizedString("light1", comment: "Light") : NSLocalizedString("dark", comment: "Dark"))
-                    + "\n"
+                + "," + tempStr
+                + "\n"
             }else{
                 var tempStr = "-"
                 if bleHisItem.temp != -999{
@@ -682,6 +702,13 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
             let headView = HistoryS02Header()
             headView.frame = CGRect(x: 0, y: 0, width: KSize.width, height: 40)
             detailTableView.tableHeaderView = headView
+            if self.deviceType == "S10"{
+                headView.humidityLabel.isHidden = true
+                headView.propLabel.isHidden = true
+            }else{
+                headView.humidityLabel.isHidden = false
+                headView.propLabel.isHidden = false
+            }
         }else{
             let headView = HistoryS04Header()
             headView.frame = CGRect(x: 0, y: 0, width: KSize.width, height: 40)
@@ -795,6 +822,13 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
             }
             cell.humidityLabel.text = humidityStr
             cell.propLabel.text = bleHisItem.prop == 1 ? NSLocalizedString("light1", comment: "Light") : NSLocalizedString("dark", comment: "Dark")
+            if self.deviceType == "S10"{
+                cell.humidityLabel.isHidden = true
+                cell.propLabel.isHidden = true
+            }else{
+                cell.humidityLabel.isHidden = false
+                cell.propLabel.isHidden = false
+            }
             return cell
         }else{
             let cell = (tableView.dequeueReusableCell(withIdentifier: HistoryS04Cell.identifier, for: indexPath)) as! HistoryS04Cell
@@ -894,7 +928,15 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
         self.overMinHumidityLimitCount = 0
         self.overMinHumidityLimitTime = 0
         var beginTempUp = false,beginTempDown = false,beginHumidityUp = false,beginHumidityDown = false;
-        var startTempCalDate = 0,endTempCalDate = 0,startHumidityCalDate = 0,endHumidityCalDate = 0;
+        var startHighTempCalDate = 0,endHighTempCalDate = 0,startHighHumidityCalDate = 0,endHighHumidityCalDate = 0;
+        var startLowTempCalDate = 0,endLowTempCalDate = 0,startLowHumidityCalDate = 0,endLowHumidityCalDate = 0;
+//        if showBleHisData.count > 0{
+//            let bleHisData = showBleHisData[0]
+//            maxTemp = bleHisData.temp
+//            minTemp = bleHisData.temp
+//            maxHumidity = bleHisData.humidity
+//            minHumidity = bleHisData.humidity
+//        }
         var i = 0
         while i < showBleHisData.count{
             let bleHisData = showBleHisData[i]
@@ -923,57 +965,33 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
                 self.minHumidity = bleHisData.humidity
             }
             if tempAlarmUp != 4095 && bleHisData.temp > Float(tempAlarmUp) && bleHisData.temp != -999{
-                if !beginTempUp{
-                    beginTempUp = true
-                    startTempCalDate = bleHisData.dateStamp
+                if i != 0{
+                    var lastItem = showBleHisData[i - 1]
+                    overMaxTempLimitTime += bleHisData.dateStamp - lastItem.dateStamp
                 }
                 overMaxTempLimitCount+=1
-            }else{
-                if beginTempUp{
-                    beginTempUp = false
-                    endTempCalDate = bleHisData.dateStamp
-                    overMaxTempLimitTime += endTempCalDate - startTempCalDate
-                }
             }
             if tempAlarmDown != 4095 && bleHisData.temp < Float(tempAlarmDown) && bleHisData.temp != -999{
-                if !beginTempDown{
-                    beginTempDown = true
-                    startTempCalDate = bleHisData.dateStamp
+                if i != 0{
+                    var lastItem = showBleHisData[i - 1]
+                    overMinTempLimitTime += bleHisData.dateStamp - lastItem.dateStamp
                 }
                 overMinTempLimitCount+=1
-            }else{
-                if beginTempDown{
-                    beginTempDown = false
-                    endTempCalDate = bleHisData.dateStamp
-                    overMinTempLimitTime += endTempCalDate - startTempCalDate
-                }
             }
             if self.deviceType == "S02" || self.deviceType == "S10"{
                 if humidityAlarmUp != 4095 && bleHisData.humidity > humidityAlarmUp && bleHisData.humidity != -999{
-                    if !beginHumidityUp{
-                        beginHumidityUp = true
-                        startHumidityCalDate = bleHisData.dateStamp
+                    if i != 0{
+                        var lastItem = showBleHisData[i - 1]
+                        overMaxHumidityLimitTime += bleHisData.dateStamp - lastItem.dateStamp
                     }
                     overMaxHumidityLimitCount+=1
-                }else{
-                    if beginHumidityUp{
-                        beginHumidityUp = false
-                        endHumidityCalDate = bleHisData.dateStamp
-                        overMaxHumidityLimitTime += endHumidityCalDate - startHumidityCalDate
-                    }
                 }
                 if humidityAlarmDown != 4095 && bleHisData.humidity < humidityAlarmDown && bleHisData.humidity != -999{
-                    if !beginHumidityDown{
-                        beginHumidityDown = true
-                        startHumidityCalDate = bleHisData.dateStamp
+                    if i != 0{
+                        var lastItem = showBleHisData[i - 1]
+                        overMinHumidityLimitTime += bleHisData.dateStamp - lastItem.dateStamp
                     }
                     overMinHumidityLimitCount+=1
-                }else{
-                    if beginHumidityDown{
-                        beginHumidityDown = false
-                        endHumidityCalDate = bleHisData.dateStamp
-                        overMinHumidityLimitTime += endHumidityCalDate - startHumidityCalDate
-                    }
                 }
             }
             i+=1
@@ -1032,7 +1050,7 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
         startLabelY += lineHigh
         
         self.txDescDeviceModel = UILabel()
-        self.initLabel(label: self.txDescDeviceModel, content: NSLocalizedString("device_name_desc", comment: "Device model:"), x: descX, y: startLabelY, width: descWidth, height: labelHigh, containView: sumView)
+        self.initLabel(label: self.txDescDeviceModel, content: NSLocalizedString("device_model", comment: "Device model:"), x: descX, y: startLabelY, width: descWidth, height: labelHigh, containView: sumView)
         self.txDeviceModel = UILabel()
         self.initLabel(label: self.txDeviceModel, content: self.deviceModel, x: contentX, y: startLabelY, width: Int(KSize.width) - contentX, height: labelHigh, containView: sumView)
         startLabelY += lineHigh
@@ -1063,35 +1081,41 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
         let endBatteryStr = String(format:"%.0d%%",self.endBattery)
         self.initLabel(label: self.txBatteryEnd, content: endBatteryStr, x: content2X, y: startLabelY, width: descWidth, height: labelHigh, containView: sumView)
         startLabelY += lineHigh
-        
-        var reportPropDesc = NSLocalizedString("door", comment: "Door:")
-        var upImageFileName = "ic_door_open.png"
-        var downImageFileName = "ic_door_close.png"
-        if self.deviceType == "S02" || self.deviceType == "S10"{
-            reportPropDesc = NSLocalizedString("light", comment: "Light:")
-            upImageFileName = "ic_light_open.png"
-            downImageFileName = "ic_light_close.png"
+        if self.deviceType != "S10"{
+            var reportPropDesc = NSLocalizedString("door", comment: "Door:")
+            var upImageFileName = "ic_door_open.png"
+            var downImageFileName = "ic_door_close.png"
+            if self.deviceType == "S02" {
+                reportPropDesc = NSLocalizedString("light", comment: "Light:")
+                upImageFileName = "ic_light_open.png"
+                downImageFileName = "ic_light_close.png"
+            }
+            self.txDescReportProp = UILabel()
+            self.initLabel(label: self.txDescReportProp, content: reportPropDesc, x: descX, y: startLabelY, width: descWidth, height: labelHigh, containView: sumView)
+            let upImage = UIImageView.init(frame: CGRect(x: contentX, y: startLabelY, width: 30, height: 30))
+            upImage.contentMode = .scaleAspectFit;
+            upImage.image = UIImage (named: upImageFileName)
+            upImage.backgroundColor = UIColor.clear
+            sumView.addSubview(upImage)
+            self.txOpenCount = UILabel()
+            self.initLabel(label: self.txOpenCount, content: String(self.propOpenCount), x: contentX+30, y: startLabelY, width: 60, height: labelHigh, containView: sumView)
+            let downImage = UIImageView.init(frame: CGRect(x: content2X, y: startLabelY, width: 30, height: 30))
+            downImage.contentMode = .scaleAspectFit;
+            downImage.image = UIImage (named: downImageFileName)
+            downImage.backgroundColor = UIColor.clear
+            sumView.addSubview(downImage)
+            self.txCloseCount = UILabel()
+            self.initLabel(label: self.txCloseCount, content: String(self.propCloseCount), x: content2X+30, y: startLabelY, width: 60, height: labelHigh, containView: sumView)
+            startLabelY += lineHigh
+            let sumViewFrame =  CGRect(x: 4, y: 5, width: Int(self.view.frame.size.width)-8, height: Int(self.txDescReportProp.frame.origin.y + self.txDescReportProp.frame.height) + 10)
+            self.sumView.frame = sumViewFrame
+        }else{
+            let sumViewFrame =  CGRect(x: 4, y: 5, width: Int(self.view.frame.size.width)-8, height: Int(self.txBatteryEnd.frame.origin.y + self.txBatteryEnd.frame.height) + 10)
+            self.sumView.frame = sumViewFrame
         }
-        self.txDescReportProp = UILabel()
-        self.initLabel(label: self.txDescReportProp, content: reportPropDesc, x: descX, y: startLabelY, width: descWidth, height: labelHigh, containView: sumView)
-        let upImage = UIImageView.init(frame: CGRect(x: contentX, y: startLabelY, width: 30, height: 30))
-        upImage.contentMode = .scaleAspectFit;
-        upImage.image = UIImage (named: upImageFileName)
-        upImage.backgroundColor = UIColor.clear
-        sumView.addSubview(upImage)
-        self.txOpenCount = UILabel()
-        self.initLabel(label: self.txOpenCount, content: String(self.propOpenCount), x: contentX+30, y: startLabelY, width: 60, height: labelHigh, containView: sumView)
-        let downImage = UIImageView.init(frame: CGRect(x: content2X, y: startLabelY, width: 30, height: 30))
-        downImage.contentMode = .scaleAspectFit;
-        downImage.image = UIImage (named: downImageFileName)
-        downImage.backgroundColor = UIColor.clear
-        sumView.addSubview(downImage)
-        self.txCloseCount = UILabel()
-        self.initLabel(label: self.txCloseCount, content: String(self.propCloseCount), x: content2X+30, y: startLabelY, width: 60, height: labelHigh, containView: sumView)
-        startLabelY += lineHigh
         
-        let sumViewFrame =  CGRect(x: 4, y: 5, width: Int(self.view.frame.size.width)-8, height: Int(self.txDescReportProp.frame.origin.y + self.txDescReportProp.frame.height) + 10)
-        self.sumView.frame = sumViewFrame
+        
+       
         
         //next panel
         secondView = UIView.init()
@@ -1103,7 +1127,11 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
         secondView.isUserInteractionEnabled = true
         self.mainView.addSubview(secondView)
         startLabelY = 0
-        if self.deviceType == "S02" || self.deviceType == "S10"{
+        if self.deviceType == "S02"{
+            var isSupportHumidity = true
+            if self.deviceType == "S10"{
+                isSupportHumidity = false
+            }
             self.txS02TempHead = UILabel()
             self.initLabel(label: self.txS02TempHead, content: String(format:"%@(%@)",NSLocalizedString("temp1", comment: "Temperature"),Utils.getCurTempUnit()), x: contentX, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
             self.txS02HumidityHead = UILabel()
@@ -1177,7 +1205,7 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
             self.initLabel(label: self.txS02TempAverage, content: averageTempStr, x: contentX, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
             self.txS02HumidityAverage = UILabel()
             var averageHumidityStr = "-"
-            if self.averageHumidity == -999{
+            if self.averageHumidity != -999{
                 averageHumidityStr = String(format:"%.2f",self.averageHumidity)
             }
             self.initLabel(label: self.txS02HumidityAverage, content: averageHumidityStr, x: content2X, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
@@ -1190,6 +1218,7 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
             if self.maxTemp != -998{
                 maxTempStr = String(format:"%.2f",Utils.getCurTemp(sourceTemp: self.maxTemp))
             }
+            print("maxTempStr \(maxTempStr)")
             self.initLabel(label: self.txS02TempMax, content: maxTempStr, x: contentX, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
             self.txS02HumidityMax = UILabel()
             var maxHumidityStr = "-"
@@ -1234,24 +1263,24 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
             self.txDescOverLowCount = UILabel()
             self.initLabel(label: self.txDescOverLowCount, content: NSLocalizedString("low_extreme_count_desc", comment: "Low extreme count:"), x: descX, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
             self.txS02TempOverLowCount = UILabel()
-            self.initLabel(label: self.txS02TempOverLowCount, content: String(format:"%d",self.overMaxTempLimitCount), x: contentX, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
+            self.initLabel(label: self.txS02TempOverLowCount, content: String(format:"%d",self.overMinTempLimitCount), x: contentX, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
             self.txS02HumidityOverLowCount = UILabel()
-            self.initLabel(label: self.txS02HumidityOverLowCount, content: String(format:"%d",self.overMaxHumidityLimitCount), x: content2X, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
+            self.initLabel(label: self.txS02HumidityOverLowCount, content: String(format:"%d",self.overMinHumidityLimitCount), x: content2X, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
             startLabelY += lineHigh
             
             self.txDescOverLowTime = UILabel()
             self.initLabel(label: self.txDescOverLowTime, content: NSLocalizedString("Low_extreme_time_desc", comment: "Low extreme time:"), x: descX, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
             self.txS02TempOverLowTime = UILabel()
-            self.initLabel(label: self.txS02TempOverLowTime, content: self.calDiffTime(timeDiff:self.overMaxTempLimitTime), x: contentX, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
+            self.initLabel(label: self.txS02TempOverLowTime, content: self.calDiffTime(timeDiff:self.overMinTempLimitTime), x: contentX, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
             self.txS02HumidityOverLowTime = UILabel()
-            self.initLabel(label: self.txS02HumidityOverLowTime, content: self.calDiffTime(timeDiff:self.overMaxHumidityLimitTime), x: content2X, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
+            self.initLabel(label: self.txS02HumidityOverLowTime, content: self.calDiffTime(timeDiff:self.overMinHumidityLimitTime), x: content2X, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
             startLabelY += lineHigh
             let secondViewFrame = CGRect(x: 4, y: sumView.frame.height + sumView.frame.origin.y + 10, width: self.view.frame.size.width-8, height: CGFloat(self.txDescOverLowTime.frame.origin.y + self.txDescOverLowTime.frame.height + 10))
             secondView.frame = secondViewFrame
             
         }else{
             self.txS04TempHead = UILabel()
-            self.initLabel(label: self.txS04TempHead, content: NSLocalizedString("start_value_desc", comment: "Start value:"), x: contentX, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
+            self.initLabel(label: self.txS04TempHead, content: NSLocalizedString("temp1", comment: "Temperature"), x: contentX, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
             startLabelY += lineHigh
             
             self.txDescStartValue = UILabel()
@@ -1295,14 +1324,20 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
             
             self.txDescMax = UILabel()
             self.initLabel(label: self.txDescMax, content: NSLocalizedString("max_desc", comment:"Max:"), x: descX, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
+            
+            var maxTempStr = "-"
+            if self.maxTemp != -998{
+                maxTempStr = String(format:"%.2f",Utils.getCurTemp(sourceTemp: self.maxTemp))
+            }
+            print("maxTempStr \(maxTempStr)")
             self.txS04TempMax = UILabel()
-            self.initLabel(label: self.txS04TempMax, content: String(format:"%.2f",Utils.getCurTemp(sourceTemp: self.maxTemp)), x: contentX, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
+            self.initLabel(label: self.txS04TempMax, content: maxTempStr, x: contentX, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
             startLabelY += lineHigh
             
             self.txDescMin = UILabel()
             self.initLabel(label: self.txDescMin, content: NSLocalizedString("min_desc", comment: "Min:"), x: descX, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
             self.txS04TempMin = UILabel()
-            self.initLabel(label: self.txS04TempMax, content: String(format:"%.2f",Utils.getCurTemp(sourceTemp: self.minTemp)), x: contentX, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
+            self.initLabel(label: self.txS04TempMin, content: String(format:"%.2f",Utils.getCurTemp(sourceTemp: self.minTemp)), x: contentX, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
             startLabelY += lineHigh
             
             self.txDescOverHighCount = UILabel()
@@ -1320,13 +1355,13 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
             self.txDescOverLowCount = UILabel()
             self.initLabel(label: self.txDescOverLowCount, content: NSLocalizedString("low_extreme_count_desc", comment: "Low extreme count:"), x: descX, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
             self.txS04TempOverLowCount = UILabel()
-            self.initLabel(label: self.txS04TempOverLowCount, content: String(format:"%d",self.overMaxTempLimitCount), x: contentX, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
+            self.initLabel(label: self.txS04TempOverLowCount, content: String(format:"%d",self.overMinTempLimitCount), x: contentX, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
             startLabelY += lineHigh
             
             self.txDescOverLowTime = UILabel()
             self.initLabel(label: self.txDescOverLowTime, content: NSLocalizedString("Low_extreme_time_desc", comment: "Low extreme time:"), x: descX, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
             self.txS04TempOverLowTime = UILabel()
-            self.initLabel(label: self.txS04TempOverLowTime, content: self.calDiffTime(timeDiff:self.overMaxTempLimitTime), x: contentX, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
+            self.initLabel(label: self.txS04TempOverLowTime, content: self.calDiffTime(timeDiff:self.overMinTempLimitTime), x: contentX, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)
             startLabelY += lineHigh
             let secondViewFrame = CGRect(x: 4, y: sumView.frame.height + sumView.frame.origin.y + 10, width: self.view.frame.size.width-8, height: CGFloat(self.txDescOverLowTime.frame.origin.y + self.txDescOverLowTime.frame.height + 10))
             secondView.frame = secondViewFrame

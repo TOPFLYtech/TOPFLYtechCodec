@@ -288,6 +288,7 @@ class SuperPwdResetController:UIViewController,CBCentralManagerDelegate,CBPeriph
                 peripheral.discoverCharacteristics([Characteristic_UUID], for: myService)
                 break
             }
+           
         }
         
     }

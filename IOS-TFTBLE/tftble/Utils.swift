@@ -153,7 +153,27 @@ class Utils{
         let range = NSRange(location: 0, length: string.utf16.count)
         return regex.firstMatch(in: string, options: [], range: range) != nil
     }
-    
+    static func short2Bytes(number:Int) ->[UInt8]{
+        var bytes = [UInt8](repeating: 0, count: 2)
+        bytes[0] = 0
+        bytes[1] = 0
+        var i = 1
+        var numb = number
+        while i >= 0{
+            bytes[i] = UInt8(numb % 256)
+            numb >>= 8
+            i -= 1
+        }
+        return bytes
+    }
+    static func unSignedInt2Bytes(_ num: Int64) -> [UInt8] {
+        var byteNum = [UInt8](repeating: 0, count: 4)
+        for ix in 0..<4 {
+            let offset = 32 - (ix + 1) * 8
+            byteNum[ix] = UInt8((num >> offset) & 0xff)
+        }
+        return byteNum
+    }
     static func bytes2Short(bytes:[UInt8],offset:Int) ->Int{
         if bytes.count > 2 && bytes.count > offset + 1{
             return (Int(bytes[offset]) << 8) + Int(bytes[offset + 1])
@@ -330,6 +350,24 @@ class Utils{
             }
             itemIndex += 1
         }
+    }
+    
+    static func bytes2HexString(bytes: [UInt8], index: Int) -> String? {
+        // 检查输入的有效性
+        guard !bytes.isEmpty, index < bytes.count else {
+            return nil
+        }
+
+        var builder = ""
+
+        for i in index..<bytes.count {
+            let byte = bytes[i]
+            // 将字节转换为十六进制字符串
+            let hex = String(format: "%02x", byte)
+            builder.append(hex)
+        }
+        
+        return builder
     }
     
     static func merOriginHisData(originHistoryList:[[[UInt8]]]) ->[[UInt8]]{

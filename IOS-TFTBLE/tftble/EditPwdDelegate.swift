@@ -30,6 +30,13 @@ protocol EditPulseRelayDelegate{
 protocol EditSecondPulseRelayDelegate{
     func setSecondPulseRelayValue(startLevel:Int,highLevelPulseWidthTime:Int,lowLevelPulseWidthTime:Int,pulseCount:Int)
 }
+protocol EditNegativeTriggerMultiPulseDelegate{
+    func setNegativeTriggerMultiPulseValue(port:Int,startLevel:Int,highLevelPulseWidthTime:Int,lowLevelPulseWidthTime:Int,pulseCount:Int)
+}
+
+protocol EditNegativeTriggerSinglePulseDelegate{
+    func settNegativeTriggerSinglePulseValue(port:Int,startLevel:Int,pulseWidthTime:Int)
+}
 
 protocol EditInstructionSequenceDelegate{
     func setCmd(cmd:String)

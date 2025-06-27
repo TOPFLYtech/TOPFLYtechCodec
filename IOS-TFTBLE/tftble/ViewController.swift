@@ -396,7 +396,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
             key = CBUUID(string:"FEAA")
             if dict[key] != nil{
                 let data = dict[key] as! Data
-                if data.count > 0 && (data[0] == 0x07 || data[0] == 0x08 || data[0] == 0x09 || data[0] == 0x0a) {
+                if data.count > 0 && (data[0] == 0x07 || data[0] == 0x08 || data[0] == 0x09 || data[0] == 0x0a || data[0] == 0x0d) {
                     
                 }else{
                     return
@@ -435,7 +435,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
             key = CBUUID(string:"6135")
             if dict[key] != nil{
                 let data = dict[key] as! Data
-                if data.count > 0 && (data[0] == 0x07 || data[0] == 0x08 || data[0] == 0x09 || data[0] == 0x0a) {
+                if data.count > 0 && (data[0] == 0x07 || data[0] == 0x08 || data[0] == 0x09 || data[0] == 0x0a || data[0] == 0x0d) {
                     
                 }else{
                     return
@@ -501,46 +501,12 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         return theImage!
     }
     @objc private func scanBtnClick(){
-        //        var style = LBXScanViewStyle()
-        //
-        //        style.centerUpOffset = 60
-        //        style.xScanRetangleOffset = 30
-        //
-        //        if UIScreen.main.bounds.size.height <= 480 {
-        //            //3.5inch 显示的扫码缩小
-        //            style.centerUpOffset = 40
-        //            style.xScanRetangleOffset = 20
-        //        }
-        //
-        //        style.color_NotRecoginitonArea = UIColor(red: 0.4, green: 0.4, blue: 0.4, alpha: 0.4)
-        //
-        //        style.photoframeAngleStyle = LBXScanViewPhotoframeAngleStyle.Inner
-        //        style.photoframeLineW = 2.0
-        //        style.photoframeAngleW = 16
-        //        style.photoframeAngleH = 16
-        //
-        //        style.isNeedShowRetangle = false
-        //
-        //        style.anmiationStyle = LBXScanViewAnimationStyle.NetGrid
-        //
-        //        let vc = LBXScanViewController()
-        //
-        //        vc.scanStyle = style
-        //        vc.scanResultDelegate = self
-        //        self.navigationController?.pushViewController(vc, animated: true)
         let scanView = QRCodeScannerViewController()
         scanView.delegate = self
         self.navigationController?.pushViewController(scanView, animated: true)
     }
     
     @objc private func rightClick() {
-        //     let historyView = HistoryReportController()
-        //        historyView.startDate = Int(Date().timeIntervalSince1970)
-        //        historyView.endDate = Int(Date().timeIntervalSince1970)
-        //
-        //      self.navigationController?.pushViewController(historyView, animated: false)
-        //        let smtpView = SmtpSettingController()
-        //        self.navigationController?.pushViewController(smtpView, animated: false)
         print("rightClick")
         if self.isOpenFilter {
             print ("hide")
@@ -633,6 +599,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         dataTable.register(DeviceS09Cell.self,forCellReuseIdentifier:DeviceS09Cell.identifier)
         dataTable.register(DeviceS10Cell.self,forCellReuseIdentifier:DeviceS10Cell.identifier)
         dataTable.register(DeviceDfuCell.self,forCellReuseIdentifier:DeviceDfuCell.identifier)
+        dataTable.register(DeviceA002Cell.self,forCellReuseIdentifier:DeviceA002Cell.identifier)
         //        let titleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
         //        //        titleLabel.text = "Bluetooth sensor"
         //        titleLabel.text = NSLocalizedString("bluetooth_sensor", comment: "Bluetooth sensor")
@@ -791,7 +758,11 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         }else if bleData[2] == 0x0a{
             deviceType = "S10"
             model = "T-one"
+        }else if bleData[2] == 0x0d{
+            deviceType = "A002"
+            model = "T-relay"
         }
+
         if deviceType == "ErrorDevice"{
             print("%@",bleData)
             print("parseEddystoneUID ErrorDevice " + deviceName)
@@ -990,6 +961,9 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         }else if bleData[0] == 0x0a{
             deviceType = "S10"
             model = "T-one"
+        }else if bleData[0] == 0x0d{
+            deviceType = "A002"
+            model = "T-relay"
         }
         if deviceType == "ErrorDevice"{
             return
@@ -1237,6 +1211,34 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
             deviceItem.updateValue(nid, forKey: "nid")
             deviceItem.updateValue(bid, forKey: "bid")
             deviceItem.updateValue(warnStr, forKey: "warn")
+        }else if bleData[0] == 0x0d{
+            battery = String(format: "%.2f V", Float(Utils.data2Short(bytes: bleData, offset: 12)) / 1000.0)
+            deviceItem.updateValue(battery, forKey: "battery")
+            var input = "OFF"
+            var relayInput = "OFF"
+            var negativeTriggerOne = "OFF"
+            var negativeTriggerTwo = "OFF"
+            var relayOutput = "OFF"
+            if(bleData[18] & 0x80) == 0x80{
+                input = "ON"
+            }
+            if(bleData[18] & 0x40) == 0x40{
+                relayInput = "ON"
+            }
+            if(bleData[18] & 0x20) == 0x20{
+                negativeTriggerOne = "ON"
+            }
+            if(bleData[18] & 0x10) == 0x10{
+                negativeTriggerTwo = "ON"
+            }
+            if(bleData[18] & 0x08) == 0x08{
+                relayOutput = "ON"
+            }
+            deviceItem.updateValue(input, forKey: "input")
+            deviceItem.updateValue(relayInput, forKey: "relayInput")
+            deviceItem.updateValue(negativeTriggerOne, forKey: "negativeTriggerOne")
+            deviceItem.updateValue(negativeTriggerTwo, forKey: "negativeTriggerTwo")
+            deviceItem.updateValue(relayOutput, forKey: "relayOutput")
         }
         
         updateDeviceInfo(deviceItem: deviceItem,mac:mac,deviceName:deviceName,id:id)
@@ -1749,6 +1751,8 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 
             }else if deviceType == "S09"{
                 return 450
+            }else if deviceType == "A002"{
+                return 480
             }else if deviceType == "S10"{
                 let broadcastType = deviceInfo["broadcastType"] as! String ?? ""
                 let extSensorType = deviceInfo["extSensorType"] as? String ?? ""
@@ -1897,6 +1901,8 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                  
             }else if deviceType == "S09"{
                 return 450
+            }else if deviceType == "A002"{
+                return 480
             }else if deviceType == "S10"{
                 let broadcastType = deviceInfo["broadcastType"] as! String ?? ""
                 let extSensorType = deviceInfo["extSensorType"] as? String ?? ""
@@ -2054,6 +2060,8 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 
             }else if deviceType == "S09"{
                 return 450
+            }else if deviceType == "A002"{
+                return 480
             }else if deviceType == "S10"{
                 let broadcastType = deviceInfo["broadcastType"] as! String ?? ""
                 let extSensorType = deviceInfo["extSensorType"] as? String ?? ""
@@ -2203,6 +2211,8 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 
             }else if deviceType == "S09"{
                 return 450
+            }else if deviceType == "A002"{
+                return 480
             }else if deviceType == "S10"{
                 let broadcastType = deviceInfo["broadcastType"] as! String ?? ""
                 let extSensorType = deviceInfo["extSensorType"] as? String ?? ""
@@ -2521,6 +2531,32 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
             cell.configBtn.addGestureRecognizer(tapGesture)
             
             return cell
+        }else if deviceType == "A002"{
+            let cell = (tableView.dequeueReusableCell(withIdentifier: DeviceA002Cell.identifier, for: indexPath)) as! DeviceA002Cell
+            
+            cell.deviceNameContentLabel.text = deviceInfo["name"]
+            cell.idContentLabel.text = deviceInfo["id"]
+            cell.dateContentLabel.text = deviceInfo["date"]
+            //        print("cell table " + (deviceInfo["date"] ?? ""))
+            cell.hardwareContentLabel.text = deviceInfo["hardware"]
+            cell.softwareContentLabel.text = deviceInfo["software"]
+            
+            cell.modelContentLabel.text = deviceInfo["deviceTypeDesc"]
+            cell.rssiContentLabel.text = deviceInfo["rssi"]
+            cell.batteryContentLabel.text = deviceInfo["battery"]
+
+            cell.inputContentLabel.text = deviceInfo["input"]
+            cell.relayInputContentLabel.text = deviceInfo["relayInput"]
+            cell.negativeTriggerOneContentLabel.text = deviceInfo["negativeTriggerOne"]
+            cell.negativeTriggerTwoContentLabel.text = deviceInfo["negativeTriggerTwo"]
+            cell.relayOutputContentLabel.text = deviceInfo["relayOutput"]
+            cell.configBtn.tag = indexPath.row
+            let tapGesture = UITapGestureRecognizer(target: self, action: #selector(tap(tap:)))
+            cell.configBtn.addGestureRecognizer(tapGesture)
+            cell.resetPwdBtn.tag = indexPath.row
+            let resetPwdTapGesture = UITapGestureRecognizer(target: self, action: #selector(resetPwdTap(tap:)))
+            cell.resetPwdBtn.addGestureRecognizer(resetPwdTapGesture)
+            return cell
         }else if deviceType == "S10"{
             let cell = (tableView.dequeueReusableCell(withIdentifier: DeviceS10Cell.identifier, for: indexPath)) as! DeviceS10Cell
             let broadcastType = deviceInfo["broadcastType"] as! String ?? ""
@@ -2684,6 +2720,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                     editView.cbPeripheral = peripheral
                     editView.mac = deviceInfo["id"] ?? ""
                     editView.software = deviceInfo["software"] ?? ""
+                    editView.hardware = deviceInfo["hardware"] ?? ""
                     editView.deviceType = deviceInfo["deviceType"] ?? ""
                     self.navigationController?.pushViewController(editView, animated: false)
                 }
