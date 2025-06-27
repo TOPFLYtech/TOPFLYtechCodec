@@ -164,6 +164,8 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
     private  FontSelector selector;
     boolean isHadValidTempData = false;
     boolean isHadValidHumidityData = false;
+    private int extSensorType = 0;
+    private boolean isS10SupportHumidity = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -180,14 +182,16 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
         mac = intent.getStringExtra("mac");
         reportType = intent.getStringExtra("reportType");
         deviceType = intent.getStringExtra("deviceType");
-        tempAlarmUp = intent.getFloatExtra("tempAlarmUp",4095.0f);
-        tempAlarmDown = intent.getFloatExtra("tempAlarmDown",4095.0f);
-        humidityAlarmUp = intent.getFloatExtra("humidityAlarmUp",4095.0f);
-        humidityAlarmDown = intent.getFloatExtra("humidityAlarmDown",4095.0f);
+        tempAlarmUp = intent.getIntExtra("tempAlarmUp",4095);
+        tempAlarmDown = intent.getIntExtra("tempAlarmDown",4095);
+        humidityAlarmUp = intent.getIntExtra("humidityAlarmUp",4095);
+        humidityAlarmDown = intent.getIntExtra("humidityAlarmDown",4095);
         deviceName = intent.getStringExtra("deviceName");
         id = intent.getStringExtra("id");
         startDate = intent.getLongExtra("startDate",0);
         endDate = intent.getLongExtra("endDate",0);
+        extSensorType = intent.getIntExtra("extSensorType",0);
+        isS10SupportHumidity = extSensorType == 3;
         initActionbar();
 //        Button btnSavePic = findViewById(R.id.btn_save_pic);
 //        btnSavePic.setOnClickListener(new SingleClickListener() {
@@ -279,6 +283,13 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
         overMaxHumidityLimitCount = 0;overMaxHumidityLimitTime = 0;overMinHumidityLimitCount = 0;overMinHumidityLimitTime = 0;
         boolean beginTempUp = false,beginTempDown = false,beginHumidityUp = false,beginHumidityDown = false;
         long startTempCalDate = 0,endTempCalDate = 0,startHumidityCalDate = 0,endHumidityCalDate = 0;
+        if(showBleHisData.size() > 0){
+            BleHisData firstItem = showBleHisData.get(0);
+            maxTemp = firstItem.getTemp();
+            minTemp = firstItem.getTemp();
+            maxHumidity = firstItem.getHumidity();
+            minHumidity = firstItem.getHumidity();
+        }
         for(BleHisData bleHisData:showBleHisData){
             if(bleHisData.getTemp() != -999){
                 tempSum += bleHisData.getTemp();
@@ -416,7 +427,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
         imgOpenCount = (ImageView)findViewById(R.id.img_open_count);
         imgCloseCount = (ImageView)findViewById(R.id.img_close_count);
         txDeviceModel = (TextView)findViewById(R.id.tx_ble_model);
-        if(deviceType.equals("S04") || deviceType.equals("S08")){
+        if(deviceType.equals("S04") || deviceType.equals("S08") || (deviceType.equals("S10") && !isS10SupportHumidity)){
             llS02Summary.setVisibility(View.GONE);
             llS04Summary.setVisibility(View.VISIBLE);
             llHumidityChart.setVisibility(View.GONE);
@@ -424,6 +435,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
             llS02Summary.setVisibility(View.VISIBLE);
             llS04Summary.setVisibility(View.GONE);
             llHumidityChart.setVisibility(View.VISIBLE);
+
         }
 
         txDeviceName.setText(deviceName);
@@ -1030,13 +1042,32 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
             };
             final Column<Byte> alarmColumn = new Column<>(getResources().getString(R.string.table_head_warn), "alarm",alarmFormat);
             if(deviceType.equals("S02") || deviceType.equals("S10")){
-                tableData = new PageTableData<>("",showBleHisData,dateColumn,batteryColumn,tempColumn,humidityColumn,propColumn,alarmColumn);
+                if(deviceType.equals("S10")){
+                    if(isS10SupportHumidity){
+                        tableData = new PageTableData<>("",showBleHisData,dateColumn,batteryColumn,tempColumn,humidityColumn,alarmColumn);
+                    }else{
+                        tableData = new PageTableData<>("",showBleHisData,dateColumn,batteryColumn,tempColumn,alarmColumn);
+                    }
+                }else{
+                    tableData = new PageTableData<>("",showBleHisData,dateColumn,batteryColumn,tempColumn,humidityColumn,propColumn,alarmColumn);
+                }
+
             }else{
                 tableData = new PageTableData<>("",showBleHisData,dateColumn,batteryColumn,tempColumn,propColumn,alarmColumn);
             }
         }else{
             if(deviceType.equals("S02") || deviceType.equals("S10")){
-                tableData = new PageTableData<>("",showBleHisData,dateColumn,batteryColumn,tempColumn,humidityColumn,propColumn);
+                if(deviceType.equals("S10")){
+                    if(isS10SupportHumidity){
+                        tableData = new PageTableData<>("",showBleHisData,dateColumn,batteryColumn,tempColumn,humidityColumn);
+                    }else{
+                        tableData = new PageTableData<>("",showBleHisData,dateColumn,batteryColumn,tempColumn);
+                    }
+
+                }else{
+                    tableData = new PageTableData<>("",showBleHisData,dateColumn,batteryColumn,tempColumn,humidityColumn,propColumn);
+                }
+
             }else{
                 tableData = new PageTableData<>("",showBleHisData,dateColumn,batteryColumn,tempColumn,propColumn);
             }
@@ -1519,7 +1550,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
         Document document = new Document();
         try {
             saveToGallery(tempChart, getSaveName("temp"));
-            if(deviceType.equals("S02") || (deviceType.equals("S10") && isHadValidHumidityData)){
+            if(deviceType.equals("S02") || (deviceType.equals("S10") && isHadValidHumidityData && isS10SupportHumidity)){
                 saveToGallery(humidityChart, getSaveName("humidity"));
             }
             File file = new File(realPath);
@@ -1544,13 +1575,13 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
             nameCell.setColspan(2);
             reportSumTable.addCell(nameCell);
 
-            PdfPCell idDescCell = new PdfPCell(new Paragraph(getResources().getString(R.string.ble_id)));
+            PdfPCell idDescCell = new PdfPCell(new Paragraph(selector.process(getResources().getString(R.string.ble_id))));
             reportSumTable.addCell(idDescCell);
             PdfPCell idCell = new PdfPCell(new Paragraph(id));
             idCell.setColspan(2);
             reportSumTable.addCell(idCell);
 
-            PdfPCell modelDescCell = new PdfPCell(new Paragraph(getResources().getString(R.string.device_model)));
+            PdfPCell modelDescCell = new PdfPCell(new Paragraph(selector.process(getResources().getString(R.string.device_model))));
             reportSumTable.addCell(modelDescCell);
             PdfPCell modelCell = new PdfPCell(new Paragraph(txDeviceModel.getText().toString()));
             modelCell.setColspan(2);
@@ -1585,7 +1616,16 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
             document.add(reportSumTable);
 
             if(deviceType.equals("S02")  || deviceType.equals("S10") ){
-                PdfPTable detailSumTable = new PdfPTable(3);
+                boolean isSupportHumidity = true;
+                if(deviceType.equals("S10")){
+                    isSupportHumidity = isS10SupportHumidity;
+                }
+                PdfPTable detailSumTable;
+                if(isSupportHumidity){
+                    detailSumTable = new PdfPTable(3);
+                }else{
+                    detailSumTable = new PdfPTable(2);
+                }
                 detailSumTable.setSpacingBefore(10f);
                 detailSumTable.setSpacingAfter(10f);
 
@@ -1594,86 +1634,120 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
                 String temHeadStr = getResources().getString(R.string.table_head_temp) + "(" + BleDeviceData.getCurTempUnit(HistoryReportActivity.this) + ")";
                 PdfPCell tempHeadCell = new PdfPCell(new Paragraph(selector.process(temHeadStr)));
                 detailSumTable.addCell(tempHeadCell);
-                PdfPCell humidityHeadCell = new PdfPCell(new Paragraph(selector.process(getResources().getString(R.string.table_head_humidity))));
-                detailSumTable.addCell(humidityHeadCell);
+                if(isSupportHumidity) {
+                    PdfPCell humidityHeadCell = new PdfPCell(new Paragraph(selector.process(getResources().getString(R.string.table_head_humidity))));
+                    detailSumTable.addCell(humidityHeadCell);
+                }
 
                 PdfPCell startValueDescCell = new PdfPCell(new Paragraph(selector.process(getResources().getString(R.string.start_value))));
                 detailSumTable.addCell(startValueDescCell);
                 PdfPCell startTempCell = new PdfPCell(new Paragraph(txS02TempStart.getText().toString()));
                 detailSumTable.addCell(startTempCell);
-                PdfPCell startHumidityCell = new PdfPCell(new Paragraph(txS02HumidityStart.getText().toString()));
-                detailSumTable.addCell(startHumidityCell);
+                if(isSupportHumidity) {
+                    PdfPCell startHumidityCell = new PdfPCell(new Paragraph(txS02HumidityStart.getText().toString()));
+                    detailSumTable.addCell(startHumidityCell);
+                }
+
 
                 PdfPCell endValueDescCell = new PdfPCell(new Paragraph(selector.process(getResources().getString(R.string.end_value))));
                 detailSumTable.addCell(endValueDescCell);
                 PdfPCell endTempCell = new PdfPCell(new Paragraph(txS02TempEnd.getText().toString()));
                 detailSumTable.addCell(endTempCell);
-                PdfPCell endHumidityCell = new PdfPCell(new Paragraph(txS02HumidityEnd.getText().toString()));
-                detailSumTable.addCell(endHumidityCell);
+                if(isSupportHumidity){
+                    PdfPCell endHumidityCell = new PdfPCell(new Paragraph(txS02HumidityEnd.getText().toString()));
+                    detailSumTable.addCell(endHumidityCell);
+                }
+
 
                 PdfPCell highAlarmDescCell = new PdfPCell(new Paragraph(selector.process(getResources().getString(R.string.max_limit))));
                 detailSumTable.addCell(highAlarmDescCell);
                 PdfPCell highTempAlarmCell = new PdfPCell(new Paragraph(txS02TempMaxLimit.getText().toString()));
                 detailSumTable.addCell(highTempAlarmCell);
-                PdfPCell highHumidityAlarmCell = new PdfPCell(new Paragraph(txS02HumidityMaxLimit.getText().toString()));
-                detailSumTable.addCell(highHumidityAlarmCell);
+                if(isSupportHumidity){
+                    PdfPCell highHumidityAlarmCell = new PdfPCell(new Paragraph(txS02HumidityMaxLimit.getText().toString()));
+                    detailSumTable.addCell(highHumidityAlarmCell);
+                }
+
 
                 PdfPCell lowAlarmDescCell = new PdfPCell(new Paragraph(selector.process(getResources().getString(R.string.min_limit))));
                 detailSumTable.addCell(lowAlarmDescCell);
                 PdfPCell lowTempAlarmCell = new PdfPCell(new Paragraph(txS02TempMinLimit.getText().toString()));
                 detailSumTable.addCell(lowTempAlarmCell);
-                PdfPCell lowHumidityAlarmCell = new PdfPCell(new Paragraph(txS02HumidityMinLimit.getText().toString()));
-                detailSumTable.addCell(lowHumidityAlarmCell);
+                if(isSupportHumidity){
+                    PdfPCell lowHumidityAlarmCell = new PdfPCell(new Paragraph(txS02HumidityMinLimit.getText().toString()));
+                    detailSumTable.addCell(lowHumidityAlarmCell);
+                }
+
 
                 PdfPCell averageDescCell = new PdfPCell(new Paragraph(selector.process(getResources().getString(R.string.average))));
                 detailSumTable.addCell(averageDescCell);
                 PdfPCell averageTempCell = new PdfPCell(new Paragraph(txS02TempAverage.getText().toString()));
                 detailSumTable.addCell(averageTempCell);
-                PdfPCell averageHumidityCell = new PdfPCell(new Paragraph(txS02HumidityAverage.getText().toString()));
-                detailSumTable.addCell(averageHumidityCell);
+                if(isSupportHumidity){
+                    PdfPCell averageHumidityCell = new PdfPCell(new Paragraph(txS02HumidityAverage.getText().toString()));
+                    detailSumTable.addCell(averageHumidityCell);
+                }
+
 
                 PdfPCell maxDescCell = new PdfPCell(new Paragraph(selector.process(getResources().getString(R.string.max))));
                 detailSumTable.addCell(maxDescCell);
                 PdfPCell maxTempCell = new PdfPCell(new Paragraph(txS02TempMax.getText().toString()));
                 detailSumTable.addCell(maxTempCell);
-                PdfPCell maxHumidityCell = new PdfPCell(new Paragraph(txS02HumidityMax.getText().toString()));
-                detailSumTable.addCell(maxHumidityCell);
+                if(isSupportHumidity){
+                    PdfPCell maxHumidityCell = new PdfPCell(new Paragraph(txS02HumidityMax.getText().toString()));
+                    detailSumTable.addCell(maxHumidityCell);
+                }
+
 
 
                 PdfPCell minDescCell = new PdfPCell(new Paragraph(selector.process(getResources().getString(R.string.min))));
                 detailSumTable.addCell(minDescCell);
                 PdfPCell minTempCell = new PdfPCell(new Paragraph(txS02TempMin.getText().toString()));
                 detailSumTable.addCell(minTempCell);
-                PdfPCell minHumidityCell = new PdfPCell(new Paragraph(txS02HumidityMin.getText().toString()));
-                detailSumTable.addCell(minHumidityCell);
+                if(isSupportHumidity){
+                    PdfPCell minHumidityCell = new PdfPCell(new Paragraph(txS02HumidityMin.getText().toString()));
+                    detailSumTable.addCell(minHumidityCell);
+                }
+
 
                 PdfPCell overHighAlarmCountDescCell = new PdfPCell(new Paragraph(selector.process(getResources().getString(R.string.over_high_count))));
                 detailSumTable.addCell(overHighAlarmCountDescCell);
                 PdfPCell overHighAlarmCountTempCell = new PdfPCell(new Paragraph(txS02TempOverHighCount.getText().toString()));
                 detailSumTable.addCell(overHighAlarmCountTempCell);
-                PdfPCell overHighAlarmCountHumidityCell = new PdfPCell(new Paragraph(txS02HumidityOverHighCount.getText().toString()));
-                detailSumTable.addCell(overHighAlarmCountHumidityCell);
+                if(isSupportHumidity){
+                    PdfPCell overHighAlarmCountHumidityCell = new PdfPCell(new Paragraph(txS02HumidityOverHighCount.getText().toString()));
+                    detailSumTable.addCell(overHighAlarmCountHumidityCell);
+                }
+
 
                 PdfPCell overHighAlarmTimeDescCell = new PdfPCell(new Paragraph(selector.process(getResources().getString(R.string.over_high_time))));
                 detailSumTable.addCell(overHighAlarmTimeDescCell);
                 PdfPCell overHighAlarmTimeTempCell = new PdfPCell(new Paragraph(txS02TempOverHighTime.getText().toString()));
                 detailSumTable.addCell(overHighAlarmTimeTempCell);
-                PdfPCell overHighAlarmTimeHumidityCell = new PdfPCell(new Paragraph(txS02HumidityOverHighTime.getText().toString()));
-                detailSumTable.addCell(overHighAlarmTimeHumidityCell);
+                if(isSupportHumidity){
+                    PdfPCell overHighAlarmTimeHumidityCell = new PdfPCell(new Paragraph(txS02HumidityOverHighTime.getText().toString()));
+                    detailSumTable.addCell(overHighAlarmTimeHumidityCell);
+                }
+
 
                 PdfPCell overLowAlarmCountDescCell = new PdfPCell(new Paragraph(selector.process(getResources().getString(R.string.over_low_count))));
                 detailSumTable.addCell(overLowAlarmCountDescCell);
                 PdfPCell overLowAlarmCountTempCell = new PdfPCell(new Paragraph(txS02TempOverLowCount.getText().toString()));
                 detailSumTable.addCell(overLowAlarmCountTempCell);
-                PdfPCell overLowAlarmCountHumidityCell = new PdfPCell(new Paragraph(txS02HumidityOverLowCount.getText().toString()));
-                detailSumTable.addCell(overLowAlarmCountHumidityCell);
+                if(isSupportHumidity){
+                    PdfPCell overLowAlarmCountHumidityCell = new PdfPCell(new Paragraph(txS02HumidityOverLowCount.getText().toString()));
+                    detailSumTable.addCell(overLowAlarmCountHumidityCell);
+                }
+
 
                 PdfPCell overLowAlarmTimeDescCell = new PdfPCell(new Paragraph(selector.process(getResources().getString(R.string.over_low_time))));
                 detailSumTable.addCell(overLowAlarmTimeDescCell);
                 PdfPCell overLowAlarmTimeTempCell = new PdfPCell(new Paragraph(txS02TempOverLowTime.getText().toString()));
                 detailSumTable.addCell(overLowAlarmTimeTempCell);
-                PdfPCell overLowAlarmTimeHumidityCell = new PdfPCell(new Paragraph(txS02HumidityOverLowTime.getText().toString()));
-                detailSumTable.addCell(overLowAlarmTimeHumidityCell);
+                if(isSupportHumidity){
+                    PdfPCell overLowAlarmTimeHumidityCell = new PdfPCell(new Paragraph(txS02HumidityOverLowTime.getText().toString()));
+                    detailSumTable.addCell(overLowAlarmTimeHumidityCell);
+                }
 
                 document.add(detailSumTable);
                 try{
@@ -1691,7 +1765,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
                 }
 
                 try{
-                    if(isHadValidHumidityData){
+                    if(isHadValidHumidityData && isS10SupportHumidity){
                         Image imgHumidity = Image.getInstance(getDownDirs() +File.separator+ getSaveName("humidity"));
                         if(imgHumidity != null){
                             document.newPage();
@@ -1791,14 +1865,26 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
             }
             int detailColumnCount = 6;
             if(reportType.equals("alarm")){
-                if(deviceType.equals("S02") || deviceType.equals("S10")){
+                if(deviceType.equals("S02")  ){
                     detailColumnCount = 6;
+                }else if(deviceType.equals("S10")){
+                    if(isS10SupportHumidity){
+                        detailColumnCount = 5;
+                    }else{
+                        detailColumnCount = 4;
+                    }
                 }else{
                     detailColumnCount = 5;
                 }
             }else{
-                if(deviceType.equals("S02") || deviceType.equals("S10")){
+                if(deviceType.equals("S02") ){
                     detailColumnCount = 5;
+                }else if(deviceType.equals("S10")){
+                    if(isS10SupportHumidity){
+                        detailColumnCount = 4;
+                    }else{
+                        detailColumnCount = 3;
+                    }
                 }else{
                     detailColumnCount = 4;
                 }
@@ -1812,11 +1898,17 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
             PdfPCell tableTempHeadCell = new PdfPCell(new Paragraph(selector.process(getResources().getString(R.string.table_head_temp))));
             detailTable.addCell(tableTempHeadCell);
             if(deviceType.equals("S02") || deviceType.equals("S10")){
-                PdfPCell tableHumidityHeadCell = new PdfPCell(new Paragraph(selector.process(getResources().getString(R.string.table_head_humidity))));
-                detailTable.addCell(tableHumidityHeadCell);
-                PdfPCell tablePropHeadCell = new PdfPCell(new Paragraph(selector.process(getResources().getString(R.string.table_head_light))));
-                detailTable.addCell(tablePropHeadCell);
-
+                if(deviceType.equals("S10") ){
+                    if(isS10SupportHumidity){
+                        PdfPCell tableHumidityHeadCell = new PdfPCell(new Paragraph(selector.process(getResources().getString(R.string.table_head_humidity))));
+                        detailTable.addCell(tableHumidityHeadCell);
+                    }
+                }else{
+                    PdfPCell tableHumidityHeadCell = new PdfPCell(new Paragraph(selector.process(getResources().getString(R.string.table_head_humidity))));
+                    detailTable.addCell(tableHumidityHeadCell);
+                    PdfPCell tablePropHeadCell = new PdfPCell(new Paragraph(selector.process(getResources().getString(R.string.table_head_light))));
+                    detailTable.addCell(tablePropHeadCell);
+                }
             }else{
                 PdfPCell tablePropHeadCell = new PdfPCell(new Paragraph(selector.process(getResources().getString(R.string.table_head_door))));
                 detailTable.addCell(tablePropHeadCell);
@@ -1833,15 +1925,26 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
                 PdfPCell tableTempValueCell = new PdfPCell(new Paragraph(BleDeviceData.getCurTemp(HistoryReportActivity.this,bleHisData.getTemp())));
                 detailTable.addCell(tableTempValueCell);
                 if(deviceType.equals("S02") || deviceType.equals("S10")){
-                    String humidityStr = "-";
-                    if(bleHisData.getHumidity() != -999){
-                        humidityStr = String.format("%.0f",bleHisData.getHumidity());
+                    if(deviceType.equals("S10") ){
+                        if(isS10SupportHumidity){
+                            String humidityStr = "-";
+                            if(bleHisData.getHumidity() != -999){
+                                humidityStr = String.format("%.0f",bleHisData.getHumidity());
+                            }
+                            PdfPCell tableHumidityValueCell = new PdfPCell(new Paragraph(humidityStr));
+                            detailTable.addCell(tableHumidityValueCell);
+                        }
+                    }else{
+                        String humidityStr = "-";
+                        if(bleHisData.getHumidity() != -999){
+                            humidityStr = String.format("%.0f",bleHisData.getHumidity());
+                        }
+                        PdfPCell tableHumidityValueCell = new PdfPCell(new Paragraph(humidityStr));
+                        detailTable.addCell(tableHumidityValueCell);
+                        String propValue = bleHisData.getProp() == 1 ? getResources().getString(R.string.prop_light) : getResources().getString(R.string.prop_dark);
+                        PdfPCell tablePropValueCell = new PdfPCell(new Paragraph(selector.process(propValue)));
+                        detailTable.addCell(tablePropValueCell);
                     }
-                    PdfPCell tableHumidityValueCell = new PdfPCell(new Paragraph(humidityStr));
-                    detailTable.addCell(tableHumidityValueCell);
-                    String propValue = bleHisData.getProp() == 1 ? getResources().getString(R.string.prop_light) : getResources().getString(R.string.prop_dark);
-                    PdfPCell tablePropValueCell = new PdfPCell(new Paragraph(selector.process(propValue)));
-                    detailTable.addCell(tablePropValueCell);
                 }else{
                     String propValue = bleHisData.getProp() == 1 ? getResources().getString(R.string.prop_door_open) : getResources().getString(R.string.prop_door_close);
                     PdfPCell tablePropValueCell = new PdfPCell(new Paragraph(selector.process(propValue)));
@@ -1969,8 +2072,15 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
         head.add(getResources().getString(R.string.table_head_battery));
         head.add(getResources().getString(R.string.table_head_temp));
         if(deviceType.equals("S02") || deviceType.equals("S10")){
-            head.add(getResources().getString(R.string.table_head_humidity));
-            head.add(getResources().getString(R.string.table_head_light));
+            if(deviceType.equals("S10")){
+                if(isS10SupportHumidity){
+                    head.add(getResources().getString(R.string.table_head_humidity));
+                }
+            }else{
+                head.add(getResources().getString(R.string.table_head_humidity));
+                head.add(getResources().getString(R.string.table_head_light));
+            }
+
         }else{
             head.add(getResources().getString(R.string.table_head_door));
         }
@@ -1984,13 +2094,24 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
             line.add(bleHisData.getBattery() + "%");
             line.add(BleDeviceData.getCurTemp(HistoryReportActivity.this,bleHisData.getTemp()) + BleDeviceData.getCurTempUnit(HistoryReportActivity.this));
             if(deviceType.equals("S02") || deviceType.equals("S10")){
-                String humidityStr = "-";
-                if(bleHisData.getHumidity() != -999){
-                    humidityStr = String.format("%.0f",bleHisData.getHumidity());
+                if(deviceType.equals("S10")){
+                    if(isS10SupportHumidity){
+                        String humidityStr = "-";
+                        if(bleHisData.getHumidity() != -999){
+                            humidityStr = String.format("%.0f",bleHisData.getHumidity());
+                        }
+                        line.add(humidityStr);
+                    }
+                }else{
+                    String humidityStr = "-";
+                    if(bleHisData.getHumidity() != -999){
+                        humidityStr = String.format("%.0f",bleHisData.getHumidity());
+                    }
+                    line.add(humidityStr);
+                    String propValue = bleHisData.getProp() == 1 ? getResources().getString(R.string.prop_light) : getResources().getString(R.string.prop_dark);
+                    line.add(propValue);
                 }
-                line.add(humidityStr);
-                String propValue = bleHisData.getProp() == 1 ? getResources().getString(R.string.prop_light) : getResources().getString(R.string.prop_dark);
-                line.add(propValue);
+
             }else{
                 String propValue = bleHisData.getProp() == 1 ? getResources().getString(R.string.prop_door_open) : getResources().getString(R.string.prop_door_close);
                 line.add(propValue);
@@ -2137,7 +2258,7 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
     public boolean exportExcel(String filePath){
         try {
             saveToGallery(tempChart, getSaveName("temp"));
-            if(deviceType.equals("S02") || (deviceType.equals("S10") && isHadValidHumidityData)){
+            if(deviceType.equals("S02") || (deviceType.equals("S10") && isHadValidHumidityData && isS10SupportHumidity)){
                 saveToGallery(humidityChart, getSaveName("humidity"));
             }
             OutputStream os = new FileOutputStream(filePath);
@@ -2182,66 +2303,103 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
             rowIndex++;
 
             if(deviceType.equals("S02") || deviceType.equals("S10")){
+                boolean isSupportHumidity = true;
+                if(deviceType.equals("S10")){
+                    isSupportHumidity = isS10SupportHumidity;
+                }
                 rowIndex++;
                 addExcelString(mWritableSheet,1,rowIndex,getResources().getString(R.string.table_head_temp) + "(" + BleDeviceData.getCurTempUnit(HistoryReportActivity.this) + ")");
-                addExcelString(mWritableSheet,2,rowIndex,getResources().getString(R.string.table_head_humidity));
+                if(isSupportHumidity){
+                    addExcelString(mWritableSheet,2,rowIndex,getResources().getString(R.string.table_head_humidity));
+                }
 
                 rowIndex++;
                 addExcelString(mWritableSheet,0,rowIndex,getResources().getString(R.string.start_value));
                 addExcelString(mWritableSheet,1,rowIndex,txS02TempStart.getText().toString());
-                addExcelString(mWritableSheet,2,rowIndex,txS02HumidityStart.getText().toString());
+                if(isSupportHumidity){
+                    addExcelString(mWritableSheet,2,rowIndex,txS02HumidityStart.getText().toString());
+                }
+
 
                 rowIndex++;
                 addExcelString(mWritableSheet,0,rowIndex,getResources().getString(R.string.end_value));
                 addExcelString(mWritableSheet,1,rowIndex,txS02TempEnd.getText().toString());
-                addExcelString(mWritableSheet,2,rowIndex,txS02HumidityEnd.getText().toString());
+                if(isSupportHumidity){
+                    addExcelString(mWritableSheet,2,rowIndex,txS02HumidityEnd.getText().toString());
+                }
+
 
                 rowIndex++;
                 addExcelString(mWritableSheet,0,rowIndex,getResources().getString(R.string.max_limit));
                 addExcelString(mWritableSheet,1,rowIndex,txS02TempMaxLimit.getText().toString());
-                addExcelString(mWritableSheet,2,rowIndex,txS02HumidityMaxLimit.getText().toString());
+                if(isSupportHumidity){
+                    addExcelString(mWritableSheet,2,rowIndex,txS02HumidityMaxLimit.getText().toString());
+                }
+
 
                 rowIndex++;
                 addExcelString(mWritableSheet,0,rowIndex,getResources().getString(R.string.min_limit));
                 addExcelString(mWritableSheet,1,rowIndex,txS02TempMinLimit.getText().toString());
-                addExcelString(mWritableSheet,2,rowIndex,txS02HumidityMinLimit.getText().toString());
+                if(isSupportHumidity){
+                    addExcelString(mWritableSheet,2,rowIndex,txS02HumidityMinLimit.getText().toString());
+                }
+
 
                 rowIndex++;
                 addExcelString(mWritableSheet,0,rowIndex,getResources().getString(R.string.average));
                 addExcelString(mWritableSheet,1,rowIndex,txS02TempAverage.getText().toString());
-                addExcelString(mWritableSheet,2,rowIndex,txS02HumidityAverage.getText().toString());
+                if(isSupportHumidity){
+                    addExcelString(mWritableSheet,2,rowIndex,txS02HumidityAverage.getText().toString());
+                }
+
 
                 rowIndex++;
                 addExcelString(mWritableSheet,0,rowIndex,getResources().getString(R.string.max));
                 addExcelString(mWritableSheet,1,rowIndex,txS02TempMax.getText().toString());
-                addExcelString(mWritableSheet,2,rowIndex,txS02HumidityMax.getText().toString());
+                if(isSupportHumidity){
+                    addExcelString(mWritableSheet,2,rowIndex,txS02HumidityMax.getText().toString());
+                }
+
 
                 rowIndex++;
                 addExcelString(mWritableSheet,0,rowIndex,getResources().getString(R.string.over_high_count));
                 addExcelString(mWritableSheet,1,rowIndex,txS02TempOverHighCount.getText().toString());
-                addExcelString(mWritableSheet,2,rowIndex,txS02HumidityOverHighCount.getText().toString());
+                if(isSupportHumidity){
+                    addExcelString(mWritableSheet,2,rowIndex,txS02HumidityOverHighCount.getText().toString());
+                }
+
 
                 rowIndex++;
                 addExcelString(mWritableSheet,0,rowIndex,getResources().getString(R.string.over_high_time));
                 addExcelString(mWritableSheet,1,rowIndex,txS02TempOverHighTime.getText().toString());
-                addExcelString(mWritableSheet,2,rowIndex,txS02HumidityOverHighTime.getText().toString());
+                if(isSupportHumidity){
+                    addExcelString(mWritableSheet,2,rowIndex,txS02HumidityOverHighTime.getText().toString());
+                }
+
 
                 rowIndex++;
                 addExcelString(mWritableSheet,0,rowIndex,getResources().getString(R.string.over_low_count));
                 addExcelString(mWritableSheet,1,rowIndex,txS02TempOverLowCount.getText().toString());
-                addExcelString(mWritableSheet,2,rowIndex,txS02HumidityOverLowCount.getText().toString());
+                if(isSupportHumidity){
+                    addExcelString(mWritableSheet,2,rowIndex,txS02HumidityOverLowCount.getText().toString());
+                }
+
 
                 rowIndex++;
                 addExcelString(mWritableSheet,0,rowIndex,getResources().getString(R.string.over_low_time));
                 addExcelString(mWritableSheet,1,rowIndex,txS02TempOverLowTime.getText().toString());
-                addExcelString(mWritableSheet,2,rowIndex,txS02HumidityOverLowTime.getText().toString());
+                if(isSupportHumidity){
+                    addExcelString(mWritableSheet,2,rowIndex,txS02HumidityOverLowTime.getText().toString());
+                }
 
                 rowIndex++;
                 rowIndex++;
                 addExcelImage(mWritableSheet,0,rowIndex,"temp");
                 rowIndex+=20;
-                addExcelImage(mWritableSheet,0,rowIndex,"humidity");
-                rowIndex+=20;
+                if(isSupportHumidity){
+                    addExcelImage(mWritableSheet,0,rowIndex,"humidity");
+                    rowIndex+=20;
+                }
             }else{
                 rowIndex++;
                 addExcelString(mWritableSheet,1,rowIndex,getResources().getString(R.string.table_head_temp) + "(" + BleDeviceData.getCurTempUnit(HistoryReportActivity.this) + ")");
@@ -2300,10 +2458,17 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
             colIndex++;
             addExcelString(mWritableSheet,colIndex,rowIndex,getResources().getString(R.string.table_head_temp));
             if(deviceType.equals("S02") || deviceType.equals("S10")){
-                colIndex++;
-                addExcelString(mWritableSheet,colIndex,rowIndex,getResources().getString(R.string.table_head_humidity));
-                colIndex++;
-                addExcelString(mWritableSheet,colIndex,rowIndex,getResources().getString(R.string.table_head_light));
+                if(deviceType.equals("S10")  ){
+                    if(isS10SupportHumidity){
+                        colIndex++;
+                        addExcelString(mWritableSheet,colIndex,rowIndex,getResources().getString(R.string.table_head_humidity));
+                    }
+                }else{
+                    colIndex++;
+                    addExcelString(mWritableSheet,colIndex,rowIndex,getResources().getString(R.string.table_head_humidity));
+                    colIndex++;
+                    addExcelString(mWritableSheet,colIndex,rowIndex,getResources().getString(R.string.table_head_light));
+                }
             }else{
                 colIndex++;
                 addExcelString(mWritableSheet,colIndex,rowIndex,getResources().getString(R.string.table_head_door));
@@ -2323,15 +2488,27 @@ public class HistoryReportActivity extends AppCompatActivity implements OnChartV
                 addExcelString(mWritableSheet,colIndex,rowIndex,BleDeviceData.getCurTemp(HistoryReportActivity.this,bleHisData.getTemp()) + BleDeviceData.getCurTempUnit(HistoryReportActivity.this));
 
                 if(deviceType.equals("S02") || deviceType.equals("S10")){
-                    colIndex++;
-                    String humidityStr = "-";
-                    if(bleHisData.getHumidity() != -999){
-                        humidityStr = String.format("%.0f",bleHisData.getHumidity());
+                    if(deviceType.equals("S10") ){
+                        if(isS10SupportHumidity){
+                            colIndex++;
+                            String humidityStr = "-";
+                            if(bleHisData.getHumidity() != -999){
+                                humidityStr = String.format("%.0f",bleHisData.getHumidity());
+                            }
+                            addExcelString(mWritableSheet,colIndex,rowIndex,humidityStr);
+                        }
+                    }else{
+                        colIndex++;
+                        String humidityStr = "-";
+                        if(bleHisData.getHumidity() != -999){
+                            humidityStr = String.format("%.0f",bleHisData.getHumidity());
+                        }
+                        addExcelString(mWritableSheet,colIndex,rowIndex,humidityStr);
+                        colIndex++;
+                        String propValue = bleHisData.getProp() == 1 ? getResources().getString(R.string.prop_light) : getResources().getString(R.string.prop_dark);
+                        addExcelString(mWritableSheet,colIndex,rowIndex,propValue);
                     }
-                    addExcelString(mWritableSheet,colIndex,rowIndex,humidityStr);
-                    colIndex++;
-                    String propValue = bleHisData.getProp() == 1 ? getResources().getString(R.string.prop_light) : getResources().getString(R.string.prop_dark);
-                    addExcelString(mWritableSheet,colIndex,rowIndex,propValue);
+
                 }else{
                     colIndex++;
                     String propValue = bleHisData.getProp() == 1 ? getResources().getString(R.string.prop_door_open) : getResources().getString(R.string.prop_door_close);

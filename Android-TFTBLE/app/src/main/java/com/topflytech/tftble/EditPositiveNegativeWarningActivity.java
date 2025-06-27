@@ -126,41 +126,46 @@ public class EditPositiveNegativeWarningActivity extends AppCompatActivity {
                     Toast.makeText(EditPositiveNegativeWarningActivity.this,R.string.fixInput,Toast.LENGTH_SHORT).show();
                     return;
                 }
-                int samplingIntervalInt = Integer.valueOf(samplingInterval);
-                if(samplingIntervalInt < 0 || samplingIntervalInt > 65535){
-                    Toast.makeText(EditPositiveNegativeWarningActivity.this,R.string.sampling_interval_error_warning,Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                float lowVoltageFloat = Float.valueOf(lowVoltage);
-                float highVoltageFloat = Float.valueOf(highVoltage);
-                if (highVoltageFloat - lowVoltageFloat < 0.5){
-                    Toast.makeText(EditPositiveNegativeWarningActivity.this,R.string.high_voltage_low_voltage_error,Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                if(highVoltageFloat < 0 || highVoltageFloat > 32 || lowVoltageFloat < 0 || lowVoltageFloat > 32){
-                    Toast.makeText(EditPositiveNegativeWarningActivity.this,R.string.voltage_range_error_warning,Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                lowVoltageFloat = lowVoltageFloat*100;
-                highVoltageFloat = highVoltageFloat*100;
-                int ditheringIntervalHighInt = Integer.valueOf(ditheringIntervalHigh);
-                int ditheringIntervalLowInt = Integer.valueOf(ditheringIntervalLow);
-                if(ditheringIntervalHighInt < 0 || ditheringIntervalHighInt > 255 || ditheringIntervalLowInt < 0 || ditheringIntervalLowInt > 255  ){
-                    Toast.makeText(EditPositiveNegativeWarningActivity.this,R.string.dithering_interval_error_warning,Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                Intent intent = new Intent();
-                intent.putExtra("port", Integer.valueOf(port));
-                intent.putExtra("mode",mode);
-                intent.putExtra("lowVoltage",(int)lowVoltageFloat);
-                intent.putExtra("highVoltage",(int)highVoltageFloat);
-                intent.putExtra("ditheringIntervalHigh",ditheringIntervalHighInt);
-                intent.putExtra("ditheringIntervalLow",ditheringIntervalLowInt);
-                intent.putExtra("samplingInterval",samplingIntervalInt);
+                try{
+                    int samplingIntervalInt = Integer.valueOf(samplingInterval);
+                    if(samplingIntervalInt < 0 || samplingIntervalInt > 65535){
+                        Toast.makeText(EditPositiveNegativeWarningActivity.this,R.string.sampling_interval_error_warning,Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    float lowVoltageFloat = Float.valueOf(lowVoltage);
+                    float highVoltageFloat = Float.valueOf(highVoltage);
+                    if (highVoltageFloat - lowVoltageFloat < 0.5){
+                        Toast.makeText(EditPositiveNegativeWarningActivity.this,R.string.high_voltage_low_voltage_error,Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    if(highVoltageFloat < 0 || highVoltageFloat > 32 || lowVoltageFloat < 0 || lowVoltageFloat > 32){
+                        Toast.makeText(EditPositiveNegativeWarningActivity.this,R.string.voltage_range_error_warning,Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    lowVoltageFloat = lowVoltageFloat*100;
+                    highVoltageFloat = highVoltageFloat*100;
+                    int ditheringIntervalHighInt = Integer.valueOf(ditheringIntervalHigh);
+                    int ditheringIntervalLowInt = Integer.valueOf(ditheringIntervalLow);
+                    if(ditheringIntervalHighInt < 0 || ditheringIntervalHighInt > 255 || ditheringIntervalLowInt < 0 || ditheringIntervalLowInt > 255  ){
+                        Toast.makeText(EditPositiveNegativeWarningActivity.this,R.string.dithering_interval_error_warning,Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    Intent intent = new Intent();
+                    intent.putExtra("port", Integer.valueOf(port));
+                    intent.putExtra("mode",mode);
+                    intent.putExtra("lowVoltage",(int)lowVoltageFloat);
+                    intent.putExtra("highVoltage",(int)highVoltageFloat);
+                    intent.putExtra("ditheringIntervalHigh",ditheringIntervalHighInt);
+                    intent.putExtra("ditheringIntervalLow",ditheringIntervalLowInt);
+                    intent.putExtra("samplingInterval",samplingIntervalInt);
 
 
-                setResult(EditActivity.RESPONSE_CHANGE_POSITIVE_NEGATIVE_WARNING,intent);
-                finish();
+                    setResult(EditActivity.RESPONSE_CHANGE_POSITIVE_NEGATIVE_WARNING,intent);
+                    finish();
+                }catch (Exception e){
+                    Toast.makeText(EditPositiveNegativeWarningActivity.this,R.string.input_error,Toast.LENGTH_SHORT).show();
+                }
+
             }
         });
     }

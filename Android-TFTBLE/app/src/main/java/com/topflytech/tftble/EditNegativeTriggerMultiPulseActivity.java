@@ -9,29 +9,39 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.topflytech.tftble.data.SingleClickListener;
 
-public class EditSecondPulseDelayActivity extends AppCompatActivity {
+public class EditNegativeTriggerMultiPulseActivity extends AppCompatActivity {
     private ActionBar actionBar;
     private ImageView backButton;
     private ImageView rightButton;
     private TextView tvHead;
 
-    private EditText etStartLevel,etHighLevelPulseWidthTime,etLowLevelPulseWidthTime,etPulseCount;
+    private EditText etPort,etStartLevel,etHighLevelPulseWidthTime,etLowLevelPulseWidthTime,etPulseCount;
     private Button btnConfirm;
+    private int port;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_edit_second_pulse_delay);
+        setContentView(R.layout.activity_edit_negative_trigger_multi_pulse);
         initActionbar();
+        etPort = (EditText)findViewById(R.id.et_port);
         etStartLevel = (EditText)findViewById(R.id.et_start_level) ;
         etHighLevelPulseWidthTime = (EditText)findViewById(R.id.et_high_level_pulse_width_time) ;
         etLowLevelPulseWidthTime = (EditText)findViewById(R.id.et_low_level_pulse_width_time) ;
         etPulseCount = (EditText)findViewById(R.id.et_pulse_count) ;
         btnConfirm = (Button) findViewById(R.id.btn_relay_pulse_confirm);
+        port = getIntent().getIntExtra("port",-1);
+        if(port != -1){
+            etPort.setText(String.valueOf(port));
+        }
         btnConfirm.setOnClickListener(new SingleClickListener() {
             @Override
             public void onSingleClick(View view) {
@@ -43,11 +53,11 @@ public class EditSecondPulseDelayActivity extends AppCompatActivity {
                         highLevelPulseWidthTime == null || highLevelPulseWidthTime.trim().length() == 0||
                         lowLevelPulseWidthTime == null || lowLevelPulseWidthTime.trim().length() == 0||
                         pulseCount == null || pulseCount.trim().length() == 0){
-                    Toast.makeText(EditSecondPulseDelayActivity.this,R.string.input_error,Toast.LENGTH_SHORT).show();
+                    Toast.makeText(EditNegativeTriggerMultiPulseActivity.this,R.string.input_error,Toast.LENGTH_SHORT).show();
                     return;
                 }
                 if(!startLevel.trim().equals("1") && !startLevel.trim().equals("0")){
-                    Toast.makeText(EditSecondPulseDelayActivity.this,R.string.start_level_format_error,Toast.LENGTH_SHORT).show();
+                    Toast.makeText(EditNegativeTriggerMultiPulseActivity.this,R.string.start_level_format_error,Toast.LENGTH_SHORT).show();
                     return;
                 }
                 try{
@@ -57,15 +67,15 @@ public class EditSecondPulseDelayActivity extends AppCompatActivity {
                     int pulseCountInt = Integer.valueOf(pulseCount);
 
                     if (highLevelPulseWidthTimeInt < 100 || highLevelPulseWidthTimeInt > 25500){
-                        Toast.makeText(EditSecondPulseDelayActivity.this,R.string.high_level_pulse_width_time_error,Toast.LENGTH_SHORT).show();
+                        Toast.makeText(EditNegativeTriggerMultiPulseActivity.this,R.string.high_level_pulse_width_time_error,Toast.LENGTH_SHORT).show();
                         return;
                     }
                     if (lowLevelPulseWidthTimeInt < 100 || lowLevelPulseWidthTimeInt > 25500){
-                        Toast.makeText(EditSecondPulseDelayActivity.this,R.string.low_level_pulse_width_time_error,Toast.LENGTH_SHORT).show();
+                        Toast.makeText(EditNegativeTriggerMultiPulseActivity.this,R.string.low_level_pulse_width_time_error,Toast.LENGTH_SHORT).show();
                         return;
                     }
                     if (pulseCountInt < 0 || pulseCountInt > 65535){
-                        Toast.makeText(EditSecondPulseDelayActivity.this,R.string.pulse_count_error,Toast.LENGTH_SHORT).show();
+                        Toast.makeText(EditNegativeTriggerMultiPulseActivity.this,R.string.pulse_count_error,Toast.LENGTH_SHORT).show();
                         return;
                     }
                     Intent intent = new Intent();
@@ -73,10 +83,11 @@ public class EditSecondPulseDelayActivity extends AppCompatActivity {
                     intent.putExtra("highLevelPulseWidthTime",highLevelPulseWidthTimeInt/ 100);
                     intent.putExtra("lowLevelPulseWidthTime",lowLevelPulseWidthTimeInt/ 100) ;
                     intent.putExtra("pulseCount",pulseCountInt);
-                    setResult(EditActivity.RESPONSE_EDIT_SECOND_PULSE_DELAY,intent);
+                    intent.putExtra("port",port);
+                    setResult(EditActivity.RESPONSE_EDIT_NEGATIVE_TRIGGER_MULTI_PULSE,intent);
                     finish();
                 }catch (Exception e){
-                    Toast.makeText(EditSecondPulseDelayActivity.this,R.string.input_error,Toast.LENGTH_SHORT).show();
+                    Toast.makeText(EditNegativeTriggerMultiPulseActivity.this,R.string.input_error,Toast.LENGTH_SHORT).show();
                 }
 
             }

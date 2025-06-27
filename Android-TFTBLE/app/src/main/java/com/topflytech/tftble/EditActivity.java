@@ -44,9 +44,6 @@ import com.alibaba.fastjson.JSONObject;
 //import com.bigkoo.pickerview.builder.OptionsPickerBuilder;
 //import com.bigkoo.pickerview.view.OptionsPickerView;
 import com.github.gzuliyujiang.wheelpicker.OptionPicker;
-import com.inuker.bluetooth.library.BluetoothClient;
-import com.inuker.bluetooth.library.connect.listener.BleConnectStatusListener;
-import com.inuker.bluetooth.library.connect.options.BleConnectOptions;
 import com.topflytech.tftble.data.A001SoftwareUpgradeManager;
 import com.topflytech.tftble.data.BleDeviceData;
 import com.topflytech.tftble.data.BleHisData;
@@ -78,9 +75,6 @@ import no.nordicsemi.android.dfu.DfuServiceController;
 import no.nordicsemi.android.dfu.DfuServiceInitiator;
 import no.nordicsemi.android.dfu.DfuServiceListenerHelper;
 
-import static com.inuker.bluetooth.library.Code.REQUEST_SUCCESS;
-import static com.inuker.bluetooth.library.Constants.STATUS_CONNECTED;
-import static com.inuker.bluetooth.library.Constants.STATUS_DISCONNECTED;
 
 public class EditActivity extends AppCompatActivity implements A001SoftwareUpgradeManager.UpgradeStatusCallback {
     private ActionBar actionBar;
@@ -91,6 +85,7 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
     private String deviceType;
     private String id;
     private String software;
+    private String hardware;
     private String confirmPwd, newPwd;
     SweetAlertDialog waitingDlg;
     SweetAlertDialog waitingCancelDlg;
@@ -119,6 +114,9 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
     private OptionPicker pvBroadcastType;
     private OptionPicker pvBroadcastCycle;
     private OptionPicker pvRelayType;
+
+    private OptionPicker pvBleConnectTimeout;
+    private OptionPicker pvNegativeTrigger;
     public static final int REQUEST_CHANGE_PWD = 1;
     public static final int RESPONSE_CHANGE_PWD = 1;
 
@@ -150,8 +148,15 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
     public static final int REQUEST_EDIT_SECOND_PULSE_DELAY = 12;
     public static final int RESPONSE_EDIT_SECOND_PULSE_DELAY = 12;
 
+    public static final int REQUEST_EDIT_NEGATIVE_TRIGGER_SINGLE_PULSE = 13;
+    public static final int RESPONSE_EDIT_NEGATIVE_TRIGGER_SINGLE_PULSE = 13;
 
-    private int getExtSensorTypeNextCtrl = -1;
+    public static final int REQUEST_EDIT_NEGATIVE_TRIGGER_MULTI_PULSE = 14;
+    public static final int RESPONSE_EDIT_NEGATIVE_TRIGGER_MULTI_PULSE = 14;
+
+
+    private int getExtSensorTypeNextCtrl = GET_EXT_SENSOR_TYPE_NEXT_DO_NOTHING;
+    public static final int GET_EXT_SENSOR_TYPE_NEXT_DO_NOTHING = 0;
     public static final int GET_EXT_SENSOR_TYPE_NEXT_DO_GET_HIS_DATA = 1;
     public static final int GET_EXT_SENSOR_TYPE_NEXT_DO_START_RECORD = 2;
 
@@ -165,17 +170,21 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
     private LinkedBlockingQueue<WriteSensorObj> waitingSendMsgQueue = new LinkedBlockingQueue<>();
     private boolean isSendMsgThreadRunning = true;
     private ArrayList<String> relayTypeList;
+    private ArrayList<String> negativeTriggerTypeList ;
     private UUID serviceId = UUID.fromString("27760001-999C-4D6A-9FC4-C7272BE10900");
     private UUID uuid = UUID.fromString("27763561-999C-4D6A-9FC4-C7272BE10900");
     private BluetoothDevice bleDevice;
     private BluetoothGatt bluetoothGatt;
     private BluetoothGattCharacteristic cmdReadWriteCharacteristic;
+
+    private BluetoothGatt upgradeBluetoothGatt;
+    private BluetoothGattCharacteristic upgradeCmdReadWriteCharacteristic;
     private boolean isA001Protocol = false;
 
-    private void checkUUID() {
+    private void checkUpgradeProtocol() {
         if (deviceType.equals("A001") || deviceType.equals("A002")) {
-            serviceId = A001SoftwareUpgradeManager.serviceId;
-            uuid = A001SoftwareUpgradeManager.cmdWriteNotifyUUID;
+//            serviceId = A001SoftwareUpgradeManager.serviceId;
+//            uuid = A001SoftwareUpgradeManager.cmdWriteNotifyUUID;
             isA001Protocol = true;
         }
     }
@@ -190,23 +199,32 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
         Intent intent = getIntent();
         mac = intent.getStringExtra("mac");
         software = intent.getStringExtra("software");
+        hardware = intent.getStringExtra("hardware");
         deviceType = intent.getStringExtra("deviceType");
+        extSensorType = intent.getIntExtra("extSensorType",0);
         id = intent.getStringExtra("id");
         initActionbar();
         if (deviceType.equals("S07")) {
             broadcastTypeList.set(0, "Eddystone T-button");
             broadcastTypeList.add("Eddystone UID");
+            String formatSoftware = software.replace("V","").replaceAll("v","").replaceAll("\\.","");
+            int result = "1007".compareToIgnoreCase(formatSoftware);
+            if(result <= 0){
+                broadcastTypeList.add("Eddystone ID Auto");
+            }
             transmittedPowerList.remove(0);
         } else if (deviceType.equals("S08")) {
+            transmittedPowerList.remove(0);
             broadcastTypeList.set(0, "Eddystone T-sense");
             broadcastTypeList.add("Eddystone UID");
         } else if (deviceType.equals("S10")) {
+            transmittedPowerList.remove(0);
             broadcastTypeList.set(0, "Eddystone T-one");
             broadcastTypeList.add("Eddystone UID");
         } else if (deviceType.equals("S02") || deviceType.equals("S04") || deviceType.equals("S05")) {
             transmittedPowerList.remove(0);
         }
-        checkUUID();
+        checkUpgradeProtocol();
         a001UpgradeManager = new A001SoftwareUpgradeManager(this, this);
 //        mClient = new BluetoothClient(EditActivity.this);
         portList = new ArrayList<String>() {{
@@ -220,11 +238,20 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
             add(getResources().getString(R.string.din_status_event_falling_edge));
             add(getResources().getString(R.string.din_status_event_bilateral_margin));
         }};
+        bleConnectTimeoutCtrlTypes = new ArrayList<String>() {{
+            add(getResources().getString(R.string.config));
+            add(getResources().getString(R.string.close));
+        }};
         relayTypeList = new ArrayList<String>() {{
             add(getResources().getString(R.string.cycle_switching));
             add(getResources().getString(R.string.relay_delay));
             add(getResources().getString(R.string.dynamic_pulse));
             add(getResources().getString(R.string.relay_pulse));
+        }};
+        negativeTriggerTypeList = new ArrayList<String>(){{
+            add(getResources().getString(R.string.normal));
+            add(getResources().getString(R.string.single_pulse));
+            add(getResources().getString(R.string.multi_pulse));
         }};
         oneWireWorkModeList = new ArrayList<String>() {{
             add(getResources().getString(R.string.close));
@@ -331,7 +358,9 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
         if (MyUtils.isDebug) {
             sweetPwdDlg.setInputText("654321");
         }
-        sweetPwdDlg.show();
+        if(onThisView){
+            sweetPwdDlg.show();
+        }
     }
 
     private void initActionbar() {
@@ -414,6 +443,8 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
 
     private ArrayList<String> oneWireWorkModeList;
 
+    private ArrayList<String> bleConnectTimeoutCtrlTypes ;
+
     private ArrayList<String> rs485BaudRateList = new ArrayList<String>() {{
         add("1200");
         add("2400");
@@ -452,7 +483,8 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
     private TextView deviceNameTV, modelTV, hardwareTV, softwareTV, broadcastCycleTV, saveRecordIntervalTV,
             tempHighAlarmTV, tempLowAlarmTV, humidityHighAlarmTV, humidityLowAlarmTV, saveCountTV, alarmCountTV, transmittedPowerTV, dinVoltageTV, dinStatusEventTV,
             dinStatusEventTypeTV, oneWireWorkModeTV, rs485BaudRateTV, broadcastTypeTV, gSensorSensitivityTV, gSensorDetectionIntervalTV, gSensorDetectionDurationTV,
-            beaconMajorSetTV, beaconMinorSetTV, eddystoneNidSetTV, eddystoneBidSetTV, btnTriggerTimeTV;
+            beaconMajorSetTV, beaconMinorSetTV, eddystoneNidSetTV, eddystoneBidSetTV, btnTriggerTimeTV,tempSensorIdTV,negativeTriggerOneTv,negativeTriggerTwoTv,
+            a002InputTv,relayTv,relayOutputTv,bleConnectTimeoutTv ;
     private SwitchButton ledSwitch, relaySwitch, lightSensorEnableSwitch, rs485EnableSwitch, longRangeEnableSwitch, gSensorEnableSwitch, doorEnableSwitch;
     private LinearLayout saveRecordIntervalLL, humidityHighAlarmLL, humidityLowAlarmLL, recordControlLL, relayLL, relayFlashingLL, transmittedPowerLL, transmittedPowerLineLL,
             saveRecordIntervaLineLL, humidityHighAlarmLineLL, humidityLowAlarmLineLL, recordControlLineLL, relayLineLL, relayFlashingLineLL,
@@ -462,15 +494,18 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
             getOneWireDeviceLL, getOneWireDeviceLineLL, sendCmdSequenceLL, sendCmdSequenceLineLL,
             sequentialLL, sequentialLineLL, sendDataLL, sendDataLineLL, rs485BaudRateLL, rs485BaudRateLineLL, rs485EnableLL, rs485EnableLineLL,
             oneWireWorkModeLL, oneWireWorkModeLineLL, longRangeLL, longRangeLineLL, broadcastTypeLL, broadcastTypeLineLL, gSensorEnableLL, gSensorEnableLineLL,
-            tempLowAlarmLL, tempLowAlarmLineLL, tempHighAlarmLL, tempHighAlarmLineLL, ledLL, ledLineLL, broadcastCycleLL, broadcastCycleLineLL, shutdownLL, shutdownLineLL, doorEnableLL, doorEnableLineLL, gSensorDetectionDurationLL, gSensorDetectionDurationLineLL, gSensorDetectionIntervalLL, gSensorDetectionIntervalLineLL,
+            tempLowAlarmLL, tempLowAlarmLineLL, tempHighAlarmLL, tempHighAlarmLineLL, ledLL, ledLineLL, broadcastCycleLL, broadcastCycleLineLL, shutdownLL, shutdownLineLL,
+            doorEnableLL, doorEnableLineLL, gSensorDetectionDurationLL, gSensorDetectionDurationLineLL, gSensorDetectionIntervalLL, gSensorDetectionIntervalLineLL,
             gSensorSensitivityLL, gSensorSensitivityLineLL, beaconMajorSetLL, beaconMajorSetLineLL, beaconMinorSetLL, beaconMinorSetLineLL,
-            eddystoneNidSetLL, eddystoneNidSetLineLL, eddystoneBidSetLL, eddystoneBidSetLineLL, btnTriggerTimeLL, btnTriggerTimeLineLL;
+            eddystoneNidSetLL, eddystoneNidSetLineLL, eddystoneBidSetLL, eddystoneBidSetLineLL, btnTriggerTimeLL, btnTriggerTimeLineLL,tempSensorIdLL,negativeTriggerLL,
+            rebootLL,bleConnectTimeoutLL,a002StatusLL;
     private Button btnEditDeviceName, btnEditPwd, btnEditBroadcastCycle, btnEditHighTemp, btnEditLowTemp, btnEditHumidityHigh,
             btnEditHumidityLow, btnEditSaveRecordInterval, btnRefreshSaveCount, btnReadSaveCount, btnStartRecord, btnStopRecord,
             btnClearRecord, btnResetFactory, btnUpgrade, btnBetaUpgrade, btnRefreshAlarmCount, btnReadAlarmCount, btnEditTransmittedPower, btnDebugUpgrade, btnConnectPwd, btnDinStatusEvent,
             btnShowAinVoltage, btnPositiveNegativeWarning, btnGeoOneWireDevice, btnOneWireWorkMode, btnRs485BaudRate, btnBroadcastType, btnEditDoutStatus,
             btnDinVoltageRefresh, btnSendCmdData, btnSendInstructionSequence, btnShutdown, btnGSensorSensitivity, btnGSensorDetectionInterval, btnGSensorDetectionDuration,
-            btnBeaconMajorSet, btnBeaconMinorSet, btnEddystoneNidSet, btnEddystoneBidSet, btnSetBtnTriggerTime, btnFlashingRelay;
+            btnBeaconMajorSet, btnBeaconMinorSet, btnEddystoneNidSet, btnEddystoneBidSet, btnSetBtnTriggerTime, btnFlashingRelay,btnReboot,
+            btnNegativeTriggerOne,btnNegativeTriggerTwo,  btnBleConnectTimeout;
 
     private void initUI() {
         relayStatusTV = (TextView) findViewById(R.id.tx_relay_status);
@@ -517,6 +552,7 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
             public void onSwitchChanged(boolean open) {
                 if (!connectSucc) {
                     relaySwitch.setSwitchStatus(!relaySwitch.getSwitchStatus());
+                    relayStatusTV.setText(relaySwitch.getSwitchStatus() ? "NO" : "NC");
                     Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -542,6 +578,7 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
                     public void onClick(SweetAlertDialog sweetAlertDialog) {
                         sweetAlertDialog.hide();
                         relaySwitch.setSwitchStatus(!relaySwitch.getSwitchStatus());
+                        relayStatusTV.setText(relaySwitch.getSwitchStatus() ? "NO" : "NC");
                     }
                 });
                 confirmRelayDlg.show();
@@ -627,11 +664,9 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
                     });
                     confirmDelayRelayDlg.show();
                 } else if (position == 2) {
-                    relaySwitch.setSwitchStatus(!relaySwitch.getSwitchStatus());
                     Intent intent = new Intent(EditActivity.this, EditPulseDelayActivity.class);
                     startActivityForResult(intent, REQUEST_EDIT_PULSE_DELAY);
                 }else if(position == 3){
-                    relaySwitch.setSwitchStatus(!relaySwitch.getSwitchStatus());
                     Intent intent = new Intent(EditActivity.this, EditSecondPulseDelayActivity.class);
                     startActivityForResult(intent, REQUEST_EDIT_SECOND_PULSE_DELAY);
                 }
@@ -640,11 +675,12 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
         pvRelayType.setOnCancelListener(new DialogInterface.OnCancelListener() {
             @Override
             public void onCancel(DialogInterface dialogInterface) {
-                if (!connectSucc) {
-                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                relaySwitch.setSwitchStatus(!relaySwitch.getSwitchStatus());
+//                if (!connectSucc) {
+//                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
+//                    return;
+//                }
+//                relaySwitch.setSwitchStatus(!relaySwitch.getSwitchStatus());
+//                relayStatusTV.setText(relaySwitch.getSwitchStatus() ? "NO" : "NC");
             }
         });
         btnEditDeviceName = (Button) findViewById(R.id.btn_edit_device_name);
@@ -690,6 +726,9 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
             }
         });
         pvBroadcastCycle = new OptionPicker(this);
+        if(deviceType.equals("A002")){
+            broadcastCycleList.add(0,"0s");
+        }
         pvBroadcastCycle.setData(broadcastCycleList);
         pvBroadcastCycle.setOnOptionPickedListener(new SingleOptionSelectClickListener() {
             @Override
@@ -698,9 +737,8 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
                     Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
                     return;
                 }
-                //返回的分别是三个级别的选中位置
-                int broadcastCycle = 5 * (position + 1);
-                writeBroadcastData(broadcastCycle);
+                int seconds = Integer.valueOf(broadcastCycleList.get(position).replaceAll("s",""));
+                writeBroadcastData(seconds);
             }
         });
         btnEditBroadcastCycle = (Button) findViewById(R.id.btn_edit_broadcast_cycle);
@@ -734,6 +772,7 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
                 intent.putExtra("lowValueOpen", tempAlarmDownOpen);
                 intent.putExtra("editType", "temp");
                 intent.putExtra("deviceType", deviceType);
+                intent.putExtra("extSensorType", extSensorType);
                 startActivityForResult(intent, REQUEST_CHANGE_TEMP);
             }
         });
@@ -752,6 +791,7 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
                 intent.putExtra("lowValueOpen", tempAlarmDownOpen);
                 intent.putExtra("editType", "temp");
                 intent.putExtra("deviceType", deviceType);
+                intent.putExtra("extSensorType", extSensorType);
                 startActivityForResult(intent, REQUEST_CHANGE_TEMP);
             }
         });
@@ -770,6 +810,7 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
                 intent.putExtra("lowValueOpen", humidityAlarmDownOpen);
                 intent.putExtra("editType", "humidity");
                 intent.putExtra("deviceType", deviceType);
+                intent.putExtra("extSensorType", extSensorType);
                 startActivityForResult(intent, REQUEST_CHANGE_HUMIDITY);
             }
         });
@@ -788,6 +829,7 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
                 intent.putExtra("lowValueOpen", humidityAlarmDownOpen);
                 intent.putExtra("editType", "humidity");
                 intent.putExtra("deviceType", deviceType);
+                intent.putExtra("extSensorType", extSensorType);
                 startActivityForResult(intent, REQUEST_CHANGE_HUMIDITY);
             }
         });
@@ -1561,6 +1603,7 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
         eddystoneNidSetTV = (TextView) findViewById(R.id.tx_eddystone_nid_set);
         eddystoneBidSetTV = (TextView) findViewById(R.id.tx_eddystone_bid_set);
         btnTriggerTimeTV = (TextView) findViewById(R.id.tx_btn_trigger_time);
+        tempSensorIdTV = (TextView) findViewById(R.id.tx_temp_sensor_id);
         btnBeaconMajorSet.setOnClickListener(new SingleClickListener() {
             @Override
             public void onSingleClick(View view) {
@@ -1745,9 +1788,170 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
                 editBtnTriggerTimeDlg.show();
             }
         });
+        negativeTriggerOneTv = (TextView) findViewById(R.id.tx_negative_trigger_one);
+        negativeTriggerTwoTv = (TextView) findViewById(R.id.tx_negative_trigger_two);
+        a002InputTv = (TextView) findViewById(R.id.tx_a002_input);
+        relayTv = (TextView) findViewById(R.id.tx_a002_relay);
+        relayOutputTv = (TextView) findViewById(R.id.tx_a002_relay_output);
+        bleConnectTimeoutTv = (TextView)findViewById(R.id.tx_ble_connect_timeout);
+        btnReboot = (Button)findViewById(R.id.btn_reboot);
+        btnReboot.setOnClickListener(new SingleClickListener() {
+            @Override
+            public void onSingleClick(View v) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                SweetAlertDialog confirmRebootDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.NORMAL_TYPE);
+                confirmRebootDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
+                confirmRebootDlg.setTitleText(getResources().getString(R.string.confirm_reboot_warning));
+                confirmRebootDlg.setCancelable(true);
+                confirmRebootDlg.setCancelText(getResources().getString(R.string.cancel));
+                confirmRebootDlg.setConfirmText(getResources().getString(R.string.confirm));
+                confirmRebootDlg.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                    @Override
+                    public void onClick(SweetAlertDialog sweetAlertDialog) {
+                        confirmRebootDlg.hide();
+                        writeReboot();
+                    }
+                });
+                confirmRebootDlg.show();
+            }
+        });
+        pvBleConnectTimeout = new OptionPicker(this);
+        pvBleConnectTimeout.setData(bleConnectTimeoutCtrlTypes);
+        pvBleConnectTimeout.setOnOptionPickedListener(new SingleOptionSelectClickListener() {
+            @Override
+            public void onSingleOptionClick(int position, Object item) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                //返回的分别是三个级别的选中位置
+                if (position == 1) {
+                    writeBleConnectTimeout(false,0);
+                }else if (position == 0)  {
+                    if (!connectSucc) {
+                        Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    SweetAlertDialog bleConnectTimeoutDlg = new SweetAlertDialog(EditActivity.this, SweetAlertDialog.INPUT_TYPE);
+                    bleConnectTimeoutDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
+                    bleConnectTimeoutDlg.setTitleText(getResources().getString(R.string.ble_connect_timeout));
+                    bleConnectTimeoutDlg.setCancelable(true);
+                    bleConnectTimeoutDlg.setInputType(InputType.TYPE_CLASS_NUMBER);
+                    bleConnectTimeoutDlg.setCancelText(getResources().getString(R.string.cancel));
+                    bleConnectTimeoutDlg.setConfirmText(getResources().getString(R.string.confirm));
+                    bleConnectTimeoutDlg.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                        @Override
+                        public void onClick(SweetAlertDialog sweetAlertDialog) {
+                            String bleConnectTimeoutValue = sweetAlertDialog.getInputText();
+                            if (bleConnectTimeoutValue.length() > 0) {
+                                int bleConnectTimeoutInt = Float.valueOf(bleConnectTimeoutValue).intValue();
+                                if (bleConnectTimeoutInt >= 30 && bleConnectTimeoutInt <= 65535) {
+                                    writeBleConnectTimeout(true,bleConnectTimeoutInt);
+                                    sweetAlertDialog.hide();
+                                } else {
+                                    Toast.makeText(EditActivity.this, R.string.ble_connect_timeout_input_error, Toast.LENGTH_SHORT).show();
+                                }
+                            } else {
+                                Toast.makeText(EditActivity.this, R.string.input_error, Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+                    bleConnectTimeoutDlg.show();
+                }
+            }
+        });
+        btnBleConnectTimeout = (Button)findViewById(R.id.btn_edit_ble_connect_timeout);
+        btnBleConnectTimeout.setOnClickListener(new SingleClickListener() {
+            @Override
+            public void onSingleClick(View v) {
+                pvBleConnectTimeout.show();
+            }
+        });
+
+        btnNegativeTriggerOne = (Button)findViewById(R.id.btn_edit_negative_trigger_one);
+        btnNegativeTriggerTwo = (Button)findViewById(R.id.btn_edit_negative_trigger_two);
+        btnNegativeTriggerOne.setOnClickListener(new SingleClickListener() {
+            @Override
+            public void onSingleClick(View v) {
+                doNegativeTrigger(1);
+            }
+        });
+        btnNegativeTriggerTwo.setOnClickListener(new SingleClickListener() {
+            @Override
+            public void onSingleClick(View v) {
+                doNegativeTrigger(2);
+            }
+        });
+        pvNegativeTrigger = new OptionPicker(this);
+        pvNegativeTrigger.setData(negativeTriggerTypeList);
+        pvNegativeTrigger.setOnOptionPickedListener(new SingleOptionSelectClickListener() {
+            @Override
+            public void onSingleOptionClick(int position, Object item) {
+                if (!connectSucc) {
+                    Toast.makeText(EditActivity.this, R.string.disconnect_please_connect_manually, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                //返回的分别是三个级别的选中位置
+                if (position == 0) {
+                    writeNormalNegativeTrigger();
+                }else if (position == 1)  {
+                    Intent intent = new Intent(EditActivity.this, EditNegativeTriggerSinglePulseActivity.class);
+                    intent.putExtra("port",curCtrlNegativeTriggerPort);
+                    startActivityForResult(intent, REQUEST_EDIT_NEGATIVE_TRIGGER_SINGLE_PULSE);
+                }else if (position == 2)  {
+                    Intent intent = new Intent(EditActivity.this, EditNegativeTriggerMultiPulseActivity.class);
+                    intent.putExtra("port",curCtrlNegativeTriggerPort);
+                    startActivityForResult(intent, REQUEST_EDIT_NEGATIVE_TRIGGER_MULTI_PULSE);
+                }
+            }
+        });
         getServerUpgradeInfo();
         initDiffUI();
     }
+
+    private void writeNormalNegativeTrigger() {
+        if(curCtrlNegativeTriggerPort == 1){
+            byte[] content = new byte[]{(byte)curCtrlNegativeTriggerPort,(byte)(negativeTriggerOneStatus == 1 ? 0 : 1)};
+            writeArrayData(MyUtils.controlFunc.get("negativeTrigger").get("write"),content,uuid);
+        }else if (curCtrlNegativeTriggerPort == 2){
+            byte[] content = new byte[]{(byte)curCtrlNegativeTriggerPort,(byte)(negativeTriggerTwoStatus == 1 ? 0 : 1)};
+            writeArrayData(MyUtils.controlFunc.get("negativeTrigger").get("write"),content,uuid);
+        }
+    }
+    private void writeSingleNegativeTrigger(int startLevel,int singleNegativeTrigger) {
+        if(curCtrlNegativeTriggerPort == 1){
+            byte[] value = MyUtils.short2Bytes(singleNegativeTrigger);
+            byte[] content = new byte[]{(byte)curCtrlNegativeTriggerPort,(byte)(startLevel),value[0],value[1]};
+            writeArrayData(MyUtils.controlFunc.get("negativeTrigger").get("write"),content,uuid);
+        }else if (curCtrlNegativeTriggerPort == 2){
+            byte[] value = MyUtils.short2Bytes(singleNegativeTrigger);
+            byte[] content = new byte[]{(byte)curCtrlNegativeTriggerPort,(byte)(startLevel),value[0],value[1]};
+            writeArrayData(MyUtils.controlFunc.get("negativeTrigger").get("write"),content,uuid);
+        }
+    }
+    private void writeMultiNegativeTrigger(int startLevel,int highLevelPulseWidthTime,int lowLevelPulseWidthTime,int PulseCount) {
+        if(curCtrlNegativeTriggerPort == 1){
+            byte[] value = MyUtils.short2Bytes(PulseCount);
+            byte[] content = new byte[]{(byte)curCtrlNegativeTriggerPort,(byte)(startLevel),(byte)highLevelPulseWidthTime,(byte)lowLevelPulseWidthTime,value[0],value[1]};
+            writeArrayData(MyUtils.controlFunc.get("negativeTrigger").get("write"),content,uuid);
+        }else if (curCtrlNegativeTriggerPort == 2){
+            byte[] value = MyUtils.short2Bytes(PulseCount);
+            byte[] content = new byte[]{(byte)curCtrlNegativeTriggerPort,(byte)(startLevel),(byte)highLevelPulseWidthTime,(byte)lowLevelPulseWidthTime,value[0],value[1]};
+            writeArrayData(MyUtils.controlFunc.get("negativeTrigger").get("write"),content,uuid);
+        }
+    }
+
+    private int curCtrlNegativeTriggerPort = 0;
+    private int negativeTriggerOneStatus = 0;
+    private int negativeTriggerTwoStatus = 0;
+    private void doNegativeTrigger(int port){
+        curCtrlNegativeTriggerPort = port;
+        pvNegativeTrigger.show();
+    }
+
 
     private void upgradeDevice() {
         DownloadFileManager.instance().geetUpdateFileUrl(EditActivity.this, upgradeLink, serverVersion, deviceType, new DownloadFileManager.Callback() {
@@ -1816,31 +2020,7 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
         dfuServiceController = starter.start(EditActivity.this, DfuService.class);
     }
 
-    private final BleConnectStatusListener mBleConnectStatusListener = new BleConnectStatusListener() {
 
-        @Override
-        public void onConnectStatusChanged(String mac, int status) {
-            if (status == STATUS_CONNECTED) {
-
-            } else if (status == STATUS_DISCONNECTED) {
-                if (onThisView) {
-                    if (connectSucc || curTryConnectCount >= tryConnectCount) {
-                        if (connectWaitingCancelDlg != null) {
-                            connectWaitingCancelDlg.hide();
-                        }
-                        if (waitingDlg != null) {
-                            waitingDlg.hide();
-                        }
-                        Toast.makeText(EditActivity.this, R.string.disconnect_from_device, Toast.LENGTH_SHORT).show();
-                    }
-                }
-                curTryConnectCount++;
-                connectSucc = false;
-                a001UpgradeManager.stopUpgrade();
-                reconnectBtn.setImageResource(R.mipmap.ic_disconnect);
-            }
-        }
-    };
     private static int progressPercent = 0;
     private static String upgradeErrorMsg = "";
     private static String upgradeStatus = "";
@@ -1915,13 +2095,14 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
     private void upgradeSucc() {
         upgradeStatus = "completed";
         Toast.makeText(EditActivity.this, R.string.upgrade_succ, Toast.LENGTH_LONG);
-        waitingDlg.setTitleText(getResources().getString(R.string.reconnecting));
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        connectDeviceBle();
+//        waitingDlg.setTitleText(getResources().getString(R.string.reconnecting));
+//        try {
+//            Thread.sleep(3000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//        connectDeviceBle();
+        finish();
     }
 
     private void getServerUpgradeInfo() {
@@ -2084,6 +2265,16 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
             Integer lowLevelPulseWidthTime = data.getIntExtra("lowLevelPulseWidthTime", -1);
             Integer pulseCount = data.getIntExtra("pulseCount", -1);
             writeSecondPulseRelayStatus(startLevel, highLevelPulseWidthTime, lowLevelPulseWidthTime, pulseCount);
+        }else if (requestCode == REQUEST_EDIT_NEGATIVE_TRIGGER_MULTI_PULSE && resultCode == RESPONSE_EDIT_NEGATIVE_TRIGGER_MULTI_PULSE) {
+            Integer startLevel = data.getIntExtra("startLevel", -1);
+            Integer highLevelPulseWidthTime = data.getIntExtra("highLevelPulseWidthTime", -1);
+            Integer lowLevelPulseWidthTime = data.getIntExtra("lowLevelPulseWidthTime", -1);
+            Integer pulseCount = data.getIntExtra("pulseCount", -1);
+            writeMultiNegativeTrigger(startLevel, highLevelPulseWidthTime, lowLevelPulseWidthTime, pulseCount);
+        }else if (requestCode == REQUEST_EDIT_NEGATIVE_TRIGGER_SINGLE_PULSE && resultCode == RESPONSE_EDIT_NEGATIVE_TRIGGER_SINGLE_PULSE) {
+            Integer startLevel = data.getIntExtra("startLevel", -1);
+            Integer pulseWidthTime = data.getIntExtra("pulseWidthTime", -1);
+            writeSingleNegativeTrigger(startLevel,pulseWidthTime);
         }
     }
 
@@ -2121,10 +2312,14 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
                 readDinStatusEvent();
                 readDinVoltage();
                 readBtnTriggerTime();
+                readExtSensorType();
                 if (!deviceType.equals("S08")) {
                     readDoorEnableStatus();
                 }
+                readTempSensorId();
                 fixTime();
+                readBleConnectTimeout();
+                readNegativeTrigger();
             } else {
                 Toast.makeText(EditActivity.this, R.string.input_error, Toast.LENGTH_SHORT).show();
 
@@ -2150,7 +2345,7 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
             UUID serviceUUID = characteristic.getService().getUuid();
             String deviceAddress = gatt.getDevice().getAddress();
 
-            if (characteristicUUID.equals(uuid) && serviceUUID.equals(serviceUUID)) {
+            if (characteristicUUID.equals(uuid) && serviceUUID.equals(serviceId)) {
                 // 处理特定UUID的特征值通知
                 byte[] data = characteristic.getValue();
 //                Log.e("BluetoothNotify", MyUtils.bytes2HexString(data, 0));
@@ -2160,6 +2355,16 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
                         parseNotifyData(data);
                     }
                 });
+            }
+            if(characteristicUUID.equals(A001SoftwareUpgradeManager.cmdWriteNotifyUUID) && serviceUUID.equals(A001SoftwareUpgradeManager.serviceId)){
+                byte[] data = characteristic.getValue();
+                Log.e("tftble_log", "upgrade resp:" + MyUtils.bytes2HexString(data, 0));
+                isWaitResponse = false;
+                LogFileHelper.getInstance(EditActivity.this).writeIntoFile("upgrade resp:" + MyUtils.bytes2HexString(data, 0));
+                if (a001UpgradeManager.getStartUpgrade()) {
+                    a001UpgradeManager.receiveCmdResp(data);
+                    return;
+                }
             }
         }
 
@@ -2223,22 +2428,33 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             Log.e("TFTBleService", "onServicesDiscovered");
             if (status == BluetoothGatt.GATT_SUCCESS) {
+                bluetoothGatt = gatt;
                 String deviceAddress = gatt.getDevice().getAddress();
                 BluetoothGattService service = gatt.getService(serviceId);
                 if (service != null) {
-                    BluetoothGattCharacteristic characteristic = service.getCharacteristic(uuid);
-                    if (characteristic != null) {
+                    cmdReadWriteCharacteristic = service.getCharacteristic(uuid);
+                    if (cmdReadWriteCharacteristic != null) {
                         // 启用通知
-                        setCharacteristicNotification(gatt, characteristic, true);
+                        setCharacteristicNotification(gatt, cmdReadWriteCharacteristic, true);
                     }
-                    if (isA001Protocol) {
-                        BluetoothGattCharacteristic dataWriteCharacteristic = service.getCharacteristic(A001SoftwareUpgradeManager.dataWriteUUID);
+                }
+                if (isA001Protocol) {
+                    BluetoothGattService upgradeService = gatt.getService(A001SoftwareUpgradeManager.serviceId);
+                    if(upgradeService != null){
+                        BluetoothGattCharacteristic dataWriteCharacteristic = upgradeService.getCharacteristic(A001SoftwareUpgradeManager.dataWriteUUID);
                         if (dataWriteCharacteristic != null) {
                             a001UpgradeManager.setDataWriteCharacteristic(dataWriteCharacteristic);
+                        }
+                        upgradeCmdReadWriteCharacteristic = upgradeService.getCharacteristic(A001SoftwareUpgradeManager.cmdWriteNotifyUUID);
+                        if (upgradeCmdReadWriteCharacteristic != null) {
+                            // 启用通知
+                            a001UpgradeManager.setCmdReadWriteCharacteristic(upgradeCmdReadWriteCharacteristic);
+//                            setCharacteristicNotification(gatt, upgradeCmdReadWriteCharacteristic, true);
                         }
                     }
 
                 }
+
             } else {
                 // 处理服务发现失败
                 if (ActivityCompat.checkSelfPermission(EditActivity.this, android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
@@ -2266,18 +2482,25 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
                 @Override
                 public void run() {
                     if (status == BluetoothGatt.GATT_SUCCESS) {
-                        String deviceAddress = gatt.getDevice().getAddress();
-                        if (connectWaitingCancelDlg != null) {
-                            connectWaitingCancelDlg.hide();
-                        }
-                        if (waitingDlg != null) {
-                            waitingDlg.hide();
-                        }
-                        if (!connectSucc) {
-                            showPwdDlg();
+                        if(descriptor.getCharacteristic().getUuid().equals(uuid)){
+                            String deviceAddress = gatt.getDevice().getAddress();
+                            if (connectWaitingCancelDlg != null) {
+                                connectWaitingCancelDlg.hide();
+                            }
+                            if (waitingDlg != null) {
+                                waitingDlg.hide();
+                            }
+                            if (!connectSucc) {
+                                showPwdDlg();
+                            }
+
+                            connectSucc = true;
+
+                            if(upgradeCmdReadWriteCharacteristic != null){
+                                setCharacteristicNotification(gatt, upgradeCmdReadWriteCharacteristic, true);
+                            }
                         }
 
-                        connectSucc = true;
 
 
                     } else {
@@ -2313,22 +2536,26 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
             super.onReliableWriteCompleted(gatt, status);
         }
 
-        private void setCharacteristicNotification(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean enabled) {
-            if (ActivityCompat.checkSelfPermission(EditActivity.this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+
+    };
+
+    private void setCharacteristicNotification(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean enabled) {
+        if (ActivityCompat.checkSelfPermission(EditActivity.this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
 
 
-            }
-            gatt.setCharacteristicNotification(characteristic, enabled);
+        }
+        boolean enableSucc = gatt.setCharacteristicNotification(characteristic, enabled);
+        Log.e("TFTBleService","setCharacteristicNotification:" + enableSucc + ";" + characteristic.getUuid());
+        UUID descriptorUUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"); // 通知描述符的UUID
+        BluetoothGattDescriptor descriptor = characteristic.getDescriptor(descriptorUUID);
+        if (descriptor != null) {
+            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+            boolean writeSucc =  gatt.writeDescriptor(descriptor);
+            Log.e("TFTBleService","writeDescriptor:" + writeSucc + ";" + characteristic.getUuid());
+            String deviceAddress = gatt.getDevice().getAddress();
+//                bluetoothGatt = gatt;
+//                cmdReadWriteCharacteristic = characteristic;
 
-            UUID descriptorUUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"); // 通知描述符的UUID
-            BluetoothGattDescriptor descriptor = characteristic.getDescriptor(descriptorUUID);
-            if (descriptor != null) {
-                descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                gatt.writeDescriptor(descriptor);
-                String deviceAddress = gatt.getDevice().getAddress();
-                bluetoothGatt = gatt;
-                cmdReadWriteCharacteristic = characteristic;
-                a001UpgradeManager.setCmdReadWriteCharacteristic(cmdReadWriteCharacteristic);
 //                String imei = macImeiMap.get(deviceAddress);
 //                if (imei != null) {
 //                    imeiWriteObj.put(imei, characteristic);
@@ -2339,81 +2566,14 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
 //                isConnectingBle = false;
 //                cancelDoWarning();
 
-            }
         }
-    };
-
-
-//    BleConnectResponse bleConnectResponse = new BleConnectResponse() {
-//        @Override
-//        public void onResponse(int code, BleGattProfile data) {
-//            if (code == REQUEST_SUCCESS) {
-//                Log.e("bleConnect", "connected");
-//                mClient.notify(mac, serviceId, uuid, bleNotifyResponse);
-//            } else {
-//                new SweetAlertDialog(EditActivity.this, SweetAlertDialog.ERROR_TYPE)
-//                        .setTitleText(getResources().getString(R.string.warning))
-//                        .setContentText(getResources().getString(R.string.connect_fail))
-//                        .show();
-//                if (waitingDlg != null) {
-//                    waitingDlg.hide();
-//                }
-//            }
-//        }
-//    };
-//    BleNotifyResponse bleNotifyResponse = new BleNotifyResponse() {
-//        @Override
-//        public void onNotify(UUID service, UUID character, byte[] value) {
-//            parseNotifyData(value);
-//        }
-//
-//        @Override
-//        public void onResponse(int code) {
-//            if (code == REQUEST_SUCCESS) {
-//                if (connectWaitingCancelDlg != null) {
-//                    connectWaitingCancelDlg.hide();
-//                }
-//                if (waitingDlg != null) {
-//                    waitingDlg.hide();
-//                }
-//                if (!connectSucc) {
-//                    showPwdDlg();
-//                }
-//
-//                connectSucc = true;
-////                byte[] readDeviceName = {54, 53, 52, 51, 50, 49, 103, 36};
-////                mClient.write(mac, serviceId, uuid, readDeviceName, new BleWriteResponse() {
-////                    @Override
-////                    public void onResponse(int code) {
-////                        if (code == REQUEST_SUCCESS) {
-////
-////                        }
-////                    }
-////                });
-//
-//            } else {
-//                new SweetAlertDialog(EditActivity.this, SweetAlertDialog.ERROR_TYPE)
-//                        .setTitleText(getResources().getString(R.string.warning))
-//                        .setContentText(getResources().getString(R.string.connect_fail))
-//                        .show();
-//                if (connectWaitingCancelDlg != null) {
-//                    connectWaitingCancelDlg.hide();
-//                }
-//                if (waitingDlg != null) {
-//                    waitingDlg.hide();
-//                }
-//                mClient.disconnect(mac);
-//            }
-//        }
-//    };
-
+    }
     private void parseNotifyData(byte[] value) {
         reconnectBtn.setImageResource(R.mipmap.ic_refresh);
         Log.e("tftble_log", "resp:" + MyUtils.bytes2HexString(value, 0));
         isWaitResponse = false;
         LogFileHelper.getInstance(EditActivity.this).writeIntoFile("resp:" + MyUtils.bytes2HexString(value, 0));
         if (a001UpgradeManager.getStartUpgrade()) {
-            a001UpgradeManager.receiveCmdResp(value);
             return;
         }
         if (value.length > 1) {
@@ -2469,11 +2629,14 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
                 } else if (type == MyUtils.controlFunc.get("relay").get("read")
                         || type == MyUtils.controlFunc.get("relay").get("write")) {
                     readRelayStatusResp(value);
+                } else if (type == MyUtils.controlFunc.get("reboot").get("write")) {
+                    Toast.makeText(EditActivity.this, R.string.reboot_succ, Toast.LENGTH_LONG).show();
+                    doReconnect();
+                    //read all params
                 } else if (type == MyUtils.controlFunc.get("resetFactory").get("write")) {
                     Toast.makeText(EditActivity.this, R.string.factory_reset_succ, Toast.LENGTH_LONG).show();
                     doReconnect();
-                    //read all params
-                } else if (type == MyUtils.controlFunc.get("lightSensorOpen").get("read")
+                }else if (type == MyUtils.controlFunc.get("lightSensorOpen").get("read")
                         || type == MyUtils.controlFunc.get("lightSensorOpen").get("write")) {
                     readLightSensorOpenStatusResp(value);
                 } else if (type == MyUtils.controlFunc.get("readDinVoltage").get("read")) {
@@ -2554,6 +2717,15 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
                 } else if (type == MyUtils.controlFunc.get("btnTriggerTime").get("read")
                         || type == MyUtils.controlFunc.get("btnTriggerTime").get("write")) {
                     readBtnTriggerTimeResp(value);
+                }else if (type == MyUtils.controlFunc.get("tempSensorId").get("read") ) {
+                    readTempSensorIdResp(value);
+                }else if (type == MyUtils.controlFunc.get("bleConnectTimeout").get("read") ||
+                        type == MyUtils.controlFunc.get("bleConnectTimeout").get("write") ) {
+                    readBleConnectTimeoutResp(value);
+                }else if (type == MyUtils.controlFunc.get("a002Status").get("read") ) {
+                    readA002StatusResp(value);
+                }else if (type == MyUtils.controlFunc.get("negativeTrigger").get("read")  ) {
+                    readNegativeTriggerResp(value);
                 }
             } else if (status == 1) {
                 if (waitingDlg != null) {
@@ -2602,7 +2774,6 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
 
     private int tryConnectCount = 5;
     private int curTryConnectCount = 0;
-    BleConnectOptions conectOptions = new BleConnectOptions.Builder().setConnectRetry(tryConnectCount).setConnectTimeout(6000).setServiceDiscoverTimeout(60000).build();
 
     private void connectDeviceBle() {
         curTryConnectCount = 0;
@@ -2613,22 +2784,27 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
 //            return;
         }
         if(bluetoothGatt != null){
+            if (cmdReadWriteCharacteristic != null) {
+                // 启用通知
+                setCharacteristicNotification(bluetoothGatt, cmdReadWriteCharacteristic, false);
+            }
+            if(upgradeCmdReadWriteCharacteristic != null){
+                setCharacteristicNotification(bluetoothGatt, upgradeCmdReadWriteCharacteristic, false);
+            }
             bluetoothGatt.disconnect();
             bluetoothGatt.close();
         }
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
         }
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (bluetoothAdapter == null) {
+            // 设备不支持蓝牙
+            return;
+        }
+        bleDevice = bluetoothAdapter.getRemoteDevice(mac);
         if (bleDevice == null) {
-            BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-            if (bluetoothAdapter == null) {
-                // 设备不支持蓝牙
-                return;
-            }
-            bleDevice = bluetoothAdapter.getRemoteDevice(mac);
-            if (bleDevice == null) {
-                Toast.makeText(EditActivity.this, R.string.error_please_try_again, Toast.LENGTH_SHORT).show();
-                return;
-            }
+            Toast.makeText(EditActivity.this, R.string.error_please_try_again, Toast.LENGTH_SHORT).show();
+            return;
         }
         bleDevice.connectGatt(this, false, bluetoothGattCallback);
     }
@@ -2813,22 +2989,23 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
     private void readExtSensorTypeResp(byte[] resp){
         int value = resp[2];
         extSensorType = value;
-        if(value == 1){
+        if(value == 1 || value == 2 || value == 3){
             if(getExtSensorTypeNextCtrl == GET_EXT_SENSOR_TYPE_NEXT_DO_GET_HIS_DATA){
                 startHistory = false;
-                getExtSensorTypeNextCtrl = -1;
+                getExtSensorTypeNextCtrl = GET_EXT_SENSOR_TYPE_NEXT_DO_NOTHING;
                 Intent intent = new Intent(EditActivity.this,HistorySelectActivity.class);
                 intent.putExtra("mac",mac);
                 intent.putExtra("deviceType",deviceType);
                 intent.putExtra("id",id);
                 intent.putExtra("reportType","history");
+                intent.putExtra("extSensorType",extSensorType);
                 startActivityForResult(intent,REQUEST_READ_HISTORY_TIME);
             }else if(getExtSensorTypeNextCtrl == GET_EXT_SENSOR_TYPE_NEXT_DO_START_RECORD){
-                getExtSensorTypeNextCtrl = -1;
+                getExtSensorTypeNextCtrl = GET_EXT_SENSOR_TYPE_NEXT_DO_NOTHING;
                 startRecord();
             }
 
-            }else{
+        }else{
             Toast.makeText(EditActivity.this,R.string.not_find_ext_sensor,Toast.LENGTH_SHORT).show();
         }
     }
@@ -2953,7 +3130,7 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
     }
 
     private void readBroadcastCycleResp(byte[] resp){
-        if (deviceType.equals("S02") || deviceType.equals("S05") || deviceType.equals("S04")){
+        if (deviceType.equals("S02") || deviceType.equals("S05") || deviceType.equals("S04") || deviceType.equals("A002")){
             int broadcast = (resp[2] << 8) + (resp[3]& 0xff);
             broadcastCycleTV.setText(String.valueOf(broadcast) + "s");
         }else{
@@ -3104,6 +3281,7 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
         intent.putExtra("deviceName",deviceName);
         intent.putExtra("startDate",startTimestamp);
         intent.putExtra("endDate",endTimestamp);
+        intent.putExtra("extSensorType",extSensorType);
         startActivity(intent);
     }
 
@@ -3155,8 +3333,11 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
                     boolean dataCorrect = MyUtils.checkOriginHisDataCrc(byteDataArray);
                     if(dataCorrect){
                         if(deviceType.equals("S10")){
-                            if(extSensorType == 1){
+                            if(extSensorType == 1 || extSensorType == 2){
                                 ArrayList<BleHisData> bleHisDataList = MyUtils.parseS10BleGX112HisData(byteDataArray);
+                                allBleHisData.addAll(bleHisDataList);
+                            }else if(extSensorType == 3){
+                                ArrayList<BleHisData> bleHisDataList = MyUtils.parseS10BleGXHT30HisData(byteDataArray);
                                 allBleHisData.addAll(bleHisDataList);
                             }
                         }else{
@@ -3192,6 +3373,7 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
                 intent.putExtra("deviceName",deviceName);
                 intent.putExtra("startDate",startTimestamp);
                 intent.putExtra("endDate",endTimestamp);
+                intent.putExtra("extSensorType",extSensorType);
                 startActivity(intent);
             }
         }
@@ -3388,7 +3570,7 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
             }else if (resp[2] == 5){
                 modelTV.setText("TSR1-B");
             }
-            String hardware = MyUtils.parseHardwareVersion(resp[3]);
+            hardware = MyUtils.parseHardwareVersion(resp[3]);
             hardwareTV.setText("V" + hardware);
             software = String.valueOf(resp[4]);
             softwareTV.setText("V"+software);
@@ -3401,8 +3583,12 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
                 modelTV.setText("T-hub");
             }else if (resp[2] == 0x0a){
                 modelTV.setText("T-one");
+            }else if (resp[2] == 0x0c){
+                modelTV.setText("A001");
+            }else if (resp[2] == 0x0d){
+                modelTV.setText("T-relay");
             }
-            String hardware = MyUtils.parseHardwareVersion(resp[3]);
+            hardware = MyUtils.parseHardwareVersion(resp[3]);
             hardwareTV.setText("V" + hardware);
             software = MyUtils.parseSoftwareVersion(resp,4);
             softwareTV.setText("V"+software);
@@ -3483,7 +3669,78 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
         }
         readData(MyUtils.controlFunc.get("btnTriggerTime").get("read"),uuid);
     }
+    private void readBleConnectTimeout(){
+        if(!isCurrentDeviceTypeFunc("bleConnectTimeout")){
+            return;
+        }
+        readData(MyUtils.controlFunc.get("bleConnectTimeout").get("read"),uuid);
+    }
 
+    private void readBleConnectTimeoutResp(byte[] resp){
+        String value = "";
+        if(resp.length == 4)
+        {
+            value = resp[2] == 0x01 ? "ON" : "OFF";
+            bleConnectTimeoutTv.setText(String.valueOf(value));
+        }else if(resp.length == 6){
+            if(resp[2] == 0x00){
+                value = resp[2] == 0x01 ? "ON" : "OFF";
+                bleConnectTimeoutTv.setText(String.valueOf(value));
+            }else{
+                int timeout = MyUtils.bytes2Short(resp,3);
+                bleConnectTimeoutTv.setText(timeout + " s");
+            }
+        }
+    }
+
+    private void readA002StatusResp(byte[] resp){
+        if(resp.length == 8){
+            a002InputTv.setText(resp[2] == 0x01 ? "ON" : "OFF");
+            relayTv.setText(resp[3] == 0x01 ? "ON" : "OFF");
+            if (resp[4] == 0){
+                relayStatusTV.setText("NC");
+                relayStatus = false;
+                relaySwitch.setSwitchStatus(false);
+
+            }else{
+                relayStatusTV.setText("NO");
+                relayStatus = true;
+                relaySwitch.setSwitchStatus(true);
+            }
+            relayOutputTv.setText(resp[4] == 0x01 ? "ON" : "OFF");
+            negativeTriggerOneStatus = resp[5];
+            negativeTriggerTwoStatus = resp[6];
+            negativeTriggerOneTv.setText(resp[5] == 0x01 ? "ON" : "OFF");
+            negativeTriggerTwoTv.setText(resp[6] == 0x01 ? "ON" : "OFF");
+        }
+    }
+
+    private void readNegativeTrigger( ){
+        if(!isCurrentDeviceTypeFunc("negativeTrigger")){
+            return;
+        }
+        readData(MyUtils.controlFunc.get("negativeTrigger").get("read"),uuid );
+    }
+
+    private void readNegativeTriggerResp(byte[] resp){
+        if(resp.length == 6){
+            negativeTriggerOneStatus = resp[2];
+            negativeTriggerTwoStatus = resp[4];
+            negativeTriggerOneTv.setText(resp[2] == 0x01 ? "ON" : "OFF");
+            negativeTriggerTwoTv.setText(resp[4] == 0x01 ? "ON" : "OFF");
+        }
+    }
+
+    private void readTempSensorId(){
+        if(!isCurrentDeviceTypeFunc("tempSensorId")){
+            return;
+        }
+        readData(MyUtils.controlFunc.get("tempSensorId").get("read"),uuid);
+    }
+    private void readTempSensorIdResp(byte[] resp){
+        String id = MyUtils.bytes2HexString(resp,2).substring(0,8).toUpperCase();
+        tempSensorIdTV.setText(id);
+    }
     private void readBtnTriggerTimeResp(byte[] resp){
         btnTriggerTimeTV.setText(String.valueOf((resp[2]& 0xff) * 100));
     }
@@ -3786,6 +4043,23 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
 //            }
 //        });
     }
+    private void readData(int cmd,UUID curUUID,byte[] data){
+        if(!connectSucc){
+            Toast.makeText(EditActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
+            return;
+        }
+        byte[] content = MyUtils.getInterActiveCmd(confirmPwd,cmd,data);
+
+        waitingSendMsgQueue.offer(new WriteSensorObj(curUUID,content));
+//        mClient.writeNoRsp(mac, serviceId, curUUID, content, new BleWriteResponse() {
+//            @Override
+//            public void onResponse(int code) {
+//                if (code == REQUEST_SUCCESS) {
+//
+//                }
+//            }
+//        });
+    }
 
 
     private void writeStrData(int cmd,String dataStr,UUID curUUID){
@@ -3902,7 +4176,7 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
     }
     private void writeBroadcastData(int value){
         byte[]  data  ;
-        if (deviceType.equals("S02") || deviceType.equals("S05") || deviceType.equals("S04")){
+        if (deviceType.equals("S02") || deviceType.equals("S05") || deviceType.equals("S04") || deviceType.equals("A002")){
             data = MyUtils.short2Bytes(value);
         }else{
             if(deviceType.equals("S07") || deviceType.equals("S08")){
@@ -4131,6 +4405,22 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
     private void writeResetFactory(){
         writeArrayData(MyUtils.controlFunc.get("resetFactory").get("write"),null,uuid);
     }
+    private void writeReboot(){
+        writeArrayData(MyUtils.controlFunc.get("reboot").get("write"),null,uuid);
+    }
+
+    private void writeBleConnectTimeout(boolean open,int timeout){
+        if(!open){
+            writeArrayData(MyUtils.controlFunc.get("bleConnectTimeout").get("write"),new byte[]{0x00},uuid);
+        }else{
+            byte[] content = new byte[3];
+            content[0] = 0x01;
+            byte[] timeoutBytes = MyUtils.short2Bytes(timeout);
+            content[1] = timeoutBytes[0];
+            content[2] = timeoutBytes[1];
+            writeArrayData(MyUtils.controlFunc.get("bleConnectTimeout").get("write"),content,uuid);
+        }
+    }
 
     private void initDiffUI(){
         saveRecordIntervalLL = (LinearLayout)findViewById(R.id.line_save_record_interval);
@@ -4293,7 +4583,8 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
         eddystoneBidSetLL=(LinearLayout)findViewById(R.id.line_eddystone_bid_set);
         eddystoneBidSetLineLL=(LinearLayout)findViewById(R.id.line_line_eddystone_bid_set);
         btnTriggerTimeLL=(LinearLayout)findViewById(R.id.line_btn_trigger_time);
-        btnTriggerTimeLineLL=(LinearLayout)findViewById(R.id.line_line_btn_trigger_time);;
+        btnTriggerTimeLineLL=(LinearLayout)findViewById(R.id.line_line_btn_trigger_time);
+        tempSensorIdLL =(LinearLayout)findViewById(R.id.ll_inner_sensor_id);
         beaconMajorSetLL.setVisibility(View.GONE);
         beaconMajorSetLineLL.setVisibility(View.GONE);
         beaconMinorSetLL.setVisibility(View.GONE);
@@ -4304,6 +4595,16 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
         eddystoneBidSetLineLL.setVisibility(View.GONE);
         btnTriggerTimeLL.setVisibility(View.GONE);
         btnTriggerTimeLineLL.setVisibility(View.GONE);
+        tempSensorIdLL.setVisibility(View.GONE);
+
+        negativeTriggerLL = (LinearLayout)findViewById(R.id.line_negative_trigger);
+        rebootLL = (LinearLayout)findViewById(R.id.line_reboot);
+        bleConnectTimeoutLL = (LinearLayout)findViewById(R.id.line_ble_connect_timeout);
+        a002StatusLL = (LinearLayout)findViewById(R.id.line_a002_status);
+        negativeTriggerLL.setVisibility(View.GONE);
+        rebootLL.setVisibility(View.GONE);
+        bleConnectTimeoutLL.setVisibility(View.GONE);
+        a002StatusLL.setVisibility(View.GONE);
         if (deviceType.equals("S04")){
             if(Integer.valueOf(software) >= 13){
                 transmittedPowerLL.setVisibility(View.VISIBLE);
@@ -4400,6 +4701,9 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
             broadcastCycleLineLL.setVisibility(View.GONE);
 
         }else if (deviceType.equals("S08")){
+            if(isCurrentDeviceTypeFunc("tempSensorId")){
+                tempSensorIdLL.setVisibility(View.VISIBLE);
+            }
             transmittedPowerLL.setVisibility(View.VISIBLE);
             transmittedPowerLineLL.setVisibility(View.VISIBLE);
             recordControlLineLL.setVisibility(View.VISIBLE);
@@ -4440,10 +4744,18 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
             clearRecordLL.setVisibility(View.VISIBLE);
             clearRecordLineLL.setVisibility(View.VISIBLE);
 
-            humidityLowAlarmLL.setVisibility(View.GONE);
-            humidityHighAlarmLL.setVisibility(View.GONE);
-            humidityLowAlarmLineLL.setVisibility(View.GONE);
-            humidityHighAlarmLineLL.setVisibility(View.GONE);
+
+            if(extSensorType == 3){
+                humidityLowAlarmLL.setVisibility(View.VISIBLE);
+                humidityHighAlarmLL.setVisibility(View.VISIBLE);
+                humidityLowAlarmLineLL.setVisibility(View.VISIBLE);
+                humidityHighAlarmLineLL.setVisibility(View.VISIBLE);
+            }else{
+                humidityLowAlarmLL.setVisibility(View.GONE);
+                humidityHighAlarmLL.setVisibility(View.GONE);
+                humidityLowAlarmLineLL.setVisibility(View.GONE);
+                humidityHighAlarmLineLL.setVisibility(View.GONE);
+            }
 
             broadcastTypeLL.setVisibility(View.VISIBLE);
             broadcastTypeLineLL.setVisibility(View.VISIBLE);
@@ -4478,6 +4790,19 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
                 btnTriggerTimeLineLL.setVisibility(View.VISIBLE);
             }
 
+        }else if(deviceType.equals("A002")){
+            negativeTriggerLL.setVisibility(View.VISIBLE);
+            rebootLL.setVisibility(View.VISIBLE);
+            bleConnectTimeoutLL.setVisibility(View.VISIBLE);
+            a002StatusLL.setVisibility(View.VISIBLE);
+            ledLL.setVisibility(View.VISIBLE);
+            ledLineLL.setVisibility(View.VISIBLE);
+            broadcastCycleLL.setVisibility(View.VISIBLE);
+            broadcastCycleLineLL.setVisibility(View.VISIBLE);
+            relayLL.setVisibility(View.VISIBLE);
+            relayLineLL.setVisibility(View.VISIBLE);
+            relayFlashingLL.setVisibility(View.VISIBLE);
+            relayFlashingLineLL.setVisibility(View.VISIBLE);
         }
     }
 
@@ -4556,6 +4881,16 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
                 return false;
             }
         }else if (deviceType.equals("S08")){
+            if(funcName.equals("tempSensorId")){
+                String hardwareTemp = hardware.replaceAll("\\.","");
+                String formatSoftware = software.replace("V","").replaceAll("v","").replaceAll("\\.","");
+                int result = "1007".compareToIgnoreCase(formatSoftware);
+                if(Integer.valueOf(hardwareTemp) >= 12 && result <= 0){
+                    return true;
+                }else{
+                    return false;
+                }
+            }
             if(funcName.equals("saveInterval") || funcName.equals("firmware") || funcName.equals("password") || funcName.equals("resetFactory") || funcName.equals("broadcastCycle")
                     || funcName.equals("tempAlarm") || funcName.equals("ledOpen") || funcName.equals("deviceName") || funcName.equals("startRecord")
                     || funcName.equals("stopRecord") || funcName.equals("clearRecord")
@@ -4570,7 +4905,7 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
         }else if (deviceType.equals("S10")){
             if(funcName.equals("saveInterval") || funcName.equals("firmware") || funcName.equals("password") || funcName.equals("resetFactory") || funcName.equals("broadcastCycle")
                     || funcName.equals("tempAlarm") || funcName.equals("ledOpen") || funcName.equals("deviceName") || funcName.equals("startRecord")
-                    || funcName.equals("stopRecord") || funcName.equals("clearRecord")
+                    || funcName.equals("stopRecord") || funcName.equals("clearRecord")  || funcName.equals("humidityAlarm")
                     || funcName.equals("saveCount") || funcName.equals("readAlarm") || funcName.equals("readOriginData") || funcName.equals("transmittedPower")
                     || funcName.equals("broadcastType") ||funcName.equals("readHistory")
                     || funcName.equals("time")   || funcName.equals("shutdown") || funcName.equals("readExtSensorType")
@@ -4613,7 +4948,10 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
                 return false;
             }
         }else if (deviceType.equals("A002")){
-            if (funcName.equals("firmware") || funcName.equals("password") || funcName.equals("resetFactory")  || funcName.equals("deviceName") ) {
+            if (funcName.equals("firmware") || funcName.equals("password") || funcName.equals("resetFactory")  || funcName.equals("deviceName")
+                    || funcName.equals("broadcastCycle")  || funcName.equals("time")  || funcName.equals("ledOpen")
+                    || funcName.equals("relay") || funcName.equals("reboot") || funcName.equals("negativeTrigger") || funcName.equals("a002Status")
+                    || funcName.equals("bleConnectTimeout")) {
                 return true;
             }else{
                 return false;
@@ -4627,40 +4965,49 @@ public class EditActivity extends AppCompatActivity implements A001SoftwareUpgra
 
     @Override
     public void onUpgradeStatus(int status, float percent) {
-        if(status == A001SoftwareUpgradeManager.STATUS_OF_FINE_NOT_FIND){
-            if(connectWaitingCancelDlg != null){
-                connectWaitingCancelDlg.hide();
-            }
-            if(waitingDlg != null){
-                waitingDlg.hide();
-            }
-            Toast.makeText(EditActivity.this,R.string.download_file_fail,Toast.LENGTH_SHORT).show();
-        }else if(status == A001SoftwareUpgradeManager.STATUS_OF_UPGRADE_UNKNOWN_ERROR){
-            if(connectWaitingCancelDlg != null){
-                connectWaitingCancelDlg.hide();
-            }
-            if(waitingDlg != null){
-                waitingDlg.hide();
-            }
-            Toast.makeText(EditActivity.this,R.string.download_file_fail,Toast.LENGTH_SHORT).show();
-        }else if(status == A001SoftwareUpgradeManager.STATUS_OF_UPGRADE_ERROR_UPGRADE_FILE){
-            if(connectWaitingCancelDlg != null){
-                connectWaitingCancelDlg.hide();
-            }
-            if(waitingDlg != null){
-                waitingDlg.hide();
-            }
-            Toast.makeText(EditActivity.this,R.string.error_upgrade_file,Toast.LENGTH_SHORT).show();
-        }else if(status == A001SoftwareUpgradeManager.STATUS_OF_UPGRADE_WRITE_SUCC){
-            upgradeSucc();
-        }else{
-            upgradeStatus = "progressChanged";
-            if(waitingDlg != null){
-                if(percent > 100){
-                    percent = 100;
-                }
-                waitingDlg.setTitleText(getResources().getString(R.string.processing)+ ":" + String.format("%.2f%%",percent));
-            }
+        float percentTemp = percent;
+        if(percentTemp > 100){
+            percentTemp = 100;
         }
+        final float percentFinal = percentTemp;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if(status == A001SoftwareUpgradeManager.STATUS_OF_FINE_NOT_FIND){
+                    if(connectWaitingCancelDlg != null){
+                        connectWaitingCancelDlg.hide();
+                    }
+                    if(waitingDlg != null){
+                        waitingDlg.hide();
+                    }
+                    Toast.makeText(EditActivity.this,R.string.download_file_fail,Toast.LENGTH_SHORT).show();
+                }else if(status == A001SoftwareUpgradeManager.STATUS_OF_UPGRADE_UNKNOWN_ERROR){
+                    if(connectWaitingCancelDlg != null){
+                        connectWaitingCancelDlg.hide();
+                    }
+                    if(waitingDlg != null){
+                        waitingDlg.hide();
+                    }
+                    Toast.makeText(EditActivity.this,R.string.download_file_fail,Toast.LENGTH_SHORT).show();
+                }else if(status == A001SoftwareUpgradeManager.STATUS_OF_UPGRADE_ERROR_UPGRADE_FILE){
+                    if(connectWaitingCancelDlg != null){
+                        connectWaitingCancelDlg.hide();
+                    }
+                    if(waitingDlg != null){
+                        waitingDlg.hide();
+                    }
+                    Toast.makeText(EditActivity.this,R.string.error_upgrade_file,Toast.LENGTH_SHORT).show();
+                }else if(status == A001SoftwareUpgradeManager.STATUS_OF_UPGRADE_WRITE_SUCC){
+                    upgradeSucc();
+                }else{
+                    upgradeStatus = "progressChanged";
+                    if(waitingDlg != null){
+
+                        waitingDlg.setTitleText(getResources().getString(R.string.processing)+ ":" + String.format("%.1f%%",percentFinal));
+                    }
+                }
+            }
+        });
+
     }
 }

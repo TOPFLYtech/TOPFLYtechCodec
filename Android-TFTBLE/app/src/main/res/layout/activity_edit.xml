@@ -284,6 +284,56 @@
                 ></LinearLayout>
             <LinearLayout
                 android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/ll_inner_sensor_id"
+                android:visibility="gone"
+                android:orientation="vertical">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_item_high"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    >
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/temp_sensor_id"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_weight="3"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/btn_size" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+
+                        android:layout_weight="3"
+                        android:layout_marginBottom="1dp"
+                        android:layout_marginRight="1dp"
+                        android:id="@+id/tx_temp_sensor_id"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/btn_size" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_weight="3"
+                        android:layout_height="match_parent"
+                        android:gravity="center">
+
+                    </LinearLayout>
+                </LinearLayout>　
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/frame_lightgrey"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    ></LinearLayout>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="@dimen/edit_item_high"
                 android:orientation="horizontal"
                 android:gravity="center"
@@ -436,6 +486,315 @@
                 android:orientation="horizontal"
                 android:gravity="center"
                 ></LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:id="@+id/line_negative_trigger"
+                >
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_item_high"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    >
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/negative_trigger_one"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_weight="3"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/btn_size" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@color/bg_color_white"
+                        android:layout_weight="3"
+                        android:layout_marginBottom="1dp"
+                        android:layout_marginRight="1dp"
+                        android:id="@+id/tx_negative_trigger_one"
+                        android:text=""
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/btn_size" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_weight="3"
+                        android:layout_height="match_parent"
+                        android:gravity="center">
+                        <com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton
+                            android:textAllCaps="false"
+                            android:layout_width="80dp"
+                            android:layout_height="30dp"
+                            android:layout_margin="7dp"
+                            android:id="@+id/btn_edit_negative_trigger_one"
+                            android:text="@string/edit"
+                            android:textSize="@dimen/btn_size">
+                        </com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton>
+                    </LinearLayout>
+                </LinearLayout>　
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/frame_lightgrey"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    ></LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_item_high"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    >
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/negative_trigger_two"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_weight="3"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/btn_size" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@color/bg_color_white"
+                        android:layout_weight="3"
+                        android:layout_marginBottom="1dp"
+                        android:layout_marginRight="1dp"
+                        android:id="@+id/tx_negative_trigger_two"
+                        android:text=""
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/btn_size" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_weight="3"
+                        android:layout_height="match_parent"
+                        android:gravity="center">
+                        <com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton
+                            android:textAllCaps="false"
+                            android:layout_width="80dp"
+                            android:layout_height="30dp"
+                            android:layout_margin="7dp"
+                            android:id="@+id/btn_edit_negative_trigger_two"
+                            android:text="@string/edit"
+                            android:textSize="@dimen/btn_size">
+                        </com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton>
+                    </LinearLayout>
+                </LinearLayout>　
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/frame_lightgrey"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    ></LinearLayout>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:id="@+id/line_a002_status"
+                >
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_item_high"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    >
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/input_acc"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_weight="3"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/btn_size" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@color/bg_color_white"
+                        android:layout_weight="3"
+                        android:layout_marginBottom="1dp"
+                        android:layout_marginRight="1dp"
+                        android:id="@+id/tx_a002_input"
+                        android:text=""
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/btn_size" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_weight="3"
+                        android:layout_height="match_parent"
+                        android:gravity="center">
+                    </LinearLayout>
+                </LinearLayout>　
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/frame_lightgrey"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    ></LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_item_high"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    >
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/relay_input"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_weight="3"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/btn_size" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@color/bg_color_white"
+                        android:layout_weight="3"
+                        android:layout_marginBottom="1dp"
+                        android:layout_marginRight="1dp"
+                        android:id="@+id/tx_a002_relay"
+                        android:text=""
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/btn_size" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_weight="3"
+                        android:layout_height="match_parent"
+                        android:gravity="center">
+                    </LinearLayout>
+                </LinearLayout>　
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/frame_lightgrey"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    ></LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_item_high"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    >
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/relay_output"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_weight="3"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/btn_size" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@color/bg_color_white"
+                        android:layout_weight="3"
+                        android:layout_marginBottom="1dp"
+                        android:layout_marginRight="1dp"
+                        android:id="@+id/tx_a002_relay_output"
+                        android:text=""
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/btn_size" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_weight="3"
+                        android:layout_height="match_parent"
+                        android:gravity="center">
+                    </LinearLayout>
+                </LinearLayout>　
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/frame_lightgrey"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    ></LinearLayout>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:id="@+id/line_ble_connect_timeout"
+                >
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_item_high"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    >
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/ble_connect_timeout_desc"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_weight="3"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/btn_size" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@color/bg_color_white"
+                        android:layout_weight="3"
+                        android:layout_marginBottom="1dp"
+                        android:layout_marginRight="1dp"
+                        android:id="@+id/tx_ble_connect_timeout"
+                        android:text=""
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/btn_size" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_weight="3"
+                        android:layout_height="match_parent"
+                        android:gravity="center">
+                        <com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton
+                            android:textAllCaps="false"
+                            android:layout_width="80dp"
+                            android:layout_height="30dp"
+                            android:layout_margin="7dp"
+                            android:id="@+id/btn_edit_ble_connect_timeout"
+                            android:text="@string/edit"
+                            android:textSize="@dimen/btn_size">
+                        </com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton>
+                    </LinearLayout>
+                </LinearLayout>　
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/frame_lightgrey"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    ></LinearLayout>
+            </LinearLayout>
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/edit_item_high"
@@ -2416,6 +2775,61 @@
                 android:id="@+id/line_line_shutdown"
                 android:gravity="center"
                 ></LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/edit_item_high"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:id="@+id/line_reboot"
+                >
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/edit_item_high"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    >
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/reboot"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_weight="3"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/btn_size" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_weight="3"
+                        android:layout_height="match_parent"
+                        android:gravity="center">
+                        <com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton
+                            android:textAllCaps="false"
+                            android:layout_width="100dp"
+                            android:layout_height="30dp"
+                            android:layout_margin="7dp"
+                            android:id="@+id/btn_reboot"
+                            android:text="@string/reboot"
+                            android:textSize="@dimen/btn_size">
+                        </com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton>
+                    </LinearLayout>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_weight="3"
+                        android:layout_height="match_parent">
+
+                    </LinearLayout>
+                </LinearLayout>　
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/frame_lightgrey"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    ></LinearLayout>
+            </LinearLayout>
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/edit_item_high"

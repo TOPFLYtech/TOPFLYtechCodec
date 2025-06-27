@@ -5,7 +5,7 @@ group = GROUP
 
 android {
     compileSdkVersion 29
-
+    namespace "cn.pedant.SweetAlert"
     defaultConfig {
         minSdkVersion 9
     }

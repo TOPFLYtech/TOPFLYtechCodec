@@ -155,7 +155,6 @@ public class MainActivity extends AppCompatActivity implements BluetoothPermissi
         super.onCreate(savedInstanceState);
         //初始化OpenCV
         OpenCV.initAsync(MainActivity.this);
-
         //初始化WeChatQRCodeDetector
         WeChatQRCodeDetector.init(MainActivity.this);
         bluetoothPermissionHelper = new BluetoothPermissionHelper(this, this);
@@ -754,165 +753,171 @@ public class MainActivity extends AppCompatActivity implements BluetoothPermissi
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             super.onScanResult(callbackType, result);
-            if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            try{
+                if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
 
-            }
-            BluetoothDevice device = result.getDevice();
-
-            int rssi = result.getRssi();
-            byte[] scanRecord = result.getScanRecord().getBytes();
-            String data = MyUtils.bytes2HexString(scanRecord, 0);
-            if(result.getScanRecord() == null || result.getScanRecord().getDeviceName() == null || result.getScanRecord().getDeviceName().trim().length() == 0){
-                return;
-            }
-//            Log.e("BluetoothUtils","MainActivity.onDeviceFounded " + device.getName() + "  " + device.getAddress() + "," + data);
-            lastRecvDate = new Date();
-            if(device.getAddress() != null && device.getAddress().contains("88:49")){
-                Log.e("BluetoothUtils","MainActivity.onDeviceFounded " + device.getName() + "  "+ result.getScanRecord().getDeviceName() + "  " + device.getAddress() + "," + data);
-            }else{
-            }
-            if (data != null) {
-                String head = data.substring(2, 8);
-                String tireHead = "";
-                if(data.length() > 20)
-                {
-                    tireHead = data.substring(16, 20).toLowerCase();
                 }
+                BluetoothDevice device = result.getDevice();
 
-                if (head.toLowerCase().equals("16ffbf") || tireHead.equals("ffac") || data.toLowerCase().startsWith("020106")) {
-                    String id = device.getAddress().replaceAll(":", "").toUpperCase();
+                int rssi = result.getRssi();
+                byte[] scanRecord = result.getScanRecord().getBytes();
+                String data = MyUtils.bytes2HexString(scanRecord, 0);
+                if(result.getScanRecord() == null || result.getScanRecord().getDeviceName() == null  ){
+                    return;
+                }
+//            Log.e("BluetoothUtils","MainActivity.onDeviceFounded " + device.getName() + "  " + device.getAddress() + "," + data);
+                lastRecvDate = new Date();
+                if(device.getAddress() != null && device.getAddress().contains("01:EB")){
+//                    Log.e("BluetoothUtils","MainActivity.onDeviceFounded " + device.getName() + "  "+ result.getScanRecord().getDeviceName() + "  " + device.getAddress() + "," + data);
+
+                }else{
+                }
+                if (data != null) {
+                    String head = data.substring(2, 8);
+                    String tireHead = "";
+                    if(data.length() > 20)
+                    {
+                        tireHead = data.substring(16, 20).toLowerCase();
+                    }
+
+                    if (head.toLowerCase().equals("16ffbf") || tireHead.equals("ffac") || data.toLowerCase().startsWith("020106")) {
+                        String id = device.getAddress().replaceAll(":", "").toUpperCase();
 //                    if(!(id.equals("D104A3CC6E55") || id.contains("6676")|| id.contains("E625"))){
 //                        return;
 //                    }
-                    if(MyUtils.isOpenBroadcastLog){
-                        LogFileHelper.getInstance(MainActivity.this).writeIntoFile("onDeviceFounded:" + result.getScanRecord().getDeviceName() + "," + device.getAddress() + "," + data);
-                    }
-                    boolean findItem = false;
-                    BleDeviceData existItem = null;
-                    for(int i = 0;i < allBleDeviceDataList.size();i++){
-                        BleDeviceData item = allBleDeviceDataList.get(i);
-                        if(item.getMac().equals(device.getAddress())){
-                            existItem = item;
-                            findItem = true;
-                            break;
+                        if(MyUtils.isOpenBroadcastLog){
+                            LogFileHelper.getInstance(MainActivity.this).writeIntoFile("onDeviceFounded:" + result.getScanRecord().getDeviceName() + "," + device.getAddress() + "," + data);
                         }
-                    }
-                    if (findItem && existItem != null) {
-                        BleDeviceData bleDeviceData = existItem;
-                        bleDeviceData.setRssi(rssi + "dBm");
-                        bleDeviceData.setRssiInt(rssi);
-                        bleDeviceData.setHexData(data);
-                        bleDeviceData.setSrcData(scanRecord);
-                        bleDeviceData.setDate(new Date());
-
-                        bleDeviceData.setDeviceName(result.getScanRecord().getDeviceName());
-                        if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-
-                        }
-                        if(result.getScanRecord().getDeviceName().toLowerCase().contains("dfu") && data.toLowerCase().startsWith("020106030259fe")){
-                            bleDeviceData.setDeviceType("dfuDevice");
-                            bleDeviceData.setId(device.getAddress().replaceAll(":", ""));
-                        }else if (data.toLowerCase().startsWith("020106") && !tireHead.equals("ffac")){
-                            try {
-                                if(device.getName() != null && device.getAddress().contains("F9:44")){
-                                    Log.e("BluetoothUtils","MainActivity.onDeviceFounded " + device.getName() + "  "+ result.getScanRecord().getDeviceName() + "  " + device.getAddress() + "," + data);
-                                }
-                                bleDeviceData.parseS0789Data(MainActivity.this);
-                                if(bleDeviceData.getDeviceType().equals("errorDevice")){
-                                    return;
-                                }
-//                                Log.e("BluetoothUtils","MainActivity.onDeviceFounded " + device.getName() + "  " + device.getAddress() + "," + data);
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        }else{
-                            if (tireHead.equals("ffac")) {
-                                bleDeviceData.setDeviceType("tire");
-                                bleDeviceData.setId(device.getAddress().replaceAll(":", ""));
-                            }
-
-                            try {
-                                bleDeviceData.parseData(MainActivity.this);
-                            } catch (Exception e) {
-//                                e.printStackTrace();
-                            }
-                        }
-
-                    } else {
-                        BleDeviceData bleDeviceData = new BleDeviceData();
-                        if (tireHead.equals("ffac")) {
-                            bleDeviceData.setDeviceType("tire");
-                        }
-                        bleDeviceData.setRssi(rssi + "dBm");
-                        bleDeviceData.setRssiInt(rssi);
-                        bleDeviceData.setHexData(data);
-                        bleDeviceData.setSrcData(scanRecord);
-                        bleDeviceData.setDate(new Date());
-                        bleDeviceData.setMac(device.getAddress());
-                        bleDeviceData.setDeviceName(result.getScanRecord().getDeviceName());
-                        if(result.getScanRecord().getDeviceName().toLowerCase().contains("dfu")  && data.toLowerCase().startsWith("020106030259fe")){
-                            bleDeviceData.setDeviceType("dfuDevice");
-                            bleDeviceData.setId(device.getAddress().replaceAll(":", ""));
-                        }else if (data.toLowerCase().startsWith("020106") && !tireHead.equals("ffac")){
-                            try {
-                                if(device.getName() != null && device.getAddress().contains("F9:44")){
-                                    Log.e("BluetoothUtils","MainActivity.onDeviceFounded " + device.getName() + "  " + device.getAddress() + "," + data);
-                                }
-                                bleDeviceData.parseS0789Data(MainActivity.this);
-                                if(bleDeviceData.getDeviceType().equals("errorDevice")){
-                                    return;
-                                }
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        }else{
-                            try {
-                                bleDeviceData.parseData(MainActivity.this);
-                            } catch (Exception e) {
-//                            e.printStackTrace();
-                            }
-                        }
-                        findItem = false;
+                        boolean findItem = false;
+                        BleDeviceData existItem = null;
                         for(int i = 0;i < allBleDeviceDataList.size();i++){
                             BleDeviceData item = allBleDeviceDataList.get(i);
                             if(item.getMac().equals(device.getAddress())){
+                                existItem = item;
                                 findItem = true;
-                                allBleDeviceDataList.set(i,bleDeviceData);
                                 break;
                             }
                         }
-                        if (!findItem) {
-                            allBleDeviceDataList.add(bleDeviceData);
-                        }
-                    }
-                    int refreshTime = 1000;
-                    if(allBleDeviceDataList.size() > 30){
-                        refreshTime = 2200;
-                    }else if(allBleDeviceDataList.size() > 20){
-                        refreshTime = 1600;
-                    }
-                    if (dataNotifyDate == null || lastRecvDate.getTime() - dataNotifyDate.getTime() > refreshTime) {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                updateAllShowItem();
+                        if (findItem && existItem != null) {
+                            BleDeviceData bleDeviceData = existItem;
+                            bleDeviceData.setRssi(rssi + "dBm");
+                            bleDeviceData.setRssiInt(rssi);
+                            bleDeviceData.setHexData(data);
+                            bleDeviceData.setSrcData(scanRecord);
+                            bleDeviceData.setDate(new Date());
+
+                            bleDeviceData.setDeviceName(result.getScanRecord().getDeviceName());
+                            if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
 
                             }
-                        });
-                        dataNotifyDate = lastRecvDate;
-                        if(showBleDeviceDataList.size() == 0 && mListAdapter.isEmpty()){
+                            if(result.getScanRecord().getDeviceName().toLowerCase().contains("dfu") && data.toLowerCase().startsWith("020106030259fe")){
+                                bleDeviceData.setDeviceType("dfuDevice");
+                                bleDeviceData.setId(device.getAddress().replaceAll(":", ""));
+                            }else if (data.toLowerCase().startsWith("020106") && !tireHead.equals("ffac")){
+                                try {
+                                    if(device.getName() != null && device.getAddress().contains("F9:44")){
+                                        Log.e("BluetoothUtils","MainActivity.onDeviceFounded " + device.getName() + "  "+ result.getScanRecord().getDeviceName() + "  " + device.getAddress() + "," + data);
+                                    }
+                                    bleDeviceData.parseS0789Data(MainActivity.this);
+                                    if(bleDeviceData.getDeviceType().equals("errorDevice")){
+                                        return;
+                                    }
+//                                Log.e("BluetoothUtils","MainActivity.onDeviceFounded " + device.getName() + "  " + device.getAddress() + "," + data);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }else{
+                                if (tireHead.equals("ffac")) {
+                                    bleDeviceData.setDeviceType("tire");
+                                    bleDeviceData.setId(device.getAddress().replaceAll(":", ""));
+                                }
 
-                        }else{
-                            mListAdapter.notifyDataSetChanged();
+                                try {
+                                    bleDeviceData.parseData(MainActivity.this);
+                                } catch (Exception e) {
+//                                e.printStackTrace();
+                                }
+                            }
+
+                        } else {
+                            BleDeviceData bleDeviceData = new BleDeviceData();
+                            if (tireHead.equals("ffac")) {
+                                bleDeviceData.setDeviceType("tire");
+                            }
+                            bleDeviceData.setRssi(rssi + "dBm");
+                            bleDeviceData.setRssiInt(rssi);
+                            bleDeviceData.setHexData(data);
+                            bleDeviceData.setSrcData(scanRecord);
+                            bleDeviceData.setDate(new Date());
+                            bleDeviceData.setMac(device.getAddress());
+                            bleDeviceData.setDeviceName(result.getScanRecord().getDeviceName());
+                            if(result.getScanRecord().getDeviceName().toLowerCase().contains("dfu")  && data.toLowerCase().startsWith("020106030259fe")){
+                                bleDeviceData.setDeviceType("dfuDevice");
+                                bleDeviceData.setId(device.getAddress().replaceAll(":", ""));
+                            }else if (data.toLowerCase().startsWith("020106") && !tireHead.equals("ffac")){
+                                try {
+                                    if(device.getName() != null && device.getAddress().contains("F9:44")){
+                                        Log.e("BluetoothUtils","MainActivity.onDeviceFounded " + device.getName() + "  " + device.getAddress() + "," + data);
+                                    }
+                                    bleDeviceData.parseS0789Data(MainActivity.this);
+                                    if(bleDeviceData.getDeviceType().equals("errorDevice")){
+                                        return;
+                                    }
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }else{
+                                try {
+                                    bleDeviceData.parseData(MainActivity.this);
+                                } catch (Exception e) {
+//                            e.printStackTrace();
+                                }
+                            }
+                            findItem = false;
+                            for(int i = 0;i < allBleDeviceDataList.size();i++){
+                                BleDeviceData item = allBleDeviceDataList.get(i);
+                                if(item.getMac().equals(device.getAddress())){
+                                    findItem = true;
+                                    allBleDeviceDataList.set(i,bleDeviceData);
+                                    break;
+                                }
+                            }
+                            if (!findItem) {
+                                allBleDeviceDataList.add(bleDeviceData);
+                            }
                         }
+                        int refreshTime = 1000;
+                        if(allBleDeviceDataList.size() > 30){
+                            refreshTime = 2200;
+                        }else if(allBleDeviceDataList.size() > 20){
+                            refreshTime = 1600;
+                        }
+                        if (dataNotifyDate == null || lastRecvDate.getTime() - dataNotifyDate.getTime() > refreshTime) {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    updateAllShowItem();
 
-                    }
-                    if (waitingCancelDlg != null) {
-                        waitingCancelDlg.hide();
-                    }
+                                }
+                            });
+                            dataNotifyDate = lastRecvDate;
+                            if(showBleDeviceDataList.size() == 0 && mListAdapter.isEmpty()){
+
+                            }else{
+                                mListAdapter.notifyDataSetChanged();
+                            }
+
+                        }
+                        if (waitingCancelDlg != null) {
+                            waitingCancelDlg.hide();
+                        }
 //                    Log.e("BluetoothUtils","MainActivity.onDeviceFounded " + device.getName() + "  " + device.getAddress() + " data:" + data);
+                    }
                 }
+            }catch (Exception e){
+                e.printStackTrace();
             }
+
         }
     };
 
@@ -1013,6 +1018,8 @@ public class MainActivity extends AppCompatActivity implements BluetoothPermissi
         intent.putExtra("deviceType",bleDeviceData.getDeviceType());
         intent.putExtra("id",bleDeviceData.getId());
         intent.putExtra("software",bleDeviceData.getSoftware());
+        intent.putExtra("hardware",bleDeviceData.getHardware());
+        intent.putExtra("extSensorType",bleDeviceData.getExtSensorType());
         startActivity(intent);
     }
     View.OnClickListener showQrCodeClick = new SingleClickListener() {
@@ -1664,7 +1671,7 @@ public class MainActivity extends AppCompatActivity implements BluetoothPermissi
                     holder.extSensorLine.setVisibility(View.VISIBLE);
 
 
-                    if(bleDeviceData.getExtSensorType() == 1){
+                    if(bleDeviceData.getExtSensorType() == 1 || bleDeviceData.getExtSensorType() == 2 || bleDeviceData.getExtSensorType() == 3){
                         holder.tempLine.setVisibility(View.VISIBLE);
                     }
                 }else  if(bleDeviceData.getBroadcastType().equals("Beacon")){
@@ -1676,9 +1683,14 @@ public class MainActivity extends AppCompatActivity implements BluetoothPermissi
                     holder.warnLine.setVisibility(View.VISIBLE);
                     holder.extSensorLine.setVisibility(View.VISIBLE);
 
-                    if(bleDeviceData.getExtSensorType() == 1){
+                    if(bleDeviceData.getExtSensorType() == 1 || bleDeviceData.getExtSensorType() == 2 || bleDeviceData.getExtSensorType() == 3){
                         holder.tempLine.setVisibility(View.VISIBLE);
                     }
+                }
+                if(bleDeviceData.isS10SupportHumidity()){
+                    holder.humidityLine.setVisibility(View.VISIBLE);
+                }else{
+                    holder.humidityLine.setVisibility(View.GONE);
                 }
                 return convertView;
             }else if(bleDeviceData.getDeviceType() != null && bleDeviceData.getDeviceType().equals("S09")){
@@ -1757,6 +1769,13 @@ public class MainActivity extends AppCompatActivity implements BluetoothPermissi
                     holder.hardwareTextView = (TextView)convertView.findViewById(R.id.tx_hardware);
                     holder.softwareTextView = (TextView)convertView.findViewById(R.id.tx_software);
                     holder.configBtn = (Button) convertView.findViewById(R.id.btn_config);
+                    holder.batteryTextView = (TextView)convertView.findViewById(R.id.tx_battery);
+                    holder.inputTextView = (TextView)convertView.findViewById(R.id.tx_input);
+                    holder.relayTextView = (TextView)convertView.findViewById(R.id.tx_relay);
+                    holder.negativeTrigger1TextView = (TextView)convertView.findViewById(R.id.tx_negative_trigger_one);
+                    holder.negativeTrigger2TextView = (TextView)convertView.findViewById(R.id.tx_negative_trigger_two);
+                    holder.relayOutputTextView = (TextView)convertView.findViewById(R.id.tx_relay_output);
+                    holder.resetPwdBtn = (Button)convertView.findViewById(R.id.btn_reset_pwd);
                     convertView.setTag(holder);
                 }
 
@@ -1768,8 +1787,16 @@ public class MainActivity extends AppCompatActivity implements BluetoothPermissi
                 holder.modelTextView.setText(bleDeviceData.getModelName());
                 holder.hardwareTextView.setText("V" + bleDeviceData.getHardware());
                 holder.softwareTextView.setText("V" + bleDeviceData.getSoftware());
+                holder.batteryTextView.setText(bleDeviceData.getBattery());
+                holder.inputTextView.setText((bleDeviceData.getA002InputOutputStatus() & 0x80) == 0x80 ? "ON" : "OFF");
+                holder.relayTextView.setText((bleDeviceData.getA002InputOutputStatus() & 0x40) == 0x40 ? "ON" : "OFF");
+                holder.negativeTrigger1TextView.setText((bleDeviceData.getA002InputOutputStatus() & 0x20) == 0x20 ? "ON" : "OFF");
+                holder.negativeTrigger2TextView.setText((bleDeviceData.getA002InputOutputStatus() & 0x10) == 0x10 ? "ON" : "OFF");
+                holder.relayOutputTextView.setText((bleDeviceData.getA002InputOutputStatus() & 0x08) == 0x08 ? "ON" : "OFF");
                 holder.configBtn.setTag(bleDeviceData.getMac());
                 holder.configBtn.setOnClickListener(configDeviceClick);
+                holder.resetPwdBtn.setTag(bleDeviceData.getMac());
+                holder.resetPwdBtn.setOnClickListener(resetDevicePwdClick);
                 return convertView;
             }else if(bleDeviceData.getDeviceType() != null && bleDeviceData.getDeviceType().equals("dfuDevice")){
                 if(null == convertView  || convertView.getTag() instanceof S09ViewHolder == false){
@@ -1892,8 +1919,9 @@ public class MainActivity extends AppCompatActivity implements BluetoothPermissi
             Button configBtn;
         }
         class A002ViewHolder {
-            TextView deviceNameTextView,  idTextView,  dateTextView, rssiTextView,modelTextView,hardwareTextView,softwareTextView;
-            Button configBtn;
+            TextView deviceNameTextView,  idTextView,  dateTextView, rssiTextView,modelTextView,hardwareTextView,softwareTextView,
+            batteryTextView,inputTextView,relayTextView,negativeTrigger1TextView,negativeTrigger2TextView,relayOutputTextView;
+            Button configBtn,resetPwdBtn;
         }
     }
 }

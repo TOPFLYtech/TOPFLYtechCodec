@@ -32,7 +32,6 @@ import java.util.concurrent.Executors;
 public class OpenAPI {
 
     private static final String URL = "http://openapi.tftiot.com:8050/v1/";
-
     private static class SingletonHolder {
         static OpenAPI openAPI = new OpenAPI();
     }

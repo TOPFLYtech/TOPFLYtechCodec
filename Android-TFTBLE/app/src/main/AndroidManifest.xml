@@ -22,6 +22,7 @@
         android:name="android.permission.READ_LOGS"
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
     <uses-feature
@@ -30,8 +31,6 @@
     <uses-feature
         android:name="android.hardware.bluetooth_le"
         android:required="true" />
-
-
 
     <application
         android:allowBackup="true"
@@ -43,6 +42,12 @@
         android:theme="@style/MyAppTheme"
         android:usesCleartextTraffic="true"
         tools:replace="android:icon, android:theme">
+        <activity
+            android:name=".EditNegativeTriggerSinglePulseActivity"
+            android:exported="false" />
+        <activity
+            android:name=".EditNegativeTriggerMultiPulseActivity"
+            android:exported="false" />
         <activity
             android:name=".EditPulseDelayActivity"
             android:exported="false" />
@@ -92,8 +97,7 @@
         <activity
             android:name=".EditActivity"
             android:label="@string/title_activity_edit" />
-        <activity
-            android:name=".SuperPwdResetActivity" />
+        <activity android:name=".SuperPwdResetActivity" />
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize"
@@ -105,7 +109,6 @@
             </intent-filter>
         </activity>
 
-        <service android:name="com.inuker.bluetooth.library.BluetoothService" />
         <service
             android:name=".data.DfuService"
             android:exported="true"
@@ -117,8 +120,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </service>
-
-
     </application>
 
 </manifest>

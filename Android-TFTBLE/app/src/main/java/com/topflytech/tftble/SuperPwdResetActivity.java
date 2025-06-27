@@ -1,13 +1,19 @@
 package com.topflytech.tftble;
 
-import static com.inuker.bluetooth.library.Code.REQUEST_SUCCESS;
-import static com.inuker.bluetooth.library.Constants.STATUS_CONNECTED;
-import static com.inuker.bluetooth.library.Constants.STATUS_DISCONNECTED;
-
+import android.Manifest;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothGattService;
+import android.bluetooth.BluetoothProfile;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
@@ -22,34 +28,20 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
-import com.inuker.bluetooth.library.BluetoothClient;
-import com.inuker.bluetooth.library.connect.listener.BleConnectStatusListener;
-import com.inuker.bluetooth.library.connect.options.BleConnectOptions;
-import com.inuker.bluetooth.library.connect.response.BleConnectResponse;
-import com.inuker.bluetooth.library.connect.response.BleNotifyResponse;
-import com.inuker.bluetooth.library.connect.response.BleWriteResponse;
-import com.inuker.bluetooth.library.model.BleGattProfile;
-import com.topflytech.tftble.data.BleDeviceData;
-import com.topflytech.tftble.data.BleHisData;
-import com.topflytech.tftble.data.DfuService;
-import com.topflytech.tftble.data.DownloadFileManager;
+
+import com.topflytech.tftble.data.A001SoftwareUpgradeManager;
 import com.topflytech.tftble.data.LogFileHelper;
 import com.topflytech.tftble.data.MyUtils;
 import com.topflytech.tftble.data.OpenAPI;
 import com.topflytech.tftble.data.SingleClickListener;
 import com.topflytech.tftble.data.WriteSensorObj;
-import com.topflytech.tftble.view.SwitchButton;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
 import java.util.UUID;
@@ -60,7 +52,6 @@ public class SuperPwdResetActivity extends AppCompatActivity {
     private ActionBar actionBar;
     private ImageView backButton;
     private ImageView reconnectBtn;
-    private BluetoothClient mClient;
     private String mac;
     private String deviceType;
     private String id;
@@ -76,7 +67,9 @@ public class SuperPwdResetActivity extends AppCompatActivity {
 
     boolean onThisView = false;
 
-
+    private BluetoothDevice bleDevice;
+    private BluetoothGatt bluetoothGatt;
+    private BluetoothGattCharacteristic cmdReadWriteCharacteristic;
     private boolean pwdErrorWarning = false;
      private boolean isWaitResponse = false;
     private LinkedBlockingQueue<WriteSensorObj> waitingSendMsgQueue = new LinkedBlockingQueue<>();
@@ -95,7 +88,6 @@ public class SuperPwdResetActivity extends AppCompatActivity {
         initActionbar();
 
 
-        mClient = new BluetoothClient(SuperPwdResetActivity.this);
         initUI();
         Thread dealSendMsgThread = new Thread(dealSendMsgRunnable);
         dealSendMsgThread.start();
@@ -112,18 +104,15 @@ public class SuperPwdResetActivity extends AppCompatActivity {
                     }
                     if(waitingSendMsgQueue.size() > 0){
                         WriteSensorObj writeSensorObj = waitingSendMsgQueue.poll();
-                        if(mClient != null && connectSucc){
+                        if(bluetoothGatt != null && connectSucc){
                             LogFileHelper.getInstance(SuperPwdResetActivity.this).writeIntoFile(MyUtils.bytes2HexString(writeSensorObj.getContent(),0));
                             Log.e("myLog",MyUtils.bytes2HexString(writeSensorObj.getContent(),0));
                             isWaitResponse = true;
-                            mClient.writeNoRsp(mac, serviceId, writeSensorObj.getCurUUID(), writeSensorObj.getContent(), new BleWriteResponse() {
-                                @Override
-                                public void onResponse(int code) {
-                                    if (code == REQUEST_SUCCESS) {
+                            cmdReadWriteCharacteristic.setValue(writeSensorObj.getContent());
+                            if (ActivityCompat.checkSelfPermission(SuperPwdResetActivity.this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                            }
+                            bluetoothGatt.writeCharacteristic(cmdReadWriteCharacteristic);
 
-                                    }
-                                }
-                            }); 
                         }
                     }else{
                         Thread.sleep(1000);
@@ -235,8 +224,16 @@ public class SuperPwdResetActivity extends AppCompatActivity {
             connectWaitingCancelDlg.hide();
         }
         reconnectBtn.setImageResource(R.mipmap.ic_disconnect);
-        mClient.disconnect(mac);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+        }
+        if(bluetoothGatt != null){
+            bluetoothGatt.disconnect();
+            bluetoothGatt.close();
+        }
         connectSucc = false;
+        if (waitingDlg != null) {
+            waitingDlg.hide();
+        }
         showConnectWaitingCancelDlg(getResources().getString(R.string.reconnecting));
 
         connectDeviceBle();
@@ -301,28 +298,6 @@ public class SuperPwdResetActivity extends AppCompatActivity {
     }
 
 
-    private final BleConnectStatusListener mBleConnectStatusListener = new BleConnectStatusListener() {
-
-        @Override
-        public void onConnectStatusChanged(String mac, int status) {
-            if (status == STATUS_CONNECTED) {
-
-            } else if (status == STATUS_DISCONNECTED) {
-                if (onThisView){
-                    if(connectSucc || curTryConnectCount >= tryConnectCount){
-                        if(connectWaitingCancelDlg != null){
-                            connectWaitingCancelDlg.hide();
-                        }
-                        Toast.makeText(SuperPwdResetActivity.this,R.string.disconnect_from_device,Toast.LENGTH_SHORT).show();
-                    }
-                }
-                curTryConnectCount++;
-                connectSucc = false;
-                reconnectBtn.setImageResource(R.mipmap.ic_disconnect);
-            }
-        }
-    };
-
 
 
 
@@ -358,88 +333,8 @@ public class SuperPwdResetActivity extends AppCompatActivity {
     private UUID serviceId = UUID.fromString("27760001-999C-4D6A-9FC4-C7272BE10900");
     private UUID uuid = UUID.fromString("27763561-999C-4D6A-9FC4-C7272BE10900");
     
-    BleConnectResponse bleConnectResponse = new BleConnectResponse() {
-        @Override
-        public void onResponse(int code, BleGattProfile data) {
-            if (code == REQUEST_SUCCESS) {
-                Log.e("bleConnect","connected");
-                mClient.notify(mac, serviceId, uuid, bleNotifyResponse); 
-            }else{
-                new SweetAlertDialog(SuperPwdResetActivity.this, SweetAlertDialog.ERROR_TYPE)
-                        .setTitleText(getResources().getString(R.string.warning))
-                        .setContentText(getResources().getString(R.string.connect_fail))
-                        .show();
-                if(waitingDlg != null){
-                    waitingDlg.hide();
-                }
-            }
-        }
-    };
-    BleNotifyResponse bleNotifyResponse = new BleNotifyResponse() {
-        @Override
-        public void onNotify(UUID service, UUID character, byte[] value) {
-            reconnectBtn.setImageResource(R.mipmap.ic_refresh);
-            Log.e("myLog","resp:" + MyUtils.bytes2HexString(value,0));
-            isWaitResponse = false;
-            LogFileHelper.getInstance(SuperPwdResetActivity.this).writeIntoFile("resp:" + MyUtils.bytes2HexString(value,0));
-            if(value.length > 1){
-                int status = value[0];
-                int type = value[1] & 0xff;
-                if (status == 0){
-                    if(type == MyUtils.controlFunc.get("password").get("write")){
-                        Toast.makeText(SuperPwdResetActivity.this,R.string.password_has_been_reset,Toast.LENGTH_SHORT).show();
-                        finish();
-                    }else if(type == MyUtils.controlFunc.get("resetFactory").get("write")){
-                        Toast.makeText(SuperPwdResetActivity.this,R.string.factory_reset_succ,Toast.LENGTH_SHORT).show();
-                        finish();
-                        //read all params
-                    }
-                }else if (status == 1){
-                    if(waitingDlg != null){
-                        waitingDlg.hide();
-                    }
-                    if(!pwdErrorWarning){
-                        Toast.makeText(SuperPwdResetActivity.this,R.string.super_password_is_error,Toast.LENGTH_SHORT).show();
-                        pwdErrorWarning = true;
-                        showPwdDlg();
-                    }
-                } else {
-                    if(waitingDlg != null){
-                        waitingDlg.hide();
-                    }
-                    Toast.makeText(SuperPwdResetActivity.this,R.string.error_please_try_again,Toast.LENGTH_SHORT).show();
-                }
-            }
-        }
 
-        @Override
-        public void onResponse(int code) {
-            if (code == REQUEST_SUCCESS) {
-                if(!connectSucc){
-                    connectWaitingCancelDlg.hide();
-                    showPwdDlg();
-                }
-                connectSucc = true;
-//                byte[] readDeviceName = {54, 53, 52, 51, 50, 49, 103, 36};
-//                mClient.write(mac, serviceId, uuid, readDeviceName, new BleWriteResponse() {
-//                    @Override
-//                    public void onResponse(int code) {
-//                        if (code == REQUEST_SUCCESS) {
-//
-//                        }
-//                    }
-//                });
 
-            }else{
-                new SweetAlertDialog(SuperPwdResetActivity.this, SweetAlertDialog.ERROR_TYPE)
-                        .setTitleText(getResources().getString(R.string.warning))
-                        .setContentText(getResources().getString(R.string.connect_fail))
-                        .show();
-                connectWaitingCancelDlg.hide();
-                mClient.disconnect(mac);
-            }
-        }
-    };
     @Override
     protected void onStart() {
         super.onStart();
@@ -462,12 +357,266 @@ public class SuperPwdResetActivity extends AppCompatActivity {
     }
     private int tryConnectCount = 5;
     private int curTryConnectCount = 0;
-    BleConnectOptions conectOptions = new BleConnectOptions.Builder().setConnectRetry(tryConnectCount).setConnectTimeout(6000).setServiceDiscoverTimeout(60000).build();
-    private void connectDeviceBle() {
+     private void connectDeviceBle() {
         curTryConnectCount = 0;
-        mClient.connect(mac, conectOptions, bleConnectResponse);
         connectFailTimeoutShow(60000);
-        mClient.registerConnectStatusListener(mac, mBleConnectStatusListener);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+//            return;
+        }
+        if(bluetoothGatt != null){
+            bluetoothGatt.disconnect();
+            bluetoothGatt.close();
+        }
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+        }
+         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+         if (bluetoothAdapter == null) {
+             // 设备不支持蓝牙
+             return;
+         }
+         bleDevice = bluetoothAdapter.getRemoteDevice(mac);
+         if (bleDevice == null) {
+             Toast.makeText(SuperPwdResetActivity.this, R.string.error_please_try_again, Toast.LENGTH_SHORT).show();
+             return;
+         }
+        bleDevice.connectGatt(this, false, bluetoothGattCallback);
+    }
+    private BluetoothGattCallback bluetoothGattCallback = new BluetoothGattCallback() {
+        @Override
+        public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            Log.e("TFTBleService", "onCharacteristicRead");
+            // 通过gatt对象来识别设备
+            String deviceAddress = gatt.getDevice().getAddress();
+            // 处理特征值
+            byte[] data = characteristic.getValue();
+            Log.e("BluetoothNotify", MyUtils.bytes2HexString(data, 0));
+
+        }
+
+        @Override
+        public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+            Log.e("TFTBleService", "onCharacteristicChanged");
+            UUID characteristicUUID = characteristic.getUuid();
+            UUID serviceUUID = characteristic.getService().getUuid();
+            String deviceAddress = gatt.getDevice().getAddress();
+
+            if (characteristicUUID.equals(uuid) && serviceUUID.equals(serviceUUID)) {
+                // 处理特定UUID的特征值通知
+                byte[] data = characteristic.getValue();
+//                Log.e("BluetoothNotify", MyUtils.bytes2HexString(data, 0));
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        parseNotifyData(data);
+                    }
+                });
+            }
+        }
+
+        @Override
+        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            Log.e("TFTBleService", "onCharacteristicWrite");
+            // 通过gatt对象来识别设备
+            String deviceAddress = gatt.getDevice().getAddress();
+            byte[] data = characteristic.getValue();
+
+            // 处理特征值写入
+        }
+
+        @Override
+        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+
+            Log.e("TFTBleService", "onConnectionStateChange");
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (newState == BluetoothProfile.STATE_CONNECTED) {
+                        String deviceAddress = gatt.getDevice().getAddress();
+                        // 处理连接成功
+                        if (ActivityCompat.checkSelfPermission(SuperPwdResetActivity.this, android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+
+                        }
+
+                        gatt.discoverServices();
+                    } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                        String deviceAddress = gatt.getDevice().getAddress();
+                        // 处理断开连接
+                        if (onThisView) {
+                            if (connectSucc || curTryConnectCount >= tryConnectCount) {
+                                if (connectWaitingCancelDlg != null) {
+                                    connectWaitingCancelDlg.hide();
+                                }
+                                if (waitingDlg != null) {
+                                    waitingDlg.hide();
+                                }
+                                Toast.makeText(SuperPwdResetActivity.this, R.string.disconnect_from_device, Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                        curTryConnectCount++;
+                        connectSucc = false;
+                        reconnectBtn.setImageResource(R.mipmap.ic_disconnect);
+                    }
+                }
+            });
+        }
+
+        @Override
+        public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                String deviceAddress = gatt.getDevice().getAddress();
+
+            }
+        }
+
+        @Override
+        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+            Log.e("TFTBleService", "onServicesDiscovered");
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                String deviceAddress = gatt.getDevice().getAddress();
+                BluetoothGattService service = gatt.getService(serviceId);
+                if (service != null) {
+                    BluetoothGattCharacteristic characteristic = service.getCharacteristic(uuid);
+                    if (characteristic != null) {
+                        // 启用通知
+                        setCharacteristicNotification(gatt, characteristic, true);
+                    }
+                }
+            } else {
+                // 处理服务发现失败
+                if (ActivityCompat.checkSelfPermission(SuperPwdResetActivity.this, android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+
+                }
+                gatt.disconnect();
+                new SweetAlertDialog(SuperPwdResetActivity.this, SweetAlertDialog.ERROR_TYPE)
+                        .setTitleText(getResources().getString(R.string.warning))
+                        .setContentText(getResources().getString(R.string.connect_fail))
+                        .show();
+                if (connectWaitingCancelDlg != null) {
+                    connectWaitingCancelDlg.hide();
+                }
+                if (waitingDlg != null) {
+                    waitingDlg.hide();
+                }
+            }
+        }
+
+        @Override
+        public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+            Log.e("TFTBleService", "onDescriptorWrite");
+            super.onDescriptorWrite(gatt, descriptor, status);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (status == BluetoothGatt.GATT_SUCCESS) {
+                        String deviceAddress = gatt.getDevice().getAddress();
+                        if (connectWaitingCancelDlg != null) {
+                            connectWaitingCancelDlg.hide();
+                        }
+                        if (waitingDlg != null) {
+                            waitingDlg.hide();
+                        }
+                        if (!connectSucc) {
+                            showPwdDlg();
+                        }
+
+                        connectSucc = true;
+
+
+                    } else {
+                        if (ActivityCompat.checkSelfPermission(SuperPwdResetActivity.this, android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+
+                        }
+                        gatt.disconnect();
+                        new SweetAlertDialog(SuperPwdResetActivity.this, SweetAlertDialog.ERROR_TYPE)
+                                .setTitleText(getResources().getString(R.string.warning))
+                                .setContentText(getResources().getString(R.string.connect_fail))
+                                .show();
+                        if (connectWaitingCancelDlg != null) {
+                            connectWaitingCancelDlg.hide();
+                        }
+                        if (waitingDlg != null) {
+                            waitingDlg.hide();
+                        }
+                    }
+                }
+            });
+
+        }
+
+        @Override
+        public void onDescriptorRead(@NonNull BluetoothGatt gatt, @NonNull BluetoothGattDescriptor descriptor, int status, @NonNull byte[] value) {
+            Log.e("TFTBleService", "onDescriptorRead");
+            super.onDescriptorRead(gatt, descriptor, status, value);
+        }
+
+        @Override
+        public void onReliableWriteCompleted(BluetoothGatt gatt, int status) {
+            Log.e("TFTBleService", "onReliableWriteCompleted");
+            super.onReliableWriteCompleted(gatt, status);
+        }
+
+
+    };
+    private void setCharacteristicNotification(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, boolean enabled) {
+        if (ActivityCompat.checkSelfPermission(SuperPwdResetActivity.this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+
+
+        }
+        gatt.setCharacteristicNotification(characteristic, enabled);
+
+        UUID descriptorUUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"); // 通知描述符的UUID
+        BluetoothGattDescriptor descriptor = characteristic.getDescriptor(descriptorUUID);
+        if (descriptor != null) {
+            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+            gatt.writeDescriptor(descriptor);
+            String deviceAddress = gatt.getDevice().getAddress();
+            bluetoothGatt = gatt;
+            cmdReadWriteCharacteristic = characteristic;
+//                String imei = macImeiMap.get(deviceAddress);
+//                if (imei != null) {
+//                    imeiWriteObj.put(imei, characteristic);
+//                    saveConnectImeis();
+//
+//                    connectStatusCallback(imei);
+//                }
+//                isConnectingBle = false;
+//                cancelDoWarning();
+
+        }
+    }
+    private void parseNotifyData(byte[] value) {
+        reconnectBtn.setImageResource(R.mipmap.ic_refresh);
+        Log.e("myLog","resp:" + MyUtils.bytes2HexString(value,0));
+        isWaitResponse = false;
+        LogFileHelper.getInstance(SuperPwdResetActivity.this).writeIntoFile("resp:" + MyUtils.bytes2HexString(value,0));
+        if(value.length > 1){
+            int status = value[0];
+            int type = value[1] & 0xff;
+            if (status == 0){
+                if(type == MyUtils.controlFunc.get("password").get("write")){
+                    Toast.makeText(SuperPwdResetActivity.this,R.string.password_has_been_reset,Toast.LENGTH_SHORT).show();
+                    finish();
+                }else if(type == MyUtils.controlFunc.get("resetFactory").get("write")){
+                    Toast.makeText(SuperPwdResetActivity.this,R.string.factory_reset_succ,Toast.LENGTH_SHORT).show();
+                    finish();
+                    //read all params
+                }
+            }else if (status == 1){
+                if(waitingDlg != null){
+                    waitingDlg.hide();
+                }
+                if(!pwdErrorWarning){
+                    Toast.makeText(SuperPwdResetActivity.this,R.string.super_password_is_error,Toast.LENGTH_SHORT).show();
+                    pwdErrorWarning = true;
+                    showPwdDlg();
+                }
+            } else {
+                if(waitingDlg != null){
+                    waitingDlg.hide();
+                }
+                Toast.makeText(SuperPwdResetActivity.this,R.string.error_please_try_again,Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     @Override
@@ -500,8 +649,19 @@ public class SuperPwdResetActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         isSendMsgThreadRunning = false;
-        mClient.disconnect(mac);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+//            return;
+        }
+        if(bluetoothGatt != null ){
+            if (cmdReadWriteCharacteristic != null) {
+                // 启用通知
+                setCharacteristicNotification(bluetoothGatt, cmdReadWriteCharacteristic, false);
+            }
+            bluetoothGatt.disconnect();
+            bluetoothGatt.close();
+        }
         connectSucc = false;
+        onThisView = false;
     }
 
 
@@ -517,23 +677,6 @@ public class SuperPwdResetActivity extends AppCompatActivity {
 
 
 
-    private void readData(int cmd,UUID curUUID){
-        if(!connectSucc){
-            Toast.makeText(SuperPwdResetActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
-            return;
-        }
-        byte[] content = MyUtils.getInterActiveCmd(confirmPwd,cmd,null);
-
-        waitingSendMsgQueue.offer(new WriteSensorObj(curUUID,content));
-//        mClient.writeNoRsp(mac, serviceId, curUUID, content, new BleWriteResponse() {
-//            @Override
-//            public void onResponse(int code) {
-//                if (code == REQUEST_SUCCESS) {
-//
-//                }
-//            }
-//        });
-    }
 
 
     private void writeStrData(int cmd,String dataStr,UUID curUUID){

@@ -315,6 +315,8 @@
     <string name="cycle_time_error_warning">周期时长必须大于首亮时长.</string>
     <string name="ext_sensor">外接传感器:</string>
     <string name="temp_sensor_gx112">温度传感器GX112</string>
+    <string name="temp_sensor_gxts03">温度传感器GXTS03</string>
+    <string name="temp_humi_sensor_gxth30">温湿度传感器GXTH30</string>
     <string name="not_find_ext_sensor">没有找到外接传感器，请先连接外接传感器</string>
     <string name="restart_app_warning">定位授权后需要重启APP才能正常使用，APP即将进行重启，如果无法启动，请手动启动APP</string>
     <string name="device_name_len_error">设备名长度必须在3到8之间</string>
@@ -326,6 +328,8 @@
     <string name="s08_temp_range_error_warning1">值不正确！必须在-20和174之间。</string>
     <string name="s10_temp_range_error_warning">值不正确！必须在-54和149之间。</string>
     <string name="s10_temp_range_error_warning1">值不正确！必须在-65和300之间。</string>
+    <string name="s10_gxts03_temp_range_error_warning">值不正确！必须在-44和129之间。</string>
+    <string name="s10_gxts03_temp_range_error_warning1">值不正确！必须在-47和264之间。</string>
     <string name="input_super_device_password">输入超级密码</string>
     <string name="reset">重置</string>
     <string name="super_password_is_error">超级密码错误！</string>
@@ -356,4 +360,23 @@
     <string name="low_level_pulse_width_time_error">低电平脉宽时间值不正确！必须在100和25500之间。</string>
     <string name="pulse_count_error">脉冲次数值不正确！必须在0和65535之间。</string>
     <string name="dynamic_pulse">动态脉冲</string>
+    <string name="temp_sensor_id">温度传感器ID:</string>
+    <string name="input_acc">ACC:</string>
+    <string name="negative_trigger_one">DOUT1:</string>
+    <string name="negative_trigger_two">DOUT2:</string>
+    <string name="relay_output">继电器状态:</string>
+    <string name="relay_input">继电器输入:</string>
+    <string name="reboot_desc">重启:</string>
+    <string name="reboot">重启</string>
+    <string name="ble_connect_timeout_desc">蓝牙连接超时:</string>
+    <string name="negative_trigger">负触发:</string>
+    <string name="single_pulse">单脉冲</string>
+    <string name="multi_pulse">多脉冲</string>
+    <string name="reboot_succ">重启成功!</string>
+    <string name="confirm_reboot_warning">尝试重启?</string>
+    <string name="ble_connect_timeout_input_error">蓝牙连接超时值必须在30到65535之间</string>
+    <string name="ble_connect_timeout">蓝牙连接超时</string>
+    <string name="negative_trigger_pulse_desc">负触发脉宽时间(ms)</string>
+    <string name="negative_trigger_pulse_input_error">负触发脉宽时间必须在100到6553500之间</string>
+    <string name="pulse_width_time">脉宽时间(ms)</string>
 </resources>

@@ -46,49 +46,54 @@ public class EditPulseDelayActivity extends AppCompatActivity {
                     Toast.makeText(EditPulseDelayActivity.this,R.string.input_error,Toast.LENGTH_SHORT).show();
                     return;
                 }
-                if(Integer.valueOf(cycleTime) % 100 != 0){
-                    Toast.makeText(EditPulseDelayActivity.this,R.string.cycle_time_format_error,Toast.LENGTH_SHORT).show();
-                    return;
+                try{
+                    if(Integer.valueOf(cycleTime) % 100 != 0){
+                        Toast.makeText(EditPulseDelayActivity.this,R.string.cycle_time_format_error,Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    if(Integer.valueOf(initEnableTime) % 10 != 0){
+                        Toast.makeText(EditPulseDelayActivity.this,R.string.init_enable_time_format_error,Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    int cycleTimeInt = Integer.valueOf(cycleTime) / 100 * 100;
+                    int initEnableTimeInt = Integer.valueOf(initEnableTime) / 10 * 10;
+                    int toggleTimeInt = Integer.valueOf(toggleTime);
+                    int recoverTimeInt = Integer.valueOf(recoverTime);
+                    if (cycleTimeInt <= 0 || cycleTimeInt > 65500){
+                        Toast.makeText(EditPulseDelayActivity.this,R.string.cycle_time_warning,Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    if (initEnableTimeInt <= 0 || initEnableTimeInt > 65500){
+                        Toast.makeText(EditPulseDelayActivity.this,R.string.init_enable_time_warning,Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    if (toggleTimeInt <= 0 || toggleTimeInt > 65535){
+                        Toast.makeText(EditPulseDelayActivity.this,R.string.toggle_time_warning,Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    if (recoverTimeInt < 0 || recoverTimeInt > 255){
+                        Toast.makeText(EditPulseDelayActivity.this,R.string.recover_time_warning,Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    if(cycleTimeInt < initEnableTimeInt){
+                        Toast.makeText(EditPulseDelayActivity.this,R.string.cycle_time_error_warning,Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    if(toggleTimeInt != 0 && (cycleTimeInt - initEnableTimeInt) / toggleTimeInt <= 20 ){
+                        Toast.makeText(EditPulseDelayActivity.this,R.string.pulse_Delay_multi_warning,Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    Intent intent = new Intent();
+                    intent.putExtra("cycleTime",cycleTimeInt);
+                    intent.putExtra("initEnableTime",initEnableTimeInt);
+                    intent.putExtra("toggleTime",toggleTimeInt);
+                    intent.putExtra("recoverTime",recoverTimeInt);
+                    setResult(EditActivity.RESPONSE_EDIT_PULSE_DELAY,intent);
+                    finish();
+                }catch (Exception e){
+                    Toast.makeText(EditPulseDelayActivity.this,R.string.input_error,Toast.LENGTH_SHORT).show();
                 }
-                if(Integer.valueOf(initEnableTime) % 10 != 0){
-                    Toast.makeText(EditPulseDelayActivity.this,R.string.init_enable_time_format_error,Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                int cycleTimeInt = Integer.valueOf(cycleTime) / 100 * 100;
-                int initEnableTimeInt = Integer.valueOf(initEnableTime) / 10 * 10;
-                int toggleTimeInt = Integer.valueOf(toggleTime);
-                int recoverTimeInt = Integer.valueOf(recoverTime);
-                if (cycleTimeInt <= 0 || cycleTimeInt > 65500){
-                    Toast.makeText(EditPulseDelayActivity.this,R.string.cycle_time_warning,Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                if (initEnableTimeInt <= 0 || initEnableTimeInt > 65500){
-                    Toast.makeText(EditPulseDelayActivity.this,R.string.init_enable_time_warning,Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                if (toggleTimeInt <= 0 || toggleTimeInt > 65535){
-                    Toast.makeText(EditPulseDelayActivity.this,R.string.toggle_time_warning,Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                if (recoverTimeInt < 0 || recoverTimeInt > 255){
-                    Toast.makeText(EditPulseDelayActivity.this,R.string.recover_time_warning,Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                if(cycleTimeInt < initEnableTimeInt){
-                    Toast.makeText(EditPulseDelayActivity.this,R.string.cycle_time_error_warning,Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                if(toggleTimeInt != 0 && (cycleTimeInt - initEnableTimeInt) / toggleTimeInt <= 20 ){
-                    Toast.makeText(EditPulseDelayActivity.this,R.string.pulse_Delay_multi_warning,Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                Intent intent = new Intent();
-                intent.putExtra("cycleTime",cycleTimeInt);
-                intent.putExtra("initEnableTime",initEnableTimeInt);
-                intent.putExtra("toggleTime",toggleTimeInt);
-                intent.putExtra("recoverTime",recoverTimeInt);
-                setResult(EditActivity.RESPONSE_EDIT_PULSE_DELAY,intent);
-                finish();
+
             }
         });
 

@@ -1,6 +1,5 @@
 package com.topflytech.tftble.data;
 
-import static com.inuker.bluetooth.library.Code.REQUEST_SUCCESS;
 
 import android.Manifest;
 import android.app.Activity;
@@ -11,9 +10,6 @@ import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
 
-import com.inuker.bluetooth.library.BluetoothClient;
-import com.inuker.bluetooth.library.connect.response.BleWriteResponse;
-import com.topflytech.tftble.EditActivity;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -129,19 +125,19 @@ public class A001SoftwareUpgradeManager {
                         }
 
                     } else if (curStep == STATUS_OF_UPGRADE_WRITE_ONE_BUFFER) {
-                        int curPackageOffset = curPackage * 251;
-                        if(upgradeFileContentList.size() > cur4KPackage && upgradeFileContentList.get(cur4KPackage).size()  == curPackage){
-                            int allLen = 0;
-                            ArrayList<byte[]> send4KItem = upgradeFileContentList.get(cur4KPackage);
-                            for(byte[] item : send4KItem){
-                                allLen += item.length;
-                            }
-                            curPackageOffset = allLen;
-                        }
-                        byte[] offset = MyUtils.unSignedInt2Bytes(cur4KPackage * 4096 + curPackageOffset);
-                        byte[] content = new byte[]{0x02, offset[3], offset[2], offset[1], offset[0], 0x00};
+//                        int curPackageOffset = curPackage * 251;
+//                        if(upgradeFileContentList.size() > cur4KPackage && upgradeFileContentList.get(cur4KPackage).size()  == curPackage){
+//                            int allLen = 0;
+//                            ArrayList<byte[]> send4KItem = upgradeFileContentList.get(cur4KPackage);
+//                            for(byte[] item : send4KItem){
+//                                allLen += item.length;
+//                            }
+//                            curPackageOffset = allLen;
+//                        }
+//                        byte[] offset = MyUtils.unSignedInt2Bytes(cur4KPackage * 4096 + curPackageOffset);
+                        byte[] content = new byte[]{0x02,  0x00};
                         if (cur4KPackage == upgradeFileContentList.size() - 1 && curPackage == upgradeFileContentList.get(cur4KPackage).size() ) {
-                            content[5] = 0x01;
+                            content[1] = 0x01;
                             writeArray( content);
                             isWaitResponse = true;
                         }else{
@@ -200,8 +196,8 @@ public class A001SoftwareUpgradeManager {
 
     private void writeDataArray( byte[] content) {
         lastWriteDate = new Date();
-        Log.e("tftble_log", "write:" + MyUtils.bytes2HexString(content, 0));
-        LogFileHelper.getInstance(activity).writeIntoFile("write:" + MyUtils.bytes2HexString(content, 0));
+        Log.e("tftble_log", "upgrade write:" + MyUtils.bytes2HexString(content, 0));
+        LogFileHelper.getInstance(activity).writeIntoFile("upgrade write:" + MyUtils.bytes2HexString(content, 0));
         dataWriteCharacteristic.setValue(content);
         if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
 
@@ -219,8 +215,8 @@ public class A001SoftwareUpgradeManager {
 
     private void writeArray( byte[] content) {
         lastWriteDate = new Date();
-        Log.e("tftble_log", "write:" + MyUtils.bytes2HexString(content, 0));
-        LogFileHelper.getInstance(activity).writeIntoFile("write:" + MyUtils.bytes2HexString(content, 0));
+        Log.e("tftble_log", "upgrade write:" + MyUtils.bytes2HexString(content, 0));
+        LogFileHelper.getInstance(activity).writeIntoFile("upgrade write:" + MyUtils.bytes2HexString(content, 0));
         cmdReadWriteCharacteristic.setValue(content);
         if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
 
@@ -381,6 +377,11 @@ public class A001SoftwareUpgradeManager {
         curPackage = 0;
         cur4KPackage = 0;
         sendPackageErrorCount = 0;
+        restartFromHeadCount++;
+        if(restartFromHeadCount >= 3){
+            isStartUpgrade = false;
+            callback.onUpgradeStatus(STATUS_OF_UPGRADE_UNKNOWN_ERROR,-1);
+        }
     }
 
 
@@ -471,7 +472,6 @@ public class A001SoftwareUpgradeManager {
                 updateProgress();
                 isWaitResponse = false;
             }else{
-                restartFromHeadCount++;
                 returnToHeadRestartUpgrade();
                 isWaitResponse = false;
             }
@@ -480,7 +480,6 @@ public class A001SoftwareUpgradeManager {
                 curStep = STATUS_OF_UPGRADE_WRITE_SUCC;
                 updateProgress();
             }else{
-                restartFromHeadCount++;
                 returnToHeadRestartUpgrade();
                 isWaitResponse = false;
             }
@@ -501,9 +500,8 @@ public class A001SoftwareUpgradeManager {
     private void doErrorCtrl(int nextStep) {
         sendPackageErrorCount++;
         if(sendPackageErrorCount > 10){
-            restartFromHeadCount++;
             sendPackageErrorCount = 0;
-            if(restartFromHeadCount > 3){
+            if(restartFromHeadCount >= 3){
                 isStartUpgrade = false;
                 callback.onUpgradeStatus(STATUS_OF_UPGRADE_UNKNOWN_ERROR,-1);
             }else{

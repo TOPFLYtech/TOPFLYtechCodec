@@ -225,7 +225,182 @@
                 android:textSize="@dimen/list_tx" />
 
         </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal">
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_weight="3"
+                android:background="@color/bg_color_white"
+                android:text="@string/battery"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:id="@+id/tx_battery"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_weight="2"
+                android:background="@color/bg_color_white"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_weight="3"
+                android:background="@color/bg_color_white"
+                android:text="@string/input_acc"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:id="@+id/tx_input"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_weight="2"
+                android:background="@color/bg_color_white"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_weight="3"
+                android:background="@color/bg_color_white"
+                android:text="@string/relay_input"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:id="@+id/tx_relay"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_weight="2"
+                android:background="@color/bg_color_white"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_weight="3"
+                android:background="@color/bg_color_white"
+                android:text="@string/negative_trigger_one"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:id="@+id/tx_negative_trigger_one"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_weight="2"
+                android:background="@color/bg_color_white"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_weight="3"
+                android:background="@color/bg_color_white"
+                android:text="@string/negative_trigger_two"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:id="@+id/tx_negative_trigger_two"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_weight="2"
+                android:background="@color/bg_color_white"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_weight="3"
+                android:background="@color/bg_color_white"
+                android:text="@string/relay_output"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:id="@+id/tx_relay_output"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_weight="2"
+                android:background="@color/bg_color_white"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="40dp"
@@ -262,7 +437,44 @@
             </LinearLayout>
         </LinearLayout>
 
-         
+        <LinearLayout
+            android:id="@+id/ll_reset_pwd"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_weight="3"
+                android:background="@color/bg_color_white"
+                android:text="@string/forget_pwd"
+                android:textColor="@color/tx_black"
+                android:textSize="14dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:descendantFocusability="blocksDescendants"
+                android:orientation="horizontal">
+
+                <com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton
+                    android:id="@+id/btn_reset_pwd"
+                    android:layout_width="200px"
+                    android:layout_height="match_parent"
+                    android:layout_margin="5dp"
+                    android:focusable="false"
+                    android:text="@string/reset"
+                    android:textAllCaps="false"
+                    android:textSize="10dp"></com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton>
+            </LinearLayout>
+
+        </LinearLayout>
 
     </LinearLayout>
 

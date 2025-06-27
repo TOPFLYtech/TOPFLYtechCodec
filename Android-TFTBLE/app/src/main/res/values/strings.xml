@@ -314,6 +314,8 @@
     <string name="cycle_time_error_warning">Cycle time must be greater than init enable time.</string>
     <string name="ext_sensor">Ext Sensor:</string>
     <string name="temp_sensor_gx112">Temperature Sensor GX112</string>
+    <string name="temp_sensor_gxts03">Temperature Sensor GXTS03</string>
+    <string name="temp_humi_sensor_gxth30">Temperature and Humidity Sensor GXTH30</string>
     <string name="not_find_ext_sensor">No external sensor found, please connect the external sensor first</string>
     <string name="restart_app_warning">After positioning authorization, the APP needs to be restarted to function properly. The APP is about to restart. If it cannot be started, please manually start the APP</string>
     <string name="device_name_len_error">The length of the device name must between 3 and 8.</string>
@@ -325,6 +327,8 @@
     <string name="s08_temp_range_error_warning1">Value is incorrect!It must between -20 and 174.</string>
     <string name="s10_temp_range_error_warning">Value is incorrect!It must between -54 and 149.</string>
     <string name="s10_temp_range_error_warning1">Value is incorrect!It must between -65 and 300.</string>
+    <string name="s10_gxts03_temp_range_error_warning">Value is incorrect!It must between -44 and 129.</string>
+    <string name="s10_gxts03_temp_range_error_warning1">Value is incorrect!It must between -47 and 264.</string>
     <string name="input_super_device_password">Enter super password</string>
     <string name="reset">Reset</string>
     <string name="super_password_is_error">Super password is error!</string>
@@ -355,4 +359,23 @@
     <string name="low_level_pulse_width_time_error">Low level pulse width time value is incorrect!It must between 100 and 25500.</string>
     <string name="pulse_count_error">Pulse count value is incorrect!It must between 0 and 65535.</string>
     <string name="dynamic_pulse">Dynamic Pulse</string>
+    <string name="temp_sensor_id">Temp sensor ID:</string>
+    <string name="input_acc">ACC:</string>
+    <string name="negative_trigger_one">DOUT1:</string>
+    <string name="negative_trigger_two">DOUT2:</string>
+    <string name="relay_output">Relay status:</string>
+    <string name="relay_input">Relay input:</string>
+    <string name="reboot_desc">Reboot:</string>
+    <string name="reboot">Reboot</string>
+    <string name="ble_connect_timeout_desc">Bluetooth connection timed out:</string>
+    <string name="negative_trigger">Negative trigger:</string>
+    <string name="single_pulse">Single pulse</string>
+    <string name="multi_pulse">Multi-pulse</string>
+    <string name="reboot_succ">Reboot successfully!</string>
+    <string name="confirm_reboot_warning">Try to reboot?</string>
+    <string name="ble_connect_timeout_input_error">Bluetooth connection timed out is incorrect!It must between 30 and 65535</string>
+    <string name="ble_connect_timeout">Bluetooth connection timed out</string>
+    <string name="negative_trigger_pulse_desc">Negative trigger pulse time(ms)</string>
+    <string name="negative_trigger_pulse_input_error">Negative trigger pulse time is incorrect!It must between 100 and 6553500</string>
+    <string name="pulse_width_time">Pulse width time(ms)</string>
 </resources>

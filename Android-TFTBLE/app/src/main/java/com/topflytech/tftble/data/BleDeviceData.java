@@ -134,6 +134,16 @@ public class BleDeviceData {
     private String analog1;
     private String analog2;
 
+    private byte a002InputOutputStatus = 0x00;
+
+    public byte getA002InputOutputStatus() {
+        return a002InputOutputStatus;
+    }
+
+    public void setA002InputOutputStatus(byte a002InputOutputStatus) {
+        this.a002InputOutputStatus = a002InputOutputStatus;
+    }
+
     public String getInput0() {
         return input0;
     }
@@ -189,9 +199,20 @@ public class BleDeviceData {
     public String getExtSensorName(Context context){
         if (extSensorType == 1){
             return context.getResources().getString(R.string.temp_sensor_gx112);
+        }else if (extSensorType == 2){
+            return context.getResources().getString(R.string.temp_sensor_gxts03);
+        }else if (extSensorType == 3){
+            return context.getResources().getString(R.string.temp_humi_sensor_gxth30);
         }else{
             return "";
         }
+    }
+
+    public boolean isS10SupportHumidity(){
+        if(this.getBroadcastType().equals("Eddystone UID")){
+            return false;
+        }
+        return extSensorType == 3;
     }
 
     public String getMajor() {
@@ -838,29 +859,48 @@ public class BleDeviceData {
                         byte extDeviceByte = data[19];
                         this.extSensorType = extDeviceByte >> 4;
                         int len = extDeviceByte & 0xf;
-                        if(this.extSensorType == 1){
-                            int tempSrc =  MyUtils.bytes2Short(data,20);
-                            if(tempSrc == 65535){
-                                sourceTemp = -999;
-                            }else{
-                                int temp = (tempSrc & 0x7fff) * ((tempSrc & 0x8000) == 0x8000 ? -1 : 1);
-                                sourceTemp = temp /100.0f;
+                        if(this.extSensorType == 1 || this.extSensorType == 2){
+                            if(len == 2){
+                                int tempSrc =  MyUtils.bytes2Short(data,20);
+                                if(tempSrc == 65535){
+                                    sourceTemp = -999;
+                                }else{
+                                    int temp = (tempSrc & 0x7fff) * ((tempSrc & 0x8000) == 0x8000 ? -1 : 1);
+                                    sourceTemp = temp /100.0f;
+                                }
+                            }
+                        }else if(this.extSensorType == 3){
+                            if(len == 3){
+                                int tempSrc =  MyUtils.bytes2Short(data,20);
+                                if(tempSrc == 65535){
+                                    sourceTemp = -999;
+                                }else{
+                                    int temp = (tempSrc & 0x7fff) * ((tempSrc & 0x8000) == 0x8000 ? -1 : 1);
+                                    sourceTemp = temp /100.0f;
+                                }
+                                int humiditySrc = data[22] & 0xff;
+                                this.humidity = String.valueOf(humiditySrc);
                             }
                         }
                     }
 
-                }else if(data[2] ==  (byte)0xa1){
+                }else if(data[2] ==  (byte)0x0c){
                     this.hardware = MyUtils.parseHardwareVersion(data[3]);
                     this.software = MyUtils.parseSoftwareVersion(data,4);
                     id = hexData.substring(14,26).toUpperCase();
                     this.modelName = "A001";
                     this.deviceType = "A001";
-                }else if(data[2] ==  (byte)0xa2){
+                }else if(data[2] ==  (byte)0x0d){
                     this.hardware = MyUtils.parseHardwareVersion(data[3]);
                     this.software = MyUtils.parseSoftwareVersion(data,4);
                     id = hexData.substring(14,26).toUpperCase();
-                    this.modelName = "A001";
+                    this.modelName = "T-relay";
                     this.deviceType = "A002";
+                    byte broadcastType = data[13];
+                    int batteryVoltage = MyUtils.bytes2Short(data,14);
+                    battery = String.format("%.2f V",batteryVoltage / 1000.0f);
+//                    batteryPercent = (data[16] & 0xff) + "%";
+                    a002InputOutputStatus = data[20];
                 }else{
                     deviceType = "errorDevice";
                 }
