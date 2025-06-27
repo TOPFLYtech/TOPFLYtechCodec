@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".deviceConfigSetting.AlarmOpenSetActivity">
+
+    <CheckBox
+        android:id="@+id/checkbox_charging_alarm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/enable_alarm_charging"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="70dp"
+        android:layout_marginTop="16dp"/>
+
+    <CheckBox
+        android:id="@+id/checkbox_overvoltage_alarm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/enable_alarm_over_voltage"
+        app:layout_constraintTop_toBottomOf="@id/checkbox_charging_alarm"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="70dp"
+        android:layout_marginTop="8dp"/>
+
+    <CheckBox
+        android:id="@+id/checkbox_low_battery_alarm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/enable_alarm_low_battery"
+        app:layout_constraintTop_toBottomOf="@id/checkbox_overvoltage_alarm"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="70dp"
+        android:layout_marginTop="8dp"/>
+
+    <CheckBox
+        android:id="@+id/checkbox_high_temperature_alarm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/enable_alarm_high_temperature"
+        app:layout_constraintTop_toBottomOf="@id/checkbox_low_battery_alarm"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="70dp"
+        android:layout_marginTop="8dp"/>
+
+    <CheckBox
+        android:id="@+id/checkbox_low_temperature_alarm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/enable_alarm_low_temperature"
+        app:layout_constraintTop_toBottomOf="@id/checkbox_high_temperature_alarm"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="70dp"
+        android:layout_marginTop="8dp"/>
+
+    <CheckBox
+        android:id="@+id/checkbox_lock_open_alarm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/enable_alarm_lock_open"
+        app:layout_constraintTop_toBottomOf="@id/checkbox_low_temperature_alarm"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="70dp"
+        android:layout_marginTop="8dp"/>
+
+    <CheckBox
+        android:id="@+id/checkbox_back_cover_open_alarm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/enable_alarm_back_cover_open"
+        app:layout_constraintTop_toBottomOf="@id/checkbox_lock_open_alarm"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="70dp"
+        android:layout_marginTop="8dp"/>
+
+    <CheckBox
+        android:visibility="gone"
+        android:id="@+id/checkbox_gps_location_alarm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/enable_alarm_gps_location"
+        app:layout_constraintTop_toBottomOf="@id/checkbox_back_cover_open_alarm"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="70dp"
+        android:layout_marginTop="8dp"/>
+
+    <CheckBox
+        android:visibility="gone"
+        android:id="@+id/checkbox_gps_interference_alarm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/enable_alarm_gps_interference"
+        app:layout_constraintTop_toBottomOf="@id/checkbox_gps_location_alarm"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="70dp"
+        android:layout_marginTop="8dp"/>
+
+    <CheckBox
+        android:id="@+id/checkbox_lock_event_alarm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/enable_alarm_lock_event"
+        app:layout_constraintTop_toBottomOf="@id/checkbox_gps_interference_alarm"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="70dp"
+        android:layout_marginTop="8dp"/>
+
+    <TextView
+        android:id="@+id/byte_value_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Byte Value: 0"
+        app:layout_constraintTop_toBottomOf="@id/checkbox_lock_event_alarm"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="70dp"
+        android:layout_marginTop="16dp"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -5,8 +5,6 @@ import android.os.Build;
 import android.util.Base64;
 import android.util.Log;
 
-import com.inuker.bluetooth.library.utils.ByteUtils;
-
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
@@ -58,7 +56,7 @@ public class UniqueIDTool {
         for(int i = 0;i < 6;i++){
             byteValue[i] = (byte)values[i];
         }
-        return ByteUtils.byteToString(byteValue);
+        return MyByteUtils.bytes2HexString(byteValue,0);
     }
 
     public static String CalcMD5(String originString) {

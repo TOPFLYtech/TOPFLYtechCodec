@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
@@ -41,16 +42,27 @@ public class ScanActivity extends AppCompatActivity  implements QRCodeView.Deleg
         String[] perms = {Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE};
         if (!EasyPermissions.hasPermissions(this, perms)) {
             EasyPermissions.requestPermissions(this, "扫描二维码需要打开相机和散光灯的权限", REQUEST_CODE_QRCODE_PERMISSIONS, perms);
+        }else {
+            // 如果权限已经存在，初始化摄像头
+            initializeCamera();
         }
     }
-    @Override
-    protected void onStart() {
-        super.onStart();
+    private void  initializeCamera(){
 
         mZXingView.startCamera(); // 打开后置摄像头开始预览，但是并未开始识别
 //        mZXingView.startCamera(Camera.CameraInfo.CAMERA_FACING_FRONT); // 打开前置摄像头开始预览，但是并未开始识别
 
         mZXingView.startSpotAndShowRect(); // 显示扫描框，并开始识别
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
+    }
+    @Override
+    protected void onStart() {
+        super.onStart();
+
     }
 
     @Override
@@ -121,11 +133,17 @@ public class ScanActivity extends AppCompatActivity  implements QRCodeView.Deleg
 
     @Override
     public void onPermissionsGranted(int requestCode, List<String> perms) {
-
+        if (requestCode == REQUEST_CODE_QRCODE_PERMISSIONS) {
+            // 权限请求成功后，初始化摄像头
+            initializeCamera();
+        }
     }
 
     @Override
     public void onPermissionsDenied(int requestCode, List<String> perms) {
-
+        if (requestCode == REQUEST_CODE_QRCODE_PERMISSIONS) {
+            // 权限请求失败后的处理
+            Toast.makeText(this, R.string.permission_denied_camera, Toast.LENGTH_SHORT).show();
+        }
     }
 }

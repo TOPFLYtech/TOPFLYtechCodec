@@ -1,0 +1,589 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:theme="@style/MyAppTheme"
+    android:descendantFocusability="blocksDescendants"
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/device_list_border"
+        android:layout_margin="5dp"
+        android:padding="5dp"
+        android:orientation="vertical">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:descendantFocusability="blocksDescendants"
+            android:id="@+id/main_view"
+            android:orientation="horizontal">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_gravity="center"
+                android:orientation="vertical"
+                android:layout_weight="7">
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:id="@+id/img_item_lock"
+                    android:src="@mipmap/ic_main_lock">
+                </ImageView>
+                <ImageView
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:id="@+id/img_item_favorite"
+                    android:src="@mipmap/ic_hide_favorite">
+                </ImageView>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:layout_marginTop="10px"
+                android:layout_marginBottom="10px"
+                android:layout_marginRight="10px"
+                android:layout_weight="4">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="18dp"
+                    android:id="@+id/tx_name"
+                    android:text="SolarGuardX 110">
+                </TextView>
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/tx_imei_head"
+                        android:text="IMEI:">
+                    </TextView>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/tx_imei"
+                        android:text="565154121454124">
+                    </TextView>
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/ll_device_id"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/tx_device_id_head"
+                        android:text="ID:"></TextView>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/tx_device_id"
+                        android:text="">
+                    </TextView>
+                </LinearLayout>
+
+
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:layout_weight="5">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:descendantFocusability="blocksDescendants"
+                    android:gravity="center_horizontal"
+                    android:layout_weight="1"
+                   android:layout_gravity="center_horizontal">
+
+                    <com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton
+                        android:id="@+id/btn_config"
+                        android:layout_width="300px"
+                        android:layout_height="30dp"
+                        android:layout_margin="5dp"
+                        android:focusable="false"
+                        android:text="@string/unlock"
+                        android:textAllCaps="false"
+                        android:textSize="10dp"></com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton>
+
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="horizontal">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_weight="3"
+                       >
+                        <ImageView
+                            android:layout_width="15dp"
+                            android:layout_height="15dp"
+                            android:id="@+id/img_device_signal"
+                            android:src="@mipmap/ic_full_signal">
+
+                        </ImageView>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="9px"
+                            android:id="@+id/tx_rssi"
+                            android:text="-144dBm">
+                        </TextView>
+                    </LinearLayout>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="5">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="9px"
+                            android:id="@+id/tx_battery"
+                            android:text="100%">
+                        </TextView>
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/detail_panel"
+            android:visibility="visible"
+            android:orientation="vertical">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/list_item_high"
+                android:orientation="horizontal" >
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/bg_color_white"
+                    android:layout_weight="3"
+                    android:text="@string/model"
+                    android:layout_marginRight="1dp"
+                    android:layout_marginLeft="15dp"
+                    android:layout_marginBottom="1dp"
+                    android:textColor="@color/tx_black"
+                    android:textSize="@dimen/list_tx" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/bg_color_white"
+                    android:layout_weight="2"
+                    android:layout_marginBottom="1dp"
+                    android:layout_marginRight="1dp"
+                    android:id="@+id/tx_model"
+                    android:textColor="@color/tx_black"
+                    android:textSize="@dimen/list_tx" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/list_item_high"
+
+                android:orientation="horizontal" >
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/bg_color_white"
+                    android:layout_weight="3"
+                    android:text="@string/hardware"
+                    android:layout_marginRight="1dp"
+                    android:layout_marginLeft="15dp"
+                    android:layout_marginBottom="1dp"
+                    android:textColor="@color/tx_black"
+                    android:textSize="@dimen/list_tx" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/bg_color_white"
+                    android:layout_weight="2"
+                    android:layout_marginBottom="1dp"
+                    android:layout_marginRight="1dp"
+                    android:id="@+id/tx_hardware"
+                    android:textColor="@color/tx_black"
+                    android:textSize="@dimen/list_tx" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/list_item_high"
+
+                android:orientation="horizontal" >
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/bg_color_white"
+                    android:layout_weight="3"
+                    android:text="@string/software"
+                    android:layout_marginRight="1dp"
+                    android:layout_marginLeft="15dp"
+                    android:layout_marginBottom="1dp"
+                    android:textColor="@color/tx_black"
+                    android:textSize="@dimen/list_tx" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/bg_color_white"
+                    android:layout_weight="2"
+                    android:layout_marginBottom="1dp"
+                    android:layout_marginRight="1dp"
+                    android:id="@+id/tx_software"
+                    android:textColor="@color/tx_black"
+                    android:textSize="@dimen/list_tx" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/list_item_high"
+                android:id="@+id/ll_solar_voltage"
+                android:orientation="horizontal" >
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/bg_color_white"
+                    android:layout_weight="3"
+                    android:text="@string/solar_voltage"
+                    android:layout_marginRight="1dp"
+                    android:layout_marginLeft="15dp"
+                    android:layout_marginBottom="1dp"
+                    android:textColor="@color/tx_black"
+                    android:textSize="@dimen/list_tx" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/bg_color_white"
+                    android:layout_weight="2"
+                    android:layout_marginBottom="1dp"
+                    android:layout_marginRight="1dp"
+                    android:id="@+id/tx_solar_voltage"
+                    android:textColor="@color/tx_black"
+                    android:textSize="@dimen/list_tx" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/list_item_high"
+                android:id="@+id/ll_battery_voltage"
+                android:orientation="horizontal" >
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/bg_color_white"
+                    android:layout_weight="3"
+                    android:text="@string/battery_voltage"
+                    android:layout_marginRight="1dp"
+                    android:layout_marginLeft="15dp"
+                    android:layout_marginBottom="1dp"
+                    android:textColor="@color/tx_black"
+                    android:textSize="@dimen/list_tx" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/bg_color_white"
+                    android:layout_weight="2"
+                    android:layout_marginBottom="1dp"
+                    android:layout_marginRight="1dp"
+                    android:id="@+id/tx_battery_voltage"
+                    android:textColor="@color/tx_black"
+                    android:textSize="@dimen/list_tx" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/list_item_high"
+                android:id="@+id/ll_temp"
+                android:orientation="horizontal" >
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/bg_color_white"
+                    android:layout_weight="3"
+                    android:text="@string/temp"
+                    android:layout_marginRight="1dp"
+                    android:layout_marginLeft="15dp"
+                    android:layout_marginBottom="1dp"
+                    android:textColor="@color/tx_black"
+                    android:textSize="@dimen/list_tx" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/bg_color_white"
+                    android:layout_weight="3"
+                    android:layout_marginBottom="1dp"
+                    android:layout_marginRight="1dp"
+                    android:id="@+id/tx_temp"
+                    android:textColor="@color/tx_black"
+                    android:textSize="@dimen/list_tx" />
+
+                <com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton
+                    android:id="@+id/btn_temp_sw"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_margin="5dp"
+                    android:layout_weight="4"
+                    android:text="@string/temp_switch"
+                    android:textAllCaps="false"
+                    android:textSize="@dimen/list_tx" >
+
+                </com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/list_item_high"
+                android:id="@+id/ll_alarm"
+                android:orientation="horizontal" >
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/bg_color_white"
+                    android:layout_weight="3"
+                    android:text="@string/table_head_alarm"
+                    android:layout_marginRight="1dp"
+                    android:layout_marginLeft="15dp"
+                    android:layout_marginBottom="1dp"
+                    android:textColor="@color/tx_black"
+                    android:textSize="@dimen/list_tx" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/bg_color_white"
+                    android:layout_weight="2"
+                    android:layout_marginBottom="1dp"
+                    android:layout_marginRight="1dp"
+                    android:id="@+id/tx_alarm"
+                    android:ellipsize="marquee"
+                    android:marqueeRepeatLimit="marquee_forever"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:scrollHorizontally="true"
+                    android:singleLine="true"
+                    android:textColor="@color/tx_black"
+                    android:textSize="@dimen/list_tx" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/list_item_high"
+                android:id="@+id/ll_parent_lock"
+                android:orientation="horizontal" >
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/bg_color_white"
+                    android:layout_weight="3"
+                    android:layout_marginRight="1dp"
+                    android:layout_marginLeft="15dp"
+                    android:layout_marginBottom="1dp">
+
+                    <!-- 原始TextView -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/parent_lock"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx"/>
+
+                    <ImageView
+                        android:id="@+id/iv_parent_lock_hint"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@mipmap/ic_question"
+                        android:contentDescription="@string/sub_lock_relation_dependency"
+                        android:padding="8dp"
+                        android:clickable="true"
+                        android:focusable="true" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/bg_color_white"
+                    android:layout_weight="2"
+                    android:layout_marginBottom="1dp"
+                    android:layout_marginRight="1dp"
+                    android:id="@+id/tx_parent_imeis"
+                    android:textColor="@color/tx_black"
+                    android:textSize="@dimen/list_tx" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:background="@color/bg_color_white"
+                    android:layout_marginBottom="1dp"
+                    android:layout_marginRight="10dp"
+                    android:text="..."
+                    android:visibility="gone"
+                    android:id="@+id/tx_parent_imeis_extend"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="@dimen/list_tx" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/list_item_high"
+                android:orientation="horizontal"
+                >
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/bg_color_white"
+                    android:text="@string/date"
+                    android:layout_marginRight="1dp"
+                    android:layout_marginBottom="1dp"
+                    android:layout_marginLeft="@dimen/list_item_margin_left"
+                    android:layout_weight="3"
+                    android:textColor="@color/tx_black"
+                    android:textSize="@dimen/list_tx" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/bg_color_white"
+                    android:layout_weight="2"
+                    android:layout_marginBottom="1dp"
+                    android:layout_marginRight="1dp"
+                    android:id="@+id/tx_date"
+                    android:textColor="@color/tx_black"
+                    android:textSize="@dimen/list_tx" />
+
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:gravity="center"
+                android:id="@+id/ll_connect"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/list_item_margin_left"
+                    android:layout_marginRight="1dp"
+                    android:layout_marginBottom="1dp"
+                    android:layout_weight="3"
+                    android:background="@color/bg_color_white"
+                    android:text="@string/connect"
+                    android:textColor="@color/tx_black"
+                    android:textSize="14dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="2"
+                    android:descendantFocusability="blocksDescendants"
+                    android:orientation="horizontal">
+
+                    <com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton
+                        android:id="@+id/btn_connect"
+                        android:layout_width="300px"
+                        android:layout_height="match_parent"
+                        android:layout_margin="5dp"
+                        android:focusable="false"
+                        android:text="@string/connect"
+                        android:textAllCaps="false"
+                        android:textSize="10dp"></com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton>
+                </LinearLayout>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:gravity="center"
+                android:id="@+id/read_data_ll"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/list_item_margin_left"
+                    android:layout_marginRight="1dp"
+                    android:layout_marginBottom="1dp"
+                    android:layout_weight="3"
+                    android:background="@color/bg_color_white"
+                    android:text="@string/read_data"
+                    android:textColor="@color/tx_black"
+                    android:textSize="14dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="2"
+                    android:descendantFocusability="blocksDescendants"
+                    android:orientation="horizontal">
+
+                    <com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton
+                        android:id="@+id/btn_read_his_data"
+                        android:layout_width="300px"
+                        android:layout_height="match_parent"
+                        android:layout_margin="5dp"
+                        android:focusable="false"
+                        android:text="@string/read"
+                        android:textAllCaps="false"
+                        android:textSize="10dp"></com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton>
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:gravity="center"
+                android:id="@+id/ll_super_pwd"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/list_item_margin_left"
+                    android:layout_marginRight="1dp"
+                    android:layout_marginBottom="1dp"
+                    android:layout_weight="3"
+                    android:background="@color/bg_color_white"
+                    android:text="@string/forget_pwd"
+                    android:textColor="@color/tx_black"
+                    android:textSize="14dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="2"
+                    android:descendantFocusability="blocksDescendants"
+                    android:orientation="horizontal">
+
+                    <com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton
+                        android:id="@+id/btn_reset_pwd"
+                        android:layout_width="300px"
+                        android:layout_height="match_parent"
+                        android:layout_margin="5dp"
+                        android:focusable="false"
+                        android:text="@string/reset"
+                        android:textAllCaps="false"
+                        android:textSize="10dp"></com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton>
+                </LinearLayout>
+            </LinearLayout>
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+</LinearLayout>

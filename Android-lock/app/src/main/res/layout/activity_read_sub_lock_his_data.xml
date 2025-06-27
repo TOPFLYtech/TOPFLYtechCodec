@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    >
+    <LinearLayout
+        android:layout_width="35dp"
+        android:layout_height="match_parent"
+        >
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageButton
+                android:id="@+id/btn_prev"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentTop="true"
+                android:layout_marginLeft="5dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
+                android:background="@drawable/lingber_ripple_bg_btn"
+                android:src="@drawable/lingber_ic_up" />
+
+            <LinearLayout
+                android:id="@+id/rv_page_number"
+                android:layout_width="30dp"
+                android:layout_height="50dp"
+                android:layout_below="@+id/btn_prev"
+                android:layout_alignParentLeft="true"
+                android:layout_marginStart="5dp"
+                android:layout_marginLeft="5dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginEnd="5dp"
+                android:paddingTop="5dp"
+                android:layout_marginBottom="5dp"
+                android:background="@drawable/lingber_page_number_shape"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_current_page"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
+                    android:text="1"
+                    android:textColor="#ff515151"
+                    android:textSize="10sp" />
+
+                <TextView
+                    android:id="@+id/tv_delimiter"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
+                    android:text="/"
+                    android:textColor="#ff515151"
+                    android:textSize="10sp" />
+
+                <TextView
+                    android:id="@+id/tv_count_page"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
+                    android:text="1"
+                    android:textColor="#ff515151"
+                    android:textSize="10sp" />
+
+            </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/btn_next"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_below="@+id/rv_page_number"
+                android:layout_alignParentLeft="true"
+                android:layout_marginLeft="5dp"
+
+                android:background="@drawable/lingber_ripple_bg_btn"
+                android:src="@drawable/lingber_ic_down" />
+
+            <ProgressBar
+                android:id="@+id/pb_waiting"
+                style="?android:attr/progressBarStyleLarge"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_below="@+id/btn_next"
+                android:layout_alignParentLeft="true"
+                android:layout_marginLeft="5dp" />
+        </RelativeLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <LinearLayout
+            android:id="@+id/ll_top_root"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:visibility="visible">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_tab_right"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:overScrollMode="never"
+                android:scrollbars="none">
+            </androidx.recyclerview.widget.RecyclerView>
+
+        </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_content"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+        </androidx.recyclerview.widget.RecyclerView>
+    </LinearLayout>
+
+</LinearLayout>

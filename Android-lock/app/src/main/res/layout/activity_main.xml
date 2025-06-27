@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+    android:orientation="vertical"  android:id="@+id/root_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent" android:background="@color/main_bkg_color">
     <LinearLayout
@@ -16,9 +16,13 @@
             android:layout_width="match_parent"
             android:layout_height="30dp"
             android:layout_weight="2"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
             />
+
         <ImageButton
             android:textAllCaps="false"
+            android:layout_toLeftOf="@+id/btn_close_search"
             android:background="@drawable/dialog_btn_bg"
             android:layout_width="match_parent"
             android:layout_height="30dp"
@@ -26,6 +30,16 @@
             android:layout_weight="12"
             android:src="@mipmap/ic_scan"
             android:textSize="@dimen/btn_size"></ImageButton>
+        <ImageView
+            android:id="@+id/btn_close_search"
+            android:layout_alignParentRight="true"
+            android:layout_height="@dimen/tab_action_bar_right_imgbtn_size"
+            android:layout_width="@dimen/tab_action_bar_right_imgbtn_size"
+            android:layout_centerVertical="true"
+            android:src="@mipmap/ic_delete"
+            android:padding="5dp"
+            android:gravity="center"
+            />
     </LinearLayout>
     <ListView
         android:layout_width="match_parent"

@@ -29,4 +29,6 @@
     <color name="colorWhite">#FFFFFF</color>
     <color name="colorCyan">#BCEAE3</color>
     <color name="colorGray">#DBDBDB</color>
+    <color name="black">#000000</color>
+    <color name="gray_light">#F0F0F0</color>
 </resources>

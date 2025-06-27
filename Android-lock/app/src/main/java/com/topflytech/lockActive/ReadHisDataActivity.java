@@ -1,11 +1,10 @@
 package com.topflytech.lockActive;
 
-import static com.inuker.bluetooth.library.Code.REQUEST_SUCCESS;
-import static com.inuker.bluetooth.library.Constants.STATUS_CONNECTED;
-import static com.inuker.bluetooth.library.Constants.STATUS_DISCONNECTED;
 
 import android.Manifest;
+import android.app.Dialog;
 import android.content.ContextWrapper;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -17,6 +16,7 @@ import android.text.InputType;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.GestureDetector;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,12 +43,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bin.david.form.data.table.PageTableData;
-import com.inuker.bluetooth.library.BluetoothClient;
-import com.inuker.bluetooth.library.connect.listener.BleConnectStatusListener;
-import com.inuker.bluetooth.library.connect.response.BleConnectResponse;
-import com.inuker.bluetooth.library.connect.response.BleNotifyResponse;
-import com.inuker.bluetooth.library.connect.response.BleWriteResponse;
-import com.inuker.bluetooth.library.model.BleGattProfile;
+import com.topflytech.lockActive.Ble.BleStatusCallback;
+import com.topflytech.lockActive.Ble.TftBleConnectManager;
 import com.topflytech.lockActive.data.BleDeviceData;
 import com.topflytech.lockActive.data.LocationMessage;
 import com.topflytech.lockActive.data.MyByteUtils;
@@ -92,7 +88,6 @@ public class ReadHisDataActivity extends AppCompatActivity {
     private ImageView reconnectBtn;
     private ImageView menuBtn;
     private ImageView btnLightStatus;
-    private BluetoothClient mClient;
     boolean onThisView = false;
     private String mac;
     private String id;
@@ -100,10 +95,8 @@ public class ReadHisDataActivity extends AppCompatActivity {
     SweetAlertDialog waitingDlg;
     SweetAlertDialog waitingCancelDlg;
     SweetAlertDialog sweetPwdDlg;
-    boolean connectSucc = false;
-    private boolean isCanSendMsg = true;
+    private boolean pwdErrorWarning = false;
     private final static Object lock = new Object();
-    private boolean isDeviceReady = false;
     private DropPopMenu mDropPopMenu;
 
     private Long readStartDate, readEndDate;
@@ -134,6 +127,7 @@ public class ReadHisDataActivity extends AppCompatActivity {
     int curPage = 1,pageSize=15,allPageCount=0;
     private GestureDetector gestureDetector;
     private LinearLayout pageNumbView;
+    private String curPwd = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -148,13 +142,140 @@ public class ReadHisDataActivity extends AppCompatActivity {
         checkWritePermission();
         allDatas.clear();
         tempDatas.clear();
-        mClient = new BluetoothClient(ReadHisDataActivity.this);
+        TftBleConnectManager.getInstance().init(ReadHisDataActivity.this);
+        TftBleConnectManager.getInstance().setOnThisView(true);
+        TftBleConnectManager.getInstance().setNeedCheckDeviceReady(false);
+        TftBleConnectManager.getInstance().setNeedGetLockStatus(false);
+        TftBleConnectManager.getInstance().setIsParentLockReadHisData();
+        TftBleConnectManager.getInstance().setCallback("ReadHisDataActivity",bleStatusCallback);
         new Thread(sendMsgThread).start();
 
 //        makeSomeData();
         initTable();
-        showSelectDate();
 
+        showPwdDlg(true);
+    }
+    private BleStatusCallback bleStatusCallback = new BleStatusCallback() {
+        @Override
+        public void onNotifyValue(byte[] value) {
+            if(!onThisView){
+                return;
+            }
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    parseResp(value);
+                }
+            });
+        }
+
+        @Override
+        public void onBleStatusCallback(int connectStatus) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if(!onThisView){
+                        return;
+                    }
+                    if (connectStatus == TftBleConnectManager.BLE_STATUS_OF_CONNECT_SUCC) {
+                        doAfterConnectSucc();
+                        reconnectBtn.setImageResource(R.mipmap.ic_refresh);
+                        if (!TftBleConnectManager.getInstance().getIsDeviceReady()) {
+                            showWaitingCancelDlg(getString(R.string.waitingDeviceReady));
+                            readLightStatus();
+                            sendGetData(true,false);
+                        }
+                        if(waitingDlg != null){
+                            waitingDlg.hide();
+                        }
+                        showWaitingCancelDlg(getString(R.string.waitingDeviceReady));
+                    } else if (connectStatus == TftBleConnectManager.BLE_STATUS_OF_CLOSE) {
+
+                    } else if (connectStatus == TftBleConnectManager.BLE_STATUS_OF_DISCONNECT) {
+                        if(waitingDlg != null){
+                            waitingDlg.hide();
+                        }
+                        reconnectBtn.setImageResource(R.mipmap.ic_disconnect);
+                        new SweetAlertDialog(ReadHisDataActivity.this, SweetAlertDialog.ERROR_TYPE)
+                                .setTitleText(getResources().getString(R.string.warning))
+                                .setContentText(getResources().getString(R.string.connect_fail))
+                                .show();
+                    } else if (connectStatus == TftBleConnectManager.BLE_STATUS_OF_CONNECTING) {
+
+                    } else if (connectStatus == TftBleConnectManager.BLE_STATUS_OF_SCANNING) {
+
+                    }
+                }
+            });
+
+        }
+
+        @Override
+        public void onRssiCallback(int rssi) {
+
+        }
+
+        @Override
+        public void onUpgradeNotifyValue(byte[] value) {
+
+        }
+    };
+
+
+    private boolean isShowPwdDlg = false;
+    private void showPwdDlg(boolean isNextShowDateDlg){
+        if(isShowPwdDlg){
+            return;
+        }
+        isShowPwdDlg = true;
+        sweetPwdDlg = new SweetAlertDialog(ReadHisDataActivity.this, SweetAlertDialog.INPUT_TYPE);
+        sweetPwdDlg.setOnKeyListener(new DialogInterface.OnKeyListener() {
+            @Override
+            public boolean onKey(DialogInterface dialogInterface, int keyCode, KeyEvent keyEvent) {
+                if (keyCode == KeyEvent.KEYCODE_BACK && keyEvent.getAction() == KeyEvent.ACTION_UP) {
+                    // 在这里处理返回按钮被按下的逻辑
+                    isShowPwdDlg = false;
+                    finish();
+                    return true; // 返回 true 表示已处理按键事件
+                }
+                return false; // 返回 false 表示未处理按键事件
+            }
+        });
+        sweetPwdDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
+        sweetPwdDlg.setTitleText(getResources().getString(R.string.input_ble_pwd));
+        sweetPwdDlg.setCancelable(true);
+        sweetPwdDlg.setCancelText(getResources().getString(R.string.cancel));
+        sweetPwdDlg.setConfirmText(getResources().getString(R.string.confirm));
+        sweetPwdDlg.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
+        sweetPwdDlg.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+            @Override
+            public void onClick(SweetAlertDialog sweetAlertDialog) {
+                String pwd = sweetPwdDlg.getInputText();
+                pwdErrorWarning = false;
+                if(pwd.length() == 6){
+                    curPwd = pwd;
+                    sweetPwdDlg.hide();
+                    isShowPwdDlg = false;
+                    if(isNextShowDateDlg){
+                        showSelectDate();
+                    }else{
+                        afterSelectDateDoInView();
+                    }
+                }else{
+                    Toast.makeText(ReadHisDataActivity.this,R.string.input_error,Toast.LENGTH_SHORT).show();
+
+                }
+            }
+        });
+        sweetPwdDlg.setCancelClickListener(new SweetAlertDialog.OnSweetClickListener() {
+            @Override
+            public void onClick(SweetAlertDialog sweetAlertDialog) {
+                isShowPwdDlg = false;
+                finish();
+            }
+        });
+        sweetPwdDlg.setInputText("");
+        sweetPwdDlg.show();
     }
 
 
@@ -389,6 +510,9 @@ public class ReadHisDataActivity extends AppCompatActivity {
     }
 
     private void showWaitingCancelDlg(String warning) {
+        if(!onThisView){
+            return;
+        }
         if (waitingCancelDlg == null) {
             waitingCancelDlg = new SweetAlertDialog(ReadHisDataActivity.this, SweetAlertDialog.PROGRESS_TYPE);
             waitingCancelDlg.getProgressHelper().setBarColor(Color.parseColor("#A5DC86"));
@@ -448,7 +572,7 @@ public class ReadHisDataActivity extends AppCompatActivity {
     private byte[] getReadHisCmd(Long startDate, Long endDate,boolean isGetNext) {
         byte[] startDateByte = MyByteUtils.unSignedInt2Bytes(startDate);
         byte[] endDateDateByte = MyByteUtils.unSignedInt2Bytes(endDate);
-        int len = 8;
+        int len = 14;
         if(isGetNext){
             startDateByte = new byte[]{(byte)0xff,(byte)0xff,(byte)0xff,(byte)0xff};
         }
@@ -456,6 +580,9 @@ public class ReadHisDataActivity extends AppCompatActivity {
         try {
             outputStream.write(getDataHead);
             outputStream.write(len);
+            if(curPwd != null){
+                outputStream.write(curPwd.getBytes());
+            }
             outputStream.write(startDateByte);
             outputStream.write(endDateDateByte);
             return outputStream.toByteArray();
@@ -482,6 +609,7 @@ public class ReadHisDataActivity extends AppCompatActivity {
         }
         return new byte[]{};
     }
+    private String model = "";
 
 
     private Date lastCheckStatusDate;
@@ -568,14 +696,11 @@ public class ReadHisDataActivity extends AppCompatActivity {
         reconnectBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 reconnectBtn.setImageResource(R.mipmap.ic_refresh);
-                mClient.disconnect(mac);
-                connectSucc = false;
-                isDeviceReady = false;
-                isCanSendMsg = false;
+                TftBleConnectManager.getInstance().disconnect();
                 showWaitingDlg(getResources().getString(R.string.reconnecting));
-                mClient.connect(mac,bleConnectResponse);
-                mClient.registerConnectStatusListener(mac, mBleConnectStatusListener);
+                TftBleConnectManager.getInstance().connect(mac,BleDeviceData.isSubLockDevice(model));
             }
         });
         btnLightStatus =  (ImageView) findViewById(R.id.btn_light_status);
@@ -759,24 +884,26 @@ public class ReadHisDataActivity extends AppCompatActivity {
                 startDateStr = dateFormat.format(new Date(readStartDate * 1000));
                 endDateStr = dateFormat.format(new Date(readEndDate * 1000));
             }
-            if(isFirstGetData){
-                isFirstGetData = false;
-                connectDevice();
-            }else{
-                if (!connectSucc) {
-                    return;
-                }
-                showWaitingCancelDlg(getString(R.string.reading_data));
-                allDatas.clear();
-                tempDatas.clear();
-                curPage = 1;
-                allPageCount = 1;
-                tvCurPage.setText(String.valueOf(curPage));
-                tvAllPage.setText("1");
-                reloadReportData();
-                sendGetData(true,false);
+            afterSelectDateDoInView();
+        }
+    }
+
+    private void afterSelectDateDoInView() {
+        if(isFirstGetData){
+            isFirstGetData = false;
+            connectDevice();
+        }else{
+            if (!TftBleConnectManager.getInstance().isConnectSucc()) {
+                return;
             }
 
+            doAfterConnectSucc();
+            if(TftBleConnectManager.getInstance().getIsDeviceReady()){
+                showWaitingCancelDlg(getString(R.string.waitingDeviceReady));
+            }else{
+                showWaitingCancelDlg(getString(R.string.reading_data));
+            }
+            sendGetData(true,false);
         }
     }
 
@@ -800,7 +927,7 @@ public class ReadHisDataActivity extends AppCompatActivity {
     }
 
     private void connectDevice(){
-        if (!connectSucc) {
+        if (!TftBleConnectManager.getInstance().isConnectSucc()) {
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
@@ -808,7 +935,7 @@ public class ReadHisDataActivity extends AppCompatActivity {
             }
             showWaitingDlg(getResources().getString(R.string.connecting));
             Log.e("writeContent","try to connect");
-            mClient.connect(mac, bleConnectResponse);
+            TftBleConnectManager.getInstance().connect(mac,BleDeviceData.isSubLockDevice(model));
         }
     }
 
@@ -841,94 +968,66 @@ public class ReadHisDataActivity extends AppCompatActivity {
             waitingCancelDlg.dismiss();
             waitingCancelDlg = null;
         }
+        if (sweetPwdDlg != null) {
+            sweetPwdDlg.hide();
+            sweetPwdDlg.dismiss();
+            sweetPwdDlg = null;
+        }
         reconnectBtn.setImageResource(R.mipmap.ic_disconnect);
-        mClient.disconnect(mac);
-        connectSucc = false;
-        isDeviceReady = false;
-        isCanSendMsg = false;
+        TftBleConnectManager.getInstance().disconnect();
+        TftBleConnectManager.getInstance().removeCallback("EditActivity");
     }
 
-    private final BleConnectStatusListener mBleConnectStatusListener = new BleConnectStatusListener() {
 
-        @Override
-        public void onConnectStatusChanged(String mac, int status) {
-            if (status == STATUS_CONNECTED) {
-
-            } else if (status == STATUS_DISCONNECTED) {
-                if (onThisView) {
-                    Toast.makeText(ReadHisDataActivity.this, R.string.disconnect_from_device, Toast.LENGTH_SHORT).show();
-                }
-                connectSucc = false;
-                isDeviceReady = false;
-                isCanSendMsg = false;
-                reconnectBtn.setImageResource(R.mipmap.ic_disconnect);
-                if (waitingCancelDlg != null) {
-                    waitingCancelDlg.hide();
-                    waitingCancelDlg.dismiss();
-                    waitingCancelDlg = null;
-                }
-            }
-        }
-    };
-
-    BleConnectResponse bleConnectResponse = new BleConnectResponse() {
-        @Override
-        public void onResponse(int code, BleGattProfile data) {
-            if (code == REQUEST_SUCCESS) {
-                Log.e("writeContent","try to notify");
-                allDatas.clear();
-                tempDatas.clear();
-                curPage = 1;
-                allPageCount = 1;
-                tvCurPage.setText(String.valueOf(curPage));
-                tvAllPage.setText("1");
-                reloadReportData();
-                mClient.notify(mac, BleDeviceData.readDataServiceId, BleDeviceData.readDataNotifyUUID, bleNotifyResponse);
-            } else {
-                new SweetAlertDialog(ReadHisDataActivity.this, SweetAlertDialog.ERROR_TYPE)
-                        .setTitleText(getResources().getString(R.string.warning))
-                        .setContentText(getResources().getString(R.string.connect_fail))
-                        .show();
-                reconnectBtn.setImageResource(R.mipmap.ic_disconnect);
-                waitingDlg.hide();
-                if (waitingCancelDlg != null) {
-                    waitingCancelDlg.hide();
-                    waitingCancelDlg.dismiss();
-                    waitingCancelDlg = null;
-                }
-            }
-        }
-    };
-
+    private void doAfterConnectSucc() {
+        allDatas.clear();
+        tempDatas.clear();
+        curPage = 1;
+        allPageCount = 1;
+        tvCurPage.setText(String.valueOf(curPage));
+        tvAllPage.setText("1");
+        reloadReportData();
+    }
 
 
     private void sendCancelLightWarning(){
-        byte[] cmd = new byte[]{0x60,0x07,(byte)0xE1,0x01,0x01};
-        writeContent(cmd);
+        byte[] headCmd = new byte[]{0x60,0x07,(byte)0xE1};
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try {
+            outputStream.write(headCmd);
+            outputStream.write(7);
+            if(curPwd != null){
+                outputStream.write(curPwd.getBytes());
+            }
+            outputStream.write(0x01);
+            byte[] cmd = outputStream.toByteArray();
+            writeContent(cmd);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 
     private void readLightStatus(){
-        byte[] cmd = new byte[]{0x60,0x07,(byte)0xE1,0x00};
-        writeContent(cmd);
+        byte[] headCmd = new byte[]{0x60,0x07,(byte)0xE1};
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try {
+            outputStream.write(headCmd);
+            outputStream.write(6);
+            if(curPwd != null){
+                outputStream.write(curPwd.getBytes());
+            }
+            byte[] cmd = outputStream.toByteArray();
+            writeContent(cmd);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private TopflytechByteBuf bleByteBuf = new TopflytechByteBuf();
     private boolean isLightWarning = false;
     private void parseResp(byte[] respContent) {
         if(respContent[0] == 0x60 &&  respContent[1] == 0x07 && respContent[2] == (byte)0xE1 ){
-//            if(respContent[4] == 0x01){
-//                isDeviceReady = false;
-//                sendGetData(true);
-//                if (waitingCancelDlg != null) {
-//                    waitingCancelDlg.show();
-//                }
-//            }else {
-//                if (waitingCancelDlg != null) {
-//                    waitingCancelDlg.hide();
-//                }
-//                Toast.makeText(ReadHisDataActivity.this, R.string.func_open_error, Toast.LENGTH_SHORT).show();
-//            }
             if(respContent.length >= 5){
                 if(respContent[4] == 0x01){
                     isLightWarning = false;
@@ -936,6 +1035,9 @@ public class ReadHisDataActivity extends AppCompatActivity {
                 }else if(respContent[4] == 0x02){
                     isLightWarning = true;
                     btnLightStatus.setImageResource(R.mipmap.light_red);
+                }else if((respContent[4] & 0xff) == 0xff ){
+                    Toast.makeText(ReadHisDataActivity.this, R.string.pwd_error, Toast.LENGTH_LONG).show();
+                    showPwdDlg(false);
                 }
             }
             return;
@@ -966,7 +1068,7 @@ public class ReadHisDataActivity extends AppCompatActivity {
                     byte status = data[0];
                     //deal status
                     if (status == 0x01) {
-                        isDeviceReady = false;
+                        TftBleConnectManager.getInstance().setDeviceReady(false);
                         sendGetData(true,false);
                     } else if (status == 0x00) {
                         if (waitingCancelDlg != null) {
@@ -981,13 +1083,14 @@ public class ReadHisDataActivity extends AppCompatActivity {
                         // init report
                         reloadReportData();
                     } else if (status == 0x02) {
-                        isDeviceReady = true;
+                        TftBleConnectManager.getInstance().setDeviceReady(true);
                         if (waitingCancelDlg != null) {
                             waitingCancelDlg.hide();
                         }
-                        Toast.makeText(ReadHisDataActivity.this, R.string.error_retry, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ReadHisDataActivity.this, R.string.pwd_error, Toast.LENGTH_LONG).show();
+                        showPwdDlg(false);
                     } else if ((status & 0xff) == 0xff) {
-                        isDeviceReady = true;
+                        TftBleConnectManager.getInstance().setDeviceReady(true);
                         if (waitingCancelDlg != null) {
                             waitingCancelDlg.hide();
                         }
@@ -1010,7 +1113,7 @@ public class ReadHisDataActivity extends AppCompatActivity {
                     isReadData = true;
                     showReadDataWaiting(isReadData);
                     lastReceiveDataDate = new Date();
-                    isDeviceReady = true;
+                    TftBleConnectManager.getInstance().setDeviceReady(true);
 //                    showWaitingCancelDlg(getString(R.string.reading_data));
                     //check msg receive all
                     try {
@@ -1210,81 +1313,11 @@ public class ReadHisDataActivity extends AppCompatActivity {
         }
     }
 
-    BleNotifyResponse bleNotifyResponse = new BleNotifyResponse() {
-        @Override
-        public void onNotify(UUID service, UUID character, byte[] value) {
-            reconnectBtn.setImageResource(R.mipmap.ic_refresh);
-//            synchronized (lock){
-//                isCanSendMsg = true;
-//            }
-            Log.e("writeContent", "resp:" + MyByteUtils.bytes2HexString(value, 0));
-
-            try {
-                parseResp(value);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        @Override
-        public void onResponse(int code) {
-            if (code == REQUEST_SUCCESS) {
-                connectSucc = true;
-                isCanSendMsg = true;
-                waitingDlg.hide();
-                if (!isDeviceReady) {
-                    showWaitingCancelDlg(getString(R.string.waitingDeviceReady));
-                    readLightStatus();
-                    sendGetData(true,false);
-                }
-
-            } else {
-                new SweetAlertDialog(ReadHisDataActivity.this, SweetAlertDialog.ERROR_TYPE)
-                        .setTitleText(getResources().getString(R.string.warning))
-                        .setContentText(getResources().getString(R.string.connect_fail))
-                        .show();
-                reconnectBtn.setImageResource(R.mipmap.ic_disconnect);
-                waitingDlg.hide();
-                if (waitingCancelDlg != null) {
-                    waitingCancelDlg.hide();
-                    waitingCancelDlg.dismiss();
-                    waitingCancelDlg = null;
-                }
-                mClient.disconnect(mac);
-
-            }
-        }
-    };
-
 
     private void writeContent(final byte[] content) {
-        if (!connectSucc) {
-//            ReadHisDataActivity.this.runOnUiThread(new Runnable() {
-//                public void run() {
-//                    Toast.makeText(ReadHisDataActivity.this,R.string.disconnect_please_connect_manually,Toast.LENGTH_SHORT).show();
-//                }
-//            });
-            return;
-        }
-        if (content != null && content.length > 0) {
-            Log.e("writeContent", MyByteUtils.bytes2HexString(content, 0));
+        TftBleConnectManager.getInstance().writeContent(content);
 
-            mClient.write(mac, BleDeviceData.readDataServiceId, BleDeviceData.readDataWriteUUID, content, new BleWriteResponse() {
-                @Override
-                public void onResponse(int code) {
-                    if (code == REQUEST_SUCCESS) {
-
-                    }else{
-                        synchronized (lock){
-                            isCanSendMsg = true;
-                        }
-                    }
-                }
-            });
-        }
     }
-
-
 
 
     private boolean isDeviceLockErrorState(int code){
@@ -1320,7 +1353,12 @@ public class ReadHisDataActivity extends AppCompatActivity {
                 lockType == 0x44 ||
                 lockType == 0x52 ||
                 lockType == 0x53 ||
-                lockType == 0x54
+                lockType == 0x54 ||
+                lockType == 0x17 ||
+                lockType == 0x27 ||
+                lockType == 0x37 ||
+                lockType == 0x47 ||
+                lockType == 0x57
         ) {
             isLock = true;
         }
@@ -1358,6 +1396,8 @@ public class ReadHisDataActivity extends AppCompatActivity {
             return getString(R.string.lock_status_04);
         }else if (lockType == 0x09){
             return getString(R.string.lock_status_09);
+        }else if (lockType == 0x0a){
+            return getString(R.string.lock_status_0a);
         }else if (lockType == 0x05){
             return getString(R.string.lock_status_05);
         }else if (lockType == 0x06){
@@ -1378,6 +1418,8 @@ public class ReadHisDataActivity extends AppCompatActivity {
             return getString(R.string.lock_status_15);
         }else if (lockType == 0x16){
             return getString(R.string.lock_status_16);
+        }else if (lockType == 0x17){
+            return getString(R.string.lock_status_17);
         }
         else if (lockType == 0x21){
             return getString(R.string.lock_status_21);
@@ -1391,6 +1433,8 @@ public class ReadHisDataActivity extends AppCompatActivity {
             return getString(R.string.lock_status_25);
         }else if (lockType == 0x26){
             return getString(R.string.lock_status_26);
+        }else if (lockType == 0x27){
+            return getString(R.string.lock_status_27);
         }
         else if (lockType == 0x31){
             return getString(R.string.lock_status_31);
@@ -1404,6 +1448,8 @@ public class ReadHisDataActivity extends AppCompatActivity {
             return getString(R.string.lock_status_35);
         }else if (lockType == 0x36){
             return getString(R.string.lock_status_36);
+        }else if (lockType == 0x37){
+            return getString(R.string.lock_status_37);
         }
         else if (lockType == 0x41){
             return getString(R.string.lock_status_41);
@@ -1417,6 +1463,8 @@ public class ReadHisDataActivity extends AppCompatActivity {
             return getString(R.string.lock_status_45);
         }else if (lockType == 0x46){
             return getString(R.string.lock_status_46);
+        }else if (lockType == 0x47){
+            return getString(R.string.lock_status_47);
         }
         else if (lockType == 0x51){
             return getString(R.string.lock_status_51);
@@ -1430,6 +1478,8 @@ public class ReadHisDataActivity extends AppCompatActivity {
             return getString(R.string.lock_status_55);
         }else if (lockType == 0x56){
             return getString(R.string.lock_status_56);
+        }else if (lockType == 0x57){
+            return getString(R.string.lock_status_57);
         }else if (lockType == 0xff){
             return getString(R.string.pwd_error);
         }

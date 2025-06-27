@@ -199,6 +199,67 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@color/bg_color_white"
+                android:text="@string/battery"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_weight="3"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:layout_weight="2"
+                android:layout_marginBottom="1dp"
+                android:layout_marginRight="1dp"
+                android:id="@+id/tx_battery"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal"
+            android:id="@+id/ll_device_id"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:text="ID:"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_weight="3"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:layout_weight="2"
+                android:layout_marginBottom="1dp"
+                android:layout_marginRight="1dp"
+                android:id="@+id/tx_device_id"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
                 android:text="@string/rssi"
                 android:layout_marginRight="1dp"
                 android:layout_marginBottom="1dp"

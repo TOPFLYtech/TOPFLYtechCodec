@@ -17,11 +17,13 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission
         android:name="android.permission.READ_LOGS"
         tools:ignore="ProtectedPermissions" />
 
+    <uses-feature
+        android:name="android.hardware.bluetooth"
+        android:required="true" />
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
     <uses-feature
@@ -38,8 +40,35 @@
         android:theme="@style/MyAppTheme"
         android:usesCleartextTraffic="true"
         tools:replace="android:icon, android:theme">
+        <activity
+            android:name=".deviceConfigSetting.AlarmOpenSetActivity"
+            android:exported="false" />
+        <activity
+            android:name=".deviceConfigSetting.TempAlarmSetActivity"
+            android:exported="false" />
+        <activity
+            android:name=".SuperPwdResetActivity"
+            android:exported="false" />
+        <activity
+            android:name=".deviceConfigSetting.IpEditActivity"
+            android:exported="false" />
+        <activity
+            android:name=".deviceConfigSetting.LockPwdChangeActivity"
+            android:exported="false" />
+        <activity
+            android:name=".deviceConfigSetting.AccessPwdChangeActivity"
+            android:exported="false" />
+        <activity
+            android:name=".deviceConfigSetting.TimerActivity"
+            android:exported="false" />
+        <activity
+            android:name=".deviceConfigSetting.RFIDActivity"
+            android:exported="false" />
+        <activity
+            android:name=".deviceConfigSetting.SubLockIdActivity"
+            android:exported="false" />
         <activity android:name=".EditActivity" />
-
+        <activity android:name=".WeChatQRCodeActivity" />
         <meta-data
             android:name="BUGLY_APPID"
             android:value="20e5685556" />
@@ -60,11 +89,11 @@
                 android:resource="@xml/provider_paths" />
         </provider>
 
-        <activity
-            android:name=".DateSelectActivity" />
-        <activity
-            android:name=".ReadHisDataActivity"  />
+        <activity android:name=".DateSelectActivity" />
+        <activity android:name=".ReadHisDataActivity" />
+        <activity android:name=".ReadSubLockHisDataActivity" />
         <activity android:name=".ScanActivity" />
+        <activity android:name=".UnlockActivity" />
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize"
