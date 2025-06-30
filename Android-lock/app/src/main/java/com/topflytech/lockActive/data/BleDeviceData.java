@@ -30,6 +30,10 @@ public class BleDeviceData {
 
 
 
+
+
+
+
     public static UUID upgradeDataServiceId = UUID.fromString("27770001-999c-4d6a-9fc4-c7272be10900");
     public static UUID upgradePackageDataWriteUUID = UUID.fromString("27770003-999c-4d6a-9fc4-c7272be10900");
     public static UUID upgradeDataWriteNotifyUUID = UUID.fromString("27770002-999c-4d6a-9fc4-c7272be10900");
