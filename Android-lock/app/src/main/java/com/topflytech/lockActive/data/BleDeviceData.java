@@ -111,6 +111,8 @@ public class BleDeviceData {
     private boolean isGpsJamming = false;
     private Float solarVoltage;
 
+
+    
     private int batteryPercent;
     private Float temp;
     private int lockType;
