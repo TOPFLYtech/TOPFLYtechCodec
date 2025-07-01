@@ -58,7 +58,7 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
         print("edit Connected")
         peripheral.delegate = self
         self.centralManager.stopScan()
-        peripheral.discoverServices([Utils.readDataServiceId,Utils.readDataNotifyUUID,Utils.readDataWriteUUID])
+        peripheral.discoverServices([BleDeviceData.readDataServiceId,BleDeviceData.readDataNotifyUUID,BleDeviceData.readDataWriteUUID])
         
     }
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
@@ -78,17 +78,22 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
     func peripheral(_ peripheral: CBPeripheral, didDiscoverIncludedServicesFor service: CBService, error: Error?) {
         print("didDiscoverIncludedServicesFor")
         //        print(peripheral.services)
+        
         for service: CBService in peripheral.services! {
             //            print("didDiscoverIncludedServicesFor 外设中的服务有：\(service)")
-            if service.uuid == Utils.readDataServiceId {
-                let myServie = service
-                print("find include service id")
-                peripheral.discoverCharacteristics(nil, for: myServie)
+            if service.uuid == BleDeviceData.readDataServiceId {
+                if !findService{
+                    findService = true
+                    let myServie = service
+                    print("find include service id")
+                    peripheral.discoverCharacteristics(nil, for: myServie)
+                  
+                }
                 break;
             }
         }
     }
-    
+    private var findService = false
     var tryFindService = 100
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         print("edit didDiscoverServices")
@@ -100,17 +105,21 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
             print("retry to find service \(tryFindService)")
             
             DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(1)) {
-                peripheral.discoverServices([Utils.readDataServiceId,Utils.readDataNotifyUUID,Utils.readDataWriteUUID])
+                peripheral.discoverServices([BleDeviceData.readDataServiceId,BleDeviceData.readDataNotifyUUID,BleDeviceData.readDataWriteUUID])
             }
             
         }
         for service: CBService in peripheral.services! {
             print("didDiscoverServices 外设中的服务有：\(service)")
-            if service.uuid == Utils.readDataServiceId {
-                let myServie = service
-                print("find service id")
-                peripheral.discoverCharacteristics(nil, for: myServie)
-                peripheral.discoverIncludedServices([Utils.readDataServiceId,Utils.readDataNotifyUUID,Utils.readDataWriteUUID],for:myServie)
+            if service.uuid == BleDeviceData.readDataServiceId {
+                if !findService{
+                    findService = true
+                    let myServie = service
+                    print("find service id")
+                    peripheral.discoverCharacteristics(nil, for: myServie)
+                    peripheral.discoverIncludedServices([BleDeviceData.readDataServiceId,BleDeviceData.readDataNotifyUUID,BleDeviceData.readDataWriteUUID],for:myServie)
+                    
+                }
                 break;
             }
         }
@@ -121,12 +130,12 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
         print("didDiscoverCharacteristicsFor")
         //        print(service.characteristics)
         for c: CBCharacteristic in service.characteristics!{
-            if c.uuid == Utils.readDataNotifyUUID{
+            if c.uuid == BleDeviceData.readDataNotifyUUID{
                 print("find notify c")
                 self.notifyCharacteristic = c
                 peripheral.setNotifyValue(true, for: self.notifyCharacteristic!)
             }
-            if c.uuid == Utils.readDataWriteUUID{
+            if c.uuid == BleDeviceData.readDataWriteUUID{
                 print("find write c")
                 self.writeCharacteristic = c
             }
@@ -177,6 +186,9 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
                         originalImage?.draw(in: CGRect(origin: .zero, size: imageSize))
                     }
                     lightAlarmBtn.setImage(image, for: .normal)
+                }else if((respContent[4] & 0xff == 0xff)){
+                    Toast.hudBuilder.title(NSLocalizedString("pwd_error", comment:"Unlock password incorrect!")).show()
+                    self.showPwdWin(isNextShowDateDlg: false)
                 }
             }
             return
@@ -206,6 +218,7 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
                     //deal status
                     if status == 0x01 {
                         isDeviceReady = false
+                        print("deal status 0x01")
                         sendGetData(true, false)
                     } else if status == 0x00 {
                         if waitingView != nil {
@@ -229,7 +242,8 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
                         if waitingCancelDlg != nil {
                             waitingCancelDlg.dismiss()
                         }
-                        Toast.hudBuilder.title(NSLocalizedString("error_retry", comment: "Error,please try again.")).show()
+                        Toast.hudBuilder.title(NSLocalizedString("pwd_error", comment:"Unlock password incorrect!")).show()
+                        self.showPwdWin(isNextShowDateDlg: false)
                     } else if status == 0xff {
                         isDeviceReady = true
                         if waitingView != nil {
@@ -244,6 +258,9 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
                     if waitingView != nil {
                         waitingView.dismiss()
                     }
+                    if waitingCancelDlg != nil {
+                        waitingCancelDlg.dismiss()
+                    }
                     isReadData = true
                     showReadDataWaiting(isReadData)
                     lastReceiveDataDate = Date()
@@ -256,6 +273,8 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
             }
         }
     }
+    
+   
     
     func makeSomeData(){
         let itemStr = "272704004924f60864200050609875471723032812343260e51a41fce2e342e272b441000000058108008000881eff3901000000cc0640001e000004b02d01f41e20d48000001200f5"
@@ -316,11 +335,13 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
     }
     var tempReceiveDataCount:Int = 0
     func dealReceiveData(_ content: [UInt8]) {
+//        print("dealReceiveData")
         let items = Utils.getLocationMessage(inBytes: content, decoderBuf: byteBuf)
         for item in items {
             item.longitudeStr = String(item.longitude)
             item.latitudeStr = String(item.latitude)
             item.dateStr = tableDateFormat.string(from: item.date!)
+//            print(item.dateStr)
             item.lockTypeStr = parseLockType(lockType: UInt8(item.lockType ?? 0))
             item.speedStr = String(format: "%.2f", item.speed)
             item.mileageStr = String(item.mileage)
@@ -355,7 +376,12 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
         let animation = UIView(frame: CGRect(x: 0, y: 0, width: 80, height: 80))
         let anim = AEBeginLineAnimation.initShow(in: animation.bounds, lineWidth: 4, lineColor: UIColor.blue)
         animation.addSubview(anim)
-        
+        let action_one = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
+                           self.waitingCancelDlg.dismiss()
+                           self.navigationController?.popViewController(animated: true)
+                           
+                       }
+                self.waitingCancelDlg.addAction(action: action_one)
         self.waitingCancelDlg.textField.isHidden = true
         self.waitingCancelDlg.set(animation: animation, width: 80, height: 80)
         self.waitingCancelDlg.show()
@@ -368,13 +394,16 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
     func getReadHisCmd(startDate: Int64, endDate: Int64, isGetNext: Bool) -> [UInt8] {
         var startDateByte = Utils.unSignedInt2Bytes(startDate)
         var endDateDateByte = Utils.unSignedInt2Bytes(endDate)
-        var len: UInt8 = 8
+        var len: UInt8 = 14
         if isGetNext {
             startDateByte = [0xff, 0xff, 0xff, 0xff]
         }
         var outputStream = Data()
         outputStream.append(Data(getDataHead))
         outputStream.append(len)
+        if(curPwd != nil){
+            outputStream.append(Data([UInt8](curPwd.utf8)))
+        }
         outputStream.append(Data(startDateByte))
         outputStream.append(Data(endDateDateByte))
         return [UInt8](outputStream)
@@ -423,8 +452,9 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
                 self.maxPage = 1
                 self.pageNumberLabel.text = "1"
                 self.maxPageNumberLabel.text = "1"
-                self.waitingView.title = NSLocalizedString("readBG9xStatus", comment: "Waiting device Ready")
+                self.waitingCancelDlg.title = NSLocalizedString("readBG9xStatus", comment: "Waiting device Ready")
                 readLightStatus()
+                print("notify succ")
                 sendGetData(true,false)
             }
             
@@ -438,6 +468,7 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
         print("连接失败")
         self.updateConnectStatusBtn(isConnect:false)
         self.connected = false
+        findService = false 
         self.isDeviceReady = false
         self.isCanSendMsg = false
     }
@@ -485,6 +516,7 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
     private var isUpgrade = false
     private var foundDevice = false
     private var connectControl = ""
+    private var curPwd:String!
     var lastCheckStatusDate:Date = Date()
     let getStatusTimeout = 4
     var sendMsgQueue:MsgQueue = MsgQueue()
@@ -506,7 +538,42 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
         self.onView = false
         self.needConnect = false
     }
-    
+    private var isShowPwdDlg = false
+    func showPwdWin(isNextShowDateDlg:Bool){
+        if self.isShowPwdDlg{
+            return
+        }
+        self.isShowPwdDlg = true
+        if self.pwdAlert != nil && !self.pwdAlert.isDismiss{
+            self.pwdAlert.show()
+            return
+        }
+        self.pwdAlert = AEUIAlertView(style: .password, title: NSLocalizedString("input_ble_open_lock_pwd", comment:"Please enter your password"), message: nil)
+        self.pwdAlert.textField.placeholder = NSLocalizedString("input_ble_open_lock_pwd", comment:"Please enter your password")
+      
+        let action_one = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
+            self.pwdAlert.dismiss()
+            self.navigationController?.popViewController(animated: true)
+        }
+        let action_two = AEAlertAction(title: NSLocalizedString("confirm", comment: "Confirm"), style: .defaulted) { (action) in
+            let pwd = String(self.pwdAlert.textField.text ?? "")
+            if pwd.count == 6{
+                self.curPwd = pwd
+                self.isShowPwdDlg = false
+                self.pwdAlert.dismiss()
+                if(isNextShowDateDlg){
+                    self.chooseDate()
+                }else{
+                    self.afterSelectDateDoInView()
+               }
+            }else{
+                Toast.hudBuilder.title(NSLocalizedString("pwd_format_error", comment: "Value is incorrect!The length has to be 6 digits")).show()
+            }
+        }
+        self.pwdAlert.addAction(action: action_one)
+        self.pwdAlert.addAction(action: action_two)
+        self.pwdAlert.show()
+    }
     override func viewDidLoad() {
         super.viewDidLoad()
         tableDateFormat.dateFormat = "yyyy-MM-dd HH:mm:ss"
@@ -519,7 +586,7 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
         self.initUI()
         self.initNavBar()
         initSendMsgThread()
-        self.chooseDate()
+        self.showPwdWin(isNextShowDateDlg: true)
        
         print("view did load")
     }
@@ -535,7 +602,7 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
         self.needConnect = true
         let mac = self.cbPeripheral.identifier.uuidString
         self.centralManager = CBCentralManager(delegate: self, queue: nil)
-        self.showWaitingDlg(title: NSLocalizedString("connecting", comment: "Connecting"))
+        self.showWaitingCancelWin(title: NSLocalizedString("connecting", comment: "Connecting"))
     }
     var refreshConnectBtn:UIButton!
     var lightAlarmBtn:UIButton!
@@ -855,6 +922,9 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
         
     }
     @objc private func lightAlarmCancelClick(){
+        if !self.isLightWarning{
+            return
+        }
         let lightAlarmWaringView = AEAlertView(style: .defaulted)
         lightAlarmWaringView.message = NSLocalizedString("cancel_light_warning", comment: "TAttempt to cancel the light alarm?")
         let upgradeCancel = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
@@ -883,11 +953,18 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
         self.onView = true
         self.needConnect = true
         initSendMsgThread()
+        self.afterSelectDateDoInView()
+    }
+    
+    func afterSelectDateDoInView(){
         if(isFirstGetData){
             isFirstGetData = false
             firstFromSelectDateViewNeedDo()
         }else{
-            self.showWaitingCancelWin(title: NSLocalizedString("reading_data", comment: "Reading data"))
+            if !connected {
+                return;
+            }
+
             allDatas.removeAll()
             tempDatas.removeAll()
             currentPage = 1
@@ -895,6 +972,13 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
             maxPageNumberLabel.text = String(maxPage)
             pageNumberLabel.text = "1"
             reloadReportData();
+            if(isDeviceReady){
+                self.showWaitingCancelWin(title: NSLocalizedString("readBG9xStatus", comment: "Waiting device Ready"))
+            }else{
+                self.showWaitingCancelWin(title: NSLocalizedString("reading_data", comment: "Reading data"))
+                
+            }
+            print("afterSelectDateDoInView")
             sendGetData(true,false);
         }
     }
@@ -1010,15 +1094,17 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
     @objc private func refreshClick() {
         print ("refresh click")
         self.initStart = false
-        if self.connected == true{
+        if self.connected == true && self.selfPeripheral != nil{
             self.centralManager.cancelPeripheralConnection(self.selfPeripheral)
         }
         self.connected = false
         self.isCanSendMsg = false
         self.isDeviceReady = false
         self.updateConnectStatusBtn(isConnect:false)
-        self.centralManager.connect(self.selfPeripheral)
-        self.showWaitingDlg(title: NSLocalizedString("connecting", comment: "Connecting"))
+        if self.selfPeripheral != nil{
+            self.centralManager.connect(self.selfPeripheral)
+        }
+        self.showWaitingCancelWin(title: NSLocalizedString("connecting", comment: "Connecting"))
     }
     func asciiStringToBytes(str: String) -> [UInt8]{
         var bytes: [UInt8] = []
@@ -1031,6 +1117,7 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
  
     func showWaitingDlg(title:String){
         if self.waitingView != nil && !self.waitingView.isDismiss{
+            self.waitingView.title = title
             self.waitingView.show()
             DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(70)) {
                 if !self.waitingView.isDismiss{
@@ -1078,6 +1165,7 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
             if sendMsgQueue.count != 0{
                 var needSendBytes = sendMsgQueue.pop()
                 if needSendBytes != nil {
+                    print("test write")
                     writeContent(content: needSendBytes!)
                 }
                 Thread.sleep(forTimeInterval: 1)
@@ -1092,13 +1180,26 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
     }
     
     private func sendCancelLightWarning() {
-        let cmd: [UInt8] = [0x60, 0x07, 0xE1, 0x01, 0x01]
-        writeContent(content: cmd)
+        let head: [UInt8] = [0x60, 0x07, 0xE1]
+        var result = [UInt8]()
+        result.append(contentsOf: head)
+        result.append(0x07)
+        if(curPwd != nil){
+            result.append(contentsOf: [UInt8](curPwd.utf8))
+        }
+        result.append(0x01)
+        writeContent(content: result)
     }
     
     private func readLightStatus() {
-        let cmd: [UInt8] = [0x60, 0x07, 0xE1, 0x00]
-        writeContent(content: cmd)
+        let head: [UInt8] = [0x60, 0x07, 0xE1]
+        var result = [UInt8]()
+        result.append(contentsOf: head)
+        result.append(0x06)
+        if(curPwd != nil){
+            result.append(contentsOf: [UInt8](curPwd.utf8))
+        }
+        writeContent(content: result)
     }
     
      
@@ -1163,7 +1264,12 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
             lockType == 0x44 ||
             lockType == 0x52 ||
             lockType == 0x53 ||
-            lockType == 0x54
+            lockType == 0x54 ||
+            lockType == 0x17 ||
+            lockType == 0x27 ||
+            lockType == 0x37 ||
+            lockType == 0x47 ||
+            lockType == 0x57
         {
             isLock = true
         }
@@ -1196,6 +1302,8 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
             return NSLocalizedString("lock_status_04", comment: "lock_status_04")
         case 0x09:
             return NSLocalizedString("lock_status_09", comment: "lock_status_09")
+        case 0x0a:
+            return NSLocalizedString("lock_status_0a", comment: "lock_status_0a")
         case 0x05:
             return NSLocalizedString("lock_status_05", comment: "lock_status_05")
         case 0x06:
@@ -1216,6 +1324,8 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
             return NSLocalizedString("lock_status_15", comment: "lock_status_15")
         case 0x16:
             return NSLocalizedString("lock_status_16", comment: "lock_status_16")
+        case 0x17:
+            return NSLocalizedString("lock_status_17", comment: "lock_status_17")
         case 0x21:
             return NSLocalizedString("lock_status_21", comment: "lock_status_21")
         case 0x22:
@@ -1228,6 +1338,8 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
             return NSLocalizedString("lock_status_25", comment: "lock_status_25")
         case 0x26:
             return NSLocalizedString("lock_status_26", comment: "lock_status_26")
+        case 0x27:
+            return NSLocalizedString("lock_status_27", comment: "lock_status_27")
         case 0x31:
             return NSLocalizedString("lock_status_31", comment: "lock_status_31")
         case 0x32:
@@ -1240,6 +1352,8 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
             return NSLocalizedString("lock_status_35", comment: "lock_status_35")
         case 0x36:
             return NSLocalizedString("lock_status_36", comment: "lock_status_36")
+        case 0x37:
+            return NSLocalizedString("lock_status_37", comment: "lock_status_37")
         case 0x41:
             return NSLocalizedString("lock_status_41", comment: "lock_status_41")
         case 0x42:
@@ -1252,6 +1366,22 @@ class ReadHisDataViewController:UIViewController,CBCentralManagerDelegate,CBPeri
             return NSLocalizedString("lock_status_45", comment: "lock_status_45")
         case 0x46:
             return NSLocalizedString("lock_status_46", comment: "lock_status_46")
+        case 0x47:
+            return NSLocalizedString("lock_status_47", comment: "lock_status_47")
+        case 0x51:
+            return NSLocalizedString("lock_status_51", comment: "lock_status_51")
+        case 0x52:
+            return NSLocalizedString("lock_status_52", comment: "lock_status_52")
+        case 0x53:
+            return NSLocalizedString("lock_status_53", comment: "lock_status_53")
+        case 0x54:
+            return NSLocalizedString("lock_status_54", comment: "lock_status_54")
+        case 0x55:
+            return NSLocalizedString("lock_status_55", comment: "lock_status_55")
+        case 0x56:
+            return NSLocalizedString("lock_status_56", comment: "lock_status_56")
+        case 0x57:
+            return NSLocalizedString("lock_status_57", comment: "lock_status_57")
         case 0xff:
             return NSLocalizedString("pwd_error", comment: "pwd_error")
         default:

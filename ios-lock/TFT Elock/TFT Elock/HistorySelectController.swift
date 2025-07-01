@@ -10,7 +10,6 @@ import Foundation
 import UIKit
 import DateTimePicker
 import ActionSheetPicker_3_0
-import QMUIKit
 import CLXToast
 class HistorySelectController: UIViewController, UIPickerViewDataSource, UIPickerViewDelegate {
     func numberOfComponents(in pickerView: UIPickerView) -> Int {
@@ -37,7 +36,7 @@ class HistorySelectController: UIViewController, UIPickerViewDataSource, UIPicke
     private var dateRangeList:[String]!
     private var btnDateRangePicker:UIButton!
     private var downTriangleStr:String!
-    private var submitBtn:QMUIGhostButton!
+    private var submitBtn:UIButton!
     public var setDateDelegate:HistorySelectDelegate?
  
     override func viewDidLoad() {
@@ -107,9 +106,13 @@ class HistorySelectController: UIViewController, UIPickerViewDataSource, UIPicke
         self.btnSelectDateEnd.addTarget(self, action: #selector(self.btnSelectedDateEndClick(sender:)), for:.touchUpInside)
         view.addSubview(self.btnSelectDateEnd)
         
-        self.submitBtn = QMUIGhostButton()
+        self.submitBtn = UIButton()
         self.submitBtn.setTitle(NSLocalizedString("submit", comment: "Submit"), for: .normal)
-        self.submitBtn.ghostColor = UIColor.colorPrimary 
+//        self.submitBtn.ghostColor = UIColor.colorPrimary
+        self.submitBtn.setTitleColor(UIColor.nordicBlue, for: .normal)
+        self.submitBtn.layer.cornerRadius = 5;
+        self.submitBtn.layer.borderWidth = 1.0;
+        self.submitBtn.layer.borderColor = UIColor.nordicBlue.cgColor
         self.submitBtn.frame = CGRect(x: Int((KSize.width - 200) / 2), y: Int(view.frame.origin.y) + Int(view.frame.height) + 10, width: 200, height: 30)
         self.submitBtn.addTarget(self, action: #selector(submit), for:.touchUpInside)
         self.view.addSubview(self.submitBtn)

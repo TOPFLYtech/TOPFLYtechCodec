@@ -9,25 +9,270 @@
 import Foundation
 import CoreBluetooth
 class Utils{
-    static let serviceId = CBUUID(string:"27760001-999C-4D6A-9FC4-C7272BE10900")
-    static let writeUUID = CBUUID(string:"27760003-999C-4D6A-9FC4-C7272BE10900")
-    static let notifyUUID = CBUUID(string:"27760003-999C-4D6A-9FC4-C7272BE10900")
-    
-    static let readDataServiceId = CBUUID(string:"27760001-999d-4d6a-9fc4-c7272be10900")
-    static let readDataWriteUUID = CBUUID(string:"27760002-999d-4d6a-9fc4-c7272be10900")
-    static let readDataNotifyUUID = CBUUID(string:"27760003-999d-4d6a-9fc4-c7272be10900")
     
     
-    static let fontSize = 13
+    static var isDebug = false
+    static let fontSize = 11
+    static let mainViewFontsize = 11
     
     
     static func hexString2Bytes(hexStr:String)->[UInt8]{
         let hexa = Array(hexStr)
         return stride(from: 0, to: hexStr.count, by: 2).flatMap { UInt8(String(hexa[$0..<$0.advanced(by: 2)]), radix: 16) }
     }
+    static func formatHex(intValue:Int,len:Int) ->[UInt8]{
+        var result = [UInt8]()
+        var remainValue = intValue
+        var i = len
+        //        if intValue < 0{
+        //            remainValue = intValue + 128
+        //        }
+        while i > 0{
+            let divValue = 1 << ((i - 1) * 8)
+            if divValue == 1 && i != 1 {
+                result.append(0)
+            } else {
+                let value = UInt8(remainValue / divValue)
+                remainValue = remainValue % divValue
+                result.append(value)
+            }
+            i-=1
+        }
+        return result
+    }
     
+    static func getReadCmdContent(cmdCode:Int,content:[UInt8]?) ->[UInt8]{
+        var cmdByte = short2Bytes(number: cmdCode)
+        var result = [UInt8]()
+        result.append(0x20)
+        result.append(cmdByte[0])
+        result.append(cmdByte[1])
+        if content != nil && content!.count > 0 {
+            result.append((UInt8)(content!.count))
+            result.append(contentsOf: content!)
+            return result;
+        }
+        return result
+    }
+    static func getCurTemp(sourceTemp:Float) ->Float{
+        if sourceTemp == -999{
+            return sourceTemp
+        }
+        let tempUnit = UserDefaults.standard.integer(forKey: "tempUnit")
+        if tempUnit == 0{
+            return sourceTemp
+        }else{
+            return 32 + sourceTemp * 1.8
+        }
+    }
+    static func getSourceTemp(sourceTemp:Float) ->Float{
+        if sourceTemp == -999{
+            return sourceTemp
+        }
+        let tempUnit = UserDefaults.standard.integer(forKey: "tempUnit")
+        if tempUnit == 0{
+            return sourceTemp
+        }else{
+            return (sourceTemp - 32) / 1.8
+        }
+    }
+    static func getCurTempUnit() -> String{
+        let tempUnit = UserDefaults.standard.integer(forKey: "tempUnit")
+        if tempUnit == 0{
+            return "˚C"
+        }else{
+            return "˚F"
+        }
+    }
     
+    static func getNextTempUnit() -> String{
+        let tempUnit = UserDefaults.standard.integer(forKey: "tempUnit")
+        if tempUnit == 0{
+            return "˚F"
+        }else{
+            return "˚C"
+        }
+    }
+    static func switchCurTempUnit(){
+        let tempUnit = UserDefaults.standard.integer(forKey: "tempUnit")
+        if tempUnit == 0{
+            UserDefaults.standard.set(1, forKey: "tempUnit")
+        }else{
+            UserDefaults.standard.set(0, forKey: "tempUnit")
+        }
+    }
+    static func parseSGX120HardwareVersion(hardware:String) ->String{
+        var hardwareF:Double = 0
+        if hardware != nil{
+            hardwareF = Double(hardware) as! Double
+        }
+        if hardwareF >= 10.0 {
+            let result = hardwareF / 10.0
+            return String.init(format:"V%.1f",result)
+        }else{
+            let result = (hardwareF - 1 + 10)/10
+            return String.init(format:"V%.1f",result)
+        }
+        
+    }
     
+    static func parseSGX120SoftwaeVersion(data:[UInt8],index:Int) ->String{
+        let all = (Int(data[index]) << 8) + Int(data[index + 1])
+        let version1 = data[index] >> 5
+        let version2 = (all & 0x1FFF) >> 7
+        let version3 = all & 0x7f
+        let testByte = data[index+2]
+        var software = ""
+        if testByte != 0{
+            return String(format: "%d.%d.%02d %@",version1,version2,version3, String(data: Data([testByte]), encoding: .utf8)!)
+        }else{
+            return String(format: "%d.%d.%02d",version1,version2,version3)
+        }
+    }
+    
+    static func getWriteCmdContent(cmdCode:Int,content:[UInt8],pwd:String?)->[[UInt8]]{
+        var result = [[UInt8]]()
+        var cmdByte = short2Bytes(number: cmdCode)
+        var count = (content.count / 16) + 1
+        if content.count % 16 == 0{
+            count = (content.count / 16)
+        }
+        if content.count > 0 {
+            var i = 0
+            while i < count{
+                var copyEnd = (i + 1) * 16
+                if copyEnd > content.count {
+                    copyEnd = content.count
+                }
+                var contentItem = arraysCopyOfRange(src: content, from: i*16, to: copyEnd)
+                var cmdHead  = 0x60
+                if i == count - 1 {
+                    cmdHead = 0x60 | i
+                }else{
+                    cmdHead = 0x40 | i
+                }
+                var resultItem = [UInt8]()
+                resultItem.append((UInt8)(cmdHead))
+                resultItem.append(contentsOf: cmdByte)
+                if pwd != nil && pwd!.count > 0 && i == 0{
+                    resultItem.append(contentsOf: pwd!.utf8)
+                }
+                resultItem.append(UInt8(contentItem.count))
+                resultItem.append(contentsOf: contentItem)
+                result.append(resultItem)
+                i+=1
+            }
+        }
+        return result
+    }
+    static func getDomainByte(isIpModeBool:Bool,domain:String) ->[UInt8]{
+        do{
+            if domain.count == 0 {
+                var result = [UInt8]()
+                result.append(0)
+                result.append(0)
+                result.append(0)
+                result.append(0)
+                return result
+            }
+            if isIpModeBool {
+                var result = [UInt8]()
+                result.append(0)
+                result.append(0)
+                result.append(0)
+                result.append(0)
+                var ipSplit = domain.split(separator:".")
+                for i in 0...ipSplit.count - 1{
+                    result[i] = (UInt8)(Int(String(ipSplit[i]))!)
+                }
+                return result
+            }else{
+                let dataArray = [UInt8](domain.utf8)
+                return dataArray
+            }
+        }catch{
+            
+        }
+        
+        return [UInt8]()
+    }
+    static func isIpMode(domain:String)->Bool{
+        if domain == nil || domain.count < 0 {
+            return false
+        }
+        var ipSplit = domain.split(separator:".")
+        if ipSplit.count != 4 {
+            return false
+        }else{
+            for i in 0...ipSplit.count - 1{
+                if isPurnInt(string:String(ipSplit[i])) {
+                    continue
+                }else{
+                    return false
+                }
+            }
+        }
+        return true
+    }
+    
+    static func getAllDataBytes(bleRespDataList:[BleRespData]) ->[UInt8]{
+        var result = [UInt8]()
+        var bleRespDataListItem = bleRespDataList
+        for i in 0...bleRespDataList.count{
+            for j in 0...bleRespDataListItem.count - 1{
+                var temp1 = bleRespDataListItem[i]
+                var temp2 = bleRespDataListItem[j]
+                if temp1.index < temp2.index{
+                    bleRespDataListItem[i] = temp2
+                    bleRespDataListItem[j] = temp1
+                }
+            }
+        }
+        for i in 0...bleRespDataList.count{
+            result.append(contentsOf: bleRespDataListItem[i].data!)
+        }
+        return result
+    }
+    
+    static func parseRespContent(content:[UInt8])->[BleRespData]{
+        var result = [BleRespData]()
+        if content.count < 4 {
+            return result
+        }
+        var index = 0
+        while index < content.count{
+            let head = content[index]
+            let controlCode = bytes2Short(bytes: content, offset: index+1)
+            let len = Int(content[index + 3] & 0x7f)
+            var type = BleRespData.READ_TYPE
+            if (head & 0x40) == 0x40 {
+                type = BleRespData.WRITE_TYPE
+            }
+            let isEnd = (head & 0x20) == 0x20
+            let serialNo = Int(head & 0xf)
+            var bleRespDataItem = BleRespData()
+            bleRespDataItem.controlCode = controlCode
+            bleRespDataItem.type = type
+            bleRespDataItem.isEnd = isEnd
+            bleRespDataItem.index = serialNo
+            if (content[index + 3] & 0x80) == 0x80{
+                bleRespDataItem.type = BleRespData.ERROR_TYPE
+                bleRespDataItem.errorCode = Int(content[index + 3] & 0x7f)
+                index +=  4
+                result.append(bleRespDataItem)
+            }else{
+                if index + 4 + len <= content.count{
+                    var data = arraysCopyOfRange(src: content, from: index+4, to: index+4+len)
+                    index += len + 4
+                    bleRespDataItem.data = data
+                    result.append(bleRespDataItem)
+                }else{
+                    break
+                }
+            }
+        }
+        return result
+    }
     
     static func isPurnInt(string: String) -> Bool {
         let scan: Scanner = Scanner(string: string)
@@ -35,23 +280,45 @@ class Utils{
         return scan.scanInt(&val) && scan.isAtEnd
     }
     
-    
+    static func convertSignedIntToBigEndian(_ number: Int) -> [UInt8] {
+        var bytes = [UInt8](repeating: 0, count: 2)
+        bytes[0] = UInt8((number >> 8) & 0xFF)
+        bytes[1] = UInt8(number & 0xFF)
+        return bytes
+    }
+
+    static func convertBigEndianToSignedInt(_ bytes: [UInt8], offset: Int) throws -> Int {
+        guard offset + 2 <= bytes.count else {
+            return 0
+        }
+
+        let high = (Int(bytes[offset]) & 0xFF) << 8
+        let low = Int(bytes[offset + 1]) & 0xFF
+
+        var result = high | low
+
+        if bytes[offset] & 0x80 != 0 {
+            result -= 0x10000
+        }
+        return result
+    }
+
+
     static func bytes2HexString(bytes:[UInt8],pos:Int) -> String {
-        var hexStr = ""
         if pos >= bytes.count{
-            return hexStr
+            return ""
         }
         if bytes.isEmpty || pos >= bytes.count {
-                return ""
-            }
-
-            var builder = ""
-            for i in pos..<bytes.count {
-                let hex = String(format: "%02x", bytes[i])
-                builder += hex
-            }
-
-            return builder
+            return ""
+        }
+        
+        var builder = ""
+        for i in pos..<bytes.count {
+            let hex = String(format: "%02x", bytes[i])
+            builder += hex
+        }
+        
+        return builder
     }
     static func hexIntToStr(HexInt:Int) -> String {
         var Str = ""
@@ -101,6 +368,16 @@ class Utils{
         return bytes
     }
     
+    
+    
+//    static func unSignedInt2Bytes(num: UInt64) -> [UInt8] {
+//        var byteNum = [UInt8](repeating: 0, count: 8) // For 64-bit numbers, we need 8 bytes
+//        for ix in 0..<8 {
+//            let offset = (7 - ix) * 8
+//            byteNum[ix] = UInt8((num >> offset) & 0xFF)
+//        }
+//        return byteNum
+//    }
     
     static func uint8ToHexStr(value:UInt8) ->String{
         return String(format:"%02X",value).uppercased()
@@ -261,6 +538,31 @@ class Utils{
             return Date()
         }
     }
+    
+    public static func parseSoftwareVersion(_ bytes: [UInt8], _ index: Int) -> String {
+        if bytes.count < index + 3 {
+            return ""
+        }
+        let all = bytes2Short(bytes: bytes, offset: index)
+        let version1 = Int(bytes[index]) >> 5
+        let version2 = (all & 0x1FFF) >> 7
+        let version3 = all & 0x7F
+        let testByte = bytes[index + 2]
+        if testByte != 0 && bytes.count != 7 {
+            let testDesc = String(bytes: [testByte], encoding: .utf8) ?? ""
+            return String(format: "%d.%d.%02d %@", version1, version2, version3, testDesc)
+        } else {
+            return String(format: "%d.%d.%02d", version1, version2, version3)
+        }
+    }
+    
+    public static func parseHardwareVersion(_ hardwareByte: UInt8) -> String {
+        let hardwareInt = Int(hardwareByte & 0xFF)
+        if Double(hardwareInt) < 10.0 {
+            return String(Double(hardwareInt - 1 + 10) / 10.0)
+        }
+        return String(Double(hardwareInt) / 10.0)
+    }
     static func bytes2Float(_ bytes: [UInt8], _ offset: Int) -> Float {
         var value: Int32 = 0
         
@@ -272,12 +574,12 @@ class Utils{
         value &= 0xffffff
         value |= (Int32(bytes[offset + 3]) << 24)
         // 对value进行符号扩展，确保正确性
-            if value & (1 << 31) != 0 {
-                value |= ~0x7fffffff
-            }
+        if value & (1 << 31) != 0 {
+            value |= ~0x7fffffff
+        }
         return Float(bitPattern: UInt32(bitPattern: value))
     }
-    static func unsigned4BytesToInt(_ buf: [UInt8], _ pos: Int) -> UInt32 {
+    static func unsigned4BytesToInt(_ buf: [UInt8], _ pos: Int) -> Int64 {
         var firstByte: UInt32 = 0
         var secondByte: UInt32 = 0
         var thirdByte: UInt32 = 0
@@ -288,7 +590,7 @@ class Utils{
         thirdByte = (0x000000FF & UInt32(buf[index + 2]))
         fourthByte = (0x000000FF & UInt32(buf[index + 3]))
         index = index + 4
-        return (firstByte << 24 | secondByte << 16 | thirdByte << 8 | fourthByte) & 0xFFFFFFFF
+        return Int64((firstByte << 24 | secondByte << 16 | thirdByte << 8 | fourthByte) & 0xFFFFFFFF)
     }
     private static func parseDataMessage(data: [UInt8]) -> LocationMessage {
         //解析数据提取各种属性
@@ -684,7 +986,7 @@ class Utils{
             bytes[2] = byte2
             
             // 判断是否有效GPS数据包
-            if (byte0 == 0x27 && byte1 == 0x27 && (byte2 == 0x02 || byte2 == 0x04 )) {
+            if (byte0 == 0x27 && byte1 == 0x27 && (byte2 == 0x02 || byte2 == 0x04 || byte2 == 0x17 )) {
                 decoderBuf.skipBytes(3)
                 let lengthBytes = decoderBuf.readBytes(2) ?? [UInt8]()
                 let packageLength = Utils.bytes2Short(bytes: lengthBytes, offset: 0)
@@ -713,7 +1015,7 @@ class Utils{
                 }
             }else {
                 decoderBuf.skipBytes(1)
-            } 
+            }
         }
         return result
     }
@@ -721,8 +1023,8 @@ class Utils{
     static func unSignedInt2Bytes(_ num: Int64) -> [UInt8] {
         var byteNum = [UInt8](repeating: 0, count: 4)
         for ix in 0..<4 {
-        let offset = 32 - (ix + 1) * 8
-        byteNum[ix] = UInt8((num >> offset) & 0xff)
+            let offset = 32 - (ix + 1) * 8
+            byteNum[ix] = UInt8((num >> offset) & 0xff)
         }
         return byteNum
     }
@@ -747,7 +1049,7 @@ class Utils{
     
     static func getDateRangeList() ->[String]{
         let result = [NSLocalizedString("str_today", comment: "Today"),NSLocalizedString("str_yesterday", comment: "Yestory"),NSLocalizedString("str_last_3_day", comment: "Last 3 days"),
-//                      NSLocalizedString("str_last_7_day", comment: "Last 7 days"),NSLocalizedString("str_last_week", comment: "Last week"),NSLocalizedString("str_this_month", comment: "This month"),NSLocalizedString("str_pre_month", comment: "Previous month"),
+                      //                      NSLocalizedString("str_last_7_day", comment: "Last 7 days"),NSLocalizedString("str_last_week", comment: "Last week"),NSLocalizedString("str_this_month", comment: "This month"),NSLocalizedString("str_pre_month", comment: "Previous month"),
                       NSLocalizedString("str_custom", comment: "Custom")]
         return result
     }
@@ -773,24 +1075,24 @@ class Utils{
             let preDate = calendar.date(byAdding: calComponents, to: today) ?? currentDate
             return preDate
         }
-//        else if selectedIndex == 3{// last 7 days
-//            calComponents.day = -6
-//            let preDate = calendar.date(byAdding: calComponents, to: today) ?? currentDate
-//            return preDate
-//        }else if selectedIndex == 4{// last week
-//            calComponents.day = -6 - dateArray[6]
-//            let preDate = calendar.date(byAdding: calComponents, to: today) ?? currentDate
-//            return preDate
-//        }else if selectedIndex == 5{// this month
-//            calComponents.day = 1 - dateArray[2]
-//            let preDate = calendar.date(byAdding: calComponents, to: today) ?? currentDate
-//            return preDate
-//        }else if selectedIndex == 6{//previous month
-//            calComponents.day =  1 - dateArray[2]
-//            calComponents.month = -1
-//            let preDate = calendar.date(byAdding: calComponents, to: today) ?? currentDate
-//            return preDate
-//        }
+        //        else if selectedIndex == 3{// last 7 days
+        //            calComponents.day = -6
+        //            let preDate = calendar.date(byAdding: calComponents, to: today) ?? currentDate
+        //            return preDate
+        //        }else if selectedIndex == 4{// last week
+        //            calComponents.day = -6 - dateArray[6]
+        //            let preDate = calendar.date(byAdding: calComponents, to: today) ?? currentDate
+        //            return preDate
+        //        }else if selectedIndex == 5{// this month
+        //            calComponents.day = 1 - dateArray[2]
+        //            let preDate = calendar.date(byAdding: calComponents, to: today) ?? currentDate
+        //            return preDate
+        //        }else if selectedIndex == 6{//previous month
+        //            calComponents.day =  1 - dateArray[2]
+        //            calComponents.month = -1
+        //            let preDate = calendar.date(byAdding: calComponents, to: today) ?? currentDate
+        //            return preDate
+        //        }
         return today
         
     }

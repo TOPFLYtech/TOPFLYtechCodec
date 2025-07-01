@@ -23,6 +23,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let screen = UIScreen.main.bounds
         self.window = UIWindow.init(frame: screen)
         let viewController = ViewController()
+//        let viewController = AlarmOpenSetViewController()
         let navigationController = UINavigationController(rootViewController: viewController)
         self.window?.rootViewController = navigationController
         self.window?.makeKeyAndVisible()

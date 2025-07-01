@@ -3,12 +3,18 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 51;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9116ECEE2DA3C83600EADBFA /* SubLockController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9116ECED2DA3C82900EADBFA /* SubLockController.swift */; };
+		9116ECF22DA3F0C100EADBFA /* A001SoftwareUpgradeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9116ECF12DA3F0AE00EADBFA /* A001SoftwareUpgradeManager.swift */; };
+		9116ECF42DA6521A00EADBFA /* SuperPwdResetController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9116ECF32DA6521A00EADBFA /* SuperPwdResetController.swift */; };
+		9116ECF62DAF577C00EADBFA /* AlarmOpenSetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9116ECF52DAF577900EADBFA /* AlarmOpenSetViewController.swift */; };
+		9116ECF82DAFD92E00EADBFA /* ic_okay.png in Resources */ = {isa = PBXBuildFile; fileRef = 9116ECF72DAFD92E00EADBFA /* ic_okay.png */; };
+		9116ECFA2DAFDA2C00EADBFA /* TempAlarmController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9116ECF92DAFDA2300EADBFA /* TempAlarmController.swift */; };
 		915502832A0B30C300C09DB2 /* LocationMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 915502822A0B30C300C09DB2 /* LocationMessage.swift */; };
-		915502972A13AEE400C09DB2 /* TopflytechByteBuf .swift in Sources */ = {isa = PBXBuildFile; fileRef = 915502962A13AEE400C09DB2 /* TopflytechByteBuf .swift */; };
+		915502972A13AEE400C09DB2 /* TopflytechByteBuf.swift in Sources */ = {isa = PBXBuildFile; fileRef = 915502962A13AEE400C09DB2 /* TopflytechByteBuf.swift */; };
 		915502992A177E8900C09DB2 /* ReadHisDataViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 915502982A177E8900C09DB2 /* ReadHisDataViewController.swift */; };
 		9155029F2A1B12CA00C09DB2 /* HistorySelectDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9155029D2A1B12CA00C09DB2 /* HistorySelectDelegate.swift */; };
 		915502A02A1B12CA00C09DB2 /* HistorySelectController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9155029E2A1B12CA00C09DB2 /* HistorySelectController.swift */; };
@@ -22,12 +28,37 @@
 		915502B02A1F12F800C09DB2 /* ic_page_next.png in Resources */ = {isa = PBXBuildFile; fileRef = 915502AE2A1F12F800C09DB2 /* ic_page_next.png */; };
 		915502B22A1F32C700C09DB2 /* HistoryCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 915502B12A1F32C700C09DB2 /* HistoryCell.swift */; };
 		9172CC352A429FB100FFC62C /* NoReadDataBleDetailItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9172CC342A429FB100FFC62C /* NoReadDataBleDetailItem.swift */; };
+		917D56EF2DB2027900DB500E /* ic_openbox.png in Resources */ = {isa = PBXBuildFile; fileRef = 917D56EE2DB2027900DB500E /* ic_openbox.png */; };
+		917D56F02DB2027900DB500E /* ic_info 2.png in Resources */ = {isa = PBXBuildFile; fileRef = 917D56ED2DB2027900DB500E /* ic_info 2.png */; };
+		918768052D26A1F700640747 /* ic_show_favorite.png in Resources */ = {isa = PBXBuildFile; fileRef = 918768032D26A1F700640747 /* ic_show_favorite.png */; };
+		918768062D26A1F700640747 /* ic_hide_favorite.png in Resources */ = {isa = PBXBuildFile; fileRef = 918768042D26A1F700640747 /* ic_hide_favorite.png */; };
+		918768092D2782A700640747 /* ic_info.png in Resources */ = {isa = PBXBuildFile; fileRef = 918768072D2782A700640747 /* ic_info.png */; };
+		9187680A2D2782A700640747 /* ic_search.png in Resources */ = {isa = PBXBuildFile; fileRef = 918768082D2782A700640747 /* ic_search.png */; };
+		9187680C2D27860300640747 /* ic_delete.png in Resources */ = {isa = PBXBuildFile; fileRef = 9187680B2D27860300640747 /* ic_delete.png */; };
+		9187680E2D41ECBE00640747 /* BleRespData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9187680D2D41ECBE00640747 /* BleRespData.swift */; };
+		918768112D4262ED00640747 /* TftBleConnectManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 918768102D4262ED00640747 /* TftBleConnectManager.swift */; };
+		9187681C2D673C0C00640747 /* EditPwdDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9187681A2D673C0C00640747 /* EditPwdDelegate.swift */; };
+		9187681D2D673C0C00640747 /* EditAccessPwdController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9187681B2D673C0C00640747 /* EditAccessPwdController.swift */; };
+		9187681E2D673C0C00640747 /* EditLockPwdController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 918768192D673C0C00640747 /* EditLockPwdController.swift */; };
+		918768202D675A5D00640747 /* IpEditController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9187681F2D675A5D00640747 /* IpEditController.swift */; };
+		918768222D681E4400640747 /* EditTimerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 918768212D681E4400640747 /* EditTimerController.swift */; };
+		918768272D6C9BFF00640747 /* RFIDViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 918768262D6C9BFF00640747 /* RFIDViewController.swift */; };
+		918C29192DCA03FD009F0414 /* UnlockController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 918C29182DC9E9D7009F0414 /* UnlockController.swift */; };
+		91C31DCD2D70850600FF8103 /* SimpleDeleteItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91C31DCC2D70850600FF8103 /* SimpleDeleteItem.swift */; };
+		91C31DCF2D7093C200FF8103 /* ic_back.png in Resources */ = {isa = PBXBuildFile; fileRef = 91C31DCE2D7093C200FF8103 /* ic_back.png */; };
+		91C31DD12D7094C200FF8103 /* ic_add.png in Resources */ = {isa = PBXBuildFile; fileRef = 91C31DD02D7094C200FF8103 /* ic_add.png */; };
 		91CD0B4F2817DBDC006AC2CB /* UniqueIDTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91CD0B4E2817DBDC006AC2CB /* UniqueIDTool.swift */; };
+		91DC0DDC2CE446960086439C /* ic_main_lock.png in Resources */ = {isa = PBXBuildFile; fileRef = 91DC0DDB2CE446960086439C /* ic_main_lock.png */; };
+		91DC0DDF2CE449350086439C /* ic_no_signal.png in Resources */ = {isa = PBXBuildFile; fileRef = 91DC0DDD2CE449350086439C /* ic_no_signal.png */; };
+		91DC0DE02CE449350086439C /* ic_full_signal.png in Resources */ = {isa = PBXBuildFile; fileRef = 91DC0DDE2CE449350086439C /* ic_full_signal.png */; };
 		91DFBD1027F586B2007F24E8 /* ic_lock.png in Resources */ = {isa = PBXBuildFile; fileRef = 91DFBD0B27F586B2007F24E8 /* ic_lock.png */; };
 		91DFBD1127F586B2007F24E8 /* ic_unlock.png in Resources */ = {isa = PBXBuildFile; fileRef = 91DFBD0C27F586B2007F24E8 /* ic_unlock.png */; };
 		91DFBD1227F586B2007F24E8 /* ic_suocut.png in Resources */ = {isa = PBXBuildFile; fileRef = 91DFBD0D27F586B2007F24E8 /* ic_suocut.png */; };
 		91DFBD1327F586B2007F24E8 /* ic_unlock_error.png in Resources */ = {isa = PBXBuildFile; fileRef = 91DFBD0E27F586B2007F24E8 /* ic_unlock_error.png */; };
 		91DFBD1427F586B2007F24E8 /* ic_lock_error.png in Resources */ = {isa = PBXBuildFile; fileRef = 91DFBD0F27F586B2007F24E8 /* ic_lock_error.png */; };
+		91EC1FBF2DE9BBA000FF1EE0 /* ReadSubLockHisDataController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91EC1FBE2DE9BB8D00FF1EE0 /* ReadSubLockHisDataController.swift */; };
+		91EC1FC62DF1250100FF1EE0 /* HistorySubLockCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91EC1FC52DF124FA00FF1EE0 /* HistorySubLockCell.swift */; };
+		91EC1FC82DF1251C00FF1EE0 /* HistorySubLockHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91EC1FC72DF1251500FF1EE0 /* HistorySubLockHeader.swift */; };
 		A2A2CB3EF654F472A8E464E8 /* Pods_TFT_Elock.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 535091048AEDBF7507B93187 /* Pods_TFT_Elock.framework */; };
 		E805099D244568D800ED7C75 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E805099C244568D800ED7C75 /* MessageUI.framework */; };
 		E81CC888269FE04B00340C50 /* SwiftPriorityQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81CC887269FE04A00340C50 /* SwiftPriorityQueue.swift */; };
@@ -97,8 +128,14 @@
 		194367EEEB1EE6362FFB87C6 /* Pods-TFT_Elock.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TFT_Elock.debug.xcconfig"; path = "Target Support Files/Pods-TFT_Elock/Pods-TFT_Elock.debug.xcconfig"; sourceTree = "<group>"; };
 		358FA72EBDD9D1A9E9474DEE /* Pods-TFT Elock.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TFT Elock.release.xcconfig"; path = "Target Support Files/Pods-TFT Elock/Pods-TFT Elock.release.xcconfig"; sourceTree = "<group>"; };
 		535091048AEDBF7507B93187 /* Pods_TFT_Elock.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TFT_Elock.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		9116ECED2DA3C82900EADBFA /* SubLockController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubLockController.swift; sourceTree = "<group>"; };
+		9116ECF12DA3F0AE00EADBFA /* A001SoftwareUpgradeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = A001SoftwareUpgradeManager.swift; sourceTree = "<group>"; };
+		9116ECF32DA6521A00EADBFA /* SuperPwdResetController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuperPwdResetController.swift; sourceTree = "<group>"; };
+		9116ECF52DAF577900EADBFA /* AlarmOpenSetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlarmOpenSetViewController.swift; sourceTree = "<group>"; };
+		9116ECF72DAFD92E00EADBFA /* ic_okay.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_okay.png; sourceTree = "<group>"; };
+		9116ECF92DAFDA2300EADBFA /* TempAlarmController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempAlarmController.swift; sourceTree = "<group>"; };
 		915502822A0B30C300C09DB2 /* LocationMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationMessage.swift; sourceTree = "<group>"; };
-		915502962A13AEE400C09DB2 /* TopflytechByteBuf .swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TopflytechByteBuf .swift"; sourceTree = "<group>"; };
+		915502962A13AEE400C09DB2 /* TopflytechByteBuf.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopflytechByteBuf.swift; sourceTree = "<group>"; };
 		915502982A177E8900C09DB2 /* ReadHisDataViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadHisDataViewController.swift; sourceTree = "<group>"; };
 		9155029D2A1B12CA00C09DB2 /* HistorySelectDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HistorySelectDelegate.swift; sourceTree = "<group>"; };
 		9155029E2A1B12CA00C09DB2 /* HistorySelectController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HistorySelectController.swift; sourceTree = "<group>"; };
@@ -113,13 +150,38 @@
 		915502B12A1F32C700C09DB2 /* HistoryCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryCell.swift; sourceTree = "<group>"; };
 		915502B42A205F6100C09DB2 /* Bridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Bridge.h; path = "../../../tftble-ios/tftble/tftble/Bridge.h"; sourceTree = "<group>"; };
 		9172CC342A429FB100FFC62C /* NoReadDataBleDetailItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoReadDataBleDetailItem.swift; sourceTree = "<group>"; };
+		917D56ED2DB2027900DB500E /* ic_info 2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ic_info 2.png"; sourceTree = "<group>"; };
+		917D56EE2DB2027900DB500E /* ic_openbox.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_openbox.png; sourceTree = "<group>"; };
+		918768032D26A1F700640747 /* ic_show_favorite.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_show_favorite.png; sourceTree = "<group>"; };
+		918768042D26A1F700640747 /* ic_hide_favorite.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_hide_favorite.png; sourceTree = "<group>"; };
+		918768072D2782A700640747 /* ic_info.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_info.png; sourceTree = "<group>"; };
+		918768082D2782A700640747 /* ic_search.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_search.png; sourceTree = "<group>"; };
+		9187680B2D27860300640747 /* ic_delete.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_delete.png; sourceTree = "<group>"; };
+		9187680D2D41ECBE00640747 /* BleRespData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BleRespData.swift; sourceTree = "<group>"; };
+		918768102D4262ED00640747 /* TftBleConnectManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TftBleConnectManager.swift; sourceTree = "<group>"; };
+		918768192D673C0C00640747 /* EditLockPwdController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditLockPwdController.swift; sourceTree = "<group>"; };
+		9187681A2D673C0C00640747 /* EditPwdDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditPwdDelegate.swift; sourceTree = "<group>"; };
+		9187681B2D673C0C00640747 /* EditAccessPwdController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditAccessPwdController.swift; sourceTree = "<group>"; };
+		9187681F2D675A5D00640747 /* IpEditController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IpEditController.swift; sourceTree = "<group>"; };
+		918768212D681E4400640747 /* EditTimerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditTimerController.swift; sourceTree = "<group>"; };
+		918768262D6C9BFF00640747 /* RFIDViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RFIDViewController.swift; sourceTree = "<group>"; };
+		918C29182DC9E9D7009F0414 /* UnlockController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnlockController.swift; sourceTree = "<group>"; };
+		91C31DCC2D70850600FF8103 /* SimpleDeleteItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleDeleteItem.swift; sourceTree = "<group>"; };
+		91C31DCE2D7093C200FF8103 /* ic_back.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_back.png; sourceTree = "<group>"; };
+		91C31DD02D7094C200FF8103 /* ic_add.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_add.png; sourceTree = "<group>"; };
 		91CD0B4D2817DB25006AC2CB /* TFT Elock.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "TFT Elock.entitlements"; sourceTree = "<group>"; };
 		91CD0B4E2817DBDC006AC2CB /* UniqueIDTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniqueIDTool.swift; sourceTree = "<group>"; };
+		91DC0DDB2CE446960086439C /* ic_main_lock.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_main_lock.png; sourceTree = "<group>"; };
+		91DC0DDD2CE449350086439C /* ic_no_signal.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_no_signal.png; sourceTree = "<group>"; };
+		91DC0DDE2CE449350086439C /* ic_full_signal.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_full_signal.png; sourceTree = "<group>"; };
 		91DFBD0B27F586B2007F24E8 /* ic_lock.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_lock.png; sourceTree = "<group>"; };
 		91DFBD0C27F586B2007F24E8 /* ic_unlock.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_unlock.png; sourceTree = "<group>"; };
 		91DFBD0D27F586B2007F24E8 /* ic_suocut.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_suocut.png; sourceTree = "<group>"; };
 		91DFBD0E27F586B2007F24E8 /* ic_unlock_error.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_unlock_error.png; sourceTree = "<group>"; };
 		91DFBD0F27F586B2007F24E8 /* ic_lock_error.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_lock_error.png; sourceTree = "<group>"; };
+		91EC1FBE2DE9BB8D00FF1EE0 /* ReadSubLockHisDataController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadSubLockHisDataController.swift; sourceTree = "<group>"; };
+		91EC1FC52DF124FA00FF1EE0 /* HistorySubLockCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistorySubLockCell.swift; sourceTree = "<group>"; };
+		91EC1FC72DF1251500FF1EE0 /* HistorySubLockHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistorySubLockHeader.swift; sourceTree = "<group>"; };
 		E805099C244568D800ED7C75 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
 		E81CC887269FE04A00340C50 /* SwiftPriorityQueue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftPriorityQueue.swift; sourceTree = "<group>"; };
 		E81CC88A26A000F400340C50 /* MsgQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MsgQueue.swift; sourceTree = "<group>"; };
@@ -220,6 +282,31 @@
 			path = Pods;
 			sourceTree = "<group>";
 		};
+		9187680F2D4262DB00640747 /* ble */ = {
+			isa = PBXGroup;
+			children = (
+				9116ECF12DA3F0AE00EADBFA /* A001SoftwareUpgradeManager.swift */,
+				918768102D4262ED00640747 /* TftBleConnectManager.swift */,
+			);
+			path = ble;
+			sourceTree = "<group>";
+		};
+		918768162D6492AE00640747 /* deviceConfigSetting */ = {
+			isa = PBXGroup;
+			children = (
+				9116ECF92DAFDA2300EADBFA /* TempAlarmController.swift */,
+				9116ECED2DA3C82900EADBFA /* SubLockController.swift */,
+				9187681B2D673C0C00640747 /* EditAccessPwdController.swift */,
+				9116ECF52DAF577900EADBFA /* AlarmOpenSetViewController.swift */,
+				918768192D673C0C00640747 /* EditLockPwdController.swift */,
+				9187681A2D673C0C00640747 /* EditPwdDelegate.swift */,
+				9187681F2D675A5D00640747 /* IpEditController.swift */,
+				918768212D681E4400640747 /* EditTimerController.swift */,
+				918768262D6C9BFF00640747 /* RFIDViewController.swift */,
+			);
+			path = deviceConfigSetting;
+			sourceTree = "<group>";
+		};
 		E86DB34D23A0EC7B002BAACA = {
 			isa = PBXGroup;
 			children = (
@@ -241,16 +328,20 @@
 		E86DB35823A0EC7B002BAACA /* TFT Elock */ = {
 			isa = PBXGroup;
 			children = (
-				915502B42A205F6100C09DB2 /* Bridge.h */,
 				E8B6DB4823AAFF92001980BF /* AEAlertView */,
 				E86DB35923A0EC7B002BAACA /* AppDelegate.swift */,
 				E86DB36223A0EC8C002BAACA /* Assets.xcassets */,
+				9187680F2D4262DB00640747 /* ble */,
+				915502B42A205F6100C09DB2 /* Bridge.h */,
 				E8AE7467266E4EFF00D4E78A /* data */,
+				918768162D6492AE00640747 /* deviceConfigSetting */,
 				E8AE74812670E69B00D4E78A /* EditController.swift */,
 				915502B12A1F32C700C09DB2 /* HistoryCell.swift */,
 				915502AB2A1B765300C09DB2 /* HistoryHeader.swift */,
 				9155029E2A1B12CA00C09DB2 /* HistorySelectController.swift */,
 				9155029D2A1B12CA00C09DB2 /* HistorySelectDelegate.swift */,
+				91EC1FC52DF124FA00FF1EE0 /* HistorySubLockCell.swift */,
+				91EC1FC72DF1251500FF1EE0 /* HistorySubLockHeader.swift */,
 				E86DB36723A0EC8C002BAACA /* Info.plist */,
 				E8AE747C266F60EA00D4E78A /* itemView */,
 				E86DB36423A0EC8C002BAACA /* LaunchScreen.storyboard */,
@@ -258,13 +349,16 @@
 				915502822A0B30C300C09DB2 /* LocationMessage.swift */,
 				E8D7C75A23B5A55800E67C7A /* MyProgress.swift */,
 				915502982A177E8900C09DB2 /* ReadHisDataViewController.swift */,
+				91EC1FBE2DE9BB8D00FF1EE0 /* ReadSubLockHisDataController.swift */,
 				E8D7C76223BDDEC600E67C7A /* Resources */,
 				E86DB35B23A0EC7B002BAACA /* SceneDelegate.swift */,
 				E86DB37723A335DB002BAACA /* splash */,
+				9116ECF32DA6521A00EADBFA /* SuperPwdResetController.swift */,
 				91CD0B4D2817DB25006AC2CB /* TFT Elock.entitlements */,
-				915502962A13AEE400C09DB2 /* TopflytechByteBuf .swift */,
+				915502962A13AEE400C09DB2 /* TopflytechByteBuf.swift */,
 				E86DB36F23A1CC15002BAACA /* UIColor+Nordic.swift */,
 				91CD0B4E2817DBDC006AC2CB /* UniqueIDTool.swift */,
+				918C29182DC9E9D7009F0414 /* UnlockController.swift */,
 				E8D2A3A423ACCC9B00B42242 /* Utils.swift */,
 				E86DB35D23A0EC7B002BAACA /* ViewController.swift */,
 			);
@@ -309,6 +403,7 @@
 		E8AE7467266E4EFF00D4E78A /* data */ = {
 			isa = PBXGroup;
 			children = (
+				9187680D2D41ECBE00640747 /* BleRespData.swift */,
 				E81CC887269FE04A00340C50 /* SwiftPriorityQueue.swift */,
 				E8AE7479266F479400D4E78A /* BleDeviceData.swift */,
 				E81CC88A26A000F400340C50 /* MsgQueue.swift */,
@@ -321,6 +416,7 @@
 			children = (
 				E8AE747D266F614E00D4E78A /* BleDetailItem.swift */,
 				9172CC342A429FB100FFC62C /* NoReadDataBleDetailItem.swift */,
+				91C31DCC2D70850600FF8103 /* SimpleDeleteItem.swift */,
 			);
 			path = itemView;
 			sourceTree = "<group>";
@@ -349,9 +445,22 @@
 		E8D7C76223BDDEC600E67C7A /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				917D56ED2DB2027900DB500E /* ic_info 2.png */,
+				917D56EE2DB2027900DB500E /* ic_openbox.png */,
+				9116ECF72DAFD92E00EADBFA /* ic_okay.png */,
+				91C31DD02D7094C200FF8103 /* ic_add.png */,
+				91C31DCE2D7093C200FF8103 /* ic_back.png */,
+				9187680B2D27860300640747 /* ic_delete.png */,
+				918768072D2782A700640747 /* ic_info.png */,
+				918768082D2782A700640747 /* ic_search.png */,
+				918768042D26A1F700640747 /* ic_hide_favorite.png */,
+				918768032D26A1F700640747 /* ic_show_favorite.png */,
 				915502AE2A1F12F800C09DB2 /* ic_page_next.png */,
 				915502AD2A1F12F800C09DB2 /* ic_page_prev.png */,
 				915502A82A1B53AD00C09DB2 /* ic_list.png */,
+				91DC0DDE2CE449350086439C /* ic_full_signal.png */,
+				91DC0DDD2CE449350086439C /* ic_no_signal.png */,
+				91DC0DDB2CE446960086439C /* ic_main_lock.png */,
 				915502A72A1B53AD00C09DB2 /* ic_refresh.png */,
 				915502A12A1B516600C09DB2 /* ic_date.png */,
 				915502A32A1B516600C09DB2 /* light_blue.png */,
@@ -440,8 +549,11 @@
 			files = (
 				E8D7C76423BDF32200E67C7A /* scan.png in Resources */,
 				91DFBD1127F586B2007F24E8 /* ic_unlock.png in Resources */,
+				917D56EF2DB2027900DB500E /* ic_openbox.png in Resources */,
+				917D56F02DB2027900DB500E /* ic_info 2.png in Resources */,
 				E84A30C4267B2ABA00365EB1 /* ic_sensor_blue.png in Resources */,
 				E86DB39C23A335DD002BAACA /* Default-Landscape-1366h@2x~ipad.png in Resources */,
+				91DC0DE02CE449350086439C /* ic_full_signal.png in Resources */,
 				E86DB3A123A335DD002BAACA /* Default-Landscape-896h@2x.png in Resources */,
 				915502AA2A1B53AD00C09DB2 /* ic_list.png in Resources */,
 				E8CBBC3B242EED1A00CE91B7 /* flash.bin in Resources */,
@@ -454,6 +566,7 @@
 				E86DB39B23A335DD002BAACA /* Default-Landscape-1194h@2x~ipad.png in Resources */,
 				E86DB39823A335DD002BAACA /* Default-896h@2x.png in Resources */,
 				915502A42A1B516600C09DB2 /* ic_date.png in Resources */,
+				9187680A2D2782A700640747 /* ic_search.png in Resources */,
 				E86DB3A623A335DD002BAACA /* Default-Landscape~ipad.png in Resources */,
 				91DFBD1227F586B2007F24E8 /* ic_suocut.png in Resources */,
 				E86DB39523A335DD002BAACA /* Default-667h@2x.png in Resources */,
@@ -461,11 +574,15 @@
 				E86DB36323A0EC8C002BAACA /* Assets.xcassets in Resources */,
 				E86DB3A923A335DD002BAACA /* Default-Portrait7-1366h@2x~ipad.png in Resources */,
 				91DFBD1427F586B2007F24E8 /* ic_lock_error.png in Resources */,
+				91C31DD12D7094C200FF8103 /* ic_add.png in Resources */,
 				E84A30C7267B2ABA00365EB1 /* ic_network_blue.png in Resources */,
 				E84A30C5267B2ABA00365EB1 /* ic_status_blue.png in Resources */,
 				E8684E8D243C0B3100D83C6D /* ic_edit.png in Resources */,
 				E82EFE6F248F195400F89E68 /* ic_btn_bg.png in Resources */,
+				91DC0DDF2CE449350086439C /* ic_no_signal.png in Resources */,
 				E86DB39423A335DD002BAACA /* Default-568h@2x.png in Resources */,
+				918768052D26A1F700640747 /* ic_show_favorite.png in Resources */,
+				918768092D2782A700640747 /* ic_info.png in Resources */,
 				E86DB3AA23A335DD002BAACA /* Default-Portrait7@2x~ipad.png in Resources */,
 				E86DB3A723A335DD002BAACA /* Default-Portrait7-1112h@2x~ipad.png in Resources */,
 				E86DB3AF23A335DD002BAACA /* Default@2x.png in Resources */,
@@ -475,6 +592,7 @@
 				91DFBD1327F586B2007F24E8 /* ic_unlock_error.png in Resources */,
 				E86DB3A823A335DD002BAACA /* Default-Portrait7-1194h@2x~ipad.png in Resources */,
 				E86DB3A523A335DD002BAACA /* Default-Landscape@2x~ipad.png in Resources */,
+				9116ECF82DAFD92E00EADBFA /* ic_okay.png in Resources */,
 				EA596D4826C11687000F0D95 /* ic_category.png in Resources */,
 				E86DB39A23A335DD002BAACA /* Default-Landscape-1112h@2x~ipad.png in Resources */,
 				915502AF2A1F12F800C09DB2 /* ic_page_prev.png in Resources */,
@@ -486,11 +604,15 @@
 				E86DB3A023A335DD002BAACA /* Default-Landscape-812h@3x.png in Resources */,
 				915502B02A1F12F800C09DB2 /* ic_page_next.png in Resources */,
 				E84A30C9267B2ABA00365EB1 /* ic_status_dark.png in Resources */,
+				918768062D26A1F700640747 /* ic_hide_favorite.png in Resources */,
 				E86DB39F23A335DD002BAACA /* Default-Landscape-736h@3x.png in Resources */,
 				E86DB39923A335DD002BAACA /* Default-896h@3x.png in Resources */,
 				E8F147A6244E936D003601B9 /* ic_disconnect.png in Resources */,
+				91DC0DDC2CE446960086439C /* ic_main_lock.png in Resources */,
+				91C31DCF2D7093C200FF8103 /* ic_back.png in Resources */,
 				E86DB39623A335DD002BAACA /* Default-736h@3x.png in Resources */,
 				E86DB3A323A335DD002BAACA /* Default-Landscape7@2x~ipad.png in Resources */,
+				9187680C2D27860300640747 /* ic_delete.png in Resources */,
 				E86DB3AB23A335DD002BAACA /* Default-Portrait7~ipad.png in Resources */,
 				915502A62A1B516600C09DB2 /* light_blue.png in Resources */,
 			);
@@ -529,9 +651,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-TFT Elock/Pods-TFT Elock-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-TFT Elock/Pods-TFT Elock-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -545,10 +671,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				918C29192DCA03FD009F0414 /* UnlockController.swift in Sources */,
 				E8D7C75F23B5E64D00E67C7A /* FileTool.swift in Sources */,
+				9187681E2D673C0C00640747 /* EditLockPwdController.swift in Sources */,
+				9187681C2D673C0C00640747 /* EditPwdDelegate.swift in Sources */,
 				E8AE747E266F614E00D4E78A /* BleDetailItem.swift in Sources */,
 				E8AE74822670E69B00D4E78A /* EditController.swift in Sources */,
 				E81CC888269FE04B00340C50 /* SwiftPriorityQueue.swift in Sources */,
+				9187681D2D673C0C00640747 /* EditAccessPwdController.swift in Sources */,
 				E8B6DB5223AAFF92001980BF /* AEPathAnimation.swift in Sources */,
 				91CD0B4F2817DBDC006AC2CB /* UniqueIDTool.swift in Sources */,
 				E81CC88B26A000F400340C50 /* MsgQueue.swift in Sources */,
@@ -557,18 +687,32 @@
 				915502AC2A1B765300C09DB2 /* HistoryHeader.swift in Sources */,
 				9172CC352A429FB100FFC62C /* NoReadDataBleDetailItem.swift in Sources */,
 				9155029F2A1B12CA00C09DB2 /* HistorySelectDelegate.swift in Sources */,
+				918768272D6C9BFF00640747 /* RFIDViewController.swift in Sources */,
 				E8D7C75B23B5A55800E67C7A /* MyProgress.swift in Sources */,
+				9116ECF62DAF577C00EADBFA /* AlarmOpenSetViewController.swift in Sources */,
+				91C31DCD2D70850600FF8103 /* SimpleDeleteItem.swift in Sources */,
+				91EC1FBF2DE9BBA000FF1EE0 /* ReadSubLockHisDataController.swift in Sources */,
 				E86DB35A23A0EC7B002BAACA /* AppDelegate.swift in Sources */,
 				E8B6DB5123AAFF92001980BF /* AEBaseAlertView.swift in Sources */,
+				918768112D4262ED00640747 /* TftBleConnectManager.swift in Sources */,
 				E8B6DB5023AAFF92001980BF /* AEAlertView.swift in Sources */,
+				918768202D675A5D00640747 /* IpEditController.swift in Sources */,
+				91EC1FC82DF1251C00FF1EE0 /* HistorySubLockHeader.swift in Sources */,
+				9187680E2D41ECBE00640747 /* BleRespData.swift in Sources */,
 				E86DB37023A1CC15002BAACA /* UIColor+Nordic.swift in Sources */,
+				9116ECEE2DA3C83600EADBFA /* SubLockController.swift in Sources */,
+				9116ECFA2DAFDA2C00EADBFA /* TempAlarmController.swift in Sources */,
 				E8AE747A266F479400D4E78A /* BleDeviceData.swift in Sources */,
 				E8B6DB5323AAFF92001980BF /* AEUIAlertView.swift in Sources */,
 				915502992A177E8900C09DB2 /* ReadHisDataViewController.swift in Sources */,
+				918768222D681E4400640747 /* EditTimerController.swift in Sources */,
+				91EC1FC62DF1250100FF1EE0 /* HistorySubLockCell.swift in Sources */,
+				9116ECF22DA3F0C100EADBFA /* A001SoftwareUpgradeManager.swift in Sources */,
 				915502B22A1F32C700C09DB2 /* HistoryCell.swift in Sources */,
 				E86DB35C23A0EC7B002BAACA /* SceneDelegate.swift in Sources */,
 				915502832A0B30C300C09DB2 /* LocationMessage.swift in Sources */,
-				915502972A13AEE400C09DB2 /* TopflytechByteBuf .swift in Sources */,
+				915502972A13AEE400C09DB2 /* TopflytechByteBuf.swift in Sources */,
+				9116ECF42DA6521A00EADBFA /* SuperPwdResetController.swift in Sources */,
 				E8D2A3A523ACCC9B00B42242 /* Utils.swift in Sources */,
 				915502A02A1B12CA00C09DB2 /* HistorySelectController.swift in Sources */,
 			);
@@ -722,15 +866,15 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "TFT Elock/TFT Elock.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.0.6;
+				CURRENT_PROJECT_VERSION = 1.0.13;
 				DEVELOPMENT_TEAM = 6W672XHN78;
 				INFOPLIST_FILE = "$(SRCROOT)/TFT Elock/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.5;
+				MARKETING_VERSION = 1.0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = com.topflytech.lockActive;
 				PRODUCT_NAME = "TFT Elock";
 				SWIFT_ENABLE_BATCH_MODE = NO;
@@ -748,15 +892,15 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "TFT Elock/TFT Elock.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.0.6;
+				CURRENT_PROJECT_VERSION = 1.0.13;
 				DEVELOPMENT_TEAM = 6W672XHN78;
 				INFOPLIST_FILE = "$(SRCROOT)/TFT Elock/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.5;
+				MARKETING_VERSION = 1.0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = com.topflytech.lockActive;
 				PRODUCT_NAME = "TFT Elock";
 				SWIFT_ENABLE_BATCH_MODE = NO;

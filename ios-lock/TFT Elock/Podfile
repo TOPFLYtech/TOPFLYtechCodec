@@ -15,5 +15,5 @@ pod 'SwiftPopMenu', :git => 'https://github.com/TangledHusky/SwiftPopMenu.git'
 pod 'libxlsxwriter'
 pod 'swiftScan', :git => 'https://github.com/MxABC/swiftScan.git'
 pod 'SAMKeychain'
-pod 'QMUIKit'
 end
+source 'https://mirrors.tuna.tsinghua.edu.cn/git/CocoaPods/Specs.git'
