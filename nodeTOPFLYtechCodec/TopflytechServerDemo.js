@@ -7,22 +7,18 @@ var ObdEncoder = require("./ObdEncoder")
 var ObdDecoder = require("./ObdDecoder")
 var PersonalAssetDecoder = require("./PersonalAssetDecoder")
 var PersonalAssetEncoder = require("./PersonalAssetEncoder")
-var moment = require("moment")
-//创建TCP服务器
+var moment = require("moment") 
 Decoder.encryptType = CryptoTool.MessageEncryptType.NONE
-var curDecoder = Decoder
-var curEncoder = Encoder
+var curDecoder = ObdDecoder
+var curEncoder = ObdEncoder
 var socketClient = []
-const server = net.createServer(function (socket) {
-    //监听data事件
-    socket.on("data", function (data) {
-        // const readSize = socket.bytesRead;
-        //打印数据
-        // console.log("接收到数据为：" + data.toString(), "；接收的数据长度为：" + readSize);
+const server = net.createServer(function (socket) { 
+    socket.on("data", function (data) { 
         var messageList = curDecoder.decode(data)
         for(var messageIndex in messageList){
             var message = messageList[messageIndex]
-            if(message.messageType == "signIn"){
+            console.log(message)
+            if(message.messageType == "signIn"){ 
                 console.log("receive signIn message,imei:" + message.imei)
                 var resp = curEncoder.getSignInMsgReply(message.imei,true,message.serialNo,CryptoTool.MessageEncryptType.NONE,null)
                 socket.write(Buffer.from(resp))
@@ -71,11 +67,11 @@ const server = net.createServer(function (socket) {
                 socket.write(Buffer.from(resp))
             }else if(message.messageType == "lock"){
                 console.log("receive lock message,imei:" + message.imei)
-                var resp = PersonalAssetEncoder.getLockMsgReply(message.imei,true,message.serialNo,CryptoTool.MessageEncryptType.NONE,null)
+                var resp = PersonalAssetEncoder.getLockMsgReply(message.imei,message.serialNo,CryptoTool.MessageEncryptType.NONE,null)
                 socket.write(Buffer.from(resp))
             }else if(message.messageType == "obdData"){
                 console.log("receive obd message,imei:" + message.imei)
-                var resp = curEncoder.getObdMsgReply(message.imei,true,message.serialNo,CryptoTool.MessageEncryptType.NONE,null)
+                var resp = curEncoder.getObdMsgReply(message.imei,message.serialNo,CryptoTool.MessageEncryptType.NONE,null)
                 socket.write(Buffer.from(resp))
             }else if(message.messageType == "innerGeoData"){
                 console.log("receive inner geo message,imei:" + message.imei)

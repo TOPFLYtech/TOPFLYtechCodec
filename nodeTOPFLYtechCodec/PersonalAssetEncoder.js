@@ -41,13 +41,13 @@ var PersonalAssetEncoder = {
         var command = [0x27, 0x27, protocolHeadType]
         return EncoderHelper.getBluetoothPeripheralDataMsgReply(imei,serialNo,command,encryptType,aesKey)
     },
-    getWifiMsgReply:function (imei,needSerialNo,serialNo,encryptType,aesKey){
+    getWifiMsgReply:function (imei,serialNo,encryptType,aesKey){
         var command = [0x27, 0x27, 0x15]
-        return EncoderHelper.getWifiMsgReply(imei,needSerialNo,serialNo,command,encryptType,aesKey);
+        return EncoderHelper.getWifiMsgReply(imei,true,serialNo,command,encryptType,aesKey);
     },
-    getLockMsgReply:function (imei,needSerialNo,serialNo,encryptType,aesKey){
+    getLockMsgReply:function (imei,serialNo,encryptType,aesKey){
         var command = [0x27, 0x27, 0x17]
-        return EncoderHelper.getLockMsgReply(imei,needSerialNo,serialNo,command,encryptType,aesKey);
+        return EncoderHelper.getLockMsgReply(imei,true,serialNo,command,encryptType,aesKey);
     },
     getInnerGeoDataMsgReply:function (imei,serialNo,encryptType,aesKey){
         var command = [0x27, 0x27, 0x20]
