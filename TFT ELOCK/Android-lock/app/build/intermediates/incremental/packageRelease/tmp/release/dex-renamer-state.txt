@@ -1,7 +1,0 @@
-#Tue May 27 11:06:45 CST 2025
-base.1=D\:\\truck\\mobile\\lock-ble-active-android\\app\\build\\intermediates\\dex\\release\\mergeDexRelease\\classes2.dex
-path.1=classes2.dex
-base.0=D\:\\truck\\mobile\\lock-ble-active-android\\app\\build\\intermediates\\dex\\release\\mergeDexRelease\\classes.dex
-renamed.1=classes2.dex
-renamed.0=classes.dex
-path.0=classes.dex
