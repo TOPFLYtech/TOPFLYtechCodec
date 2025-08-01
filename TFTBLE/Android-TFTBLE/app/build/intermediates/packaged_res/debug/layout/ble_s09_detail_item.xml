@@ -1,0 +1,483 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:theme="@style/MyAppTheme"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/device_list_border"
+        android:layout_margin="5dp"
+        android:descendantFocusability="blocksDescendants"
+        android:padding="5dp"
+        android:orientation="vertical">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal"
+           >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:text="@string/ble_name"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="15dp"
+                android:layout_weight="3"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:layout_weight="2"
+                android:layout_marginBottom="1dp"
+                android:layout_marginRight="1dp"
+                android:id="@+id/tx_name"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+
+            android:orientation="horizontal" >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:layout_weight="3"
+                android:text="@string/ble_id"
+                android:layout_marginRight="1dp"
+                android:layout_marginLeft="15dp"
+                android:layout_marginBottom="1dp"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:layout_weight="2"
+                android:layout_marginBottom="1dp"
+                android:layout_marginRight="1dp"
+                android:id="@+id/tx_ble_id"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:text="@string/date"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_weight="3"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:layout_weight="2"
+                android:layout_marginBottom="1dp"
+                android:layout_marginRight="1dp"
+                android:id="@+id/tx_date"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:text="@string/rssi"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_weight="3"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:layout_weight="2"
+                android:layout_marginBottom="1dp"
+                android:layout_marginRight="1dp"
+                android:id="@+id/tx_rssi"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:text="@string/device_model"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_weight="3"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:layout_weight="2"
+                android:layout_marginBottom="1dp"
+                android:layout_marginRight="1dp"
+                android:id="@+id/tx_device_model"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:text="@string/hardware"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_weight="3"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:layout_weight="2"
+                android:layout_marginBottom="1dp"
+                android:layout_marginRight="1dp"
+                android:id="@+id/tx_hardware"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:text="@string/software"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_weight="3"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:layout_weight="2"
+                android:layout_marginBottom="1dp"
+                android:layout_marginRight="1dp"
+                android:id="@+id/tx_software"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:text="@string/input0"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_weight="3"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:layout_weight="2"
+                android:layout_marginBottom="1dp"
+                android:layout_marginRight="1dp"
+                android:id="@+id/tx_input0"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:text="@string/output0"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_weight="3"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:layout_weight="2"
+                android:layout_marginBottom="1dp"
+                android:layout_marginRight="1dp"
+                android:id="@+id/tx_output0"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:text="@string/output1"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_weight="3"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:layout_weight="2"
+                android:layout_marginBottom="1dp"
+                android:layout_marginRight="1dp"
+                android:id="@+id/tx_output1"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:text="@string/analogInput0"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_weight="3"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:layout_weight="2"
+                android:layout_marginBottom="1dp"
+                android:layout_marginRight="1dp"
+                android:id="@+id/tx_analog_input_0"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:text="@string/analogInput1"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_weight="3"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:layout_weight="2"
+                android:layout_marginBottom="1dp"
+                android:layout_marginRight="1dp"
+                android:id="@+id/tx_analog_input_1"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/list_item_high"
+            android:orientation="horizontal"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:text="@string/analogInput2"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_weight="3"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg_color_white"
+                android:layout_weight="2"
+                android:layout_marginBottom="1dp"
+                android:layout_marginRight="1dp"
+                android:id="@+id/tx_analog_input_2"
+                android:textColor="@color/tx_black"
+                android:textSize="@dimen/list_tx" />
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:orientation="horizontal"
+            android:gravity="center"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/bg_color_white"
+                android:text="@string/configDesc"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_weight="3"
+                android:textColor="@color/tx_black"
+                android:textSize="14dp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:descendantFocusability="blocksDescendants"
+                android:orientation="horizontal">
+                <com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton
+                    android:layout_width="200px"
+                    android:layout_height="match_parent"
+                    android:id="@+id/btn_config"
+                    android:textAllCaps="false"
+                    android:text="@string/config"
+                    android:focusable="false"
+                    android:layout_margin="5dp"
+                    android:textSize="10dp"></com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton>
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:visibility="gone"
+            android:id="@+id/ll_show_qrcode"
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/bg_color_white"
+                android:text="QRCode"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="@dimen/list_item_margin_left"
+                android:layout_weight="3"
+                android:textColor="@color/tx_black"
+                android:textSize="14dp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:descendantFocusability="blocksDescendants"
+                android:orientation="horizontal">
+                <com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton
+                    android:layout_width="200px"
+                    android:layout_height="match_parent"
+                    android:id="@+id/btn_show_qrcode"
+                    android:textAllCaps="false"
+                    android:layout_margin="5dp"
+                    android:text="QRCode"
+                    android:textSize="10dp"></com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton>
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

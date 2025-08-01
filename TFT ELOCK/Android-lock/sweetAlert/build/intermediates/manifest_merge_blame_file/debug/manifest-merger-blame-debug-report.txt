@@ -1,0 +1,14 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="cn.pedant.SweetAlert"
+4    android:versionCode="2"
+5    android:versionName="1.1" >
+6
+7    <uses-sdk android:minSdkVersion="9" />
+7-->D:\truck\mobile\lock-ble-active-android\sweetAlert\src\main\AndroidManifest.xml
+8
+9    <!-- <uses-sdk android:minSdkVersion="9" android:targetSdkVersion="17"/> -->
+10    <application />
+10-->D:\truck\mobile\lock-ble-active-android\sweetAlert\src\main\AndroidManifest.xml:8:1-16
+11
+12</manifest>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"  android:id="@+id/root_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" android:background="@color/main_bkg_color">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="5dp"
+        android:visibility="gone"
+        android:id="@+id/ll_fuzzy_search">
+        <EditText
+            android:id="@+id/et_fuzzy_search"
+            style="@style/editTextStyle"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:layout_weight="2"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            />
+        <ImageButton
+            android:textAllCaps="false"
+            android:background="@drawable/dialog_btn_bg"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:id="@+id/btn_scan"
+            android:layout_weight="12"
+            android:src="@mipmap/ic_scan"
+            android:textSize="@dimen/btn_size"></ImageButton>
+    </LinearLayout>
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/bg_color_white"
+        android:id="@+id/listView"/>
+</LinearLayout>

@@ -1,0 +1,12 @@
+D:\truck\other-tool\DecoderLib\880XServerDemo\MqttExample\bin\Debug\MqttExample.exe.config
+D:\truck\other-tool\DecoderLib\880XServerDemo\MqttExample\bin\Debug\MqttExample.exe
+D:\truck\other-tool\DecoderLib\880XServerDemo\MqttExample\bin\Debug\MqttExample.pdb
+D:\truck\other-tool\DecoderLib\880XServerDemo\MqttExample\bin\Debug\TopflytechCodec.dll
+D:\truck\other-tool\DecoderLib\880XServerDemo\MqttExample\bin\Debug\MQTTnet.dll
+D:\truck\other-tool\DecoderLib\880XServerDemo\MqttExample\bin\Debug\TopflytechCodec.pdb
+D:\truck\other-tool\DecoderLib\880XServerDemo\MqttExample\bin\Debug\MQTTnet.xml
+D:\truck\other-tool\DecoderLib\880XServerDemo\MqttExample\obj\Debug\MqttExample.csproj.AssemblyReference.cache
+D:\truck\other-tool\DecoderLib\880XServerDemo\MqttExample\obj\Debug\MqttExample.csproj.CoreCompileInputs.cache
+D:\truck\other-tool\DecoderLib\880XServerDemo\MqttExample\obj\Debug\MqttExample.csproj.CopyComplete
+D:\truck\other-tool\DecoderLib\880XServerDemo\MqttExample\obj\Debug\MqttExample.exe
+D:\truck\other-tool\DecoderLib\880XServerDemo\MqttExample\obj\Debug\MqttExample.pdb

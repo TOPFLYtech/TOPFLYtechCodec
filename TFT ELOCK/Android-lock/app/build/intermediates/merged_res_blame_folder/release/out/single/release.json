@@ -1,0 +1,542 @@
+[
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_sensor_dark.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_sensor_dark.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_edit_activity_bar.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\edit_activity_bar.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_activity_rfid.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\activity_rfid.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_lingber_ripple_bg_btn.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\lingber_ripple_bg_btn.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_activity_ip_edit.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\activity_ip_edit.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-xhdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_lingber_page_number_shape.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\lingber_page_number_shape.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_date.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_date.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_alert_dark.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_alert_dark.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-xxhdpi_ic_launcher_round.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-xxhdpi\\ic_launcher_round.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_activity_edit.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\activity_edit.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_back.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_back.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_openbox.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_openbox.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_item_drop_pop_menu.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\item_drop_pop_menu.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_ic_sure.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\ic_sure.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_io_blue.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_io_blue.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_launcher.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_bg_drop_pop_menu_white_shap.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\bg_drop_pop_menu_white_shap.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_status_blue.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_status_blue.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_switch_mask.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\switch_mask.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_lingber_border_shape.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\lingber_border_shape.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_suocut.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_suocut.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_activity_main.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_lingber_ic_backspacing.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\lingber_ic_backspacing.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_list.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_list.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_disconnect.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_disconnect.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_lingber_date_picker_unavailable_msk_shape.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\lingber_date_picker_unavailable_msk_shape.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_submit.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_submit.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_ble_simple_detail_item.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\ble_simple_detail_item.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_light_blue.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\light_blue.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_custom_popup_window.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\custom_popup_window.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_activity_scan.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\activity_scan.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-xxxhdpi_ic_launcher_foreground.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-xxxhdpi\\ic_launcher_foreground.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_activity_alarm_open_set.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\activity_alarm_open_set.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_info.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_info.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_activity_history_select.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\activity_history_select.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_dialog_btn_bg.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\dialog_btn_bg.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_lingber_ic_sub.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\lingber_ic_sub.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_activity_lock_pwd_change.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\activity_lock_pwd_change.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_lingber_ic_checkbox_selected.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\lingber_ic_checkbox_selected.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_activity_super_pwd_reset.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\activity_super_pwd_reset.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_network_dark.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_network_dark.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_status_dark.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_status_dark.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_edit.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_edit.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-xxxhdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_scan_icon_scanline.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\scan_icon_scanline.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_activity_timer.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\activity_timer.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_activity_temp_alarm_set.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\activity_temp_alarm_set.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_edit_cursor_color.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\edit_cursor_color.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_lingber_edittext_shape.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\lingber_edittext_shape.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_lingber_ic_add.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\lingber_ic_add.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_activity_sub_lock_id.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\activity_sub_lock_id.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_lingber_ic_up.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\lingber_ic_up.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_activity_read_sub_lock_his_data.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\activity_read_sub_lock_his_data.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_item_rfid.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\item_rfid.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_lingber_ic_fast_added.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\lingber_ic_fast_added.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_lingber_keyboard_default_style.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\lingber_keyboard_default_style.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-xhdpi_ic_launcher_foreground.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-xhdpi\\ic_launcher_foreground.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_refresh.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_refresh.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_advanced_blue.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_advanced_blue.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_layout_item_scroll.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\layout_item_scroll.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_main_lock.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_main_lock.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_lingber_checkbox_style.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\lingber_checkbox_style.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_question.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_question.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-anydpi-v26\\ic_launcher.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_lingber_ic_fast_add.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\lingber_ic_fast_add.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_device_list_border.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\device_list_border.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_linearlayout_border.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\linearlayout_border.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-mdpi_ic_launcher.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-mdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_okay.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_okay.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_main_activity_bar.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\main_activity_bar.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_delete.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_delete.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_date_input_background.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\date_input_background.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_lock_error.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_lock_error.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_edit_page_split_line.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\edit_page_split_line.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_lingber_ic_downward.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\lingber_ic_downward.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_edit_panel.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\edit_panel.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_launcher_foreground.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_launcher_foreground.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_custom_activity_bar.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\custom_activity_bar.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_lingber_ic_checkbox_unselected.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\lingber_ic_checkbox_unselected.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-xxxhdpi_ic_launcher_round.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-xxxhdpi\\ic_launcher_round.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_ic_back.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\ic_back.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_edit_type_list_border.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\edit_type_list_border.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_lingber_page_number_bg_shape.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\lingber_page_number_bg_shape.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_search_edit_text_bg.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\search_edit_text_bg.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_io_dark.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_io_dark.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_layout_item_content.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\layout_item_content.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_network_blue.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_network_blue.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_switch_white_bg.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\switch_white_bg.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_ble_detail_item.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\ble_detail_item.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-anydpi-v26\\ic_launcher_round.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_activity_unlock_edit.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\activity_unlock_edit.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_lingber_line_shape.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\lingber_line_shape.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_down.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_down.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_switch_bg.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\switch_bg.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-xxhdpi_ic_launcher_foreground.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-xxhdpi\\ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.topflytech.lockActive.app-merged_res-45:/layout_activity_edit.xml.flat",
+        "source": "com.topflytech.lockActive.app-main-46:/layout/activity_edit.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_no_signal.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_no_signal.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_show_panel.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\show_panel.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_switch_red_bg.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\switch_red_bg.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_read_his_data_activity_bar.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\read_his_data_activity_bar.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_activity_access_pwd_change.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\activity_access_pwd_change.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_full_signal.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_full_signal.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_unlock_error.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_unlock_error.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_bg_drop_pop_menu_shap.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\bg_drop_pop_menu_shap.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\xml_network_security_config.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\xml\\network_security_config.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-xhdpi_ic_launcher_round.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-xhdpi\\ic_launcher_round.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_launcher_round.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_launcher_round.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_edit_search.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_edit_search.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-mdpi_ic_launcher_foreground.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-mdpi\\ic_launcher_foreground.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_hide_favorite.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_hide_favorite.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_spinner_daropdown_item.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\spinner_daropdown_item.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_add.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_add.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_lingber_ripple_bg_btn_unavailable.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\lingber_ripple_bg_btn_unavailable.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_popup_menu_item.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\popup_menu_item.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-mdpi_ic_launcher_round.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-mdpi\\ic_launcher_round.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_edit_bg.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\edit_bg.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_sensor_blue.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_sensor_blue.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_search.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_search.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-xxhdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_next.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_next.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_show_favorite.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_show_favorite.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_edit_panel_only_set.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\edit_panel_only_set.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\xml_provider_paths.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\xml\\provider_paths.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_alert_blue.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_alert_blue.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_activity_read_his_data.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\activity_read_his_data.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_lingber_ic_down.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\lingber_ic_down.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable_lingber_textview_shape.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\drawable\\lingber_textview_shape.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\drawable-anydpi-v24_ic_launcher_foreground.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-pngs-40:\\drawable-anydpi-v24\\ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_unlock.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_unlock.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\layout_spinner_simple_daropdown_item.xml.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\layout\\spinner_simple_daropdown_item.xml"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_lock.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_lock.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_advanced_dark.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_advanced_dark.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_ic_scan.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\ic_scan.png"
+    },
+    {
+        "merged": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-merged_res-45:\\mipmap-hdpi_light_red.png.flat",
+        "source": "C:\\Users\\TFT_M\\.gradle\\daemon\\7.5\\com.topflytech.lockActive.app-main-46:\\mipmap-hdpi\\light_red.png"
+    }
+]

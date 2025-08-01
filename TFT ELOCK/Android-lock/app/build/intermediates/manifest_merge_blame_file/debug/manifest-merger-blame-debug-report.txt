@@ -1,0 +1,338 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.topflytech.lockActive"
+4    android:versionCode="21"
+5    android:versionName="1.0.19" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="23"
+8-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml
+9        android:targetSdkVersion="34" />
+9-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml
+10
+11    <uses-permission android:name="android.permission.BLUETOOTH" />
+11-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:6:5-68
+11-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:6:22-65
+12    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+12-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:7:5-74
+12-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:7:22-71
+13    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+13-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:8:5-79
+13-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:8:22-76
+14    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+14-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:9:5-81
+14-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:9:22-78
+15    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+15-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:10:5-76
+15-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:10:22-73
+16    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+16-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:11:5-73
+16-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:11:22-70
+17    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+17-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:12:5-80
+17-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:12:22-77
+18    <uses-permission android:name="android.permission.VIBRATE" />
+18-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:13:5-66
+18-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:13:22-63
+19    <uses-permission android:name="android.permission.CAMERA" />
+19-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:14:5-65
+19-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:14:22-62
+20    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+20-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:15:5-81
+20-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:15:22-78
+21    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+21-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:16:5-75
+21-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:16:22-72
+22    <uses-permission android:name="android.permission.INTERNET" />
+22-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:17:5-67
+22-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:17:22-64
+23    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+23-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:18:5-79
+23-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:18:22-76
+24    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+24-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:19:5-76
+24-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:19:22-73
+25    <uses-permission android:name="android.permission.READ_LOGS" />
+25-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:20:5-22:47
+25-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:21:9-52
+26
+27    <uses-feature
+27-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:24:5-26:35
+28        android:name="android.hardware.bluetooth"
+28-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:25:9-50
+29        android:required="true" />
+29-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:26:9-32
+30    <uses-feature android:name="android.hardware.camera" />
+30-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:27:5-60
+30-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:27:19-57
+31    <uses-feature android:name="android.hardware.camera.autofocus" />
+31-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:28:5-70
+31-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:28:19-67
+32    <uses-feature
+32-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:29:5-31:35
+33        android:name="android.hardware.bluetooth_le"
+33-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:30:9-53
+34        android:required="true" />
+34-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:31:9-32
+35
+36    <uses-permission android:name="android.permission.FLASHLIGHT" /> <!-- To allow starting foreground services on Android P+ - https://developer.android.com/preview/behavior-changes#fg-svc -->
+36-->[com.github.jenly1314:camera-scan:1.0.1] C:\Users\TFT_M\.gradle\caches\transforms-3\6a95fff75bd7bf1d29820633d1a5fbb4\transformed\jetified-camera-scan-1.0.1\AndroidManifest.xml:9:5-69
+36-->[com.github.jenly1314:camera-scan:1.0.1] C:\Users\TFT_M\.gradle\caches\transforms-3\6a95fff75bd7bf1d29820633d1a5fbb4\transformed\jetified-camera-scan-1.0.1\AndroidManifest.xml:9:22-66
+37    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+37-->[com.liulishuo.filedownloader:library:1.7.7] C:\Users\TFT_M\.gradle\caches\transforms-3\876497ecb0a55da974ddb0edd413d1ac\transformed\jetified-library-1.7.7\AndroidManifest.xml:9:5-77
+37-->[com.liulishuo.filedownloader:library:1.7.7] C:\Users\TFT_M\.gradle\caches\transforms-3\876497ecb0a55da974ddb0edd413d1ac\transformed\jetified-library-1.7.7\AndroidManifest.xml:9:22-74
+38
+39    <uses-feature
+39-->[cn.bingoogolapple:bga-qrcode-core:1.3.7] C:\Users\TFT_M\.gradle\caches\transforms-3\c6862227d609b76b22744823d2a7a942\transformed\jetified-bga-qrcode-core-1.3.7\AndroidManifest.xml:15:5-17:36
+40        android:name="android.hardware.camera.flash"
+40-->[cn.bingoogolapple:bga-qrcode-core:1.3.7] C:\Users\TFT_M\.gradle\caches\transforms-3\c6862227d609b76b22744823d2a7a942\transformed\jetified-bga-qrcode-core-1.3.7\AndroidManifest.xml:16:9-53
+41        android:required="false" />
+41-->[cn.bingoogolapple:bga-qrcode-core:1.3.7] C:\Users\TFT_M\.gradle\caches\transforms-3\c6862227d609b76b22744823d2a7a942\transformed\jetified-bga-qrcode-core-1.3.7\AndroidManifest.xml:17:9-33
+42
+43    <application
+43-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:33:5-107:19
+44        android:allowBackup="true"
+44-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:34:9-35
+45        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+45-->[androidx.core:core:1.8.0] C:\Users\TFT_M\.gradle\caches\transforms-3\547512a7b746352299aaa882ca559e69\transformed\core-1.8.0\AndroidManifest.xml:24:18-86
+46        android:configChanges="orientation|screenSize"
+46-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:35:9-55
+47        android:debuggable="true"
+48        android:extractNativeLibs="false"
+49        android:icon="@mipmap/ic_launcher"
+49-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:36:9-43
+50        android:label="@string/app_name"
+50-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:37:9-41
+51        android:roundIcon="@mipmap/ic_launcher_round"
+51-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:38:9-54
+52        android:supportsRtl="true"
+52-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:39:9-35
+53        android:testOnly="true"
+54        android:theme="@style/MyAppTheme"
+54-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:40:9-42
+55        android:usesCleartextTraffic="true" >
+55-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:41:9-44
+56        <activity
+56-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:43:9-45:40
+57            android:name="com.topflytech.lockActive.deviceConfigSetting.AlarmOpenSetActivity"
+57-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:44:13-69
+58            android:exported="false" />
+58-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:45:13-37
+59        <activity
+59-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:46:9-48:40
+60            android:name="com.topflytech.lockActive.deviceConfigSetting.TempAlarmSetActivity"
+60-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:47:13-69
+61            android:exported="false" />
+61-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:48:13-37
+62        <activity
+62-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:49:9-51:40
+63            android:name="com.topflytech.lockActive.SuperPwdResetActivity"
+63-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:50:13-50
+64            android:exported="false" />
+64-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:51:13-37
+65        <activity
+65-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:52:9-54:40
+66            android:name="com.topflytech.lockActive.deviceConfigSetting.IpEditActivity"
+66-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:53:13-63
+67            android:exported="false" />
+67-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:54:13-37
+68        <activity
+68-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:55:9-57:40
+69            android:name="com.topflytech.lockActive.deviceConfigSetting.LockPwdChangeActivity"
+69-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:56:13-70
+70            android:exported="false" />
+70-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:57:13-37
+71        <activity
+71-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:58:9-60:40
+72            android:name="com.topflytech.lockActive.deviceConfigSetting.AccessPwdChangeActivity"
+72-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:59:13-72
+73            android:exported="false" />
+73-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:60:13-37
+74        <activity
+74-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:61:9-63:40
+75            android:name="com.topflytech.lockActive.deviceConfigSetting.TimerActivity"
+75-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:62:13-62
+76            android:exported="false" />
+76-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:63:13-37
+77        <activity
+77-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:64:9-66:40
+78            android:name="com.topflytech.lockActive.deviceConfigSetting.RFIDActivity"
+78-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:65:13-61
+79            android:exported="false" />
+79-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:66:13-37
+80        <activity
+80-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:67:9-69:40
+81            android:name="com.topflytech.lockActive.deviceConfigSetting.SubLockIdActivity"
+81-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:68:13-66
+82            android:exported="false" />
+82-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:69:13-37
+83        <activity android:name="com.topflytech.lockActive.EditActivity" />
+83-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:70:9-50
+83-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:70:19-47
+84        <activity android:name="com.topflytech.lockActive.WeChatQRCodeActivity" />
+84-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:71:9-58
+84-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:71:19-55
+85
+86        <meta-data
+86-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:72:9-74:42
+87            android:name="BUGLY_APPID"
+87-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:73:13-39
+88            android:value="20e5685556" />
+88-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:74:13-39
+89        <meta-data
+89-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:75:9-77:36
+90            android:name="BUGLY_APP_CHANNEL"
+90-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:76:13-45
+91            android:value="play" /> <!-- 配置Bugly调试模式（true或者false） -->
+91-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:77:13-33
+92        <meta-data
+92-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:78:9-80:37
+93            android:name="BUGLY_ENABLE_DEBUG"
+93-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:79:13-46
+94            android:value="false" />
+94-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:80:13-34
+95
+96        <provider
+96-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:82:9-90:20
+97            android:name="androidx.core.content.FileProvider"
+97-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:83:13-62
+98            android:authorities="com.topflytech.lockActive.fileprovider"
+98-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:84:13-73
+99            android:exported="false"
+99-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:85:13-37
+100            android:grantUriPermissions="true" >
+100-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:86:13-47
+101            <meta-data
+101-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:87:13-89:58
+102                android:name="android.support.FILE_PROVIDER_PATHS"
+102-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:88:17-67
+103                android:resource="@xml/provider_paths" />
+103-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:89:17-55
+104        </provider>
+105
+106        <activity android:name="com.topflytech.lockActive.DateSelectActivity" />
+106-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:92:9-56
+106-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:92:19-53
+107        <activity android:name="com.topflytech.lockActive.ReadHisDataActivity" />
+107-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:93:9-57
+107-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:93:19-54
+108        <activity android:name="com.topflytech.lockActive.ReadSubLockHisDataActivity" />
+108-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:94:9-64
+108-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:94:19-61
+109        <activity android:name="com.topflytech.lockActive.ScanActivity" />
+109-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:95:9-50
+109-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:95:19-47
+110        <activity android:name="com.topflytech.lockActive.UnlockActivity" />
+110-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:96:9-52
+110-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:96:19-49
+111        <activity
+111-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:97:9-106:20
+112            android:name="com.topflytech.lockActive.MainActivity"
+112-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:98:13-41
+113            android:configChanges="orientation|screenSize"
+113-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:99:13-59
+114            android:exported="true" >
+114-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:100:13-36
+115            <intent-filter>
+115-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:101:13-105:29
+116                <action android:name="android.intent.action.MAIN" />
+116-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:102:17-69
+116-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:102:25-66
+117
+118                <category android:name="android.intent.category.LAUNCHER" />
+118-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:104:17-77
+118-->D:\truck\mobile\lock-ble-active-android\app\src\main\AndroidManifest.xml:104:27-74
+119            </intent-filter>
+120        </activity>
+121        <activity
+121-->[pub.devrel:easypermissions:1.0.1] C:\Users\TFT_M\.gradle\caches\transforms-3\eb68517a4e085b296a58990f5ce25c35\transformed\jetified-easypermissions-1.0.1\AndroidManifest.xml:12:9-16:66
+122            android:name="pub.devrel.easypermissions.AppSettingsDialogHolderActivity"
+122-->[pub.devrel:easypermissions:1.0.1] C:\Users\TFT_M\.gradle\caches\transforms-3\eb68517a4e085b296a58990f5ce25c35\transformed\jetified-easypermissions-1.0.1\AndroidManifest.xml:13:13-86
+123            android:exported="false"
+123-->[pub.devrel:easypermissions:1.0.1] C:\Users\TFT_M\.gradle\caches\transforms-3\eb68517a4e085b296a58990f5ce25c35\transformed\jetified-easypermissions-1.0.1\AndroidManifest.xml:14:13-37
+124            android:label=""
+124-->[pub.devrel:easypermissions:1.0.1] C:\Users\TFT_M\.gradle\caches\transforms-3\eb68517a4e085b296a58990f5ce25c35\transformed\jetified-easypermissions-1.0.1\AndroidManifest.xml:15:13-29
+125            android:theme="@style/EasyPermissions.Transparent" />
+125-->[pub.devrel:easypermissions:1.0.1] C:\Users\TFT_M\.gradle\caches\transforms-3\eb68517a4e085b296a58990f5ce25c35\transformed\jetified-easypermissions-1.0.1\AndroidManifest.xml:16:13-63
+126
+127        <service
+127-->[androidx.camera:camera-camera2:1.2.3] C:\Users\TFT_M\.gradle\caches\transforms-3\1e406cdc260cc0dbefa0c0d2b86abe90\transformed\jetified-camera-camera2-1.2.3\AndroidManifest.xml:24:9-33:19
+128            android:name="androidx.camera.core.impl.MetadataHolderService"
+128-->[androidx.camera:camera-camera2:1.2.3] C:\Users\TFT_M\.gradle\caches\transforms-3\1e406cdc260cc0dbefa0c0d2b86abe90\transformed\jetified-camera-camera2-1.2.3\AndroidManifest.xml:25:13-75
+129            android:enabled="false"
+129-->[androidx.camera:camera-camera2:1.2.3] C:\Users\TFT_M\.gradle\caches\transforms-3\1e406cdc260cc0dbefa0c0d2b86abe90\transformed\jetified-camera-camera2-1.2.3\AndroidManifest.xml:26:13-36
+130            android:exported="false" >
+130-->[androidx.camera:camera-camera2:1.2.3] C:\Users\TFT_M\.gradle\caches\transforms-3\1e406cdc260cc0dbefa0c0d2b86abe90\transformed\jetified-camera-camera2-1.2.3\AndroidManifest.xml:27:13-37
+131            <meta-data
+131-->[androidx.camera:camera-camera2:1.2.3] C:\Users\TFT_M\.gradle\caches\transforms-3\1e406cdc260cc0dbefa0c0d2b86abe90\transformed\jetified-camera-camera2-1.2.3\AndroidManifest.xml:30:13-32:89
+132                android:name="androidx.camera.core.impl.MetadataHolderService.DEFAULT_CONFIG_PROVIDER"
+132-->[androidx.camera:camera-camera2:1.2.3] C:\Users\TFT_M\.gradle\caches\transforms-3\1e406cdc260cc0dbefa0c0d2b86abe90\transformed\jetified-camera-camera2-1.2.3\AndroidManifest.xml:31:17-103
+133                android:value="androidx.camera.camera2.Camera2Config$DefaultProvider" />
+133-->[androidx.camera:camera-camera2:1.2.3] C:\Users\TFT_M\.gradle\caches\transforms-3\1e406cdc260cc0dbefa0c0d2b86abe90\transformed\jetified-camera-camera2-1.2.3\AndroidManifest.xml:32:17-86
+134        </service>
+135        <service android:name="com.liulishuo.filedownloader.services.FileDownloadService$SharedMainProcessService" />
+135-->[com.liulishuo.filedownloader:library:1.7.7] C:\Users\TFT_M\.gradle\caches\transforms-3\876497ecb0a55da974ddb0edd413d1ac\transformed\jetified-library-1.7.7\AndroidManifest.xml:12:9-118
+135-->[com.liulishuo.filedownloader:library:1.7.7] C:\Users\TFT_M\.gradle\caches\transforms-3\876497ecb0a55da974ddb0edd413d1ac\transformed\jetified-library-1.7.7\AndroidManifest.xml:12:18-115
+136        <service
+136-->[com.liulishuo.filedownloader:library:1.7.7] C:\Users\TFT_M\.gradle\caches\transforms-3\876497ecb0a55da974ddb0edd413d1ac\transformed\jetified-library-1.7.7\AndroidManifest.xml:13:9-15:49
+137            android:name="com.liulishuo.filedownloader.services.FileDownloadService$SeparateProcessService"
+137-->[com.liulishuo.filedownloader:library:1.7.7] C:\Users\TFT_M\.gradle\caches\transforms-3\876497ecb0a55da974ddb0edd413d1ac\transformed\jetified-library-1.7.7\AndroidManifest.xml:14:13-108
+138            android:process=":filedownloader" />
+138-->[com.liulishuo.filedownloader:library:1.7.7] C:\Users\TFT_M\.gradle\caches\transforms-3\876497ecb0a55da974ddb0edd413d1ac\transformed\jetified-library-1.7.7\AndroidManifest.xml:15:13-46
+139
+140        <provider
+140-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\TFT_M\.gradle\caches\transforms-3\4ddd4d45152886ef82be509d9b258422\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:24:9-32:20
+141            android:name="androidx.startup.InitializationProvider"
+141-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\TFT_M\.gradle\caches\transforms-3\4ddd4d45152886ef82be509d9b258422\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:25:13-67
+142            android:authorities="com.topflytech.lockActive.androidx-startup"
+142-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\TFT_M\.gradle\caches\transforms-3\4ddd4d45152886ef82be509d9b258422\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:26:13-68
+143            android:exported="false" >
+143-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\TFT_M\.gradle\caches\transforms-3\4ddd4d45152886ef82be509d9b258422\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:27:13-37
+144            <meta-data
+144-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\TFT_M\.gradle\caches\transforms-3\4ddd4d45152886ef82be509d9b258422\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:29:13-31:52
+145                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+145-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\TFT_M\.gradle\caches\transforms-3\4ddd4d45152886ef82be509d9b258422\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:30:17-85
+146                android:value="androidx.startup" />
+146-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\TFT_M\.gradle\caches\transforms-3\4ddd4d45152886ef82be509d9b258422\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:31:17-49
+147        </provider>
+148
+149        <receiver
+149-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\TFT_M\.gradle\caches\transforms-3\4ddd4d45152886ef82be509d9b258422\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:34:9-52:20
+150            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+150-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\TFT_M\.gradle\caches\transforms-3\4ddd4d45152886ef82be509d9b258422\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:35:13-76
+151            android:directBootAware="false"
+151-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\TFT_M\.gradle\caches\transforms-3\4ddd4d45152886ef82be509d9b258422\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:36:13-44
+152            android:enabled="true"
+152-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\TFT_M\.gradle\caches\transforms-3\4ddd4d45152886ef82be509d9b258422\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:37:13-35
+153            android:exported="true"
+153-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\TFT_M\.gradle\caches\transforms-3\4ddd4d45152886ef82be509d9b258422\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:38:13-36
+154            android:permission="android.permission.DUMP" >
+154-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\TFT_M\.gradle\caches\transforms-3\4ddd4d45152886ef82be509d9b258422\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:39:13-57
+155            <intent-filter>
+155-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\TFT_M\.gradle\caches\transforms-3\4ddd4d45152886ef82be509d9b258422\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:40:13-42:29
+156                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+156-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\TFT_M\.gradle\caches\transforms-3\4ddd4d45152886ef82be509d9b258422\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:41:17-91
+156-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\TFT_M\.gradle\caches\transforms-3\4ddd4d45152886ef82be509d9b258422\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:41:25-88
+157            </intent-filter>
+158            <intent-filter>
+158-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\TFT_M\.gradle\caches\transforms-3\4ddd4d45152886ef82be509d9b258422\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:43:13-45:29
+159                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+159-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\TFT_M\.gradle\caches\transforms-3\4ddd4d45152886ef82be509d9b258422\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:44:17-85
+159-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\TFT_M\.gradle\caches\transforms-3\4ddd4d45152886ef82be509d9b258422\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:44:25-82
+160            </intent-filter>
+161            <intent-filter>
+161-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\TFT_M\.gradle\caches\transforms-3\4ddd4d45152886ef82be509d9b258422\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:46:13-48:29
+162                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+162-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\TFT_M\.gradle\caches\transforms-3\4ddd4d45152886ef82be509d9b258422\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:47:17-88
+162-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\TFT_M\.gradle\caches\transforms-3\4ddd4d45152886ef82be509d9b258422\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:47:25-85
+163            </intent-filter>
+164            <intent-filter>
+164-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\TFT_M\.gradle\caches\transforms-3\4ddd4d45152886ef82be509d9b258422\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:49:13-51:29
+165                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+165-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\TFT_M\.gradle\caches\transforms-3\4ddd4d45152886ef82be509d9b258422\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:50:17-95
+165-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\TFT_M\.gradle\caches\transforms-3\4ddd4d45152886ef82be509d9b258422\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:50:25-92
+166            </intent-filter>
+167        </receiver>
+168    </application>
+169
+170</manifest>

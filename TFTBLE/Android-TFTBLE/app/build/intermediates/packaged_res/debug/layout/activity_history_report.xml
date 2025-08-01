@@ -1,0 +1,1428 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".HistoryReportActivity">
+
+    <ScrollView
+        android:id="@+id/scrollview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbars="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:background="@drawable/device_list_border"
+                android:orientation="vertical"
+                android:padding="5dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/ble_name"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_device_name"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="2"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/ble_id"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_ble_id"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="2"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/device_model"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_ble_model"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="2"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/report_create_time"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_report_create_time"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="2"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/report_time"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_report_begin_time"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_report_end_time"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/battery"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_battery_begin"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_battery_end"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tx_report_prop"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/light"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_weight="3"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:id="@+id/img_open_count"
+                            android:layout_width="25dp"
+                            android:layout_height="25dp">
+
+                        </ImageView>
+
+                        <TextView
+                            android:id="@+id/tx_open_count"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_marginRight="1dp"
+                            android:layout_marginBottom="1dp"
+                            android:background="@color/bg_color_white"
+                            android:textColor="@color/tx_black"
+                            android:textSize="@dimen/list_tx" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_weight="3"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:id="@+id/img_close_count"
+                            android:layout_width="25dp"
+                            android:layout_height="25dp">
+
+                        </ImageView>
+
+                        <TextView
+                            android:id="@+id/tx_close_count"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_marginRight="1dp"
+                            android:layout_marginBottom="1dp"
+                            android:layout_weight="3"
+                            android:background="@color/bg_color_white"
+                            android:textColor="@color/tx_black"
+                            android:textSize="@dimen/list_tx" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="20dp"></LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/ll_s02_summary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:background="@drawable/device_list_border"
+                android:orientation="vertical"
+                android:padding="5dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="2"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s02_temp_head"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s02_humidity_head"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="2"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/start_value"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s02_temp_start"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s02_humidity_start"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="2"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/end_value"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s02_temp_end"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s02_humidity_end"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="2"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/max_limit"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s02_temp_max_limit"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s02_humidity_max_limit"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="2"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/min_limit"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s02_temp_min_limit"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s02_humidity_min_limit"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="2"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/average"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s02_temp_average"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s02_humidity_average"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="2"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/max"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s02_temp_max"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s02_humidity_max"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="2"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/min"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s02_temp_min"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s02_humidity_min"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="2"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/over_high_count"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s02_temp_over_high_count"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s02_humidity_over_high_count"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="2"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/over_high_time"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s02_temp_over_high_time"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s02_humidity_over_high_time"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="2"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/over_low_count"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s02_temp_over_low_count"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s02_humidity_over_low_count"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="2"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/over_low_time"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s02_temp_over_low_time"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s02_humidity_over_low_time"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/ll_s04_summary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:background="@drawable/device_list_border"
+                android:orientation="vertical"
+                android:padding="5dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s04_temp_head"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/start_value"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s04_temp_start"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/end_value"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s04_temp_end"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/max_limit"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s04_temp_max_limit"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/min_limit"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s04_temp_min_limit"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/average"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s04_temp_average"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/max"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s04_temp_max"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/min"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s04_temp_min"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/over_high_count"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s04_temp_over_high_count"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/over_high_time"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s04_temp_over_high_time"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/over_low_count"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s04_temp_over_low_count"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="@dimen/list_item_margin_left"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:text="@string/over_low_time"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                    <TextView
+                        android:id="@+id/tx_s04_temp_over_low_time"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="1dp"
+                        android:layout_marginBottom="1dp"
+                        android:layout_weight="3"
+                        android:background="@color/bg_color_white"
+                        android:textColor="@color/tx_black"
+                        android:textSize="@dimen/list_tx" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/report_item_high"
+                    android:orientation="horizontal"></LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="20dp"></LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/ll_temp_chart"
+                android:layout_width="match_parent"
+                android:layout_height="400dp">
+
+                <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/temp_chart"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/ll_humidity_chart"
+                android:layout_width="match_parent"
+                android:layout_height="400dp">
+
+                <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/humidity_chart"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="20dp"></LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="400dp">
+
+                <com.bin.david.form.core.SmartTable
+                    android:id="@+id/table"
+                    android:layout_width="match_parent"
+                    android:layout_height="400dp"
+
+                    />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="horizontal">
+
+                <com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton
+                    android:id="@+id/btn_pre_page"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_margin="10dp"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:text="@string/previous"
+                    android:textAllCaps="false" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:orientation="horizontal">
+
+                    <Spinner
+                        android:id="@+id/page_spinner"
+                        android:layout_width="100dp"
+                        android:layout_height="match_parent"
+                        android:gravity="center" />
+                </LinearLayout>
+
+                <com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton
+                    android:id="@+id/btn_next_page"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_margin="10dp"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:text="@string/next"
+                    android:textAllCaps="false" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+</RelativeLayout>
