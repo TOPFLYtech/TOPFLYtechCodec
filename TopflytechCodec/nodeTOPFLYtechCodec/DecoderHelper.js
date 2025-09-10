@@ -48,7 +48,11 @@ var DecoderHelper = {
         this.parseLocationTypeOneData(locationMessage, type1Map);
         this.parseLocationTypeTwoData(locationMessage, type2Map);
         this.parseLocationTypeThreeData(locationMessage, type3Map);
-
+        if(!locationMessage.latlngValid && locationMessage.latitude != undefined && locationMessage.longitude != undefined  ){
+            if(!(locationMessage.latitude == 0 && locationMessage.longitude == 0)){
+                locationMessage.latlngValid = false;
+            }
+        }
         return locationMessage;
     },
     parseThreeTypeDataMap:function (bytes, packageLen, positionIndex, type1Map, type2Map, type3Map) {
@@ -164,9 +168,26 @@ var DecoderHelper = {
             }
         }
     },
+    isAllFF:function(array) {
+        if (array == null || array.length === 0) {
+            return false;
+        }
+        for (let i = 0; i < array.length; i++) {
+            // In JavaScript, byte values are signed (-128 to 127)
+            // 0xFF is represented as -1 in signed byte
+            if (array[i] !== 255) {
+                return false;
+            }
+        }
+        return true;
+    },
     parseLocationTypeThreeData:function(locationMessage, typeMap) {
         for (let [dataId, valueByte] of typeMap.entries()) {
             if (dataId === 0x01) {
+                if(this.isAllFF(valueByte)){
+                    locationMessage.latlngValid = false
+                    continue;
+                }
                 const altitude = ByteUtils.bytes2Float(valueByte, 0);
                 const longitude = ByteUtils.bytes2Float(valueByte, 4);
                 const latitude = ByteUtils.bytes2Float(valueByte, 8);
