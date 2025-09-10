@@ -66,7 +66,7 @@ namespace TopflytechCodec
             locationMessage.IsHistoryData = isHistory;
             ParseLocationTypeOneData(locationMessage, type1Map);
             ParseLocationTypeTwoData(locationMessage, type2Map);
-            ParseLocationTypeThreeData(locationMessage, type3Map);
+            ParseLocationTypeThreeData(locationMessage, type3Map); 
             return locationMessage;
         }
 
@@ -227,7 +227,21 @@ namespace TopflytechCodec
                 }
             }
         }
-
+        private static bool IsAllFF(byte[] array)
+        {
+            if (array == null || array.Length == 0)
+            {
+                return false;
+            }
+            foreach (byte b in array)
+            {
+                if (b != 0xFF)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
         private static void ParseLocationTypeThreeData(LocationMessage locationMessage, Dictionary<int, byte[]> typeMap)
         {
             foreach (var dataId in typeMap.Keys)
@@ -235,6 +249,11 @@ namespace TopflytechCodec
                 if (dataId == 0x01)
                 {
                     byte[] valueByte = typeMap[dataId];
+                    if (IsAllFF(valueByte))
+                    {
+                        locationMessage.LatlngValid = false;
+                        continue;
+                    }
                     double altitude = BytesUtils.Bytes2Float(valueByte, 0);
                     double longitude = BytesUtils.Bytes2Float(valueByte, 4);
                     double latitude = BytesUtils.Bytes2Float(valueByte, 8);
@@ -295,11 +314,11 @@ namespace TopflytechCodec
                 {
                     byte[] valueByte = typeMap[dataId];
                     string selfMac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(valueByte, 0, 6), 0);
-                    string ap1Mac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(valueByte, 6, 6), 0);
+                    string ap1Mac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(valueByte, 6, 12), 0);
                     int ap1Rssi = (int)valueByte[12];
-                    string ap2Mac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(valueByte, 13, 6), 0);
+                    string ap2Mac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(valueByte, 13, 19), 0);
                     int ap2Rssi = (int)valueByte[19];
-                    string ap3Mac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(valueByte, 20, 6), 0);
+                    string ap3Mac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(valueByte, 20, 26), 0);
                     int ap3Rssi = (int)valueByte[26];
                     locationMessage.SelfMac = selfMac.ToUpper();
                     locationMessage.Ap1Mac = ap1Mac.ToUpper();
@@ -314,9 +333,9 @@ namespace TopflytechCodec
                     byte[] valueByte = typeMap[dataId];
                     byte[] axisXByte = Utils.ArrayCopyOfRange(valueByte, 0, 2) ;
                     int axisX = BytesUtils.bytes2SingleShort(axisXByte,0);
-                    byte[] axisYByte = Utils.ArrayCopyOfRange(valueByte, 2, 2) ;
+                    byte[] axisYByte = Utils.ArrayCopyOfRange(valueByte, 2, 4) ;
                     int axisY = BytesUtils.bytes2SingleShort(axisYByte, 0);
-                    byte[] axisZByte = Utils.ArrayCopyOfRange(valueByte, 4, 2);
+                    byte[] axisZByte = Utils.ArrayCopyOfRange(valueByte, 4, 6);
                     int axisZ = BytesUtils.bytes2SingleShort(axisZByte, 0);
                     locationMessage.AxisX = axisX;
                     locationMessage.AxisY = axisY;
@@ -327,9 +346,9 @@ namespace TopflytechCodec
                     byte[] valueByte = typeMap[dataId];
                     byte[] gyroscopeAxisXByte = Utils.ArrayCopyOfRange(valueByte, 0, 2);
                     int gyroscopeAxisX = BytesUtils.bytes2SingleShort(gyroscopeAxisXByte, 0);
-                    byte[] gyroscopeAxisYByte = Utils.ArrayCopyOfRange(valueByte, 2, 2);
+                    byte[] gyroscopeAxisYByte = Utils.ArrayCopyOfRange(valueByte, 2, 4);
                     int gyroscopeAxisY = BytesUtils.bytes2SingleShort(gyroscopeAxisYByte, 0);
-                    byte[] gyroscopeAxisZByte = Utils.ArrayCopyOfRange(valueByte, 4, 2);
+                    byte[] gyroscopeAxisZByte = Utils.ArrayCopyOfRange(valueByte, 4, 6);
                     int gyroscopeAxisZ = BytesUtils.bytes2SingleShort(gyroscopeAxisZByte, 0);
                     locationMessage.GyroscopeAxisX = gyroscopeAxisX;
                     locationMessage.GyroscopeAxisY = gyroscopeAxisY;
