@@ -1392,11 +1392,21 @@ class DecoderHelper:
                     dataContent = bytesData[positionIndex:positionIndex + dataLen]
                     positionIndex += dataLen
                     type3Map[idValue] = dataContent
-
+    @staticmethod
+    def isAllFF(byte_array):
+        if byte_array is None or len(byte_array) == 0:
+            return False 
+        for b in byte_array:
+            if b != 0xFF:
+                return False 
+        return True
     @staticmethod
     def parseLocationTypeThreeData(locationMessage, typeMap):
         for dataId, valueByte in typeMap.items():
             if dataId == 0x01:
+                if DecoderHelper.isAllFF(valueByte):
+                    locationMessage.latlngValid = False
+                    continue
                 altitude = bytes2Float(valueByte, 0)
                 longitude = bytes2Float(valueByte, 4)
                 latitude = bytes2Float(valueByte, 8)
