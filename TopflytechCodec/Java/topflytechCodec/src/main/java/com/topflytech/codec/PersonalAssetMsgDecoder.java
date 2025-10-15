@@ -899,6 +899,16 @@ public class PersonalAssetMsgDecoder {
                     }else{
                         break;
                     }
+                }else if (bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x0d) { 
+                    positionIndex += 2;
+                    if (positionIndex + 7 <= bleData.length) {
+                        BleCustomer2397SensorData bleCustomer2397SensorData = parseCustomer2397Data(bleData, positionIndex);
+                        if(bleCustomer2397SensorData == null){
+                            break;
+                        }
+                        bleDataList.add(bleCustomer2397SensorData); 
+                        positionIndex += 8 + bleCustomer2397SensorData.getRawData().length + 1;
+                    } 
                 }else{
                     break;
                 }
@@ -943,6 +953,17 @@ public class PersonalAssetMsgDecoder {
                 BleFuelData bleFuelData = getBleFuelData(bleData, i, decimalFormat);
                 bleDataList.add(bleFuelData);
             }
+        }else if (bleData[0] == 0x00 && bleData[1] == 0x0d) {
+            bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_Customer2397);
+            int positionIndex = 2;
+            while (positionIndex + 7 <= bleData.length) {
+                BleCustomer2397SensorData bleCustomer2397SensorData = parseCustomer2397Data(bleData, positionIndex);
+                if(bleCustomer2397SensorData == null){
+                    break;
+                }
+                bleDataList.add(bleCustomer2397SensorData); 
+                positionIndex += 8 + bleCustomer2397SensorData.getRawData().length + 1;
+            } 
         }
         bluetoothPeripheralDataMessage.setBleDataList(bleDataList);
         return bluetoothPeripheralDataMessage;
@@ -1187,6 +1208,16 @@ public class PersonalAssetMsgDecoder {
                     }else{
                         break;
                     }
+                }else if (bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x0d) { 
+                    positionIndex+=2;
+                    if (positionIndex + 7 <= bleData.length) {
+                        BleCustomer2397SensorData bleCustomer2397SensorData = parseCustomer2397Data(bleData, positionIndex);
+                        if(bleCustomer2397SensorData == null){
+                            break;
+                        }
+                        bleDataList.add(bleCustomer2397SensorData); 
+                        positionIndex += 8 + bleCustomer2397SensorData.getRawData().length + 1;
+                    } 
                 }else{
                     break;
                 }
@@ -1225,15 +1256,49 @@ public class PersonalAssetMsgDecoder {
                 BleCtrlData bleCtrlData = getBleCtrlData(bleData, i, decimalFormat);
                 bleDataList.add(bleCtrlData);
             }
-        }else if (bleData[0] == 0x00 && bleData[1] == 0x07) {
+        }else if (bleData[0] == 0x00 && bleData[1] == 0x07){
             bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_FUEL);
-            for (int i = 2;i+15 <= bleData.length;i+=15){
+            for (int i = 2;i +15 <= bleData.length;i+=15){
                 BleFuelData bleFuelData = getBleFuelData(bleData, i, decimalFormat);
                 bleDataList.add(bleFuelData);
             }
+        }else if (bleData[0] == 0x00 && bleData[1] == 0x0d) {
+            bluetoothPeripheralDataMessage.setMessageType(BluetoothPeripheralDataMessage.MESSAGE_TYPE_Customer2397);
+            int positionIndex = 2;
+            while (positionIndex + 7 <= bleData.length) {
+                BleCustomer2397SensorData bleCustomer2397SensorData = parseCustomer2397Data(bleData, positionIndex);
+                if(bleCustomer2397SensorData == null){
+                    break;
+                }
+                bleDataList.add(bleCustomer2397SensorData); 
+                positionIndex += 8 + bleCustomer2397SensorData.getRawData().length + 1;
+            } 
         }
         bluetoothPeripheralDataMessage.setBleDataList(bleDataList);
         return bluetoothPeripheralDataMessage;
+    }
+
+    private BleCustomer2397SensorData parseCustomer2397Data(byte[] bleData, int positionIndex) { 
+        byte[] macArray = Arrays.copyOfRange(bleData, positionIndex + 0, positionIndex + 6);
+        positionIndex+=6;
+        int len = BytesUtils.bytes2Short(bleData, positionIndex) ;
+        if(positionIndex + len > bleData.length || len < 1){
+            return null;
+        }
+        positionIndex += 2;
+        byte[] rawData = Arrays.copyOfRange(bleData, positionIndex, positionIndex + len - 1); 
+        int rssiTemp = (int) bleData[positionIndex + len - 1] < 0 ? (int) bleData[positionIndex + len - 1] + 256 : (int) bleData[positionIndex + len - 1];
+        int rssi;
+        if(rssiTemp == 255){
+            rssi = -999;
+        }else{
+            rssi = rssiTemp - 128;
+        }
+        BleCustomer2397SensorData bleCustomer2397SensorData = new BleCustomer2397SensorData();
+        bleCustomer2397SensorData.setMac(BytesUtils.bytes2HexString(macArray, 0));
+        bleCustomer2397SensorData.setRawData(rawData);
+        bleCustomer2397SensorData.setRssi(rssi);
+        return bleCustomer2397SensorData;
     }
 
     private BleFuelData getBleFuelData(byte[] bleData, int i, DecimalFormat decimalFormat) {
@@ -1476,8 +1541,8 @@ public class PersonalAssetMsgDecoder {
                     speedf = Float.parseFloat(String.format("%d.%d", Integer.parseInt(strSp.substring(0, 3)), Integer.parseInt(strSp.substring(3, strSp.length()))));
                 }
             }catch (Exception e){
-                System.out.println("Imei : " + imei);
-                e.printStackTrace();
+                // System.out.println("Imei : " + imei);
+                // e.printStackTrace();
             }
         }
         Boolean is_4g_lbs = false;
