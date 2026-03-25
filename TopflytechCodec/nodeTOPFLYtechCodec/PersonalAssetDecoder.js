@@ -5,6 +5,7 @@ var DecoderHelper = require("./DecoderHelper")
 var PersonalAssetDecoder = {
     HEADER_LENGTH:3,
     SIGNUP:[0x27, 0x27, 0x01],
+    SIGNUP_SECOND:[0x27, 0x27, 0x31],
     DATA:[0x27, 0x27, 0x02],
     HEARTBEAT:[0x27, 0x27, 0x03],
     ALARM:[0x27, 0x27, 0x04],
@@ -13,6 +14,7 @@ var PersonalAssetDecoder = {
     BLUETOOTH_DATA:[0x27, 0x27, 0x10],
     WIFI_DATA:[0x27, 0x27, 0x15],
     LOCK_DATA:[0x27, 0x27, 0x17],
+    SUB_LOCK_DATA:[0x27, 0x27, 0x27],
     GEO_DATA :[0x27, 0x27, 0x20],
     BLUETOOTH_SECOND_DATA:[0x27, 0x27, 0x12],
     WIFI_WITH_DEVICE_INFO_DATA : [0x27, 0x27, 0x24 ],
@@ -29,6 +31,7 @@ var PersonalAssetDecoder = {
             return false
         }
         return ByteUtils.arrayEquals(this.SIGNUP, bytes)
+            || ByteUtils.arrayEquals(this.SIGNUP_SECOND, bytes)
             || ByteUtils.arrayEquals(this.HEARTBEAT, bytes)
             || ByteUtils.arrayEquals(this.DATA, bytes)
             || ByteUtils.arrayEquals(this.ALARM, bytes)
@@ -36,6 +39,7 @@ var PersonalAssetDecoder = {
             || ByteUtils.arrayEquals(this.BLUETOOTH_DATA,bytes)
             || ByteUtils.arrayEquals(this.WIFI_DATA,bytes)
             || ByteUtils.arrayEquals(this.LOCK_DATA,bytes)
+            || ByteUtils.arrayEquals(this.SUB_LOCK_DATA,bytes)
             || ByteUtils.arrayEquals(this.GEO_DATA,bytes)
             || ByteUtils.arrayEquals(this.BLUETOOTH_SECOND_DATA,bytes)
             || ByteUtils.arrayEquals(this.WIFI_WITH_DEVICE_INFO_DATA,bytes)
@@ -159,6 +163,9 @@ var PersonalAssetDecoder = {
                 case 0x01:
                     var signInMessage = this.parseLoginMessage(bytes);
                     return signInMessage;
+                case 0x31:
+                    var secondSignInMessage = this.parseSecondLoginMessage(bytes);
+                    return secondSignInMessage;
                 case 0x03:
                     var heartbeatMessage = this.parseHeartbeat(bytes);
                     return heartbeatMessage;
@@ -175,6 +182,9 @@ var PersonalAssetDecoder = {
                 case 0x17:
                     var lockMessage = this.parseLockMessage(bytes);
                     return lockMessage;
+                case 0x27:
+                    var subLockMessage = this.parseSubLockMessage(bytes);
+                    return subLockMessage;
                 case 0x15:
                     var  wifiMessage = this.parseWifiMessage(bytes);
                     return wifiMessage;
@@ -328,17 +338,37 @@ var PersonalAssetDecoder = {
     },
     parseInteractMessage:function (bytes){
         var serialNo = ByteUtils.byteToShort(bytes,5);
-        var imei = ByteUtils.IMEI.decode(bytes,7)
-        var data = ByteUtils.arrayOfRange(bytes,16,bytes.length)
-        var content = ByteUtils.charArrayToStr(data,"ascii")
-        var configMessage = {
-            serialNo:serialNo,
-            messageType:"config",
-            imei:imei,
-            srcBytes:bytes,
-            content:content,
+        var imei = ByteUtils.IMEI.decode(bytes,7);
+        var protocol = bytes[15];
+        var data = ByteUtils.arrayOfRange(bytes,16,bytes.length);
+        var messageData = Buffer.from(data).toString("utf16le").replace(/\u0000+$/g, "");
+        if (protocol == 0x01){
+            return {
+                serialNo:serialNo,
+                messageType:"config",
+                imei:imei,
+                srcBytes:bytes,
+                content:messageData,
+                configResultContent:messageData,
+            };
+        }else if(protocol == 0x03){
+            return {
+                serialNo:serialNo,
+                messageType:"forward",
+                imei:imei,
+                srcBytes:bytes,
+                content:messageData,
+            };
+        }else if(protocol == 0x05){
+            return {
+                serialNo:serialNo,
+                messageType:"ussd",
+                imei:imei,
+                srcBytes:bytes,
+                content:messageData,
+            };
         }
-        return configMessage
+        return null;
     },
     getBleTireData: function (bleData, i) {
         var bleTireData = {};
@@ -1256,6 +1286,33 @@ var PersonalAssetDecoder = {
         }
         return signInMessage
     },
+    parseSecondLoginMessage:function (bytes){
+        var serialNo = ByteUtils.byteToShort(bytes,5);
+        var imei = ByteUtils.IMEI.decode(bytes,7);
+        var model = ByteUtils.byteToShort(bytes,15);
+        var software = "V" + (bytes[17] & 0xf) + "." + ((bytes[18] & 0xf0) >> 4) + "." + (bytes[18] & 0xf);
+        var firmware = ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes,22,24),0);
+        firmware = "V" + firmware.substring(0,1)+ "." +firmware.substring(1, 2)+ "." + firmware.substring(2,3)+ "." +firmware.substring(3,4);
+        var hardwareByte = bytes[24];
+        var hardware = "";
+        if((hardwareByte & 0x80) == 0x80){
+            hardware = ByteUtils.bytes2HexString([hardwareByte & 0x7f],0);
+        }else{
+            hardware = ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes,24,25),0);
+        }
+        hardware = "V" + hardware.substring(0,1)+ "." +hardware.substring(1, 2);
+        return {
+            serialNo:serialNo,
+            imei:imei,
+            software:software,
+            firmware:firmware,
+            hardware:hardware,
+            model:model,
+            protocolHeadType:bytes[2],
+            srcBytes:bytes,
+            messageType:"signIn",
+        };
+    },
     parseLockMessage:function(bytes){
         var serialNo = ByteUtils.byteToShort(bytes,5);
         var imei = ByteUtils.IMEI.decode(bytes,7)
@@ -1324,7 +1381,7 @@ var PersonalAssetDecoder = {
         if (is_4g_lbs){
             mcc_4g = ByteUtils.byteToShort(bytes,22) & 0x7FFF;
             mnc_4g = ByteUtils.byteToShort(bytes,24);
-            eci_4g = ByteUtils.bin2String(bytes, 26);
+            eci_4g = ByteUtils.byteToLong(bytes, 26);
             tac = ByteUtils.byteToShort(bytes, 30);
             pcid_4g_1 = ByteUtils.byteToShort(bytes, 32);
             pcid_4g_2 = ByteUtils.byteToShort(bytes, 34);
@@ -1376,6 +1433,166 @@ var PersonalAssetDecoder = {
 
         return lockMessage;
     },
+    parseSubLockSoftwareVersion:function(bytes,index){
+        if(bytes.length < index + 3){
+            return "";
+        }
+        var all = ByteUtils.byteToShort(bytes,index);
+        var version1 = (bytes[index] & 0xFF) >> 5;
+        var version2 = (all & 0x1FFF) >> 7;
+        var version3 = all & 0x7f;
+        var testByte = bytes[index + 2];
+        if(testByte != 0){
+            return version1 + "." + version2 + "." + (version3 < 10 ? "0" + version3 : version3) + " " + String.fromCharCode(testByte);
+        }
+        return version1 + "." + version2 + "." + (version3 < 10 ? "0" + version3 : version3);
+    },
+    parseSubLockMessage:function(bytes){
+        var serialNo = ByteUtils.byteToShort(bytes,5);
+        var imei = ByteUtils.IMEI.decode(bytes,7);
+        var date = ByteUtils.getGTM0Date(bytes, 15);
+        var latlngValid = (bytes[21] & 0x40) != 0x00;
+        var isGpsWorking = (bytes[21] & 0x20) == 0x00;
+        var isHistoryData = (bytes[21] & 0x80) != 0x00;
+        var satelliteCount = bytes[21] & 0x1F;
+        var latlngData = ByteUtils.arrayOfRange(bytes,22,38);
+        if (ByteUtils.arrayEquals(latlngData,this.latlngInvalidData)){
+            latlngValid = false;
+        }
+        var altitude = latlngValid ? ByteUtils.bytes2Float(bytes, 22) : 0;
+        var longitude = latlngValid ? ByteUtils.bytes2Float(bytes,26) : 0;
+        var latitude = latlngValid ? ByteUtils.bytes2Float(bytes,30) : 0;
+        var speedf = 0.0;
+        if (latlngValid){
+            var bytesSpeed = ByteUtils.arrayOfRange(bytes, 34, 36);
+            var strSp = ByteUtils.bytes2HexString(bytesSpeed, 0);
+            if(strSp.toLowerCase() !=="ffff"){
+                speedf = parseFloat(strSp.substring(0, 3) + "." +strSp.substring(3, strSp.length));
+            }
+        }
+        var azimuth = latlngValid ? ByteUtils.byteToShort(bytes, 36) : 0;
+        var is_4g_lbs = false;
+        var mcc_4g = null;
+        var mnc_4g = null;
+        var eci_4g = null;
+        var tac = null;
+        var pcid_4g_1 = null;
+        var pcid_4g_2 = null;
+        var pcid_4g_3 = null;
+        var is_2g_lbs = false;
+        var mcc_2g = null;
+        var mnc_2g = null;
+        var lac_2g_1 = null;
+        var ci_2g_1 = null;
+        var lac_2g_2 = null;
+        var ci_2g_2 = null;
+        var lac_2g_3 = null;
+        var ci_2g_3 = null;
+        if (!latlngValid){
+            var lbsByte = bytes[22];
+            if ((lbsByte & 0x80) == 0x80){
+                is_4g_lbs = true;
+            }else{
+                is_2g_lbs = true;
+            }
+        }
+        if (is_2g_lbs){
+            mcc_2g = ByteUtils.byteToShort(bytes,22);
+            mnc_2g = ByteUtils.byteToShort(bytes,24);
+            lac_2g_1 = ByteUtils.byteToShort(bytes,26);
+            ci_2g_1 = ByteUtils.byteToShort(bytes,28);
+            lac_2g_2 = ByteUtils.byteToShort(bytes,30);
+            ci_2g_2 = ByteUtils.byteToShort(bytes,32);
+            lac_2g_3 = ByteUtils.byteToShort(bytes,34);
+            ci_2g_3 = ByteUtils.byteToShort(bytes,36);
+        }
+        if (is_4g_lbs){
+            mcc_4g = ByteUtils.byteToShort(bytes,22) & 0x7FFF;
+            mnc_4g = ByteUtils.byteToShort(bytes,24);
+            eci_4g = ByteUtils.byteToLong(bytes, 26);
+            tac = ByteUtils.byteToShort(bytes, 30);
+            pcid_4g_1 = ByteUtils.byteToShort(bytes, 32);
+            pcid_4g_2 = ByteUtils.byteToShort(bytes, 34);
+            pcid_4g_3 = ByteUtils.byteToShort(bytes,36);
+        }
+        var rssiTemp = bytes[38] < 0 ? bytes[38] + 256 : bytes[38];
+        var rssi = rssiTemp == 255 ? -999 : (rssiTemp - 128);
+        var hardware = ((bytes[39] & 0xf0) >> 4) + "." + (bytes[39] & 0xf);
+        var software = this.parseSubLockSoftwareVersion(bytes,40);
+        var alarmByte = bytes[43];
+        var lockType = bytes[44] & 0xff;
+        var lockStatus = ByteUtils.byteToShort(bytes,45);
+        var isCharging = (lockStatus & 0x01) == 0x01;
+        var isChargingOverVoltage = (lockStatus & 0x02) == 0x02;
+        var isLowPower = (lockStatus & 0x04) == 0x04;
+        var isHighTemp = (lockStatus & 0x08) == 0x08;
+        var isLowTemp = (lockStatus & 0x10) == 0x10;
+        var isOpenLockCover = (lockStatus & 0x20) == 0x20;
+        var isOpenBackCover = (lockStatus & 0x40) == 0x40;
+        var isGpsPosition = (lockStatus & 0x80) == 0x80;
+        var isGpsJamming = (lockStatus & 0x100) == 0x100;
+        var voltage = ByteUtils.byteToShort(bytes,47) / 1000.0;
+        var solarVoltage = ByteUtils.byteToShort(bytes,49) / 1000.0;
+        var temp = bytes[51];
+        if(bytes[51] == 0xff){
+            temp = -999;
+        }
+        var lockId = ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes,52,58),0).toUpperCase();
+        var deviceId = ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes,58,62),0);
+        return {
+            protocolHeadType:bytes[2],
+            serialNo:serialNo,
+            imei:imei,
+            srcBytes:bytes,
+            messageType:"subLock",
+            date:date,
+            latlngValid:latlngValid,
+            altitude:altitude,
+            longitude:longitude,
+            latitude:latitude,
+            speed:speedf,
+            azimuth:azimuth,
+            lockType:lockType,
+            lockId:lockId,
+            isHistoryData:isHistoryData,
+            satelliteCount:satelliteCount,
+            isGpsWorking:isGpsWorking,
+            is_4g_lbs:is_4g_lbs,
+            is_2g_lbs:is_2g_lbs,
+            mcc_2g:mcc_2g,
+            mnc_2g:mnc_2g,
+            lac_2g_1:lac_2g_1,
+            ci_2g_1:ci_2g_1,
+            lac_2g_2:lac_2g_2,
+            ci_2g_2:ci_2g_2,
+            lac_2g_3:lac_2g_3,
+            ci_2g_3:ci_2g_3,
+            mcc_4g:mcc_4g,
+            mnc_4g:mnc_4g,
+            eci_4g:eci_4g,
+            tac:tac,
+            pcid_4g_1:pcid_4g_1,
+            pcid_4g_2:pcid_4g_2,
+            pcid_4g_3:pcid_4g_3,
+            rssi:rssi,
+            isCharging:isCharging,
+            isChargingOverVoltage:isChargingOverVoltage,
+            isLowPower:isLowPower,
+            isHighTemp:isHighTemp,
+            isLowTemp:isLowTemp,
+            isOpenLockCover:isOpenLockCover,
+            isOpenBackCover:isOpenBackCover,
+            isGpsPosition:isGpsPosition,
+            isGpsJamming:isGpsJamming,
+            software:software,
+            hardware:hardware,
+            voltage:voltage,
+            solarVoltage:solarVoltage,
+            temp:temp,
+            deviceId:deviceId,
+            alarmByte:alarmByte,
+        };
+    },
     parseDeviceTempCollectionMessage:function(bytes){
         var serialNo = ByteUtils.byteToShort(bytes,5);
         var imei = ByteUtils.IMEI.decode(bytes,7);
@@ -1416,11 +1633,11 @@ var PersonalAssetDecoder = {
         }
         var selfMac =  ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes, 23, 29), 0);
         var ap1Mac =  ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes, 29, 35), 0);
-        var ap1Rssi = bytes[35];
+        var ap1Rssi = bytes[35] > 127 ? bytes[35] - 256 : bytes[35];
         var ap2Mac =  ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes,36,42),0);
-        var ap2Rssi = bytes[42];
+        var ap2Rssi = bytes[42] > 127 ? bytes[42] - 256 : bytes[42];
         var ap3Mac =  ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes,43,49),0);
-        var ap3Rssi = bytes[49];
+        var ap3Rssi = bytes[49] > 127 ? bytes[49] - 256 : bytes[49];
 
         var latlngValid = (bytes[15] & 0x40) == 0x40;
         var altitude = latlngValid ? ByteUtils.bytes2Float(bytes, 23) : 0;
@@ -1707,11 +1924,11 @@ var PersonalAssetDecoder = {
         var date = ByteUtils.getGTM0Date(bytes, 15);
         var selfMac =  ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes, 21, 27), 0);
         var ap1Mac =  ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes, 27, 33), 0);
-        var ap1Rssi = bytes[33];
+        var ap1Rssi = bytes[33] > 127 ? bytes[33] - 256 : bytes[33];
         var ap2Mac =  ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes,34,40),0);
-        var ap2Rssi = bytes[40];
+        var ap2Rssi = bytes[40] > 127 ? bytes[40] - 256 : bytes[40];
         var ap3Mac =  ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes,41,47),0);
-        var ap3Rssi = bytes[47];
+        var ap3Rssi = bytes[47] > 127 ? bytes[47] - 256 : bytes[47];
         wifiMessage.setDate = date
         wifiMessage.selfMac = selfMac.toUpperCase()
         wifiMessage.ap1Mac = ap1Mac.toUpperCase()

@@ -1,10 +1,12 @@
 var CryptoTool = require("./CryptoTool")
 var ByteUtils = require("./ByteUtils")
 const TopflytechByteBuf = require("./TopflytechByteBuf")
+var DecoderHelper = require("./DecoderHelper")
 
 var Decoder = {
     HEADER_LENGTH:3,
     SIGNUP:[0x23, 0x23, 0x01],
+    SIGNUP_SECOND:[0x23, 0x23, 0x31],
     DATA:[0x23, 0x23, 0x02],
     HEARTBEAT:[0x23, 0x23, 0x03],
     ALARM:[0x23, 0x23, 0x04],
@@ -40,6 +42,10 @@ var Decoder = {
     obdHead : [0x55,0xAA],
     LOCATION_SECOND_DATA_WITH_SENSOR :[ 0x25, 0x25, 0x33 ],
     LARM_SECOND_DATA_WITH_SENSOR :[ 0x25, 0x25, 0x34] ,
+    DEBUG_DATA:[0x25, 0x25, 0x40],
+    MANUAL_CAN_DATA:[0x25, 0x25, 0x44],
+    INDEFINITE_LOCATION_DATA:[0x25,0x25,0x62],
+    INDEFINITE_LOCATION_ALARM_DATA:[0x25,0x25,0x64],
     encryptType:0,
     aesKey:"",
     MASK_IGNITION : 0x4000,
@@ -52,6 +58,7 @@ var Decoder = {
             return false
         }
         return ByteUtils.arrayEquals(this.SIGNUP, bytes)
+            || ByteUtils.arrayEquals(this.SIGNUP_SECOND, bytes)
             || ByteUtils.arrayEquals(this.HEARTBEAT, bytes)
             || ByteUtils.arrayEquals(this.DATA, bytes)
             || ByteUtils.arrayEquals(this.ALARM, bytes)
@@ -79,6 +86,10 @@ var Decoder = {
             || ByteUtils.arrayEquals(this.LOCATION_ALARM_WITH_SENSOR,bytes)
             || ByteUtils.arrayEquals(this.LOCATION_SECOND_DATA_WITH_SENSOR,bytes)
             || ByteUtils.arrayEquals(this.LARM_SECOND_DATA_WITH_SENSOR,bytes)
+            || ByteUtils.arrayEquals(this.DEBUG_DATA,bytes)
+            || ByteUtils.arrayEquals(this.MANUAL_CAN_DATA,bytes)
+            || ByteUtils.arrayEquals(this.INDEFINITE_LOCATION_DATA,bytes)
+            || ByteUtils.arrayEquals(this.INDEFINITE_LOCATION_ALARM_DATA,bytes)
     },
 
     decode(buf){
@@ -137,6 +148,9 @@ var Decoder = {
                 case 0x01:
                     var signInMessage = this.parseLoginMessage(bytes);
                     return signInMessage;
+                case 0x31:
+                    var secondSignInMessage = this.parseSecondLoginMessage(bytes);
+                    return secondSignInMessage;
                 case 0x03:
                     var heartbeatMessage = this.parseHeartbeat(bytes);
                     return heartbeatMessage;
@@ -185,6 +199,16 @@ var Decoder = {
                 case 0x23:
                     var oneWireMessage = this.parseOneWireMessage(bytes);
                     return oneWireMessage;
+                case 0x40:
+                    var debugMessage = this.parseDebugMessage(bytes);
+                    return debugMessage;
+                case 0x44:
+                    var manualCANMessage = this.parseManualCANMessage(bytes);
+                    return manualCANMessage;
+                case 0x62:
+                case 0x64:
+                    var indefiniteLocationMessage = DecoderHelper.parseLocationMessage(bytes);
+                    return indefiniteLocationMessage;
                 case 0x81:
                     var message =  this.parseInteractMessage(bytes);
                     return message;
@@ -323,11 +347,11 @@ var Decoder = {
         var is_4g_lbs = false;
         var mcc_4g = null;
         var mnc_4g = null;
-        var eci_4g = null;
-        var tac = null;
+        var ci_4g = null;
+        var earfcn_4g_1 = null;
         var pcid_4g_1 = null;
+        var earfcn_4g_2 = null;
         var pcid_4g_2 = null;
-        var pcid_4g_3 = null;
         var is_2g_lbs = false;
         var mcc_2g = null;
         var mnc_2g = null;
@@ -453,11 +477,11 @@ var Decoder = {
         var date = ByteUtils.getGTM0Date(bytes, 15);
         var selfMac =  ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes, 21, 27), 0);
         var ap1Mac =  ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes, 27, 33), 0);
-        var ap1Rssi = bytes[33];
+        var ap1Rssi = bytes[33] > 127 ? bytes[33] - 256 : bytes[33];
         var ap2Mac =  ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes,34,40),0);
-        var ap2Rssi = bytes[40];
+        var ap2Rssi = bytes[40] > 127 ? bytes[40] - 256 : bytes[40];
         var ap3Mac =  ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes,41,47),0);
-        var ap3Rssi = bytes[47];
+        var ap3Rssi = bytes[47] > 127 ? bytes[47] - 256 : bytes[47];
         wifiMessage.setDate = date
         wifiMessage.selfMac = selfMac.toUpperCase()
         wifiMessage.ap1Mac = ap1Mac.toUpperCase()
@@ -533,6 +557,48 @@ var Decoder = {
             return signInMessage
         }
         return null
+    },
+    parseSecondLoginMessage:function (bytes){
+        var serialNo = ByteUtils.byteToShort(bytes,5);
+        var imei = ByteUtils.IMEI.decode(bytes,7);
+        var model = ByteUtils.byteToShort(bytes,15);
+        var software = "V" + (bytes[17] & 0x0f) + "." + ((bytes[18] & 0xf0) >> 4) + "." + (bytes[18] & 0x0f);
+        var firmware = ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes,22,24),0);
+        firmware = "V" + firmware.substring(0,1)+ "." +firmware.substring(1, 2)+ "." + firmware.substring(2,3)+ "." +firmware.substring(3,4);
+        var hardware = ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes,24,25),0);
+        hardware = "V" + hardware.substring(0,1)+ "." +hardware.substring(1, 2);
+        var signInMessage = {
+            serialNo:serialNo,
+            imei:imei,
+            software:software,
+            firmware:firmware,
+            hardware:hardware,
+            model:model,
+            protocolHeadType:bytes[2],
+            srcBytes:bytes,
+            messageType:"signIn",
+        };
+        return signInMessage;
+    },
+    parseDebugMessage:function (bytes){
+        var serialNo = ByteUtils.byteToShort(bytes,5);
+        var imei = ByteUtils.IMEI.decode(bytes,7);
+        return {
+            serialNo:serialNo,
+            imei:imei,
+            srcBytes:bytes,
+            messageType:"debug",
+        };
+    },
+    parseManualCANMessage:function (bytes){
+        var serialNo = ByteUtils.byteToShort(bytes,5);
+        var imei = ByteUtils.IMEI.decode(bytes,7);
+        return {
+            serialNo:serialNo,
+            imei:imei,
+            srcBytes:bytes,
+            messageType:"manualCan",
+        };
     },
     parseHeartbeat:function (bytes){
         var serialNo = ByteUtils.byteToShort(bytes,5);
@@ -666,11 +732,11 @@ var Decoder = {
         var is_4g_lbs = false;
         var mcc_4g = null;
         var mnc_4g = null;
-        var eci_4g = null;
-        var tac = null;
+        var ci_4g = null;
+        var earfcn_4g_1 = null;
         var pcid_4g_1 = null;
+        var earfcn_4g_2 = null;
         var pcid_4g_2 = null;
-        var pcid_4g_3 = null;
         var is_2g_lbs = false;
         var mcc_2g = null;
         var mnc_2g = null;
@@ -1000,11 +1066,11 @@ var Decoder = {
         if (is_4g_lbs){
             mcc_4g = ByteUtils.byteToShort(bytes,curParseIndex + 12) & 0x7FFF;
             mnc_4g = ByteUtils.byteToShort(bytes,curParseIndex + 14);
-            eci_4g = ByteUtils.byteToLong(bytes, curParseIndex + 16);
-            tac = ByteUtils.byteToShort(bytes, curParseIndex + 20);
+            ci_4g = ByteUtils.byteToLong(bytes, curParseIndex + 16);
+            earfcn_4g_1 = ByteUtils.byteToShort(bytes, curParseIndex + 20);
             pcid_4g_1 = ByteUtils.byteToShort(bytes, curParseIndex + 22);
-            pcid_4g_2 = ByteUtils.byteToShort(bytes, curParseIndex + 24);
-            pcid_4g_3 = ByteUtils.byteToShort(bytes,curParseIndex + 26);
+            earfcn_4g_2 = ByteUtils.byteToShort(bytes, curParseIndex + 24);
+            pcid_4g_2 = ByteUtils.byteToShort(bytes,curParseIndex + 26);
         }
         if(bytes.length > 44){
             var gyroscopeAxisXDirect = (bytes[curParseIndex + 28] & 0x80) == 0x80 ? 1 : -1;
@@ -1029,11 +1095,11 @@ var Decoder = {
         acceleration.ci_2g_3 =ci_2g_3
         acceleration.mcc_4g =mcc_4g
         acceleration.mnc_4g =mnc_4g
-        acceleration.eci_4g =eci_4g
-        acceleration.tac =tac
+        acceleration.ci_4g =ci_4g
+        acceleration.earfcn_4g_1 =earfcn_4g_1
         acceleration.pcid_4g_1 =pcid_4g_1
+        acceleration.earfcn_4g_2 =earfcn_4g_2
         acceleration.pcid_4g_2 =pcid_4g_2
-        acceleration.pcid_4g_3 =pcid_4g_3
         return acceleration;
     },
     parseAccelerationAlarmMessage:function (bytes){
@@ -1141,11 +1207,11 @@ var Decoder = {
         if (is_4g_lbs){
             mcc_4g = ByteUtils.byteToShort(bytes,curParseIndex + 12) & 0x7FFF;
             mnc_4g = ByteUtils.byteToShort(bytes,curParseIndex + 14);
-            eci_4g = ByteUtils.byteToLong(bytes, curParseIndex + 16);
-            tac = ByteUtils.byteToShort(bytes, curParseIndex + 20);
+            ci_4g = ByteUtils.byteToLong(bytes, curParseIndex + 16);
+            earfcn_4g_1 = ByteUtils.byteToShort(bytes, curParseIndex + 20);
             pcid_4g_1 = ByteUtils.byteToShort(bytes, curParseIndex + 22);
-            pcid_4g_2 = ByteUtils.byteToShort(bytes, curParseIndex + 24);
-            pcid_4g_3 = ByteUtils.byteToShort(bytes,curParseIndex + 26);
+            earfcn_4g_2 = ByteUtils.byteToShort(bytes, curParseIndex + 24);
+            pcid_4g_2 = ByteUtils.byteToShort(bytes,curParseIndex + 26);
         }
         var azimuth = 0;
         try {
@@ -1169,11 +1235,11 @@ var Decoder = {
         acceleration.ci_2g_3 = ci_2g_3
         acceleration.mcc_4g = mcc_4g
         acceleration.mnc_4g = mnc_4g
-        acceleration.eci_4g = eci_4g
-        acceleration.tac = tac
+        acceleration.ci_4g = ci_4g
+        acceleration.earfcn_4g_1 = earfcn_4g_1
         acceleration.pcid_4g_1 = pcid_4g_1
+        acceleration.earfcn_4g_2 = earfcn_4g_2
         acceleration.pcid_4g_2 = pcid_4g_2
-        acceleration.pcid_4g_3 = pcid_4g_3
         return acceleration;
     },
     parseNetworkInfoMessage:function (bytes){
@@ -2420,6 +2486,9 @@ var Decoder = {
         }
 
         var lastMileageDiff =  ByteUtils.byteToLong(data, 26);
+        if (lastMileageDiff < 0) {
+            lastMileageDiff += 4294967296;
+        }
 
         var alarmByte = data[30];
         var originalAlarmCode = alarmByte;
@@ -2555,6 +2624,9 @@ var Decoder = {
                 message.fmsSpeed = fmsSpeed
                 if(data.length >= 78  && isHadFmsData){
                     var fmsAccumulatingFuelConsumption =  ByteUtils.byteToLong(data, 74);
+                    if (fmsAccumulatingFuelConsumption < 0) {
+                        fmsAccumulatingFuelConsumption += 4294967296;
+                    }
                     if(fmsAccumulatingFuelConsumption == 4294967295){
                         fmsAccumulatingFuelConsumption = -999;
                     }else{
@@ -2684,17 +2756,37 @@ var Decoder = {
     },
     parseInteractMessage:function (bytes){
         var serialNo = ByteUtils.byteToShort(bytes,5);
-        var imei = ByteUtils.IMEI.decode(bytes,7)
-        var data = ByteUtils.arrayOfRange(bytes,16,bytes.length)
-        var content = ByteUtils.charArrayToStr(data,"ascii")
-        var configMessage = {
-            serialNo:serialNo,
-            messageType:"config",
-            imei:imei,
-            srcBytes:bytes,
-            content:content,
+        var imei = ByteUtils.IMEI.decode(bytes,7);
+        var protocol = bytes[15];
+        var data = ByteUtils.arrayOfRange(bytes,16,bytes.length);
+        var messageData = Buffer.from(data).toString("utf16le").replace(/\u0000+$/g, "");
+        if (protocol == 0x01){
+            return {
+                serialNo:serialNo,
+                messageType:"config",
+                imei:imei,
+                srcBytes:bytes,
+                content:messageData,
+                configResultContent:messageData,
+            };
+        }else if(protocol == 0x03){
+            return {
+                serialNo:serialNo,
+                messageType:"forward",
+                imei:imei,
+                srcBytes:bytes,
+                content:messageData,
+            };
+        }else if(protocol == 0x05){
+            return {
+                serialNo:serialNo,
+                messageType:"ussd",
+                imei:imei,
+                srcBytes:bytes,
+                content:messageData,
+            };
         }
-        return configMessage
+        return null;
     },
 }
 

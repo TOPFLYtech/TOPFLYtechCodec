@@ -9,8 +9,8 @@ var PersonalAssetDecoder = require("./PersonalAssetDecoder")
 var PersonalAssetEncoder = require("./PersonalAssetEncoder")
 var moment = require("moment") 
 Decoder.encryptType = CryptoTool.MessageEncryptType.NONE
-var curDecoder = ObdDecoder
-var curEncoder = ObdEncoder
+var curDecoder = PersonalAssetDecoder
+var curEncoder = PersonalAssetEncoder
 var socketClient = []
 const server = net.createServer(function (socket) { 
     socket.on("data", function (data) { 

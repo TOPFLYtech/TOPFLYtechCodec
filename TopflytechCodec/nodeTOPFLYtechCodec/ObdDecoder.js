@@ -5,6 +5,7 @@ var DecoderHelper = require("./DecoderHelper")
 var ObdDecoder = {
     HEADER_LENGTH:3,
     SIGNUP:[0x26, 0x26, 0x01],
+    SIGNUP_SECOND:[0x26, 0x26, 0x31],
     DATA:[0x26, 0x26, 0x02],
     HEARTBEAT:[0x26, 0x26, 0x03],
     ALARM:[0x26, 0x26, 0x04],
@@ -37,6 +38,7 @@ var ObdDecoder = {
             return false
         }
         return ByteUtils.arrayEquals(this.SIGNUP, bytes)
+            || ByteUtils.arrayEquals(this.SIGNUP_SECOND, bytes)
             || ByteUtils.arrayEquals(this.HEARTBEAT, bytes)
             || ByteUtils.arrayEquals(this.DATA, bytes)
             || ByteUtils.arrayEquals(this.ALARM, bytes)
@@ -168,6 +170,9 @@ var ObdDecoder = {
                 case 0x01:
                     var signInMessage = this.parseLoginMessage(bytes);
                     return signInMessage;
+                case 0x31:
+                    var secondSignInMessage = this.parseSecondLoginMessage(bytes);
+                    return secondSignInMessage;
                 case 0x03:
                     var heartbeatMessage = this.parseHeartbeat(bytes);
                     return heartbeatMessage;
@@ -370,11 +375,11 @@ var ObdDecoder = {
         var is_4g_lbs = false;
         var mcc_4g = null;
         var mnc_4g = null;
-        var eci_4g = null;
-        var tac = null;
+        var ci_4g = null;
+        var earfcn_4g_1 = null;
         var pcid_4g_1 = null;
+        var earfcn_4g_2 = null;
         var pcid_4g_2 = null;
-        var pcid_4g_3 = null;
         var is_2g_lbs = false;
         var mcc_2g = null;
         var mnc_2g = null;
@@ -405,11 +410,11 @@ var ObdDecoder = {
         if (is_4g_lbs){
             mcc_4g = ByteUtils.byteToShort(bytes,curParseIndex + 12) & 0x7FFF;
             mnc_4g = ByteUtils.byteToShort(bytes,curParseIndex + 14);
-            eci_4g = ByteUtils.byteToLong(bytes, curParseIndex + 16);
-            tac = ByteUtils.byteToShort(bytes, curParseIndex + 20);
+            ci_4g = ByteUtils.byteToLong(bytes, curParseIndex + 16);
+            earfcn_4g_1 = ByteUtils.byteToShort(bytes, curParseIndex + 20);
             pcid_4g_1 = ByteUtils.byteToShort(bytes, curParseIndex + 22);
-            pcid_4g_2 = ByteUtils.byteToShort(bytes, curParseIndex + 24);
-            pcid_4g_3 = ByteUtils.byteToShort(bytes,curParseIndex + 26);
+            earfcn_4g_2 = ByteUtils.byteToShort(bytes, curParseIndex + 24);
+            pcid_4g_2 = ByteUtils.byteToShort(bytes,curParseIndex + 26);
         }
         var rpm = ByteUtils.byteToShort(bytes, curParseIndex + 28);
         if(rpm == 65535){
@@ -428,11 +433,11 @@ var ObdDecoder = {
         acceleration.ci_2g_3 =ci_2g_3
         acceleration.mcc_4g =mcc_4g
         acceleration.mnc_4g =mnc_4g
-        acceleration.eci_4g =eci_4g
-        acceleration.tac =tac
+        acceleration.ci_4g =ci_4g
+        acceleration.earfcn_4g_1 =earfcn_4g_1
         acceleration.pcid_4g_1 =pcid_4g_1
+        acceleration.earfcn_4g_2 =earfcn_4g_2
         acceleration.pcid_4g_2 =pcid_4g_2
-        acceleration.pcid_4g_3 =pcid_4g_3
         return acceleration;
     },
     parseAccelerationAlarmMessage:function (bytes){
@@ -505,11 +510,11 @@ var ObdDecoder = {
         var is_4g_lbs = false;
         var mcc_4g = null;
         var mnc_4g = null;
-        var eci_4g = null;
-        var tac = null;
+        var ci_4g = null;
+        var earfcn_4g_1 = null;
         var pcid_4g_1 = null;
+        var earfcn_4g_2 = null;
         var pcid_4g_2 = null;
-        var pcid_4g_3 = null;
         var is_2g_lbs = false;
         var mcc_2g = null;
         var mnc_2g = null;
@@ -540,11 +545,11 @@ var ObdDecoder = {
         if (is_4g_lbs){
             mcc_4g = ByteUtils.byteToShort(bytes,curParseIndex + 12) & 0x7FFF;
             mnc_4g = ByteUtils.byteToShort(bytes,curParseIndex + 14);
-            eci_4g = ByteUtils.byteToLong(bytes, curParseIndex + 16);
-            tac = ByteUtils.byteToShort(bytes, curParseIndex + 20);
+            ci_4g = ByteUtils.byteToLong(bytes, curParseIndex + 16);
+            earfcn_4g_1 = ByteUtils.byteToShort(bytes, curParseIndex + 20);
             pcid_4g_1 = ByteUtils.byteToShort(bytes, curParseIndex + 22);
-            pcid_4g_2 = ByteUtils.byteToShort(bytes, curParseIndex + 24);
-            pcid_4g_3 = ByteUtils.byteToShort(bytes,curParseIndex + 26);
+            earfcn_4g_2 = ByteUtils.byteToShort(bytes, curParseIndex + 24);
+            pcid_4g_2 = ByteUtils.byteToShort(bytes,curParseIndex + 26);
         }
         var azimuth = 0;
         try {
@@ -573,11 +578,11 @@ var ObdDecoder = {
         acceleration.ci_2g_3 = ci_2g_3
         acceleration.mcc_4g = mcc_4g
         acceleration.mnc_4g = mnc_4g
-        acceleration.eci_4g = eci_4g
-        acceleration.tac = tac
+        acceleration.ci_4g = ci_4g
+        acceleration.earfcn_4g_1 = earfcn_4g_1
         acceleration.pcid_4g_1 = pcid_4g_1
+        acceleration.earfcn_4g_2 = earfcn_4g_2
         acceleration.pcid_4g_2 = pcid_4g_2
-        acceleration.pcid_4g_3 = pcid_4g_3
         return acceleration;
     },
     parseNetworkInfoMessage:function (bytes){
@@ -1516,17 +1521,37 @@ var ObdDecoder = {
     },
     parseInteractMessage:function (bytes){
         var serialNo = ByteUtils.byteToShort(bytes,5);
-        var imei = ByteUtils.IMEI.decode(bytes,7)
-        var data = ByteUtils.arrayOfRange(bytes,16,bytes.length)
-        var content = ByteUtils.charArrayToStr(data,"ascii")
-        var configMessage = {
-            serialNo:serialNo,
-            messageType:"config",
-            imei:imei,
-            srcBytes:bytes,
-            content:content,
+        var imei = ByteUtils.IMEI.decode(bytes,7);
+        var protocol = bytes[15];
+        var data = ByteUtils.arrayOfRange(bytes,16,bytes.length);
+        var messageData = Buffer.from(data).toString("utf16le").replace(/\u0000+$/g, "");
+        if (protocol == 0x01){
+            return {
+                serialNo:serialNo,
+                messageType:"config",
+                imei:imei,
+                srcBytes:bytes,
+                content:messageData,
+                configResultContent:messageData,
+            };
+        }else if(protocol == 0x03){
+            return {
+                serialNo:serialNo,
+                messageType:"forward",
+                imei:imei,
+                srcBytes:bytes,
+                content:messageData,
+            };
+        }else if(protocol == 0x05){
+            return {
+                serialNo:serialNo,
+                messageType:"ussd",
+                imei:imei,
+                srcBytes:bytes,
+                content:messageData,
+            };
         }
-        return configMessage
+        return null;
     },
     parseLoginMessage:function(bytes){
         if (bytes.length == 25){
@@ -1670,6 +1695,47 @@ var ObdDecoder = {
         }
         return null
     },
+    parseSecondLoginMessage:function(bytes){
+        var serialNo = ByteUtils.byteToShort(bytes,5);
+        var imei = ByteUtils.IMEI.decode(bytes,7);
+        var modelType = ByteUtils.byteToShort(bytes,15);
+        var model = ByteUtils.byteToShort(bytes,17);
+        var str = ByteUtils.bytes2HexString(bytes, 19);
+        var software = "V" + str.substring(0, 1) + "." + str.substring(1, 2) + "." + str.substring(2, 3) + "." + str.substring(3, 4);
+        var platform = str.substring(4, 10);
+        var firmware = "V" + str.substring(10, 11) + "." + str.substring(11, 12) + "." + str.substring(12, 13) + "." + str.substring(13, 14);
+        var hardware = str.substring(14, 15) + "." + str.substring(15, 16);
+        var obdV1 = bytes[27] < 0 ? bytes[27] + 256 : bytes[27];
+        var obdV2 = bytes[28] < 0 ? bytes[28] + 256 : bytes[28];
+        var obdV3 = bytes[29] < 0 ? bytes[29] + 256 : bytes[29];
+        var obdSoftware = "V" + obdV1 + "." + obdV2 + "." + obdV3;
+        obdV1 = bytes[30] < 0 ? bytes[30] + 256 : bytes[30];
+        obdV2 = bytes[31] < 0 ? bytes[31] + 256 : bytes[31];
+        obdV3 = bytes[32] < 0 ? bytes[32] + 256 : bytes[32];
+        var obdBootVersion = "V" + obdV1 + "." + obdV2 + "." + obdV3;
+        obdV1 = bytes[33] < 0 ? bytes[33] + 256 : bytes[33];
+        obdV2 = bytes[34] < 0 ? bytes[34] + 256 : bytes[34];
+        obdV3 = bytes[35] < 0 ? bytes[35] + 256 : bytes[35];
+        var obdDataVersion = "V" + obdV1 + "." + obdV2 + "." + obdV3;
+        var obdHardware = ((bytes[36] & 0xf0) >> 4) + "." + (bytes[36] & 0xf);
+        return {
+            serialNo:serialNo,
+            imei:imei,
+            software:software,
+            firmware:firmware,
+            platform:platform,
+            hardware:hardware,
+            srcBytes:bytes,
+            obdHardware:obdHardware,
+            obdSoftware:obdSoftware,
+            obdDataVersion:obdDataVersion,
+            obdBootVersion:obdBootVersion,
+            model:modelType,
+            protocolHeadType:bytes[2],
+            modelExt:model,
+            messageType:"signIn",
+        };
+    },
     parseDataMessage:function(bytes){
         var serialNo = ByteUtils.byteToShort(bytes,5);
         var imei = ByteUtils.IMEI.decode(bytes,7)
@@ -1719,9 +1785,9 @@ var ObdDecoder = {
         var rs232PowerOf5V = (iop & 0x20) ==  0x20  ? 1 : 0;
         var hasThirdPartyObd = (iop & 0x10) ==  0x10  ? 1 : 0;
         var exPowerConsumpStatus = 0;
-        if ((iop & 0x03) == 0x01){
+        if ((iop & 0x06) == 0x02){
             exPowerConsumpStatus = 2;
-        }else if ((iop & 0x03) == 0x02){
+        }else if ((iop & 0x06) == 0x04){
             exPowerConsumpStatus = 1;
         }else{
             exPowerConsumpStatus = 0;
@@ -1738,6 +1804,9 @@ var ObdDecoder = {
         var batteryBytes = [data[24]]
         var batteryStr = ByteUtils.bytes2HexString(batteryBytes, 0);
         var batteryCharge = parseInt(batteryStr)
+        if (0 == batteryCharge) {
+            batteryCharge = 100;
+        }
         var gmt0 = ByteUtils.getGTM0Date(data, 25);
         var latlngValid = (data[9] & 0x40) != 0x00;
         var latlngData = ByteUtils.arrayOfRange(data,31,47);
@@ -1806,10 +1875,16 @@ var ObdDecoder = {
         }
 
         var accumulatingFuelConsumption = ByteUtils.byteToLong(data, 51);
+        if (accumulatingFuelConsumption < 0) {
+            accumulatingFuelConsumption += 4294967296;
+        }
         if(accumulatingFuelConsumption == 4294967295){
             accumulatingFuelConsumption = -999;
         }
         var instantFuelConsumption =  ByteUtils.byteToLong(data, 55);
+        if (instantFuelConsumption < 0) {
+            instantFuelConsumption += 4294967296;
+        }
         if(instantFuelConsumption == 4294967295){
             instantFuelConsumption = -999;
         }
@@ -1846,10 +1921,10 @@ var ObdDecoder = {
             throttlePosition = -999;
         }
         var remainFuelRate = data[67] & 0x7f;
-        var remainFuelUnit = (data[67] & 0x80) == 0x80 ? "L" : "%";
+        var remainFuelUnit = (data[67] & 0x80) == 0x80 ? 1 : 0;
         if(data[67] == 255){
             remainFuelRate = -999;
-            remainFuelUnit = "";
+            remainFuelUnit = -999;
         }
 
         var protocolHead = bytes[2];
@@ -2069,11 +2144,11 @@ var ObdDecoder = {
         var date = ByteUtils.getGTM0Date(bytes, 15);
         var selfMac =  ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes, 21, 27), 0);
         var ap1Mac =  ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes, 27, 33), 0);
-        var ap1Rssi = bytes[33];
+        var ap1Rssi = bytes[33] > 127 ? bytes[33] - 256 : bytes[33];
         var ap2Mac =  ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes,34,40),0);
-        var ap2Rssi = bytes[40];
+        var ap2Rssi = bytes[40] > 127 ? bytes[40] - 256 : bytes[40];
         var ap3Mac =  ByteUtils.bytes2HexString(ByteUtils.arrayOfRange(bytes,41,47),0);
-        var ap3Rssi = bytes[47];
+        var ap3Rssi = bytes[47] > 127 ? bytes[47] - 256 : bytes[47];
         wifiMessage.setDate = date
         wifiMessage.selfMac = selfMac.toUpperCase()
         wifiMessage.ap1Mac = ap1Mac.toUpperCase()
