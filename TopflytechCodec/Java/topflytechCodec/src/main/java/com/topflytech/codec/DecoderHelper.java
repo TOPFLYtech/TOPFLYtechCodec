@@ -542,6 +542,12 @@ public class DecoderHelper {
                 byte value = valueByte[0];
                 locationMessage.setHasThirdPartyObd((value & 0x80) == 0x80 ? 1 : 0);
                 locationMessage.setExPowerConsumpStatus((value & 0x40) == 0x40 ? 1 : 0);
+                boolean isEcuMileage = (value & 0x10) == 0x10;
+                if(isEcuMileage){
+                    locationMessage.setMileageSource(1);
+                }else{
+                    locationMessage.setMileageSource(0);
+                }
             }else if(dataId == 0x07){
                 byte[] valueByte = typeMap.get(dataId);
                 int value = valueByte[0];
@@ -612,6 +618,22 @@ public class DecoderHelper {
             }else if (dataId == 0x12){
                 byte[] valueByte = typeMap.get(dataId);
                 locationMessage.setRelayStatus(valueByte[0] & 0xff);
+            }else if (dataId == 0x13){
+                byte[] valueByte = typeMap.get(dataId);
+                if(valueByte[0] == 0x01){
+                    locationMessage.setMileageSource(2);
+                }else{
+                    locationMessage.setMileageSource(0);
+                } 
+            }else if (dataId == 0x14){
+                byte[] valueByte = typeMap.get(dataId);
+                locationMessage.setIgnitionSource(valueByte[0] & 0xff);
+            }else if (dataId == 0x15){
+                byte[] valueByte = typeMap.get(dataId);
+                locationMessage.setObdFuelType(valueByte[0] & 0xff);
+            }else if (dataId == 0x16){
+                byte[] valueByte = typeMap.get(dataId);
+                locationMessage.setWifiScanInterval(valueByte[0] & 0xff);
             }else if(dataId == 0x60){
                 byte[] valueByte = typeMap.get(dataId);
                 int voltage = BytesUtils.bytes2Short(valueByte,0);

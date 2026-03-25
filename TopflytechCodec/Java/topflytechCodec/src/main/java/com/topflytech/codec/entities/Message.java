@@ -1,5 +1,8 @@
 package com.topflytech.codec.entities;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import java.util.Date;
 
 /**
  * Message is the base class for all decoded messages
@@ -80,11 +83,57 @@ public abstract class Message {
     public void setEncryptType(int encryptType) {
         this.encryptType = encryptType;
     }
-
+  
     private String imei;
     private int serialNo;
     private byte[] orignBytes;
     private boolean isNeedResp = true;
     private int protocolHeadType;
     private int encryptType = MessageEncryptType.NONE;
+
+
+    //The following are used for other purposes.
+     /**
+     * Convert the message to JSON string
+     * @return JSON string representation of the message
+     */
+    public String toJSON() {
+        try { 
+            return JSON.toJSONString(this);
+        } catch (Exception e) { 
+            return "{}";
+        }
+    }
+      private String protocol;
+    private String linkType; 
+
+    private Date recvDate;
+    private String postResp;
+
+     public void setProtocol(String protocol) {
+        this.protocol = protocol;
+    }
+    public String getProtocol() {
+        return protocol;
+    }
+
+    public String getLinkType() {
+		return linkType;
+	}
+
+    public void setLinkType(String linkType) {
+		this.linkType = linkType;
+	}
+    public Date getRecvDate() {
+        return recvDate;
+    }
+    public void setRecvDate(Date recvDate) {
+        this.recvDate = recvDate;
+    }
+    public String getPostResp() {
+        return postResp;
+    }
+    public void setPostResp(String postResp) {
+        this.postResp = postResp;
+    }
 }

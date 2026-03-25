@@ -2633,8 +2633,8 @@ public class ObdDecoder {
         message.setIgnitionSource(ignitionSource);
         message.setExPowerConsumpStatus(exPowerConsumpStatus);
         message.setHasThirdPartyObd(hasThirdPartyObd);
-        message.setMileageSource(mileageSource);
-        message.setObdElectricData(false);
+        message.setMileageSource(mileageSource); 
+		message.setObdElectricData(false);
         return message;
     }
 

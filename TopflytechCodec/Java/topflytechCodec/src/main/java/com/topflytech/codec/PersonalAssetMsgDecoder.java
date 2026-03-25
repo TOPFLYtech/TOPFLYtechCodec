@@ -374,8 +374,12 @@ public class PersonalAssetMsgDecoder {
             int tempCount = valueLen / 2;
             List<Float> tempList = new ArrayList<>();
             for(int i = 0;i < tempCount;i++){
-                int tempInt = BytesUtils.byte2SignedShort(bytes,24 + i * 2);
-                tempList.add(tempInt * 0.01f);
+                if((bytes[24 + i * 2] & 0xff) == 0xff && (bytes[24 + i * 2 + 1] & 0xff) == 0xff){
+                    tempList.add(-999.0f);
+                }else{
+                    int tempInt = BytesUtils.byte2SignedShort(bytes,24 + i * 2);
+                    tempList.add(tempInt * 0.01f);
+                } 
             }
             deviceTempCollectionMessage.setTempList(tempList);
         }

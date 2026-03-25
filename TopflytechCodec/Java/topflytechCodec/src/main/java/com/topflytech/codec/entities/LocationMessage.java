@@ -1049,10 +1049,10 @@ public class LocationMessage extends Message{
     private Boolean isHistoryData = false;
     private Integer satelliteNumber = 0;
     private Integer overSpeedLimit = 0;
-    private Long samplingIntervalAccOn = 0l;
-    private Long samplingIntervalAccOff = 0l;
-    private Integer angleCompensation = 0;
-    private Integer distanceCompensation = 0;
+    private Long samplingIntervalAccOn;
+    private Long samplingIntervalAccOff;
+    private Integer angleCompensation;
+    private Integer distanceCompensation;
 
 
     //odb special message
@@ -1204,6 +1204,23 @@ public class LocationMessage extends Message{
     private Boolean logoLightOpen;
     private Boolean buzzerOpen;
     private Boolean lostModeOpen;
+ 
+    private Integer obdFuelType; 
+    private Integer wifiScanInterval;
+
+    public Integer getWifiScanInterval() {
+        return wifiScanInterval;
+    }
+    public void setWifiScanInterval(Integer wifiScanInterval) {
+        this.wifiScanInterval = wifiScanInterval;
+    }
+
+    public Integer getObdFuelType() {
+        return obdFuelType;
+    }
+    public void setObdFuelType(Integer obdFuelType) {
+        this.obdFuelType = obdFuelType;
+    }
 
     public Boolean getLostModeOpen() {
         return lostModeOpen;
@@ -1252,6 +1269,7 @@ public class LocationMessage extends Message{
     public void setWirelessCharging(Boolean wirelessCharging) {
         isWirelessCharging = wirelessCharging;
     }
+ 
 
     public Boolean getObdElectricData() {
         return isObdElectricData;
