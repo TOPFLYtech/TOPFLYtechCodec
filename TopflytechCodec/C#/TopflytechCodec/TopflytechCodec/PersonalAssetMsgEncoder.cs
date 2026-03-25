@@ -19,6 +19,11 @@ namespace TopflytechCodec
             byte[] command = { 0x27, 0x27, 0x01 };
             return Encoder.getSignInMsgReply(imei, needSerialNo, serialNo, command, encryptType, aesKey);
         }
+        public byte[] getSignInMsgReply(String imei, bool needSerialNo, int serialNo, int protocolHeadType)
+        {
+            byte[] command = { 0x27, 0x27, (byte)protocolHeadType };
+            return Encoder.getSignInMsgReply(imei, needSerialNo, serialNo, command, encryptType, aesKey);
+        }
         public byte[] getHeartbeatMsgReply(String imei, bool needSerialNo, int serialNo)
         {
             byte[] command = { 0x27, 0x27, 0x03 };
@@ -30,11 +35,26 @@ namespace TopflytechCodec
             byte[] command = { 0x27, 0x27, 0x17 };
             return Encoder.getWifiMsgReply(imei, true, serialNo, command, encryptType, aesKey);
         }
+        public byte[] getLockMsgReply(String imei, bool needSerialNo, int serialNo, int protocolHeadType)
+        {
+            byte[] command = { 0x27, 0x27, (byte)protocolHeadType };
+            return Encoder.getWifiMsgReply(imei, needSerialNo, serialNo, command, encryptType, aesKey);
+        }
+        public byte[] getSubLockMsgReply(String imei, bool needSerialNo, int serialNo)
+        {
+            byte[] command = { 0x27, 0x27, 0x27 };
+            return Encoder.getWifiMsgReply(imei, needSerialNo, serialNo, command, encryptType, aesKey);
+        }
 
         public byte[] getWifiMsgReply(String imei, int serialNo)
         {
             byte[] command = { 0x27, 0x27, 0x15 };
             return Encoder.getWifiMsgReply(imei, true, serialNo, command, encryptType, aesKey);
+        }
+        public byte[] getWifiMsgReply(String imei, bool needSerialNo, int serialNo)
+        {
+            byte[] command = { 0x27, 0x27, 0x15 };
+            return Encoder.getWifiMsgReply(imei, needSerialNo, serialNo, command, encryptType, aesKey);
         }
 
         public byte[] getLocationMsgReply(String imei, bool needSerialNo, int serialNo, int protocolHeadType)
@@ -85,10 +105,15 @@ namespace TopflytechCodec
             return Encoder.getNormalMsgReply(imei, serialNo, command, content, encryptType, aesKey);
         }
 
-    public byte[] getInnerGeoDataMsgReply(String imei, bool needSerialNo, int serialNo)
+        public byte[] getInnerGeoDataMsgReply(String imei, bool needSerialNo, int serialNo)
         {
             byte[] command = { 0x27, 0x27, 0x20 };
             return Encoder.getNormalMsgReply(imei, serialNo, command, new byte[] {},encryptType, aesKey);
+        }
+        public byte[] getInnerGeoDataMsgReply(String imei, int serialNo)
+        {
+            byte[] command = { 0x27, 0x27, 0x20 };
+            return Encoder.getNormalMsgReply(imei, serialNo, command, new byte[] { }, encryptType, aesKey);
         }
 
         public byte[] getWifiWithDeviceInfoReply(String imei, int serialNo, int alarmCode,int protocolHeadType)

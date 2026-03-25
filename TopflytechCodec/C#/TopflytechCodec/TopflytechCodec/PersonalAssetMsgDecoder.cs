@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +11,7 @@ namespace TopflytechCodec
         private static int HEADER_LENGTH = 3;
 
         private static byte[] SIGNUP = { 0x27, 0x27, 0x01 };
+        private static byte[] SECOND_SIGNUP = { 0x27, 0x27, 0x31 };
 
         private static byte[] DATA = { 0x27, 0x27, 0x02 };
 
@@ -26,6 +27,7 @@ namespace TopflytechCodec
         private static byte[] WIFI_DATA = { 0x27, 0x27, (byte)0x15 };
 
         private static byte[] LOCK_DATA =  {0x27, 0x27, (byte)0x17};
+        private static byte[] SUB_LOCK_DATA = { 0x27, 0x27, (byte)0x27 };
 
         private static byte[] latlngInvalidData = {(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,
                                                      (byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF};
@@ -44,6 +46,17 @@ namespace TopflytechCodec
         private static byte[] INDEFINITE_LOCATION_ALARM_DATA = { 0x27, 0x27, (byte)0x64 };
         private int encryptType = 0;
         private String aesKey;
+        private bool srcEncryptDataShowEncrypt = false;
+
+        public bool isSrcEncryptDataShowEncrypt()
+        {
+            return srcEncryptDataShowEncrypt;
+        }
+
+        public void setSrcEncryptDataShowEncrypt(bool srcEncryptDataShowEncrypt)
+        {
+            this.srcEncryptDataShowEncrypt = srcEncryptDataShowEncrypt;
+        }
         public PersonalAssetMsgDecoder(int messageEncryptType, String aesKey)
         {
             this.encryptType = messageEncryptType;
@@ -64,6 +77,7 @@ namespace TopflytechCodec
         private static bool match(byte[] bytes)
         {
             return Utils.ArrayEquals(SIGNUP, bytes)
+                    || Utils.ArrayEquals(SECOND_SIGNUP, bytes)
                     || Utils.ArrayEquals(HEARTBEAT, bytes)
                     || Utils.ArrayEquals(DATA, bytes)
                     || Utils.ArrayEquals(ALARM, bytes)
@@ -78,7 +92,8 @@ namespace TopflytechCodec
                     || Utils.ArrayEquals(DEVICE_TEMP_COLLECTION_DATA, bytes)
                     || Utils.ArrayEquals(INDEFINITE_LOCATION_DATA, bytes)
                     || Utils.ArrayEquals(INDEFINITE_LOCATION_ALARM_DATA, bytes)
-                    || Utils.ArrayEquals(LOCK_DATA, bytes);
+                    || Utils.ArrayEquals(LOCK_DATA, bytes)
+                    || Utils.ArrayEquals(SUB_LOCK_DATA, bytes);
         }
         private TopflytechByteBuf decoderBuf = new TopflytechByteBuf();
 
@@ -209,6 +224,9 @@ namespace TopflytechCodec
                     case 0x01:
                         SignInMessage signInMessage = parseLoginMessage(bytes);
                         return signInMessage;
+                    case 0x31:
+                        SignInMessage secondSignInMessage = parseSecondLoginMessage(bytes);
+                        return secondSignInMessage;
                     case 0x03:
                         HeartbeatMessage heartbeatMessage = parseHeartbeat(bytes);
                         return heartbeatMessage;
@@ -228,6 +246,9 @@ namespace TopflytechCodec
                     case 0x17:
                         LockMessage lockMessage = parseLockMessage(bytes);
                         return lockMessage;
+                    case 0x27:
+                        SubLockMessage subLockMessage = parseSubLockMessage(bytes);
+                        return subLockMessage;
                     case 0x20:
                         InnerGeoDataMessage innerGeoDataMessage = parseInnerGeoMessage(bytes);
                         return innerGeoDataMessage;
@@ -440,6 +461,184 @@ namespace TopflytechCodec
             lockMessage.Ci_2g_3 = ci_2g_3;
             return lockMessage;
         }
+
+        public String parseSubLockSoftwareVersion(byte[] bytes, int index)
+        {
+            if (bytes.Length < index + 3)
+            {
+                return "";
+            }
+            int all = BytesUtils.Bytes2Short(bytes, index);
+            int version1 = (bytes[index] & 0xFF) >> 5;
+            int version2 = (all & 0x1FFF) >> 7;
+            int version3 = all & 0x7f;
+            byte testByte = bytes[index + 2];
+            if (testByte != 0)
+            {
+                String testDesc = Encoding.ASCII.GetString(new byte[] { testByte });
+                return String.Format("{0}.{1}.{2:00} {3}", version1, version2, version3, testDesc);
+            }
+            return String.Format("{0}.{1}.{2:00}", version1, version2, version3);
+        }
+
+        private SubLockMessage parseSubLockMessage(byte[] bytes)
+        {
+            SubLockMessage subLockMessage = new SubLockMessage();
+            int serialNo = BytesUtils.Bytes2Short(bytes, 5);
+            String imei = BytesUtils.IMEI.Decode(bytes, 7);
+            DateTime date = Utils.getGTM0Date(bytes, 15);
+            Boolean latlngValid = (bytes[21] & 0x40) != 0x00;
+            Boolean isGpsWorking = (bytes[21] & 0x20) == 0x00;
+            Boolean isHistoryData = (bytes[21] & 0x80) != 0x00;
+            int satelliteNumber = bytes[21] & 0x1F;
+            byte[] latlngData = Utils.ArrayCopyOfRange(bytes, 22, 38);
+            if (Utils.ArrayEquals(latlngData, latlngInvalidData))
+            {
+                latlngValid = false;
+            }
+            double altitude = latlngValid ? BytesUtils.Bytes2Float(bytes, 22) : 0;
+            double longitude = latlngValid ? BytesUtils.Bytes2Float(bytes, 26) : 0;
+            double latitude = latlngValid ? BytesUtils.Bytes2Float(bytes, 30) : 0;
+            float speedf = 0.0f;
+            if (latlngValid)
+            {
+                byte[] bytesSpeed = Utils.ArrayCopyOfRange(bytes, 34, 36);
+                String strSp = BytesUtils.Bytes2HexString(bytesSpeed, 0);
+                if (!strSp.ToLower().Equals("ffff"))
+                {
+                    speedf = (float)Convert.ToDouble(String.Format("{0}.{1}", Convert.ToInt32(strSp.Substring(0, 3)), Convert.ToInt32(strSp.Substring(3, strSp.Length - 3))));
+                }
+            }
+            int azimuth = latlngValid ? BytesUtils.Bytes2Short(bytes, 36) : 0;
+            Boolean is_4g_lbs = false;
+            Int32 mcc_4g = -1;
+            Int32 mnc_4g = -1;
+            Int64 eci_4g = -1;
+            Int32 tac = -1;
+            Int32 pcid_4g_1 = -1;
+            Int32 pcid_4g_2 = -1;
+            Int32 pcid_4g_3 = -1;
+            Boolean is_2g_lbs = false;
+            Int32 mcc_2g = -1;
+            Int32 mnc_2g = -1;
+            Int32 lac_2g_1 = -1;
+            Int32 ci_2g_1 = -1;
+            Int32 lac_2g_2 = -1;
+            Int32 ci_2g_2 = -1;
+            Int32 lac_2g_3 = -1;
+            Int32 ci_2g_3 = -1;
+            if (!latlngValid)
+            {
+                byte lbsByte = bytes[22];
+                if ((lbsByte & 0x80) == 0x80)
+                {
+                    is_4g_lbs = true;
+                }
+                else
+                {
+                    is_2g_lbs = true;
+                }
+            }
+            if (is_2g_lbs)
+            {
+                mcc_2g = BytesUtils.Bytes2Short(bytes, 22);
+                mnc_2g = BytesUtils.Bytes2Short(bytes, 24);
+                lac_2g_1 = BytesUtils.Bytes2Short(bytes, 26);
+                ci_2g_1 = BytesUtils.Bytes2Short(bytes, 28);
+                lac_2g_2 = BytesUtils.Bytes2Short(bytes, 30);
+                ci_2g_2 = BytesUtils.Bytes2Short(bytes, 32);
+                lac_2g_3 = BytesUtils.Bytes2Short(bytes, 34);
+                ci_2g_3 = BytesUtils.Bytes2Short(bytes, 36);
+            }
+            if (is_4g_lbs)
+            {
+                mcc_4g = BytesUtils.Bytes2Short(bytes, 22) & 0x7FFF;
+                mnc_4g = BytesUtils.Bytes2Short(bytes, 24);
+                eci_4g = BytesUtils.Byte2Int(bytes, 26);
+                tac = BytesUtils.Bytes2Short(bytes, 30);
+                pcid_4g_1 = BytesUtils.Bytes2Short(bytes, 32);
+                pcid_4g_2 = BytesUtils.Bytes2Short(bytes, 34);
+                pcid_4g_3 = BytesUtils.Bytes2Short(bytes, 36);
+            }
+            int rssiTemp = (int)bytes[38] < 0 ? (int)bytes[38] + 256 : (int)bytes[38];
+            int rssi = rssiTemp == 255 ? -999 : (rssiTemp - 128);
+            String hardware = String.Format("{0}.{1}", (bytes[39] & 0xf0) >> 4, bytes[39] & 0xf);
+            String software = parseSubLockSoftwareVersion(bytes, 40);
+            byte alarmByte = bytes[43];
+            int lockType = bytes[44] & 0xff;
+            int lockStatus = BytesUtils.Bytes2Short(bytes, 45);
+            bool isCharging = (lockStatus & 0x01) == 0x01;
+            bool isChargingOverVoltage = (lockStatus & 0x02) == 0x02;
+            bool isLowPower = (lockStatus & 0x04) == 0x04;
+            bool isHighTemp = (lockStatus & 0x08) == 0x08;
+            bool isLowTemp = (lockStatus & 0x10) == 0x10;
+            bool isOpenLockCover = (lockStatus & 0x20) == 0x20;
+            bool isOpenBackCover = (lockStatus & 0x40) == 0x40;
+            bool isGpsPosition = (lockStatus & 0x80) == 0x80;
+            bool isGpsJamming = (lockStatus & 0x100) == 0x100;
+            float voltage = BytesUtils.Bytes2Short(bytes, 47) / 1000.0f;
+            float solarVoltage = BytesUtils.Bytes2Short(bytes, 49) / 1000.0f;
+            int temp = bytes[51];
+            if (bytes[51] == 0xff)
+            {
+                temp = -999;
+            }
+            String lockId = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 52, 58), 0).ToUpper();
+            String deviceId = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 58, 62), 0);
+
+            subLockMessage.ProtocolHeadType = bytes[2];
+            subLockMessage.SerialNo = serialNo;
+            subLockMessage.Imei = imei;
+            subLockMessage.OrignBytes = bytes;
+            subLockMessage.Date = date;
+            subLockMessage.LatlngValid = latlngValid;
+            subLockMessage.Altitude = altitude;
+            subLockMessage.Longitude = longitude;
+            subLockMessage.Latitude = latitude;
+            subLockMessage.Speed = speedf;
+            subLockMessage.Azimuth = azimuth;
+            subLockMessage.LockType = lockType;
+            subLockMessage.LockId = lockId;
+            subLockMessage.IsHistoryData = isHistoryData;
+            subLockMessage.SatelliteNumber = satelliteNumber;
+            subLockMessage.GpsWorking = isGpsWorking;
+            subLockMessage.Is_4g_lbs = is_4g_lbs;
+            subLockMessage.Is_2g_lbs = is_2g_lbs;
+            subLockMessage.Mcc_2g = mcc_2g;
+            subLockMessage.Mnc_2g = mnc_2g;
+            subLockMessage.Lac_2g_1 = lac_2g_1;
+            subLockMessage.Ci_2g_1 = ci_2g_1;
+            subLockMessage.Lac_2g_2 = lac_2g_2;
+            subLockMessage.Ci_2g_2 = ci_2g_2;
+            subLockMessage.Lac_2g_3 = lac_2g_3;
+            subLockMessage.Ci_2g_3 = ci_2g_3;
+            subLockMessage.Mcc_4g = mcc_4g;
+            subLockMessage.Mnc_4g = mnc_4g;
+            subLockMessage.Eci_4g = eci_4g;
+            subLockMessage.TAC = tac;
+            subLockMessage.Pcid_4g_1 = pcid_4g_1;
+            subLockMessage.Pcid_4g_2 = pcid_4g_2;
+            subLockMessage.Pcid_4g_3 = pcid_4g_3;
+            subLockMessage.Rssi = rssi;
+            subLockMessage.IsCharging = isCharging;
+            subLockMessage.IsChargingOverVoltage = isChargingOverVoltage;
+            subLockMessage.IsLowPower = isLowPower;
+            subLockMessage.IsHighTemp = isHighTemp;
+            subLockMessage.IsLowTemp = isLowTemp;
+            subLockMessage.IsOpenLockCover = isOpenLockCover;
+            subLockMessage.IsOpenBackCover = isOpenBackCover;
+            subLockMessage.IsGpsPosition = isGpsPosition;
+            subLockMessage.IsGpsJamming = isGpsJamming;
+            subLockMessage.Software = software;
+            subLockMessage.Hardware = hardware;
+            subLockMessage.Voltage = voltage;
+            subLockMessage.SolarVoltage = solarVoltage;
+            subLockMessage.Temp = temp;
+            subLockMessage.DeviceId = deviceId;
+            subLockMessage.AlarmByte = alarmByte;
+            return subLockMessage;
+        }
+
         private BluetoothPeripheralDataMessage parseSecondBluetoothDataMessage(byte[] bytes)
         {
             BluetoothPeripheralDataMessage bluetoothPeripheralDataMessage = new BluetoothPeripheralDataMessage();
@@ -677,6 +876,25 @@ namespace TopflytechCodec
                             break;
                         }
                     }
+                    else if (bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x0d)
+                    {
+                        positionIndex += 2;
+                        if (positionIndex + 7 <= bleData.Length)
+                        {
+                            BleCustomer2397SensorData bleCustomer2397SensorData = parseCustomer2397Data(bleData, positionIndex);
+                            if (bleCustomer2397SensorData == null)
+                            {
+                                break;
+                            }
+                            bleDataList.Add(bleCustomer2397SensorData);
+                            positionIndex += 8 + bleCustomer2397SensorData.RawData.Length + 1;
+                            continue;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
                     else
                     {
                         break;
@@ -792,6 +1010,11 @@ namespace TopflytechCodec
             bleDriverSignInData.Lac_2g_3 = lac_2g_3;
             bleDriverSignInData.Ci_2g_3 = ci_2g_3;
             return bleDriverSignInData;
+        }
+
+        private static BleDriverSignInData getBleDriverSignInDataWithoutLocation(bool latlngValid, bool isHisData, double altitude, double longitude, double latitude, int azimuth, float speedf, bool is_4g_lbs, int mcc_4g, int mnc_4g, long eci_4g, int tac, int pcid_4g_1, int pcid_4g_2, int pcid_4g_3, bool is_2g_lbs, int mcc_2g, int mnc_2g, int lac_2g_1, int ci_2g_1, int lac_2g_2, int ci_2g_2, int lac_2g_3, int ci_2g_3, byte[] bleData)
+        {
+            return getBleDriverSiginInDataWithoutLocation(latlngValid, isHisData, altitude, longitude, latitude, azimuth, speedf, is_4g_lbs, mcc_4g, mnc_4g, eci_4g, tac, pcid_4g_1, pcid_4g_2, pcid_4g_3, is_2g_lbs, mcc_2g, mnc_2g, lac_2g_1, ci_2g_1, lac_2g_2, ci_2g_2, lac_2g_3, ci_2g_3, bleData);
         }
 
         private static BleAlertData getBleAlertDataWithoutLocation(bool latlngValid, bool isHisData, double altitude, double longitude, double latitude, int azimuth, float speedf, bool is_4g_lbs, int mcc_4g, int mnc_4g, long eci_4g, int tac, int pcid_4g_1, int pcid_4g_2, int pcid_4g_3, bool is_2g_lbs, int mcc_2g, int mnc_2g, int lac_2g_1, int ci_2g_1, int lac_2g_2, int ci_2g_2, int lac_2g_3, int ci_2g_3, byte[] bleData)
@@ -1042,8 +1265,44 @@ namespace TopflytechCodec
                     bleDataList.Add(bleFuelData);
                 }
             }
+            else if (bleData[0] == 0x00 && bleData[1] == 0x0d)
+            {
+                bluetoothPeripheralDataMessage.MessageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_Customer2397;
+                int positionIndex = 2;
+                while (positionIndex + 7 <= bleData.Length)
+                {
+                    BleCustomer2397SensorData bleCustomer2397SensorData = parseCustomer2397Data(bleData, positionIndex);
+                    if (bleCustomer2397SensorData == null)
+                    {
+                        break;
+                    }
+                    bleDataList.Add(bleCustomer2397SensorData);
+                    positionIndex += 8 + bleCustomer2397SensorData.RawData.Length + 1;
+                }
+            }
             bluetoothPeripheralDataMessage.BleDataList = bleDataList;
             return bluetoothPeripheralDataMessage;
+        }
+
+        private BleCustomer2397SensorData parseCustomer2397Data(byte[] bleData, int positionIndex)
+        {
+            byte[] macArray = new byte[6];
+            Array.Copy(bleData, positionIndex, macArray, 0, 6);
+            positionIndex += 6;
+            int len = BytesUtils.Bytes2Short(bleData, positionIndex);
+            if (positionIndex + len > bleData.Length || len < 1)
+            {
+                return null;
+            }
+            positionIndex += 2;
+            byte[] rawData = Utils.ArrayCopyOfRange(bleData, positionIndex, positionIndex + len - 1);
+            int rssiTemp = bleData[positionIndex + len - 1] < 0 ? bleData[positionIndex + len - 1] + 256 : bleData[positionIndex + len - 1];
+            int rssi = rssiTemp == 255 ? -999 : rssiTemp - 128;
+            BleCustomer2397SensorData bleCustomer2397SensorData = new BleCustomer2397SensorData();
+            bleCustomer2397SensorData.Mac = BytesUtils.Bytes2HexString(macArray, 0);
+            bleCustomer2397SensorData.RawData = rawData;
+            bleCustomer2397SensorData.Rssi = rssi;
+            return bleCustomer2397SensorData;
         }
 
         private static BleAlertData getBleAlertData(byte[] bleData)
@@ -1731,7 +1990,7 @@ namespace TopflytechCodec
         float lightSensor = 0;
         if (lightSensorStr.ToLower().Equals("ff"))
         {
-            lightSensor = -1;
+            lightSensor = -999;
         }else{
             lightSensor = Convert.ToInt32(lightSensorStr) / 10.0f;
 
@@ -1741,7 +2000,7 @@ namespace TopflytechCodec
         String batteryVoltageStr = BytesUtils.Bytes2HexString(batteryVoltageBytes, 0);
         float batteryVoltage = 0;
         if(batteryVoltageStr.ToLower().Equals("ff")){
-            batteryVoltage = -1;
+            batteryVoltage = -999;
         }else{
             batteryVoltage = Convert.ToInt32(batteryVoltageStr) / 10.0f;
         }
@@ -1749,7 +2008,7 @@ namespace TopflytechCodec
         String solarVoltageStr = BytesUtils.Bytes2HexString(solarVoltageBytes, 0);
         float solarVoltage = 0;
         if(solarVoltageStr.ToLower().Equals("ff")){
-            solarVoltage = -1;
+            solarVoltage = -999;
         }else{
             solarVoltage = Convert.ToInt32(solarVoltageStr) / 10.0f;
         }
@@ -1758,7 +2017,7 @@ namespace TopflytechCodec
         int status = BytesUtils.Bytes2Short(data, 53);
         int network = (status & 0x7F0) >> 4;
         int accOnInterval = BytesUtils.Bytes2Short(data, 55);
-        int accOffInterval = BytesUtils.Bytes2Short(data, 57);
+        int accOffInterval = BytesUtils.Byte2Int(data, 57);
         int angleCompensation = (int) data[61];
         int distanceCompensation = BytesUtils.Bytes2Short(data, 62);
         int heartbeatInterval = (int) data[64];
@@ -1885,7 +2144,7 @@ namespace TopflytechCodec
         String software = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 15, 17), 0);
         software = String.Format("V{0}.{1}.{2}", Convert.ToInt32(software.Substring(1, 1), 16), Convert.ToInt32(software.Substring(2, 1), 16), Convert.ToInt32(software.Substring(3, 1), 16));
         String firmware = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 20, 22), 0);
-        firmware = String.Format("V{0}.{1}.{2}", firmware.Substring(0, 1), firmware.Substring(1, 1), firmware.Substring(2, 2));
+        firmware = String.Format("V{0}.{1}.{2}.{3}", firmware.Substring(0, 1), firmware.Substring(1, 1), firmware.Substring(2, 1), firmware.Substring(3, 1));
         byte hardwareByte = bytes[22];
         String hardware = "";
         if ((hardwareByte & 0x80) == 0x80)
@@ -1903,8 +2162,40 @@ namespace TopflytechCodec
         signInMessage.Imei=imei;
         signInMessage.Software=software;
         signInMessage.Firmware=firmware;
-        signInMessage.Hareware=hardware;
+        signInMessage.Hardware=hardware;
         signInMessage.OrignBytes=bytes;
+        signInMessage.ProtocolHeadType = bytes[2];
+        return signInMessage;
+    }
+
+    private SignInMessage parseSecondLoginMessage(byte[] bytes)
+    {
+        int serialNo = BytesUtils.Bytes2Short(bytes, 5);
+        String imei = BytesUtils.IMEI.Decode(bytes, 7);
+        int modelType = BytesUtils.Bytes2Short(bytes, 15);
+        String software = String.Format("V{0}.{1}.{2}", bytes[17] & 0x0f, (bytes[18] & 0xf0) >> 4, bytes[18] & 0x0f);
+        String firmware = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 22, 24), 0);
+        firmware = String.Format("V{0}.{1}.{2}.{3}", firmware.Substring(0, 1), firmware.Substring(1, 1), firmware.Substring(2, 1), firmware.Substring(3, 1));
+        byte hardwareByte = bytes[24];
+        String hardware;
+        if ((hardwareByte & 0x80) == 0x80)
+        {
+            hardware = String.Format("{0:X2}", hardwareByte & 0x7f);
+        }
+        else
+        {
+            hardware = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 24, 25), 0);
+        }
+        hardware = String.Format("V{0}.{1}", hardware.Substring(0, 1), hardware.Substring(1, 1));
+        SignInMessage signInMessage = new SignInMessage();
+        signInMessage.SerialNo = serialNo;
+        signInMessage.Imei = imei;
+        signInMessage.Software = software;
+        signInMessage.Firmware = firmware;
+        signInMessage.Hardware = hardware;
+        signInMessage.OrignBytes = bytes;
+        signInMessage.Model = modelType;
+        signInMessage.ProtocolHeadType = bytes[2];
         return signInMessage;
     }
     private HeartbeatMessage parseHeartbeat(byte[] bytes)
@@ -1931,10 +2222,22 @@ namespace TopflytechCodec
             String selfMac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 23, 29), 0);
             String ap1Mac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 29, 35), 0);
             int ap1Rssi = (int)bytes[35];
+            if (ap1Rssi > 127)
+            {
+                ap1Rssi -= 256;
+            }
             String ap2Mac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 36, 42), 0);
             int ap2Rssi = (int)bytes[42];
+            if (ap2Rssi > 127)
+            {
+                ap2Rssi -= 256;
+            }
             String ap3Mac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 43, 49), 0);
             int ap3Rssi = (int)bytes[49];
+            if (ap3Rssi > 127)
+            {
+                ap3Rssi -= 256;
+            }
              
             bool latlngValid = (bytes[15] & 0x40) == 0x40; 
             double altitude = latlngValid ? BytesUtils.Bytes2Float(bytes, 23) : 0;
@@ -2461,7 +2764,7 @@ namespace TopflytechCodec
             case 0x05:
                 {
                     USSDMessage ussdMessage = new USSDMessage();
-                    messageData = Encoding.GetEncoding("UTF-16lE").GetString(data);
+                    messageData = Encoding.GetEncoding("UTF-16LE").GetString(data);
                     ussdMessage.Content = messageData;
                     ussdMessage.OrignBytes = bytes;
                     ussdMessage.SerialNo = serialNo;

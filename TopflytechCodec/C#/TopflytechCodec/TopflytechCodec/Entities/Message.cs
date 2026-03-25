@@ -54,5 +54,33 @@ namespace TopflytechCodec.Entities
             get { return encryptType; }
             set { encryptType = value; }
         }
+
+        private String protocol;
+        public String Protocol
+        {
+            get { return protocol; }
+            set { protocol = value; }
+        }
+
+        private String linkType;
+        public String LinkType
+        {
+            get { return linkType; }
+            set { linkType = value; }
+        }
+
+        private DateTime recvDate;
+        public DateTime RecvDate
+        {
+            get { return recvDate; }
+            set { recvDate = value; }
+        }
+
+        private String postResp;
+        public String PostResp
+        {
+            get { return postResp; }
+            set { postResp = value; }
+        }
     }
 }

@@ -1,12 +1,19 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 namespace TopflytechCodec.Entities
 {
-    class BleTireData : BleData
+    public class BleTireData : BleData
     {
+        private String mac;
+        public override String Mac
+        {
+            get { return mac; }
+            set { mac = value; }
+        }
+
         private double voltage = 0;
 
         public double Voltage

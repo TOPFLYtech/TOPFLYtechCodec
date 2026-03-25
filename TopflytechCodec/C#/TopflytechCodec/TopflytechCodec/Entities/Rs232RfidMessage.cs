@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 namespace TopflytechCodec.Entities
 {
-    class Rs232RfidMessage : Rs232DeviceMessage
+    public class Rs232RfidMessage : Rs232DeviceMessage
     {
         private String rfid;
 

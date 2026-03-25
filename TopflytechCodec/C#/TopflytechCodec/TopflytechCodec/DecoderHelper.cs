@@ -66,7 +66,11 @@ namespace TopflytechCodec
             locationMessage.IsHistoryData = isHistory;
             ParseLocationTypeOneData(locationMessage, type1Map);
             ParseLocationTypeTwoData(locationMessage, type2Map);
-            ParseLocationTypeThreeData(locationMessage, type3Map); 
+            ParseLocationTypeThreeData(locationMessage, type3Map);
+            if (!locationMessage.LatlngValid && !CheckLatitudeAndLongtitudeIsZero(locationMessage.Latitude, locationMessage.Longitude))
+            {
+                locationMessage.LatlngValid = true;
+            }
             return locationMessage;
         }
 
@@ -242,6 +246,16 @@ namespace TopflytechCodec
             }
             return true;
         }
+
+        private static bool CheckLatitudeAndLongtitudeIsZero(double lat, double lng)
+        {
+            if (lat < -300 || lat > 300 || lng < -300 || lng > 300)
+            {
+                return true;
+            }
+            return lat == 0.0d && lng == 0.0d;
+        }
+
         private static void ParseLocationTypeThreeData(LocationMessage locationMessage, Dictionary<int, byte[]> typeMap)
         {
             foreach (var dataId in typeMap.Keys)
@@ -316,10 +330,34 @@ namespace TopflytechCodec
                     string selfMac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(valueByte, 0, 6), 0);
                     string ap1Mac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(valueByte, 6, 12), 0);
                     int ap1Rssi = (int)valueByte[12];
+                    if (ap1Rssi == 255)
+                    {
+                        ap1Rssi = -999;
+                    }
+                    else if (ap1Rssi > 127)
+                    {
+                        ap1Rssi -= 256;
+                    }
                     string ap2Mac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(valueByte, 13, 19), 0);
                     int ap2Rssi = (int)valueByte[19];
+                    if (ap2Rssi == 255)
+                    {
+                        ap2Rssi = -999;
+                    }
+                    else if (ap2Rssi > 127)
+                    {
+                        ap2Rssi -= 256;
+                    }
                     string ap3Mac = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(valueByte, 20, 26), 0);
                     int ap3Rssi = (int)valueByte[26];
+                    if (ap3Rssi == 255)
+                    {
+                        ap3Rssi = -999;
+                    }
+                    else if (ap3Rssi > 127)
+                    {
+                        ap3Rssi -= 256;
+                    }
                     locationMessage.SelfMac = selfMac.ToUpper();
                     locationMessage.Ap1Mac = ap1Mac.ToUpper();
                     locationMessage.Ap1RSSI = ap1Rssi;
@@ -412,11 +450,12 @@ namespace TopflytechCodec
                     }
                     int remainFuelRate = valueByte[16] & 0x7f;
                     int remainFuelUnit = (valueByte[16] & 0x80) == 0x80 ? 1 : 0;
-                    if (valueByte[16] == -1)
+                    if (valueByte[16] == 0xFF)
                     {
                         remainFuelRate = -999;
                         remainFuelUnit = -999;
                     }
+                    locationMessage.IsObdElectricData = false;
                     locationMessage.AccumulatingFuelConsumption = accumulatingFuelConsumption;
                     locationMessage.InstantFuelConsumption = instantFuelConsumption;
                     locationMessage.Rpm = rpm;
@@ -498,12 +537,76 @@ namespace TopflytechCodec
                     locationMessage.IsCarCharge = isCarCharge;
                     locationMessage.DashboardSpeed = dashboardSpeed;
                     locationMessage.AcceleratorPedalPosition = acceleratorPedalPosition;
+                    locationMessage.IsObdElectricData = true;
+                    locationMessage.RemainPowerDistance = remainPowerMinDistance;
                     locationMessage.RemainPowerMinDistance = remainPowerMinDistance;
                     locationMessage.RemainPowerMaxDistance = remainPowerMaxDistance;
                     locationMessage.CarChargeVoltage = carChargeVoltage;
                     locationMessage.CarChargeElectricCurrent = carChargeElectricCurrent;
                     locationMessage.CarChargePower = carChargePower;
                     locationMessage.FullRemainingTime = fullRemainingTime;
+                    locationMessage.CarBatteryEffectiveCapacity = carBatteryEffectiveCapacity;
+                    locationMessage.CarBatteryInitialCapacity = carBatteryInitialCapacity;
+                    locationMessage.CarTotalPowerConsumption = carTotalPowerConsumption;
+                }
+                else if (dataId == 0x0D)
+                {
+                    byte[] valueByte = typeMap[dataId];
+                    int remainPower = (int)valueByte[0] < 0 ? (int)valueByte[0] + 256 : (int)valueByte[0];
+                    if (remainPower == 255)
+                    {
+                        remainPower = -999;
+                    }
+                    bool isCarCharge = valueByte[1] == 0x01;
+                    int dashboardSpeed = (int)valueByte[2] < 0 ? (int)valueByte[2] + 256 : (int)valueByte[2];
+                    if (dashboardSpeed == 255)
+                    {
+                        dashboardSpeed = -999;
+                    }
+                    int acceleratorPedalPosition = (int)valueByte[3] < 0 ? (int)valueByte[3] + 256 : (int)valueByte[3];
+                    if (acceleratorPedalPosition == 255)
+                    {
+                        acceleratorPedalPosition = -999;
+                    }
+                    long remainPowerDistance = BytesUtils.Byte2Int(valueByte, 4);
+                    if (remainPowerDistance == 4294967295L)
+                    {
+                        remainPowerDistance = -999L;
+                    }
+                    long carChargeVoltageTemp = BytesUtils.Byte2Int(valueByte, 8);
+                    float carChargeVoltage = carChargeVoltageTemp / 1000.0f;
+                    if (carChargeVoltageTemp == 4294967295L)
+                    {
+                        carChargeVoltage = -999f;
+                    }
+                    long carChargeElectricCurrent = BytesUtils.Byte2Int(valueByte, 12);
+                    if (carChargeElectricCurrent == 4294967295L)
+                    {
+                        carChargeElectricCurrent = -999L;
+                    }
+                    long carBatteryEffectiveCapacity = BytesUtils.Byte2Int(valueByte, 16);
+                    if (carBatteryEffectiveCapacity == 4294967295L)
+                    {
+                        carBatteryEffectiveCapacity = -999L;
+                    }
+                    long carBatteryInitialCapacity = BytesUtils.Byte2Int(valueByte, 20);
+                    if (carBatteryInitialCapacity == 4294967295L)
+                    {
+                        carBatteryInitialCapacity = -999L;
+                    }
+                    long carTotalPowerConsumption = BytesUtils.Byte2Int(valueByte, 24);
+                    if (carTotalPowerConsumption == 4294967295L)
+                    {
+                        carTotalPowerConsumption = -999L;
+                    }
+                    locationMessage.IsObdElectricData = true;
+                    locationMessage.RemainPower = remainPower;
+                    locationMessage.IsCarCharge = isCarCharge;
+                    locationMessage.DashboardSpeed = dashboardSpeed;
+                    locationMessage.AcceleratorPedalPosition = acceleratorPedalPosition;
+                    locationMessage.RemainPowerDistance = remainPowerDistance;
+                    locationMessage.CarChargeVoltage = carChargeVoltage;
+                    locationMessage.CarChargeElectricCurrent = carChargeElectricCurrent;
                     locationMessage.CarBatteryEffectiveCapacity = carBatteryEffectiveCapacity;
                     locationMessage.CarBatteryInitialCapacity = carBatteryInitialCapacity;
                     locationMessage.CarTotalPowerConsumption = carTotalPowerConsumption;
@@ -532,6 +635,10 @@ namespace TopflytechCodec
                     locationMessage.GpsWorking = (value & 0x80) == 0x80;
                     bool gpsEnable = (value & 0x40) == 0x40;
                     locationMessage.GpsEnable = gpsEnable;
+                    bool latlngValid = (value & 0x04) == 0x04;
+                    locationMessage.LatlngValid = latlngValid;
+                    bool isHistory = (value & 0x02) == 0x02;
+                    locationMessage.IsHistoryData = isHistory;
                 }
                 else if (dataId == 0x03)
                 {
@@ -579,6 +686,8 @@ namespace TopflytechCodec
                     byte value = valueByte[0];
                     locationMessage.HasThirdPartyObd = (value & 0x80) == 0x80 ? 1 : 0;
                     locationMessage.ExPowerConsumpStatus = (value & 0x40) == 0x40 ? 1 : 0;
+                    bool isEcuMileage = (value & 0x10) == 0x10;
+                    locationMessage.MileageSource = isEcuMileage ? 1 : 0;
                 }
                 else if (dataId == 0x07)
                 {
@@ -648,6 +757,44 @@ namespace TopflytechCodec
                     int lockType = (int)valueByte[0];
                     locationMessage.LockType = lockType;
                 }
+                else if (dataId == 0x10)
+                {
+                    byte[] valueByte = typeMap[dataId];
+                    locationMessage.SmartPowerSettingStatus = (valueByte[0] & 0x80) == 0x80 ? "enable" : "disable";
+                }
+                else if (dataId == 0x11)
+                {
+                    byte[] valueByte = typeMap[dataId];
+                    locationMessage.FlashLightOpen = (valueByte[0] & 0x80) == 0x80;
+                    locationMessage.LogoLightOpen = (valueByte[0] & 0x40) == 0x40;
+                    locationMessage.BuzzerOpen = (valueByte[0] & 0x20) == 0x20;
+                    locationMessage.LostModeOpen = (valueByte[0] & 0x10) == 0x10;
+                }
+                else if (dataId == 0x12)
+                {
+                    byte[] valueByte = typeMap[dataId];
+                    locationMessage.RelayStatus = valueByte[0] & 0xff;
+                }
+                else if (dataId == 0x13)
+                {
+                    byte[] valueByte = typeMap[dataId];
+                    locationMessage.MileageSource = valueByte[0] == 0x01 ? 2 : 0;
+                }
+                else if (dataId == 0x14)
+                {
+                    byte[] valueByte = typeMap[dataId];
+                    locationMessage.IgnitionSource = valueByte[0] & 0xff;
+                }
+                else if (dataId == 0x15)
+                {
+                    byte[] valueByte = typeMap[dataId];
+                    locationMessage.ObdFuelType = valueByte[0] & 0xff;
+                }
+                else if (dataId == 0x16)
+                {
+                    byte[] valueByte = typeMap[dataId];
+                    locationMessage.WifiScanInterval = valueByte[0] & 0xff;
+                }
                 else if (dataId == 0x60)
                 {
                     byte[] valueByte = typeMap[dataId];
@@ -663,11 +810,13 @@ namespace TopflytechCodec
                     bool usbConnect = (valueByte[0] & 0x10) == 0x10;
                     bool isSolarCharge = (valueByte[0] & 0x08) == 0x08;
                     bool isSmartUpload = (valueByte[0] & 0x04) == 0x04;
+                    bool isWirelessCharging = (valueByte[0] & 0x02) == 0x02;
                     locationMessage.IopIgnition = accOn;
-                    locationMessage.IOP = accOn ? 0x4000 : 0x0000;
+                    locationMessage.IOP = accOn ? 0x4000L : 0x0000L;
                     locationMessage.IopACOn = acOn;
                     locationMessage.IsUsbCharging = usbConnect;
                     locationMessage.IsSolarCharging = isSolarCharge;
+                    locationMessage.WirelessCharging = isWirelessCharging;
                     string smartPowerOpenStatus = "close";
                     if (isSmartUpload)
                     {
@@ -685,21 +834,55 @@ namespace TopflytechCodec
                 {
                     byte[] valueByte = typeMap[dataId];
                     int solarVoltage = BytesUtils.Bytes2Short(valueByte, 0);
-                    locationMessage.SolarVoltage = solarVoltage / 10.0f;
+                    locationMessage.SolarVoltage = solarVoltage / 1000.0f;
                 }
                 else if (dataId == 0x64)
                 {
                     byte[] valueByte = typeMap[dataId];
-                    bool isNegative = (valueByte[0] & 0x80) == 0x80;
-                    float value = (isNegative ? -1 : 1) * ((valueByte[0] & 0x7f) + (valueByte[1] / 100.0f));
-                    locationMessage.ExternalTemp = value;
+                    if (!IsAllFF(valueByte))
+                    {
+                        bool isNegative = (valueByte[1] & 0x80) == 0x80;
+                        float value = (isNegative ? -1 : 1) * (valueByte[0] + ((valueByte[1] & 0x7f) / 100.0f));
+                        locationMessage.ExternalTemp = value;
+                    }
                 }
                 else if (dataId == 0x65)
                 {
                     byte[] valueByte = typeMap[dataId];
-                    bool isNegative = (valueByte[0] & 0x80) == 0x80;
-                    float value = (isNegative ? -1 : 1) * ((valueByte[0] & 0x7f) + (valueByte[1] / 100.0f));
-                    locationMessage.ExternalHumidity = value;
+                    if (!IsAllFF(valueByte))
+                    {
+                        bool isNegative = (valueByte[0] & 0x80) == 0x80;
+                        float value = (isNegative ? -1 : 1) * ((valueByte[0] & 0x7f) + (valueByte[1] / 100.0f));
+                        locationMessage.ExternalHumidity = value;
+                    }
+                }
+                else if (dataId == 0x66)
+                {
+                    byte[] valueByte = typeMap[dataId];
+                    if (!IsAllFF(valueByte))
+                    {
+                        bool isNegative = (valueByte[1] & 0x80) == 0x80;
+                        float value = (isNegative ? -1 : 1) * (valueByte[0] + ((valueByte[1] & 0x7f) / 100.0f));
+                        locationMessage.DeviceHighPrecisionTemp = value;
+                    }
+                }
+                else if (dataId == 0x67)
+                {
+                    byte[] valueByte = typeMap[dataId];
+                    int voltage = BytesUtils.Bytes2Short(valueByte, 0);
+                    locationMessage.AnalogInput1 = voltage / 1000.0f;
+                }
+                else if (dataId == 0x68)
+                {
+                    byte[] valueByte = typeMap[dataId];
+                    int voltage = BytesUtils.Bytes2Short(valueByte, 0);
+                    locationMessage.AnalogInput2 = voltage / 1000.0f;
+                }
+                else if (dataId == 0x69)
+                {
+                    byte[] valueByte = typeMap[dataId];
+                    int voltage = BytesUtils.Bytes2Short(valueByte, 0);
+                    locationMessage.AnalogInput3 = voltage / 1000.0f;
                 }
                 else if (dataId == 0xA0)
                 {
@@ -785,6 +968,11 @@ namespace TopflytechCodec
                     byte[] valueByte = typeMap[dataId];
                     int jammerDetectionStatus = (valueByte[0] & 0xC);
                     locationMessage.JammerDetectionStatus = jammerDetectionStatus;
+                }
+                else if (dataId == 0x09)
+                {
+                    byte[] valueByte = typeMap[dataId];
+                    locationMessage.AntitheftedStatus = valueByte[0] & 0xff;
                 }
                 else if (dataId == 0x80)
                 {

@@ -1,14 +1,20 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 namespace TopflytechCodec.Entities
 {
-    class BleAlertData : BleData
+    public class BleAlertData : BleData
     {
         public static int ALERT_TYPE_SOS = 0;
         public static int ALERT_TYPE_LOW_BATTERY = 1;
+        private String mac;
+        public override String Mac
+        {
+            get { return mac; }
+            set { mac = value; }
+        }
 
         private float innerVoltage;
 
@@ -98,7 +104,6 @@ namespace TopflytechCodec.Entities
             get { return mnc_4g; }
             set { mnc_4g = value; }
         }
-        private Int64 ci_4g;
         private Int64 eci_4g;
         public Int64 Eci_4g
         {

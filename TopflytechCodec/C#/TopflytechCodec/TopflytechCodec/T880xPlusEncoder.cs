@@ -86,6 +86,11 @@ namespace TopflytechCodec
             byte[] command = { 0x25, 0x25, 0x09 };
             return Encoder.getRS232MsgReply(imei, serialNo, command, encryptType, aesKey);
         }
+        public byte[] getManualCANMsgReply(String imei, int serialNo)
+        {
+            byte[] command = { 0x25, 0x25, 0x44 };
+            return Encoder.getRS232MsgReply(imei, serialNo, command, encryptType, aesKey);
+        }
         public byte[] getNetworkMsgReply(String imei, int serialNo)
         {
             byte[] command = { 0x25, 0x25, 0x11 };

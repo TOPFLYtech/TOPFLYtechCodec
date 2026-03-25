@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,6 +17,7 @@ namespace TopflytechCodec
 
 
         private static byte[] SIGNUP = { 0x23, 0x23, 0x01 };
+        private static byte[] SECOND_SIGNUP = { 0x25, 0x25, 0x31 };
 
         private static byte[] DATA = { 0x23, 0x23, 0x02 };
 
@@ -62,10 +63,15 @@ namespace TopflytechCodec
         private static byte[] ONE_WIRE_DATA = { 0x25, 0x25, (byte)0x23 };
         private static byte[] LOCATION_SECOND_DATA_WITH_SENSOR = { 0x25, 0x25, (byte)0x33 };
         private static byte[] ALARM_SECOND_DATA_WITH_SENSOR = { 0x25, 0x25, (byte)0x34 };
+        private static byte[] DEBUG_DATA = { 0x25, 0x25, (byte)0x40 };
+        private static byte[] MANUAL_CAN_DATA = { 0x25, 0x25, (byte)0x44 };
+        private static byte[] INDEFINITE_LOCATION_DATA = { 0x25, 0x25, (byte)0x62 };
+        private static byte[] INDEFINITE_LOCATION_ALARM_DATA = { 0x25, 0x25, (byte)0x64 };
         private static byte[] obdHead = { 0x55, (byte)0xAA };
         private static bool match(byte[] bytes)
         {
             return Utils.ArrayEquals(SIGNUP, bytes)
+                || Utils.ArrayEquals(SECOND_SIGNUP, bytes)
                 || Utils.ArrayEquals(HEARTBEAT, bytes)
                 || Utils.ArrayEquals(DATA, bytes)
                 || Utils.ArrayEquals(ALARM, bytes)
@@ -92,7 +98,11 @@ namespace TopflytechCodec
                 || Utils.ArrayEquals(ONE_WIRE_DATA, bytes)
                 || Utils.ArrayEquals(LOCATION_ALARM_WITH_SENSOR, bytes)
                 || Utils.ArrayEquals(LOCATION_SECOND_DATA_WITH_SENSOR, bytes)
-                || Utils.ArrayEquals(ALARM_SECOND_DATA_WITH_SENSOR, bytes);
+                || Utils.ArrayEquals(ALARM_SECOND_DATA_WITH_SENSOR, bytes)
+                || Utils.ArrayEquals(DEBUG_DATA, bytes)
+                || Utils.ArrayEquals(MANUAL_CAN_DATA, bytes)
+                || Utils.ArrayEquals(INDEFINITE_LOCATION_DATA, bytes)
+                || Utils.ArrayEquals(INDEFINITE_LOCATION_ALARM_DATA, bytes);
         }
 
 
@@ -101,6 +111,17 @@ namespace TopflytechCodec
 
         private int encryptType = 0;
         private string aesKey;
+        private bool srcEncryptDataShowEncrypt = false;
+
+        public bool isSrcEncryptDataShowEncrypt()
+        {
+            return srcEncryptDataShowEncrypt;
+        }
+
+        public void setSrcEncryptDataShowEncrypt(bool srcEncryptDataShowEncrypt)
+        {
+            this.srcEncryptDataShowEncrypt = srcEncryptDataShowEncrypt;
+        }
 
         private static long MASK_IGNITION = 0x4000;
         private static long MASK_POWER_CUT = 0x8000;
@@ -188,7 +209,7 @@ namespace TopflytechCodec
         }
 
 
-        private Message build(byte[] bytes)
+        public Message build(byte[] bytes)
         {
             if (bytes != null && bytes.Length > HEADER_LENGTH
                     && ((bytes[0] == 0x23 && bytes[1] == 0x23) || (bytes[0] == 0x25 && bytes[1] == 0x25)))
@@ -198,6 +219,9 @@ namespace TopflytechCodec
                     case 0x01:
                         SignInMessage signInMessage = parseLoginMessage(bytes);
                         return signInMessage;
+                    case 0x31:
+                        SignInMessage secondSignInMessage = parseSecondLoginMessage(bytes);
+                        return secondSignInMessage;
                     case 0x03:
                         HeartbeatMessage heartbeatMessage = parseHeartbeat(bytes);
                         return heartbeatMessage;
@@ -246,6 +270,16 @@ namespace TopflytechCodec
                     case 0x23:
                         OneWireMessage oneWireMessage = parseOneWireMessage(bytes);
                         return oneWireMessage;
+                    case 0x40:
+                        DebugMessage debugMessage = parseDebugMessage(bytes);
+                        return debugMessage;
+                    case 0x44:
+                        ManualCANMessage manualCanMessage = parseManualCANMessage(bytes);
+                        return manualCanMessage;
+                    case 0x62:
+                    case 0x64:
+                        Message indefiniteLocationMessage = DecoderHelper.ParseLocationMessage(bytes);
+                        return indefiniteLocationMessage;
                     case (byte)0x81:
                         Message message = parseInteractMessage(bytes);
                         return message;
@@ -311,8 +345,8 @@ namespace TopflytechCodec
             Int64 eci_4g = -1;
             Int32 tac = -1;
             Int32 pcid_4g_1 = -1;
-            Int32 pcid_4g_2 = -1;
             Int32 pcid_4g_3 = -1;
+            Int32 pcid_4g_2 = -1;
             Boolean is_2g_lbs = false;
             Int32 mcc_2g = -1;
             Int32 mnc_2g = -1;
@@ -625,7 +659,7 @@ namespace TopflytechCodec
             int networkOperatorLen = bytes[21];
             int networkOperatorStartIndex = 22;
             byte[] networkOperatorByte = Utils.ArrayCopyOfRange(bytes, networkOperatorStartIndex, networkOperatorStartIndex + networkOperatorLen);
-            String networkOperator = Encoding.GetEncoding("UTF-16le").GetString(networkOperatorByte);
+            String networkOperator = Encoding.GetEncoding("UTF-16LE").GetString(networkOperatorByte);
             int accessTechnologyLen = bytes[networkOperatorStartIndex + networkOperatorLen];
             int accessTechnologyStartIndex = networkOperatorStartIndex + networkOperatorLen + 1;
             byte[] accessTechnologyByte = Utils.ArrayCopyOfRange(bytes, accessTechnologyStartIndex, accessTechnologyStartIndex + accessTechnologyLen);
@@ -671,11 +705,10 @@ namespace TopflytechCodec
             String str = BytesUtils.Bytes2HexString(bytes, 15);
             if (12 == str.Length)
             {
-                char[] strChars = str.ToCharArray();
-                String software = String.Format("V{0}.{1}.{2}", Convert.ToInt32(str.Substring(0, 1), 16), Convert.ToInt32(str.Substring(1, 1), 16), Convert.ToInt32(str.Substring(2, 1), 16));
-                String firmware = String.Format("V{0}.{1}.{2}", Convert.ToInt32(str.Substring(3, 1), 16), Convert.ToInt32(str.Substring(4, 1), 16), Convert.ToInt32(str.Substring(5, 1), 16));
+                String software = String.Format("V{0}.{1}.{2}", (bytes[15] & 0xf0) >> 4, bytes[15] & 0xf, (bytes[16] & 0xf0) >> 4);
+                String firmware = String.Format("V{0}.{1}.{2}", bytes[16] & 0xf, (bytes[17] & 0xf0) >> 4, bytes[17] & 0xf);
                 String platform = str.Substring(6, 4);
-                String hardware = String.Format("{0}.{1}", Convert.ToInt32(str.Substring(10, 1), 16), Convert.ToInt32(str.Substring(11, 1), 16));
+                String hardware = String.Format("{0}.{1}", (bytes[20] & 0xf0) >> 4, bytes[20] & 0xf);
                 SignInMessage signInMessage = new SignInMessage();
                 signInMessage.SerialNo = serialNo;
                 //signInMessage.IsNeedResp = isNeedResp;
@@ -684,14 +717,17 @@ namespace TopflytechCodec
                 signInMessage.Firmware = firmware;
                 signInMessage.Platform = platform;
                 signInMessage.Hareware = hardware;
+                signInMessage.ProtocolHeadType = bytes[2];
                 signInMessage.OrignBytes = bytes;
                 return signInMessage;
             }
             else if (16 == str.Length)
             {
-                String software = String.Format("V{1}.{2}.{3}", Convert.ToInt32(str.Substring(1, 1), 16), Convert.ToInt32(str.Substring(2, 1), 16), Convert.ToInt32(str.Substring(3, 1), 16));
-                String firmware = String.Format("V{0}.{1}.{2}.{3}", Convert.ToInt32(str.Substring(10, 1), 16), Convert.ToInt32(str.Substring(11, 1), 16), Convert.ToInt32(str.Substring(12, 1), 16), Convert.ToInt32(str.Substring(13, 1), 16));
-                String hardware = String.Format("{0}.{1}", Convert.ToInt32(str.Substring(14, 1), 16), Convert.ToInt32(str.Substring(15, 1), 16));
+                String software = String.Format("V{0}.{1}.{2}", bytes[15] & 0xf, (bytes[16] & 0xf0) >> 4, bytes[16] & 0xf);
+                String firmware = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 20, 22), 0);
+                firmware = String.Format("V{0}.{1}.{2}.{3}", firmware.Substring(0, 1), firmware.Substring(1, 1), firmware.Substring(2, 1), firmware.Substring(3, 1));
+                String hardware = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 22, 23), 0);
+                hardware = String.Format("V{0}.{1}", hardware.Substring(0, 1), hardware.Substring(1, 1));
                 SignInMessage signInMessage = new SignInMessage();
                 signInMessage.SerialNo = serialNo;
                 //signInMessage.IsNeedResp = isNeedResp;
@@ -699,19 +735,23 @@ namespace TopflytechCodec
                 signInMessage.Software = software;
                 signInMessage.Firmware = firmware;
                 signInMessage.Hareware = hardware;
+                signInMessage.ProtocolHeadType = bytes[2];
                 signInMessage.OrignBytes = bytes;
                 return signInMessage;
             }
             else if (33 == bytes.Length)
             {
-                String software = String.Format("V{1}.{2}.{3}", Convert.ToInt32(str.Substring(1, 1), 16), Convert.ToInt32(str.Substring(2, 1), 16), Convert.ToInt32(str.Substring(3, 1), 16));
-                String firmware = String.Format("V{0}.{1}.{2}.{3}", Convert.ToInt32(str.Substring(10, 1), 16), Convert.ToInt32(str.Substring(11, 1), 16), Convert.ToInt32(str.Substring(12, 1), 16), Convert.ToInt32(str.Substring(13, 1), 16));
-                String hardware = String.Format("{0}.{1}", Convert.ToInt32(str.Substring(14, 1), 16), Convert.ToInt32(str.Substring(15, 1), 16));
-                String obdHardware = String.Format("{0}.{1}", Convert.ToInt32(str.Substring(15, 1), 16), Convert.ToInt32(str.Substring(16, 1), 16));
+                String software = String.Format("V{0}.{1}.{2}", bytes[15] & 0xf, (bytes[16] & 0xf0) >> 4, bytes[16] & 0xf);
+                String firmware = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 20, 22), 0);
+                firmware = String.Format("V{0}.{1}.{2}.{3}", firmware.Substring(0, 1), firmware.Substring(1, 1), firmware.Substring(2, 1), firmware.Substring(3, 1));
+                String hardware = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 22, 23), 0);
+                hardware = String.Format("V{0}.{1}", hardware.Substring(0, 1), hardware.Substring(1, 1));
+                String obdHardware = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 23, 24), 0);
+                obdHardware = String.Format("V{0}.{1}", hardware.Substring(0, 1), hardware.Substring(1, 1));
                 String obdSoftware = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 24, 27), 0);
                 if (!obdSoftware.ToLower().Equals("ffffff"))
                 {
-                    obdSoftware = String.Format("V%d.%d.%d", Convert.ToInt32(firmware.Substring(0, 2)), Convert.ToInt32(firmware.Substring(2, 2)), Convert.ToInt32(firmware.Substring(4, 2)));
+                    obdSoftware = String.Format("V{0}.{1}.{2}", Convert.ToInt32(obdSoftware.Substring(0, 2)), Convert.ToInt32(obdSoftware.Substring(2, 2)), Convert.ToInt32(obdSoftware.Substring(4, 2)));
                 }
                 else
                 {
@@ -720,7 +760,7 @@ namespace TopflytechCodec
                 String obdBootSoftware = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 27, 30), 0);
                 if (!obdBootSoftware.ToLower().Equals("ffffff"))
                 {
-                    obdBootSoftware = String.Format("V%d.%d.%d", Convert.ToInt32(obdBootSoftware.Substring(0, 2)), Convert.ToInt32(obdBootSoftware.Substring(2, 4)), Convert.ToInt32(obdBootSoftware.Substring(4, 6)));
+                    obdBootSoftware = String.Format("V{0}.{1}.{2}", Convert.ToInt32(obdBootSoftware.Substring(0, 2)), Convert.ToInt32(obdBootSoftware.Substring(2, 2)), Convert.ToInt32(obdBootSoftware.Substring(4, 2)));
                 }
                 else
                 {
@@ -729,7 +769,7 @@ namespace TopflytechCodec
                 String obdDataSoftware = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 30, 33), 0);
                 if (!obdDataSoftware.ToLower().Equals("ffffff"))
                 {
-                    obdDataSoftware = String.Format("V%d.%d.%d", Convert.ToInt32(obdDataSoftware.Substring(0, 2)), Convert.ToInt32(obdDataSoftware.Substring(2, 4)), Convert.ToInt32(obdDataSoftware.Substring(4, 6)));
+                    obdDataSoftware = String.Format("V{0}.{1}.{2}", Convert.ToInt32(obdDataSoftware.Substring(0, 2)), Convert.ToInt32(obdDataSoftware.Substring(2, 2)), Convert.ToInt32(obdDataSoftware.Substring(4, 2)));
                 }
                 else
                 {
@@ -742,6 +782,7 @@ namespace TopflytechCodec
                 signInMessage.Software = software;
                 signInMessage.Firmware = firmware;
                 signInMessage.Hareware = hardware;
+                signInMessage.ProtocolHeadType = bytes[2];
                 signInMessage.OrignBytes = bytes;
                 signInMessage.ObdHareware = obdHardware;
                 if (obdSoftware != null)
@@ -762,6 +803,50 @@ namespace TopflytechCodec
             {
                 throw new Exception("Error login message");
             }
+        }
+
+        private SignInMessage parseSecondLoginMessage(byte[] bytes)
+        {
+            int serialNo = BytesUtils.Bytes2Short(bytes, 5);
+            String imei = BytesUtils.IMEI.Decode(bytes, 7);
+            int modelType = BytesUtils.Bytes2Short(bytes, 15);
+            String software = String.Format("V{0}.{1}.{2}", bytes[17] & 0x0f, (bytes[18] & 0xf0) >> 4, bytes[18] & 0x0f);
+            String firmware = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 22, 24), 0);
+            firmware = String.Format("V{0}.{1}.{2}.{3}", firmware.Substring(0, 1), firmware.Substring(1, 1), firmware.Substring(2, 1), firmware.Substring(3, 1));
+            String hardware = BytesUtils.Bytes2HexString(Utils.ArrayCopyOfRange(bytes, 24, 25), 0);
+            hardware = String.Format("V{0}.{1}", hardware.Substring(0, 1), hardware.Substring(1, 1));
+            SignInMessage signInMessage = new SignInMessage();
+            signInMessage.SerialNo = serialNo;
+            signInMessage.Imei = imei;
+            signInMessage.Software = software;
+            signInMessage.Firmware = firmware;
+            signInMessage.Hardware = hardware;
+            signInMessage.Model = modelType;
+            signInMessage.ProtocolHeadType = bytes[2];
+            signInMessage.OrignBytes = bytes;
+            return signInMessage;
+        }
+
+        private DebugMessage parseDebugMessage(byte[] bytes)
+        {
+            int serialNo = BytesUtils.Bytes2Short(bytes, 5);
+            String imei = BytesUtils.IMEI.Decode(bytes, 7);
+            DebugMessage debugMessage = new DebugMessage();
+            debugMessage.SerialNo = serialNo;
+            debugMessage.Imei = imei;
+            debugMessage.OrignBytes = bytes;
+            return debugMessage;
+        }
+
+        private ManualCANMessage parseManualCANMessage(byte[] bytes)
+        {
+            int serialNo = BytesUtils.Bytes2Short(bytes, 5);
+            String imei = BytesUtils.IMEI.Decode(bytes, 7);
+            ManualCANMessage manualCANMessage = new ManualCANMessage();
+            manualCANMessage.SerialNo = serialNo;
+            manualCANMessage.Imei = imei;
+            manualCANMessage.OrignBytes = bytes;
+            return manualCANMessage;
         }
 
 
@@ -814,7 +899,7 @@ namespace TopflytechCodec
                 case 0x05:
                     {
                         USSDMessage ussdMessage = new USSDMessage();
-                        messageData = Encoding.GetEncoding("UTF-16lE").GetString(data);
+                        messageData = Encoding.GetEncoding("UTF-16LE").GetString(data);
                         ussdMessage.Content = messageData;
                         ussdMessage.OrignBytes = bytes;
                         ussdMessage.SerialNo = serialNo;
@@ -1182,6 +1267,11 @@ namespace TopflytechCodec
             return gpsDriverBehaviorMessage;
         }
 
+        private GpsDriverBehaviorMessage parseGpsDriverBehaviorMessage(byte[] bytes)
+        {
+            return parseGpsDriverBehavorMessage(bytes);
+        }
+
 
         private AccidentAccelerationMessage parseAccelerationAlarmMessage(byte[] bytes)
         {
@@ -1280,11 +1370,11 @@ namespace TopflytechCodec
             Boolean is_4g_lbs = false;
             Int32 mcc_4g = -1;
             Int32 mnc_4g = -1;
-            Int64 eci_4g = -1;
-            Int32 tac = -1;
+            Int64 ci_4g = -1;
+            Int32 earfcn_4g_1 = -1;
             Int32 pcid_4g_1 = -1;
+            Int32 earfcn_4g_2 = -1;
             Int32 pcid_4g_2 = -1;
-            Int32 pcid_4g_3 = -1;
             Boolean is_2g_lbs = false;
             Int32 mcc_2g = -1;
             Int32 mnc_2g = -1;
@@ -1321,22 +1411,22 @@ namespace TopflytechCodec
             {
                 mcc_4g = BytesUtils.Bytes2Short(bytes, curParseIndex + 12) & 0x7FFF;
                 mnc_4g = BytesUtils.Bytes2Short(bytes, curParseIndex + 14);
-                eci_4g = BytesUtils.Byte2Int(bytes, curParseIndex + 16);
-                tac = BytesUtils.Bytes2Short(bytes, curParseIndex + 20);
+                ci_4g = BytesUtils.Byte2Int(bytes, curParseIndex + 16);
+                earfcn_4g_1 = BytesUtils.Bytes2Short(bytes, curParseIndex + 20);
                 pcid_4g_1 = BytesUtils.Bytes2Short(bytes, curParseIndex + 22);
-                pcid_4g_2 = BytesUtils.Bytes2Short(bytes, curParseIndex + 24);
-                pcid_4g_3 = BytesUtils.Bytes2Short(bytes, curParseIndex + 26);
+                earfcn_4g_2 = BytesUtils.Bytes2Short(bytes, curParseIndex + 24);
+                pcid_4g_2 = BytesUtils.Bytes2Short(bytes, curParseIndex + 26);
             }
             acceleration.Azimuth = azimuth;
             acceleration.Is_2g_lbs = is_2g_lbs;
             acceleration.Is_4g_lbs = is_4g_lbs;
             acceleration.Mcc_4g = mcc_4g;
             acceleration.Mnc_4g = mnc_4g;
-            acceleration.Eci_4g = eci_4g;
-            acceleration.TAC = tac;
+            acceleration.Ci_4g = ci_4g;
+            acceleration.Earfcn_4g_1 = earfcn_4g_1;
             acceleration.Pcid_4g_1 = pcid_4g_1;
+            acceleration.Earfcn_4g_2 = earfcn_4g_2;
             acceleration.Pcid_4g_2 = pcid_4g_2;
-            acceleration.Pcid_4g_3 = pcid_4g_3;
             acceleration.Mcc_2g = mcc_2g;
             acceleration.Mnc_2g = mnc_2g;
             acceleration.Lac_2g_1 = lac_2g_1;
@@ -1346,6 +1436,11 @@ namespace TopflytechCodec
             acceleration.Lac_2g_3 = lac_2g_3;
             acceleration.Ci_2g_3 = ci_2g_3;
             return acceleration;
+        }
+
+        private AccelerationData getAlarmAccelerationData(byte[] bytes, String imei, int curParseIndex)
+        {
+            return getAccidentAccelerationData(bytes, imei, curParseIndex);
         }
 
         private AccelerationData getAccelerationData(byte[] bytes, String imei, int curParseIndex)
@@ -1403,11 +1498,11 @@ namespace TopflytechCodec
             Boolean is_4g_lbs = false;
             Int32 mcc_4g = -1;
             Int32 mnc_4g = -1;
-            Int64 eci_4g = -1;
-            Int32 tac = -1;
+            Int64 ci_4g = -1;
+            Int32 earfcn_4g_1 = -1;
             Int32 pcid_4g_1 = -1;
+            Int32 earfcn_4g_2 = -1;
             Int32 pcid_4g_2 = -1;
-            Int32 pcid_4g_3 = -1;
             Boolean is_2g_lbs = false;
             Int32 mcc_2g = -1;
             Int32 mnc_2g = -1;
@@ -1444,11 +1539,11 @@ namespace TopflytechCodec
             {
                 mcc_4g = BytesUtils.Bytes2Short(bytes, curParseIndex + 12) & 0x7FFF;
                 mnc_4g = BytesUtils.Bytes2Short(bytes, curParseIndex + 14);
-                eci_4g = BytesUtils.Byte2Int(bytes, curParseIndex + 16);
-                tac = BytesUtils.Bytes2Short(bytes, curParseIndex + 20);
+                ci_4g = BytesUtils.Byte2Int(bytes, curParseIndex + 16);
+                earfcn_4g_1 = BytesUtils.Bytes2Short(bytes, curParseIndex + 20);
                 pcid_4g_1 = BytesUtils.Bytes2Short(bytes, curParseIndex + 22);
-                pcid_4g_2 = BytesUtils.Bytes2Short(bytes, curParseIndex + 24);
-                pcid_4g_3 = BytesUtils.Bytes2Short(bytes, curParseIndex + 26);
+                earfcn_4g_2 = BytesUtils.Bytes2Short(bytes, curParseIndex + 24);
+                pcid_4g_2 = BytesUtils.Bytes2Short(bytes, curParseIndex + 26);
             }
            
             if (bytes.Length > 44)
@@ -1467,11 +1562,11 @@ namespace TopflytechCodec
             acceleration.Is_4g_lbs = is_4g_lbs;
             acceleration.Mcc_4g = mcc_4g;
             acceleration.Mnc_4g = mnc_4g;
-            acceleration.Eci_4g = eci_4g;
-            acceleration.TAC = tac;
+            acceleration.Ci_4g = ci_4g;
+            acceleration.Earfcn_4g_1 = earfcn_4g_1;
             acceleration.Pcid_4g_1 = pcid_4g_1;
+            acceleration.Earfcn_4g_2 = earfcn_4g_2;
             acceleration.Pcid_4g_2 = pcid_4g_2;
-            acceleration.Pcid_4g_3 = pcid_4g_3;
             acceleration.Mcc_2g = mcc_2g;
             acceleration.Mnc_2g = mnc_2g;
             acceleration.Lac_2g_1 = lac_2g_1;
@@ -1720,6 +1815,25 @@ namespace TopflytechCodec
                             break;
                         }
                     }
+                    else if (bleData[positionIndex] == 0x00 && bleData[positionIndex + 1] == 0x0d)
+                    {
+                        positionIndex += 2;
+                        if (positionIndex + 7 <= bleData.Length)
+                        {
+                            BleCustomer2397SensorData bleCustomer2397SensorData = parseCustomer2397Data(bleData, positionIndex);
+                            if (bleCustomer2397SensorData == null)
+                            {
+                                break;
+                            }
+                            bleDataList.Add(bleCustomer2397SensorData);
+                            positionIndex += 8 + bleCustomer2397SensorData.RawData.Length + 1;
+                            continue;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
                     else
                     {
                         break;
@@ -1835,6 +1949,11 @@ namespace TopflytechCodec
             bleDriverSignInData.Lac_2g_3 = lac_2g_3;
             bleDriverSignInData.Ci_2g_3 = ci_2g_3;
             return bleDriverSignInData;
+        }
+
+        private static BleDriverSignInData getBleDriverSignInDataWithoutLocation(bool latlngValid, bool isHisData, double altitude, double longitude, double latitude, int azimuth, float speedf, bool is_4g_lbs, int mcc_4g, int mnc_4g, long eci_4g, int tac, int pcid_4g_1, int pcid_4g_2, int pcid_4g_3, bool is_2g_lbs, int mcc_2g, int mnc_2g, int lac_2g_1, int ci_2g_1, int lac_2g_2, int ci_2g_2, int lac_2g_3, int ci_2g_3, byte[] bleData)
+        {
+            return getBleDriverSiginInDataWithoutLocation(latlngValid, isHisData, altitude, longitude, latitude, azimuth, speedf, is_4g_lbs, mcc_4g, mnc_4g, eci_4g, tac, pcid_4g_1, pcid_4g_2, pcid_4g_3, is_2g_lbs, mcc_2g, mnc_2g, lac_2g_1, ci_2g_1, lac_2g_2, ci_2g_2, lac_2g_3, ci_2g_3, bleData);
         }
 
         private static BleAlertData getBleAlertDataWithoutLocation(bool latlngValid, bool isHisData, double altitude, double longitude, double latitude, int azimuth, float speedf, bool is_4g_lbs, int mcc_4g, int mnc_4g, long eci_4g, int tac, int pcid_4g_1, int pcid_4g_2, int pcid_4g_3, bool is_2g_lbs, int mcc_2g, int mnc_2g, int lac_2g_1, int ci_2g_1, int lac_2g_2, int ci_2g_2, int lac_2g_3, int ci_2g_3, byte[] bleData)
@@ -2084,9 +2203,45 @@ namespace TopflytechCodec
                     BleFuelData bleFuelData = getBleFuelData(bleData, i);
                     bleDataList.Add(bleFuelData);
                 }
+            }
+            else if (bleData[0] == 0x00 && bleData[1] == 0x0d)
+            {
+                bluetoothPeripheralDataMessage.MessageType = BluetoothPeripheralDataMessage.MESSAGE_TYPE_Customer2397;
+                int positionIndex = 2;
+                while (positionIndex + 7 <= bleData.Length)
+                {
+                    BleCustomer2397SensorData bleCustomer2397SensorData = parseCustomer2397Data(bleData, positionIndex);
+                    if (bleCustomer2397SensorData == null)
+                    {
+                        break;
+                    }
+                    bleDataList.Add(bleCustomer2397SensorData);
+                    positionIndex += 8 + bleCustomer2397SensorData.RawData.Length + 1;
+                }
             } 
             bluetoothPeripheralDataMessage.BleDataList = bleDataList;
             return bluetoothPeripheralDataMessage;
+        }
+
+        private BleCustomer2397SensorData parseCustomer2397Data(byte[] bleData, int positionIndex)
+        {
+            byte[] macArray = new byte[6];
+            Array.Copy(bleData, positionIndex, macArray, 0, 6);
+            positionIndex += 6;
+            int len = BytesUtils.Bytes2Short(bleData, positionIndex);
+            if (positionIndex + len > bleData.Length || len < 1)
+            {
+                return null;
+            }
+            positionIndex += 2;
+            byte[] rawData = Utils.ArrayCopyOfRange(bleData, positionIndex, positionIndex + len - 1);
+            int rssiTemp = bleData[positionIndex + len - 1] < 0 ? bleData[positionIndex + len - 1] + 256 : bleData[positionIndex + len - 1];
+            int rssi = rssiTemp == 255 ? -999 : rssiTemp - 128;
+            BleCustomer2397SensorData bleCustomer2397SensorData = new BleCustomer2397SensorData();
+            bleCustomer2397SensorData.Mac = BytesUtils.Bytes2HexString(macArray, 0);
+            bleCustomer2397SensorData.RawData = rawData;
+            bleCustomer2397SensorData.Rssi = rssi;
+            return bleCustomer2397SensorData;
         }
 
         private static BleAlertData getBleAlertData(byte[] bleData)
@@ -2730,7 +2885,7 @@ namespace TopflytechCodec
             int accdetSettingStatus = (iop & 0x1) ==  0x1  ? 1 : 0;
             String str = BytesUtils.Bytes2HexString(data, 20);
             float analoginput = 0;
-            if (!str.ToLower().Equals("ffff"))
+            if (!str.ToLower().StartsWith("ffff"))
             {
                 try
                 {
@@ -2782,6 +2937,10 @@ namespace TopflytechCodec
                 analoginput3 = -999;
             }
             long lastMileageDiff = (long)BytesUtils.Byte2Int(data, 26);
+            if (lastMileageDiff == -1)
+            {
+                lastMileageDiff = 4294967295L;
+            }
  
             byte alarmByte = data[30];
             int originalAlarmCode = (int)alarmByte;
@@ -3035,6 +3194,7 @@ namespace TopflytechCodec
             message.IopIgnition = iopIgnition;
             message.IopPowerCutOff = iopPowerCutOff;
             message.IopACOn = iopACOn;
+            message.GpsEnable = true;
             message.Output12V = output12V;
             message.Output1 = output1;
             message.Output2 = output2;
@@ -3044,6 +3204,7 @@ namespace TopflytechCodec
             message.AnalogInput2 = analoginput2;
             message.AnalogInput3 = analoginput3; 
             message.AccdetSettingStatus = accdetSettingStatus;
+            message.ExternalPowerReduceStatus = externalPowerReduceValue;
             message.Rpm = rpm;
             message.OriginalAlarmCode = originalAlarmCode;
             message.Mileage = mileage;
@@ -3106,6 +3267,8 @@ namespace TopflytechCodec
             message.IsSendSmsAlarmWhenDigitalInput2Change = isSendSmsAlarmWhenDigitalInput2Change;
             message.IsSendSmsAlarmToManagerPhone = isSendSmsAlarmToManagerPhone;
             message.JammerDetectionStatus = jammerDetectionStatus;
+            message.SmartPowerOpenStatus = "close";
+            message.SmartPowerSettingStatus = "disable";
             return message;
 
         }
@@ -3166,23 +3329,37 @@ namespace TopflytechCodec
             int accdetSettingStatus = (iop & 0x1) ==  0x1  ? 1 : 0;
             String str = BytesUtils.Bytes2HexString(data, 18);
             float analoginput = 0;
-            try
+            if (!str.ToLower().StartsWith("ffff"))
             {
-                analoginput = (float)(Convert.ToDouble(String.Format("{0}.{1}", str.Substring(0, 2), str.Substring(2, 2))));
+                try
+                {
+                    analoginput = (float)(Convert.ToDouble(String.Format("{0}.{1}", str.Substring(0, 2), str.Substring(2, 2))));
+                }
+                catch (Exception e)
+                {
+                    Console.Write(e.Message);
+                }
             }
-            catch (Exception e)
+            else
             {
-                Console.Write(e.Message);
+                analoginput = -999;
             }
             str = BytesUtils.Bytes2HexString(data, 20);
             float analoginput2 = 0;
-            try
+            if (!str.ToLower().StartsWith("ffff"))
             {
-                analoginput2 = (float)(Convert.ToDouble(String.Format("{0}.{1}", str.Substring(0, 2), str.Substring(2, 2))));
+                try
+                {
+                    analoginput2 = (float)(Convert.ToDouble(String.Format("{0}.{1}", str.Substring(0, 2), str.Substring(2, 2))));
+                }
+                catch (Exception e)
+                {
+                    Console.Write(e.Message);
+                }
             }
-            catch (Exception e)
+            else
             {
-                Console.Write(e.Message);
+                analoginput2 = -999;
             }
             byte alarmByte = data[22];
             int originalAlarmCode = (int)alarmByte;
@@ -3414,3 +3591,4 @@ namespace TopflytechCodec
 
     }
 }
+

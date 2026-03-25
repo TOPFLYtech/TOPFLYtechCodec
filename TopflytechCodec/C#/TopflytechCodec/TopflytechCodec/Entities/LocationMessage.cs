@@ -841,6 +841,13 @@ namespace TopflytechCodec.Entities
             get { return exPowerConsumpStatus; }
             set { exPowerConsumpStatus = value; }
         }
+
+        private Int32 externalPowerReduceStatus;//0:unknown,1:normal,2abnormal
+        public Int32 ExternalPowerReduceStatus
+        {
+            get { return externalPowerReduceStatus; }
+            set { externalPowerReduceStatus = value; }
+        }
  
 
         private int remainFuelUnit = 0; // 0:% 1:L
@@ -875,6 +882,7 @@ namespace TopflytechCodec.Entities
 
         private Boolean isCarCharge;
         public Boolean IsCarCharge { get => isCarCharge; set => isCarCharge = value; }
+        public Boolean CarCharge { get => isCarCharge; set => isCarCharge = value; }
         private Int32 dashboardSpeed;
         public Int32 DashboardSpeed { get => dashboardSpeed; set => dashboardSpeed = value; }
         private Int32 acceleratorPedalPosition;
@@ -883,6 +891,8 @@ namespace TopflytechCodec.Entities
         public Int64 RemainPowerMinDistance { get => remainPowerMinDistance; set => remainPowerMinDistance = value; }
         private Int64 remainPowerMaxDistance;
         public Int64 RemainPowerMaxDistance { get => remainPowerMaxDistance; set => remainPowerMaxDistance = value; }
+        private Int64 remainPowerDistance;
+        public Int64 RemainPowerDistance { get => remainPowerDistance; set => remainPowerDistance = value; }
 
         private float carChargeVoltage;// V
         public float CarChargeVoltage { get => carChargeVoltage; set => carChargeVoltage = value; }
@@ -915,6 +925,34 @@ namespace TopflytechCodec.Entities
 
         private float externalHumidity;
         public float ExternalHumidity { get => externalHumidity; set => externalHumidity = value; }
+
+        private float deviceHighPrecisionTemp;
+        public float DeviceHighPrecisionTemp { get => deviceHighPrecisionTemp; set => deviceHighPrecisionTemp = value; }
+
+        private Boolean flashLightOpen;
+        public Boolean FlashLightOpen { get => flashLightOpen; set => flashLightOpen = value; }
+
+        private Boolean logoLightOpen;
+        public Boolean LogoLightOpen { get => logoLightOpen; set => logoLightOpen = value; }
+
+        private Boolean buzzerOpen;
+        public Boolean BuzzerOpen { get => buzzerOpen; set => buzzerOpen = value; }
+
+        private Boolean lostModeOpen;
+        public Boolean LostModeOpen { get => lostModeOpen; set => lostModeOpen = value; }
+
+        private Int32 obdFuelType;
+        public Int32 ObdFuelType { get => obdFuelType; set => obdFuelType = value; }
+
+        private Int32 wifiScanInterval;
+        public Int32 WifiScanInterval { get => wifiScanInterval; set => wifiScanInterval = value; }
+
+        private Boolean wirelessCharging;
+        public Boolean WirelessCharging { get => wirelessCharging; set => wirelessCharging = value; }
+        public Boolean IsWirelessCharging { get => wirelessCharging; set => wirelessCharging = value; }
+        private Boolean isObdElectricData;
+        public Boolean IsObdElectricData { get => isObdElectricData; set => isObdElectricData = value; }
+        public Boolean ObdElectricData { get => isObdElectricData; set => isObdElectricData = value; }
 
 
         private String selfMac;

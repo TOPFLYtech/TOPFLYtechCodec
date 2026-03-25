@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
 namespace TopflytechCodec
 {
-    class BytesUtils
+    public class BytesUtils
     {
         public static int bytes2SingleShort(byte[] bytes,int offset){
             if(bytes.Length < offset + 2){

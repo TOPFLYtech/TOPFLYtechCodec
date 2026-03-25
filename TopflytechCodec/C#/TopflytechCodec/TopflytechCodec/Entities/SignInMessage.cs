@@ -67,6 +67,8 @@ namespace TopflytechCodec.Entities
         public string ObdBootVersion { get => obdBootVersion; set => obdBootVersion = value; }
         public string ObdDataVersion { get => obdDataVersion; set => obdDataVersion = value; }
         public int Model { get => model; set => model = value; }
+        public string Hardware { get => hareware; set => hareware = value; }
+        public string ObdHardware { get => obdHareware; set => obdHareware = value; }
 
         private String obdBootVersion;
         private String obdDataVersion;

@@ -1,37 +1,43 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using TopflytechCodec.Entities;
 
 namespace TopflytechCodec
 {
     public class PTTDecoder
     {
-        private const int HEADER_LENGTH = 16;
-        private readonly byte[] HEARTBEAT = new byte[] { 0x00, 0x00, 0x01 };
-        private readonly byte[] TALK_START = new byte[] { 0x00, 0x00, 0x02 };
-        private readonly byte[] TALK_END = new byte[] { 0x00, 0x00, 0x03 };
-        private readonly byte[] VOICE_DATA = new byte[] { 0x00, 0x00, 0x04 };
+        private const int HEADER_LENGTH = 3;
+        private static readonly byte[] HEARTBEAT = { 0x28, 0x28, 0x03 };
+        private static readonly byte[] TALK_START = { 0x28, 0x28, 0x04 };
+        private static readonly byte[] TALK_END = { 0x28, 0x28, 0x05 };
+        private static readonly byte[] VOICE_DATA = { 0x28, 0x28, 0x06 };
 
         private readonly int encryptType;
         private readonly string aesKey;
+        private TopflytechByteBuf decoderBuf = new TopflytechByteBuf();
 
         public PTTDecoder(int messageEncryptType, string aesKey)
         {
             this.encryptType = messageEncryptType;
             this.aesKey = aesKey;
         }
-        public PTTDecoder(int messageEncryptType, String aesKey, int buffSize)
-        { 
+
+        public PTTDecoder(int messageEncryptType, string aesKey, int buffSize)
+        {
             this.encryptType = messageEncryptType;
             this.aesKey = aesKey;
             this.decoderBuf = new TopflytechByteBuf(buffSize);
         }
 
-
-        private TopflytechByteBuf decoderBuf = new TopflytechByteBuf();
+        private static bool match(byte[] bytes)
+        {
+            Debug.Assert(bytes.Length >= HEADER_LENGTH, "command match: length is not 3!");
+            return Utils.ArrayEquals(TALK_START, bytes)
+                   || Utils.ArrayEquals(HEARTBEAT, bytes)
+                   || Utils.ArrayEquals(TALK_END, bytes)
+                   || Utils.ArrayEquals(VOICE_DATA, bytes);
+        }
 
         public List<Message> decode(byte[] buf)
         {
@@ -41,6 +47,7 @@ namespace TopflytechCodec
             {
                 return messages;
             }
+
             byte[] bytes = new byte[3];
             while (decoderBuf.GetReadableBytes() > 5)
             {
@@ -55,7 +62,7 @@ namespace TopflytechCodec
                     int packageLength = BytesUtils.Bytes2Short(lengthBytes, 0);
                     if (encryptType == MessageEncryptType.MD5)
                     {
-                        packageLength = packageLength + 8;
+                        packageLength += 8;
                     }
                     else if (encryptType == MessageEncryptType.AES)
                     {
@@ -73,12 +80,14 @@ namespace TopflytechCodec
                     }
                     byte[] data = decoderBuf.ReadBytes(packageLength);
                     data = Crypto.DecryptData(data, encryptType, aesKey);
-                    Message message = build(data);
-                    if (message != null)
+                    if (data != null)
                     {
-                        messages.Add(message);
+                        Message message = build(data);
+                        if (message != null)
+                        {
+                            messages.Add(message);
+                        }
                     }
-
                 }
                 else
                 {
@@ -88,77 +97,31 @@ namespace TopflytechCodec
             return messages;
         }
 
-        private bool match(byte[] bytes)
+        public Message build(byte[] bytes)
         {
-            Debug.Assert(bytes.Length >= HEADER_LENGTH, "command match: length is not 3!");
-            return Utils.ArrayEquals(TALK_START, bytes)
-                || Utils.ArrayEquals(HEARTBEAT, bytes)
-                || Utils.ArrayEquals(TALK_END, bytes)
-                || Utils.ArrayEquals(VOICE_DATA, bytes);
-        }
-
-
-
-        private Message build(byte[] messageData)
-        {
-            if (messageData.Length < 3 || !(messageData[0] == 0x26 && messageData[1] == 0x26))
+            if (bytes != null && bytes.Length > HEADER_LENGTH)
             {
-                return null;
-            } 
-
-            switch (messageData[2])
-            {
-                case 0x01:
-                    return ParseHeartbeatMessage(messageData);
-                case 0x02:
-                    return ParseTalkStartMessage(messageData);
-                case 0x03:
-                    return ParseTalkEndMessage(messageData);
-                case 0x04:
-                    return ParseVoiceMessage(messageData);
-                default:
-                    return null;
+                switch (bytes[2])
+                {
+                    case 0x03:
+                        return parseHeartbeat(bytes);
+                    case 0x04:
+                        return parseTalkStartMessage(bytes);
+                    case 0x05:
+                        return parseTalkEndMessage(bytes);
+                    case 0x06:
+                        return parseVoiceMessage(bytes);
+                    default:
+                        return null;
+                }
             }
+            return null;
         }
 
-        private HeartbeatMessage ParseHeartbeatMessage(byte[] bytes)
-        {
-            int serialNo = BytesUtils.Bytes2Short(bytes, 5); 
-            String imei = BytesUtils.IMEI.Decode(bytes, 7);
-            HeartbeatMessage heartbeatMessage = new HeartbeatMessage();
-            heartbeatMessage.OrignBytes = bytes;
-            heartbeatMessage.SerialNo = serialNo; 
-            heartbeatMessage.Imei = imei;
-            return heartbeatMessage;
-        }
-
-        private TalkStartMessage ParseTalkStartMessage(byte[] bytes)
-        {
-
-            int serialNo = BytesUtils.Bytes2Short(bytes, 5); 
-            String imei = BytesUtils.IMEI.Decode(bytes, 7);
-            TalkStartMessage talkStartMessage = new TalkStartMessage();
-            talkStartMessage.OrignBytes = bytes;
-            talkStartMessage.SerialNo = serialNo;
-            talkStartMessage.Imei = imei;
-            return talkStartMessage;
-        }
-
-        private TalkEndMessage ParseTalkEndMessage(byte[] bytes)
+        private VoiceMessage parseVoiceMessage(byte[] bytes)
         {
             int serialNo = BytesUtils.Bytes2Short(bytes, 5);
-            String imei = BytesUtils.IMEI.Decode(bytes, 7);
-            TalkEndMessage talkEndMessage = new TalkEndMessage();
-            talkEndMessage.OrignBytes = bytes;
-            talkEndMessage.SerialNo = serialNo;
-            talkEndMessage.Imei = imei;
-            return talkEndMessage;
-        }
-
-        private VoiceMessage ParseVoiceMessage(byte[] bytes)
-        {
-            int serialNo = BytesUtils.Bytes2Short(bytes, 5);
-            String imei = BytesUtils.IMEI.Decode(bytes, 7);
+            string imei = BytesUtils.IMEI.Decode(bytes, 7);
             VoiceMessage voiceMessage = new VoiceMessage();
             voiceMessage.OrignBytes = bytes;
             voiceMessage.SerialNo = serialNo;
@@ -172,6 +135,38 @@ namespace TopflytechCodec
             }
             return voiceMessage;
         }
-         
+
+        private TalkEndMessage parseTalkEndMessage(byte[] bytes)
+        {
+            int serialNo = BytesUtils.Bytes2Short(bytes, 5);
+            string imei = BytesUtils.IMEI.Decode(bytes, 7);
+            TalkEndMessage talkEndMessage = new TalkEndMessage();
+            talkEndMessage.OrignBytes = bytes;
+            talkEndMessage.SerialNo = serialNo;
+            talkEndMessage.Imei = imei;
+            return talkEndMessage;
+        }
+
+        private TalkStartMessage parseTalkStartMessage(byte[] bytes)
+        {
+            int serialNo = BytesUtils.Bytes2Short(bytes, 5);
+            string imei = BytesUtils.IMEI.Decode(bytes, 7);
+            TalkStartMessage talkStartMessage = new TalkStartMessage();
+            talkStartMessage.OrignBytes = bytes;
+            talkStartMessage.SerialNo = serialNo;
+            talkStartMessage.Imei = imei;
+            return talkStartMessage;
+        }
+
+        private HeartbeatMessage parseHeartbeat(byte[] bytes)
+        {
+            int serialNo = BytesUtils.Bytes2Short(bytes, 5);
+            string imei = BytesUtils.IMEI.Decode(bytes, 7);
+            HeartbeatMessage heartbeatMessage = new HeartbeatMessage();
+            heartbeatMessage.OrignBytes = bytes;
+            heartbeatMessage.SerialNo = serialNo;
+            heartbeatMessage.Imei = imei;
+            return heartbeatMessage;
+        }
     }
 }

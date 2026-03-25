@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,7 +7,7 @@ using System.IO;
 
 namespace TopflytechCodec.Entities
 {
-    class Crypto
+    public class Crypto
     {
         private const String ivParam = "topflytech201205";
         public static byte[] AESEncrypt(byte[] toEncrypt, string key)

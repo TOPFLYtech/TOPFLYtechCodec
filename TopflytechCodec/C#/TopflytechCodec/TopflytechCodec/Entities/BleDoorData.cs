@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 namespace TopflytechCodec.Entities
 {
-    class BleDoorData : BleData
+    public class BleDoorData : BleData
     {
         private float voltage;
 

@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 namespace TopflytechCodec.Entities
 {
-    class Rs232FingerprintMessage:Rs232DeviceMessage
+    public class Rs232FingerprintMessage:Rs232DeviceMessage
     {
         private int fingerprintId;
 

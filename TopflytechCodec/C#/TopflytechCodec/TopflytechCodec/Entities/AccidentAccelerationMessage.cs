@@ -10,6 +10,13 @@ namespace TopflytechCodec.Entities
     /// </summary>
     public class AccidentAccelerationMessage : Message
     {
+        private int behaviorType;
+        public int BehaviorType
+        {
+            get { return behaviorType; }
+            set { behaviorType = value; }
+        }
+
         private List<AccelerationData> accelerationList;
         public List<AccelerationData> AccelerationList
         {

@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 namespace TopflytechCodec.Entities
 {
-    class Rs232TireMessage :Rs232DeviceMessage
+    public class Rs232TireMessage :Rs232DeviceMessage
     {
         private String sensorId;
 
