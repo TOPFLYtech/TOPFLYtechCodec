@@ -23,6 +23,19 @@ class ConfigMessage(Message):
         the device returns the result of the setup. This class describes the setting result
     """
     configContent = "" #The Config result content.
+    configResultContent = "" # Keep same naming as Java entity.
+
+
+class ReplyMessage(Message):
+    pass
+
+
+class DebugMessage(Message):
+    pass
+
+
+class ManualCANMessage(Message):
+    pass
 
 
 class ForwardMessage(Message):
@@ -109,6 +122,7 @@ class WifiWithDeviceInfoMessage(Message):
         self.axisX = 0.0
         self.axisY = 0.0
         self.axisZ = 0.0
+        self.isHistoryData = False
         self.deviceTemp = None
         self.lightSensor = None
         self.batteryVoltage = None
@@ -172,6 +186,55 @@ class LockMessage(Message):
     ci_2g_2 = 0
     lac_2g_3 = 0
     ci_2g_3 = 0
+
+
+class SubLockMessage(Message):
+    latlngValid = False
+    latitude = 0.0
+    longitude = 0.0
+    altitude = 0.0
+    speed = 0.0
+    azimuth = 0
+    lockType = 0
+    lockId = ""
+    date = datetime.datetime
+    gpsWorking = False
+    satelliteNumber = 0
+    isHistoryData = False
+    is_4g_lbs = False
+    mcc_4g = 0
+    mnc_4g = 0
+    eci_4g = 0
+    tac = 0
+    pcid_4g_1 = 0
+    pcid_4g_2 = 0
+    pcid_4g_3 = 0
+    is_2g_lbs = False
+    mcc_2g = 0
+    mnc_2g = 0
+    lac_2g_1 = 0
+    ci_2g_1 = 0
+    lac_2g_2 = 0
+    ci_2g_2 = 0
+    lac_2g_3 = 0
+    ci_2g_3 = 0
+    rssi = 0
+    hardware = ""
+    software = ""
+    voltage = 0.0
+    solarVoltage = 0.0
+    temp = 0.0
+    deviceId = ""
+    isCharging = False
+    isChargingOverVoltage = False
+    isLowPower = False
+    isHighTemp = False
+    isLowTemp = False
+    isOpenLockCover = False
+    isOpenBackCover = False
+    isGpsPosition = False
+    isGpsJamming = False
+    alarmByte = 0
 
 class Rs232FuelMessage(Rs232DeviceMessage):
     fuelPercent = 0.0
@@ -332,6 +395,9 @@ class BleFuelData(BleData):
     value = 0
     temp = 0
     alarm = 0
+    ALARM_NONE = 0
+    ALARM_FILL_TANK = 1
+    ALARM_FUEL_LEAK = 2
     online = 0
     rssi = 0
 
@@ -361,11 +427,11 @@ class AccelerationData:
     is_4g_lbs = False
     mcc_4g = 0
     mnc_4g = 0
-    eci_4g = 0
-    tac = 0
+    ci_4g = 0
+    earfcn_4g_1 = 0
     pcid_4g_1 = 0
     pcid_4g_2 = 0
-    pcid_4g_3 = 0
+    earfcn_4g_2 = 0
     is_2g_lbs = False
     mcc_2g = 0
     mnc_2g = 0
@@ -391,6 +457,7 @@ class SignInMessage(Message):
     obdSoftware = ""
     obdBootVersion = ""
     obdDataVersion = ""
+    model = 0
 
 class HeartbeatMessage(Message):
     pass
@@ -428,6 +495,7 @@ class LocationMessage(Message):
     isHistoryData = False
     satelliteNumber = 0
     overspeedLimit = 0 #The over speed limit.The unit is km / h
+    overSpeedLimit = 0 # Keep Java field naming.
     samplingIntervalAccOn = 0 #The acc on upload interval.
     samplingIntervalAccOff = 0 #The acc off upload interval.
     angleCompensation = 0
@@ -531,6 +599,7 @@ class LocationMessage(Message):
     gpsEnable=False
     isLockApn=False
     remainPower=0
+    remainPowerDistance=0
     isCarCharge=False
     dashboardSpeed=0
     acceleratorPedalPosition=0
@@ -544,6 +613,16 @@ class LocationMessage(Message):
     carBatteryInitialCapacity=0
     carTotalPowerConsumption=0
     batteryCanRecharge=0
+    isWirelessCharging=False
+    isObdElectricData=False
+    flashLightOpen=False
+    logoLightOpen=False
+    buzzerOpen=False
+    lostModeOpen=False
+    obdFuelType=0
+    wifiScanInterval=0
+    deviceHighPrecisionTemp=0
+    externalPowerReduceStatus=0
     lightIntensityValue=0
     externalTemp=0
     externalHumidity=0
@@ -715,6 +794,10 @@ class DeviceTempCollectionMessage(Message):
         self.tempList = value
 
 class OneWireData:
+    deviceType = None
+    deviceId = None
+    oneWireContent = None
+
     def __init__(self):
         self._device_type = None
         self._device_id = None
@@ -1077,6 +1160,9 @@ class AccidentAccelerationMessage(Message):
         Protocol number is 25 25 07.
     """
     accelerationList = [] # list item is AccelerationData
+    behaviorType = -1
+    BEHAVIOR_TURN_AND_BRAKE = 0
+    BEHAVIOR_ACCELERATE = 1
 
 
 class ObdMessage(Message):
@@ -1097,9 +1183,7 @@ def byte2HexString(byteArray,index):
 
 
 def hexString2Bytes(hexStr):
-    hexData = hexStr.decode("hex")#python2.7
-    return map(ord,hexData)#python2.7
-    #return bytes.fromhex(hexStr)  # python 3.x
+    return bytes.fromhex(hexStr)  # python 3.x
 
 
 def formatNumb(numb):
@@ -1108,8 +1192,7 @@ def formatNumb(numb):
 
 def short2Bytes(number):
     str = '{:04x}'.format(number)
-    #return bytes.fromhex(str)  # python 3.X
-    return map(ord,'{:04x}'.format(number).decode("hex"))#python 2.7
+    return bytes.fromhex(str)  # python 3.X
 def tftCrc8(ptr):
     crc = 0xff
     index = 0
@@ -1400,6 +1483,7 @@ class DecoderHelper:
             if b != 0xFF:
                 return False 
         return True
+    
     @staticmethod
     def parseLocationTypeThreeData(locationMessage, typeMap):
         for dataId, valueByte in typeMap.items():
@@ -1543,6 +1627,7 @@ class DecoderHelper:
                 locationMessage.throttlePosition = throttlePosition
                 locationMessage.remainFuelRate = remainFuelRate
                 locationMessage.remainFuelUnit = remainFuelUnit
+                locationMessage.isObdElectricData = False
             elif dataId == 0x08:
                 remainPower = int(valueByte[0])
                 if remainPower < 0:
@@ -1594,6 +1679,7 @@ class DecoderHelper:
                 locationMessage.acceleratorPedalPosition = acceleratorPedalPosition
                 locationMessage.remainPowerMinDistance = remainPowerMinDistance
                 locationMessage.remainPowerMaxDistance = remainPowerMaxDistance
+                locationMessage.remainPowerDistance = remainPowerMinDistance
                 locationMessage.carChargeVoltage = carChargeVoltage
                 locationMessage.carChargeElectricCurrent = carChargeElectricCurrent
                 locationMessage.carChargePower = carChargePower
@@ -1601,6 +1687,54 @@ class DecoderHelper:
                 locationMessage.carBatteryEffectiveCapacity = carBatteryEffectiveCapacity
                 locationMessage.carBatteryInitialCapacity = carBatteryInitialCapacity
                 locationMessage.carTotalPowerConsumption = carTotalPowerConsumption
+                locationMessage.isObdElectricData = True
+            elif dataId == 0x0D:
+                remainPower = int(valueByte[0])
+                if remainPower < 0:
+                    remainPower += 256
+                if remainPower == 255:
+                    remainPower = -999
+                isCarCharge = valueByte[1] == 0x01
+                dashboardSpeed = int(valueByte[2])
+                if dashboardSpeed < 0:
+                    dashboardSpeed += 256
+                if dashboardSpeed == 255:
+                    dashboardSpeed = -999
+                acceleratorPedalPosition = int(valueByte[3])
+                if acceleratorPedalPosition < 0:
+                    acceleratorPedalPosition += 256
+                if acceleratorPedalPosition == 255:
+                    acceleratorPedalPosition = -999
+                remainPowerDistance = bytes2Integer(valueByte, 4)
+                if remainPowerDistance == 4294967295:
+                    remainPowerDistance = -999
+                carChargeVoltageTemp = bytes2Integer(valueByte, 8)
+                carChargeVoltage = carChargeVoltageTemp / 1000.0
+                if carChargeVoltageTemp == 4294967295:
+                    carChargeVoltage = -999
+                carChargeElectricCurrent = bytes2Integer(valueByte, 12)
+                if carChargeElectricCurrent == 4294967295:
+                    carChargeElectricCurrent = -999
+                carBatteryEffectiveCapacity = bytes2Integer(valueByte, 16)
+                if carBatteryEffectiveCapacity == 4294967295:
+                    carBatteryEffectiveCapacity = -999
+                carBatteryInitialCapacity = bytes2Integer(valueByte, 20)
+                if carBatteryInitialCapacity == 4294967295:
+                    carBatteryInitialCapacity = -999
+                carTotalPowerConsumption = bytes2Integer(valueByte, 24)
+                if carTotalPowerConsumption == 4294967295:
+                    carTotalPowerConsumption = -999
+                locationMessage.remainPower = remainPower
+                locationMessage.isCarCharge = isCarCharge
+                locationMessage.dashboardSpeed = dashboardSpeed
+                locationMessage.acceleratorPedalPosition = acceleratorPedalPosition
+                locationMessage.remainPowerDistance = remainPowerDistance
+                locationMessage.carChargeVoltage = carChargeVoltage
+                locationMessage.carChargeElectricCurrent = carChargeElectricCurrent
+                locationMessage.carBatteryEffectiveCapacity = carBatteryEffectiveCapacity
+                locationMessage.carBatteryInitialCapacity = carBatteryInitialCapacity
+                locationMessage.carTotalPowerConsumption = carTotalPowerConsumption
+                locationMessage.isObdElectricData = True
 
     @staticmethod
     def parseLocationTypeTwoData(locationMessage, typeMap):
@@ -1615,6 +1749,8 @@ class DecoderHelper:
                 locationMessage.gpsWorking = (value & 0x80) == 0x80
                 gpsEnable = (value & 0x40) == 0x40
                 locationMessage.gpsEnable = gpsEnable
+                locationMessage.latlngValid = (value & 0x04) == 0x04
+                locationMessage.isHistoryData = (value & 0x02) == 0x02
             elif dataId == 0x03:
                 value = valueByte[0]
                 if value < 0:
@@ -1646,6 +1782,7 @@ class DecoderHelper:
                 value = valueByte[0]
                 locationMessage.hasThirdPartyObd = 1 if (value & 0x80) == 0x80 else 0
                 locationMessage.exPowerConsumpStatus = 1 if (value & 0x40) == 0x40 else 0
+                locationMessage.mileageSource = 1 if (value & 0x10) == 0x10 else 0
             elif dataId == 0x07:
                 value = valueByte[0]
                 if value < 0:
@@ -1655,6 +1792,17 @@ class DecoderHelper:
                 value = valueByte[0]
                 if value < 0:
                     value += 256
+                locationMessage.antitheftedStatus = value
+            elif dataId == 0x10:
+                smartPowerSettingStatus = "disable"
+                if (valueByte[0] & 0x80) == 0x80:
+                    smartPowerSettingStatus = "enable"
+                locationMessage.smartPowerSettingStatus = smartPowerSettingStatus
+            elif dataId == 0x11:
+                locationMessage.flashLightOpen = (valueByte[0] & 0x80) == 0x80
+                locationMessage.logoLightOpen = (valueByte[0] & 0x40) == 0x40
+                locationMessage.buzzerOpen = (valueByte[0] & 0x20) == 0x20
+                locationMessage.lostModeOpen = (valueByte[0] & 0x10) == 0x10
             elif dataId == 0x0A:
                 deviceTemp = -999
                 if valueByte[0] != 0xff:
@@ -1678,6 +1826,16 @@ class DecoderHelper:
             elif dataId == 0x0F:
                 lockType = int(valueByte[0])
                 locationMessage.lockType = lockType
+            elif dataId == 0x12:
+                locationMessage.relayStatus = valueByte[0] & 0xff
+            elif dataId == 0x13:
+                locationMessage.mileageSource = 2 if valueByte[0] == 0x01 else 0
+            elif dataId == 0x14:
+                locationMessage.ignitionSource = valueByte[0] & 0xff
+            elif dataId == 0x15:
+                locationMessage.obdFuelType = valueByte[0] & 0xff
+            elif dataId == 0x16:
+                locationMessage.wifiScanInterval = valueByte[0] & 0xff
             elif dataId == 0x60:
                 voltage = bytes2Short(valueByte, 0)
                 locationMessage.batteryVoltage = voltage / 1000.0
@@ -1688,11 +1846,14 @@ class DecoderHelper:
                 usbConnect = (valueByte[0] & 0x10) == 0x10
                 isSolarCharge = (valueByte[0] & 0x08) == 0x08
                 isSmartUpload = (valueByte[0] & 0x04) == 0x04
+                isWirelessCharging = (valueByte[0] & 0x02) == 0x02
                 locationMessage.iopIgnition = accOn
                 locationMessage.iop = 0x4000 if accOn else 0x0000
+                locationMessage.IOP = locationMessage.iop
                 locationMessage.iopACOn = acOn
                 locationMessage.isUsbCharging = usbConnect
                 locationMessage.isSolarCharging = isSolarCharge
+                locationMessage.isWirelessCharging = isWirelessCharging
                 smartPowerOpenStatus = "close"
                 if isSmartUpload:
                     smartPowerOpenStatus = "open"
@@ -1702,15 +1863,31 @@ class DecoderHelper:
                 locationMessage.speed = float(speed)
             elif dataId == 0x63:
                 solarVoltage = bytes2Short(valueByte, 0)
-                locationMessage.solarVoltage = solarVoltage / 10.0
+                locationMessage.solarVoltage = solarVoltage / 1000.0
             elif dataId == 0x64:
-                isNegative = (valueByte[0] & 0x80) == 0x80
-                value = (1 if isNegative else -1) * ((valueByte[0] & 0x7f) + (valueByte[1] / 100.0))
-                locationMessage.externalTemp = value
+                if not DecoderHelper.isAllFF(valueByte):
+                    isNegative = (valueByte[1] & 0x80) == 0x80
+                    value = (-1 if isNegative else 1) * (valueByte[0] + ((valueByte[1] & 0x7f) / 100.0))
+                    locationMessage.externalTemp = value
             elif dataId == 0x65:
-                isNegative = (valueByte[0] & 0x80) == 0x80
-                value = (1 if isNegative else -1) * ((valueByte[0] & 0x7f) + (valueByte[1] / 100.0))
-                locationMessage.externalHumidity = value
+                if not DecoderHelper.isAllFF(valueByte):
+                    isNegative = (valueByte[0] & 0x80) == 0x80
+                    value = (-1 if isNegative else 1) * ((valueByte[0] & 0x7f) + (valueByte[1] / 100.0))
+                    locationMessage.externalHumidity = value
+            elif dataId == 0x66:
+                if not DecoderHelper.isAllFF(valueByte):
+                    isNegative = (valueByte[1] & 0x80) == 0x80
+                    value = (-1 if isNegative else 1) * (valueByte[0] + ((valueByte[1] & 0x7f) / 100.0))
+                    locationMessage.deviceHighPrecisionTemp = value
+            elif dataId == 0x67:
+                voltage = bytes2Short(valueByte, 0)
+                locationMessage.analogInput1 = voltage / 1000.0
+            elif dataId == 0x68:
+                voltage = bytes2Short(valueByte, 0)
+                locationMessage.analogInput2 = voltage / 1000.0
+            elif dataId == 0x69:
+                voltage = bytes2Short(valueByte, 0)
+                locationMessage.analogInput3 = voltage / 1000.0
             elif dataId == 0xA0:
                 mileage = bytes2Integer(valueByte, 0)
                 locationMessage.mileage = mileage
@@ -1734,6 +1911,7 @@ class DecoderHelper:
                 if value < 0:
                     value += 256
                 locationMessage.overspeedLimit = value
+                locationMessage.overSpeedLimit = value
             elif dataId == 0x05:
                 value = valueByte[0]
                 isManagerConfigured1 = (value & 0x01) == 0x01
@@ -1760,6 +1938,8 @@ class DecoderHelper:
             elif dataId == 0x08:
                 jammerDetectionStatus = (valueByte[0] & 0xC)
                 locationMessage.jammerDetectionStatus = jammerDetectionStatus
+            elif dataId == 0x09:
+                locationMessage.antitheftedStatus = valueByte[0] & 0xff
             elif dataId == 0x80:
                 distance = bytes2Short(valueByte, 0)
                 locationMessage.distanceCompensation = distance
@@ -2064,11 +2244,11 @@ class Decoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        eci_4g = 0
-        tac = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
         pcid_4g_1 = 0
         pcid_4g_2 = 0
-        pcid_4g_3 = 0
+        earfcn_4g_2 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -2572,11 +2752,11 @@ class Decoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        eci_4g = 0
-        tac = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
         pcid_4g_1 = 0
         pcid_4g_2 = 0
-        pcid_4g_3 = 0
+        earfcn_4g_2 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -3348,11 +3528,11 @@ class Decoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        eci_4g = 0
-        tac = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
         pcid_4g_1 = 0
         pcid_4g_2 = 0
-        pcid_4g_3 = 0
+        earfcn_4g_2 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -3451,11 +3631,11 @@ class Decoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        eci_4g = 0
-        tac = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
         pcid_4g_1 = 0
         pcid_4g_2 = 0
-        pcid_4g_3 = 0
+        earfcn_4g_2 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -3596,6 +3776,7 @@ class Decoder:
             # configMessage.isNeedResp = isNeedResp
             configMessage.imei = imei
             configMessage.configContent = messageData
+            configMessage.configResultContent = messageData
             configMessage.orignBytes = byteArray
             return configMessage
         elif protocol == 0x03:
@@ -3684,11 +3865,11 @@ class Decoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        eci_4g = 0
-        tac = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
         pcid_4g_1 = 0
         pcid_4g_2 = 0
-        pcid_4g_3 = 0
+        earfcn_4g_2 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -3726,20 +3907,20 @@ class Decoder:
         if is_4g_lbs:
             mcc_4g = bytes2Short(byteArray,curParseIndex + 12) & 0x7FFF
             mnc_4g = bytes2Short(byteArray,curParseIndex + 14)
-            eci_4g = bytes2Integer(byteArray, curParseIndex + 16)
-            tac = bytes2Short(byteArray, curParseIndex + 20)
+            ci_4g = bytes2Integer(byteArray, curParseIndex + 16)
+            earfcn_4g_1 = bytes2Short(byteArray, curParseIndex + 20)
             pcid_4g_1 = bytes2Short(byteArray, curParseIndex + 22)
-            pcid_4g_2 = bytes2Short(byteArray, curParseIndex + 24)
-            pcid_4g_3 = bytes2Short(byteArray,curParseIndex + 26)
+            earfcn_4g_2 = bytes2Short(byteArray, curParseIndex + 24)
+            pcid_4g_2 = bytes2Short(byteArray,curParseIndex + 26)
 
         acceleration.is_2g_lbs = is_2g_lbs
         acceleration.mcc_4g = mcc_4g
         acceleration.mnc_4g = mnc_4g
-        acceleration.eci_4g = eci_4g
-        acceleration.tac = tac
+        acceleration.ci_4g = ci_4g
+        acceleration.earfcn_4g_1 = earfcn_4g_1
         acceleration.pcid_4g_1 = pcid_4g_1
         acceleration.pcid_4g_2 = pcid_4g_2
-        acceleration.pcid_4g_3 = pcid_4g_3
+        acceleration.earfcn_4g_2 = earfcn_4g_2
         acceleration.mcc_2g = mcc_2g
         acceleration.mnc_2g = mnc_2g
         acceleration.lac_2g_1 = lac_2g_1
@@ -3790,11 +3971,11 @@ class Decoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        eci_4g = 0
-        tac = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
         pcid_4g_1 = 0
         pcid_4g_2 = 0
-        pcid_4g_3 = 0
+        earfcn_4g_2 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -3832,20 +4013,20 @@ class Decoder:
         if is_4g_lbs:
             mcc_4g = bytes2Short(byteArray,curParseIndex + 12) & 0x7FFF
             mnc_4g = bytes2Short(byteArray,curParseIndex + 14)
-            eci_4g = bytes2Integer(byteArray, curParseIndex + 16)
-            tac = bytes2Short(byteArray, curParseIndex + 20)
+            ci_4g = bytes2Integer(byteArray, curParseIndex + 16)
+            earfcn_4g_1 = bytes2Short(byteArray, curParseIndex + 20)
             pcid_4g_1 = bytes2Short(byteArray, curParseIndex + 22)
-            pcid_4g_2 = bytes2Short(byteArray, curParseIndex + 24)
-            pcid_4g_3 = bytes2Short(byteArray,curParseIndex + 26)
+            earfcn_4g_2 = bytes2Short(byteArray, curParseIndex + 24)
+            pcid_4g_2 = bytes2Short(byteArray,curParseIndex + 26)
         acceleration.is_4g_lbs = is_4g_lbs
         acceleration.is_2g_lbs = is_2g_lbs
         acceleration.mcc_4g = mcc_4g
         acceleration.mnc_4g = mnc_4g
-        acceleration.eci_4g = eci_4g
-        acceleration.tac = tac
+        acceleration.ci_4g = ci_4g
+        acceleration.earfcn_4g_1 = earfcn_4g_1
         acceleration.pcid_4g_1 = pcid_4g_1
         acceleration.pcid_4g_2 = pcid_4g_2
-        acceleration.pcid_4g_3 = pcid_4g_3
+        acceleration.earfcn_4g_2 = earfcn_4g_2
         acceleration.mcc_2g = mcc_2g
         acceleration.mnc_2g = mnc_2g
         acceleration.lac_2g_1 = lac_2g_1
@@ -3861,11 +4042,13 @@ class Decoder:
         serialNo = bytes2Short(byteArray,5)
         # isNeedResp = (serialNo & 0x8000) != 0x8000
         imei = decodeImei(byteArray,7)
+        behaviorType = int(byteArray[15])
         accidentAccelerationMessage = AccidentAccelerationMessage()
         accidentAccelerationMessage.serialNo = serialNo
         # accidentAccelerationMessage.isNeedResp = isNeedResp
         accidentAccelerationMessage.imei = imei
         accidentAccelerationMessage.orignBytes = byteArray
+        accidentAccelerationMessage.behaviorType = behaviorType
         dataLength = length - 16
         beginIndex = 16
         accidentAccelerationList = []
@@ -3951,27 +4134,27 @@ class Decoder:
             accdetSettingStatus = 1
         str = byte2HexString(data, 20)
         analoginput = 0
-        if str.lower().startswith("ffff"):
+        if not str.lower().startswith("ffff"):
             try:
-                analoginput = (float)("{0}.{1}".format(str[0:2],str[2:4]))
+                analoginput = float("{0}.{1}".format(int(str[0:2]), str[2:4]))
             except:
                 print ("alalog1 error")
         else:
             analoginput = -999
         analoginput2 = 0
         str = byte2HexString(data, 22)
-        if str.lower().startswith("ffff"):
+        if not str.lower().startswith("ffff"):
             try:
-                analoginput2 = (float)("{0}.{1}".format(str[0:2],str[2:4]))
+                analoginput2 = float("{0}.{1}".format(int(str[0:2]), str[2:4]))
             except:
                 print ("alalog2 error")
         else:
             analoginput2 = -999
         analoginput3 = 0
         str = byte2HexString(data, 24)
-        if str.lower().startswith("ffff"):
+        if not str.lower().startswith("ffff"):
             try:
-                analoginput3 = (float)("{0}.{1}".format(str[0:2],str[2:4]))
+                analoginput3 = float("{0}.{1}".format(int(str[0:2]), str[2:4]))
             except:
                 print ("alalog3 error")
         else:
@@ -3979,6 +4162,7 @@ class Decoder:
         lastMileageDiff = bytes2Integer(data, 26)
         originalAlarmCode = (int) (data[30])
         isAlarmData = command[2] == 0x14 or command[2] == 0x34
+        externalPowerReduceStatus = data[31] & 0x11
         isSendSmsAlarmToManagerPhone = (data[31] & 0x20) == 0x20
         isSendSmsAlarmWhenDigitalInput2Change = (data[31] & 0x10) == 0x10
         jammerDetectionStatus = (data[31] & 0xC)
@@ -3996,11 +4180,11 @@ class Decoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        eci_4g = 0
-        tac = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
         pcid_4g_1 = 0
         pcid_4g_2 = 0
-        pcid_4g_3 = 0
+        earfcn_4g_2 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -4057,9 +4241,9 @@ class Decoder:
         isSmartUploadSupport = (data[65] & 0x8) == 0x8
         supportChangeBattery =  (data[66] & 0x8) == 0x8
         deviceTemp = -999
-        if byteArray[68] != 0xff:
-            deviceTemp = byteArray[68] & 0x7F
-            if (byteArray[68] & 0x80) == 0x80:
+        if len(data) >= 69 and data[68] != 0xff:
+            deviceTemp = data[68] & 0x7F
+            if (data[68] & 0x80) == 0x80:
                 deviceTemp = -1 * deviceTemp
         fmsSpeed = data[66]
         locationMessage = LocationInfoMessage()
@@ -4160,6 +4344,7 @@ class Decoder:
         locationMessage.iopACOn = iopACOn
         locationMessage.analogInput1 = analoginput
         locationMessage.analogInput2 = analoginput2
+        locationMessage.externalPowerReduceStatus = externalPowerReduceStatus
         locationMessage.originalAlarmCode = originalAlarmCode
         locationMessage.mileage = mileage
         locationMessage.externalPowerSupply = externalPowerSupply
@@ -4313,11 +4498,11 @@ class Decoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        eci_4g = 0
-        tac = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
         pcid_4g_1 = 0
         pcid_4g_2 = 0
-        pcid_4g_3 = 0
+        earfcn_4g_2 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -5197,6 +5382,7 @@ class ObdDecoder:
             signInMessage.software = software
             signInMessage.hardware = hardware
             signInMessage.orignBytes = byteArray
+            signInMessage.model = model
             signInMessage.obdHardware = obdHardware
             signInMessage.obdSoftware = obdSoftware
             signInMessage.obdDataVersion = obdDataVersion
@@ -5375,11 +5561,11 @@ class ObdDecoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        eci_4g = 0
-        tac = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
         pcid_4g_1 = 0
         pcid_4g_2 = 0
-        pcid_4g_3 = 0
+        earfcn_4g_2 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -5650,11 +5836,11 @@ class ObdDecoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        eci_4g = 0
-        tac = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
         pcid_4g_1 = 0
         pcid_4g_2 = 0
-        pcid_4g_3 = 0
+        earfcn_4g_2 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -5692,21 +5878,21 @@ class ObdDecoder:
         if is_4g_lbs:
             mcc_4g = bytes2Short(byteArray,curParseIndex + 12) & 0x7FFF
             mnc_4g = bytes2Short(byteArray,curParseIndex + 14)
-            eci_4g = bytes2Integer(byteArray, curParseIndex + 16)
-            tac = bytes2Short(byteArray, curParseIndex + 20)
+            ci_4g = bytes2Integer(byteArray, curParseIndex + 16)
+            earfcn_4g_1 = bytes2Short(byteArray, curParseIndex + 20)
             pcid_4g_1 = bytes2Short(byteArray, curParseIndex + 22)
-            pcid_4g_2 = bytes2Short(byteArray, curParseIndex + 24)
-            pcid_4g_3 = bytes2Short(byteArray,curParseIndex + 26)
+            earfcn_4g_2 = bytes2Short(byteArray, curParseIndex + 24)
+            pcid_4g_2 = bytes2Short(byteArray,curParseIndex + 26)
 
         acceleration.is_4g_lbs = is_4g_lbs
         acceleration.is_2g_lbs = is_2g_lbs
         acceleration.mcc_4g = mcc_4g
         acceleration.mnc_4g = mnc_4g
-        acceleration.eci_4g = eci_4g
-        acceleration.tac = tac
+        acceleration.ci_4g = ci_4g
+        acceleration.earfcn_4g_1 = earfcn_4g_1
         acceleration.pcid_4g_1 = pcid_4g_1
         acceleration.pcid_4g_2 = pcid_4g_2
-        acceleration.pcid_4g_3 = pcid_4g_3
+        acceleration.earfcn_4g_2 = earfcn_4g_2
         acceleration.mcc_2g = mcc_2g
         acceleration.mnc_2g = mnc_2g
         acceleration.lac_2g_1 = lac_2g_1
@@ -5764,11 +5950,13 @@ class ObdDecoder:
         serialNo = bytes2Short(byteArray,5)
         # isNeedResp = (serialNo & 0x8000) != 0x8000
         imei = decodeImei(byteArray,7)
+        behaviorType = int(byteArray[15])
         accidentAccelerationMessage = AccidentAccelerationMessage()
         accidentAccelerationMessage.serialNo = serialNo
         # accidentAccelerationMessage.isNeedResp = isNeedResp
         accidentAccelerationMessage.imei = imei
         accidentAccelerationMessage.orignBytes = byteArray
+        accidentAccelerationMessage.behaviorType = behaviorType
         dataLength = length - 16
         beginIndex = 16
         accidentAccelerationList = []
@@ -5813,11 +6001,11 @@ class ObdDecoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        eci_4g = 0
-        tac = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
         pcid_4g_1 = 0
         pcid_4g_2 = 0
-        pcid_4g_3 = 0
+        earfcn_4g_2 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -6589,11 +6777,11 @@ class ObdDecoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        eci_4g = 0
-        tac = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
         pcid_4g_1 = 0
         pcid_4g_2 = 0
-        pcid_4g_3 = 0
+        earfcn_4g_2 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -6692,11 +6880,11 @@ class ObdDecoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        eci_4g = 0
-        tac = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
         pcid_4g_1 = 0
         pcid_4g_2 = 0
-        pcid_4g_3 = 0
+        earfcn_4g_2 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -6823,6 +7011,7 @@ class ObdDecoder:
             # configMessage.isNeedResp = isNeedResp
             configMessage.imei = imei
             configMessage.configContent = messageData
+            configMessage.configResultContent = messageData
             configMessage.orignBytes = byteArray
             return configMessage
         elif protocol == 0x03:
@@ -7032,9 +7221,11 @@ class PersonalAssetMsgDecoder:
     WIFI_WITH_DEVICE_INFO_DATA = [0x27, 0x27, 0x24]
     WIFI_ALARM_WITH_DEVICE_INFO_DATA = [0x27, 0x27, 0x25]
     DEVICE_TEMP_COLLECTION_DATA = [0x27, 0x27, 0x26]
+    SUB_LOCK_DATA = [0x27, 0x27, 0x27]
     CONFIG = [0x27, 0x27, 0x81]
     INDEFINITE_LOCATION_DATA = [0x27, 0x27, 0x62]
     INDEFINITE_LOCATION_ALARM_DATA = [0x27, 0x27, 0x64]
+    latlngInvalidData = [0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]
     encryptType = 0
     esKey = ""
 
@@ -7055,7 +7246,8 @@ class PersonalAssetMsgDecoder:
                or byteArray == self.CONFIG or byteArray == self.WIFI_DATA or byteArray == self.LOCK_DATA  \
                or byteArray == self.GEO_DATA or byteArray == self.BLUETOOTH_SECOND_DATA or byteArray == self.WIFI_WITH_DEVICE_INFO_DATA  \
                or byteArray == self.WIFI_ALARM_WITH_DEVICE_INFO_DATA or byteArray == self.DEVICE_TEMP_COLLECTION_DATA \
-               or byteArray == self.INDEFINITE_LOCATION_DATA or byteArray == self.INDEFINITE_LOCATION_ALARM_DATA
+               or byteArray == self.INDEFINITE_LOCATION_DATA or byteArray == self.INDEFINITE_LOCATION_ALARM_DATA \
+               or byteArray == self.SUB_LOCK_DATA
 
 
     decoderBuf = TopflytechByteBuf()
@@ -7175,6 +7367,8 @@ class PersonalAssetMsgDecoder:
                 return self.parseInnerGeoMessage(byteArray)
             elif byteArray[2] == 0x26:
                 return self.parseDeviceTempCollectionMessage(byteArray)
+            elif byteArray[2] == 0x27:
+                return self.parseSubLockMessage(byteArray)
             elif byteArray[2] == 0x24 or byteArray[2] == 0x25:
                 return self.parseWifiWithDeviceInfoMessage(byteArray)
             elif byteArray[2] == 0x62 or byteArray[2] == 0x64:
@@ -7264,11 +7458,11 @@ class PersonalAssetMsgDecoder:
 
         mcc_4g = 0
         mnc_4g = 0
-        eci_4g = 0
-        tac = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
         pcid_4g_1 = 0
         pcid_4g_2 = 0
-        pcid_4g_3 = 0
+        earfcn_4g_2 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -7371,6 +7565,7 @@ class PersonalAssetMsgDecoder:
             # configMessage.isNeedResp = isNeedResp
             configMessage.imei = imei
             configMessage.configContent = messageData
+            configMessage.configResultContent = messageData
             configMessage.orignBytes = byteArray
             return configMessage
         elif protocol == 0x03:
@@ -7417,6 +7612,167 @@ class PersonalAssetMsgDecoder:
         signInMessage.orignBytes = byteArray
         return signInMessage
 
+    def parseSubLockSoftwareVersion(self, byteArray, index):
+        if len(byteArray) < index + 3:
+            return ""
+        all_value = bytes2Short(byteArray, index)
+        version1 = byteArray[index] >> 5
+        version2 = (all_value & 0x1FFF) >> 7
+        version3 = all_value & 0x7F
+        testByte = byteArray[index + 2]
+        if testByte != 0:
+            return "{0}.{1}.{2:02d} {3}".format(version1, version2, version3, chr(testByte))
+        return "{0}.{1}.{2:02d}".format(version1, version2, version3)
+
+    def parseSubLockMessage(self, byteArray):
+        subLockMessage = SubLockMessage()
+        serialNo = bytes2Short(byteArray, 5)
+        imei = decodeImei(byteArray, 7)
+        dateStr = "20" + byte2HexString(byteArray[15:21], 0)
+        gtm0 = GTM0(dateStr)
+        latlngValid = (byteArray[21] & 0x40) != 0x00
+        isGpsWorking = (byteArray[21] & 0x20) == 0x00
+        isHistoryData = (byteArray[21] & 0x80) != 0x00
+        satelliteNumber = byteArray[21] & 0x1F
+
+        latlngData = byteArray[22:38]
+        if latlngData == self.latlngInvalidData:
+            latlngValid = False
+
+        altitude = bytes2Float(byteArray, 22) if latlngValid else 0
+        longitude = bytes2Float(byteArray, 26) if latlngValid else 0
+        latitude = bytes2Float(byteArray, 30) if latlngValid else 0
+        speedf = 0.0
+        if latlngValid:
+            try:
+                speedHex = byte2HexString(byteArray[34:36], 0).lower()
+                if speedHex != "ffff":
+                    speedf = float("{0}.{1}".format(int(speedHex[0:3]), int(speedHex[3:])))
+            except Exception:
+                speedf = 0.0
+        azimuth = bytes2Short(byteArray, 36) if latlngValid else 0
+
+        is_4g_lbs = False
+        mcc_4g = 0
+        mnc_4g = 0
+        eci_4g = 0
+        tac = 0
+        pcid_4g_1 = 0
+        pcid_4g_2 = 0
+        pcid_4g_3 = 0
+        is_2g_lbs = False
+        mcc_2g = 0
+        mnc_2g = 0
+        lac_2g_1 = 0
+        ci_2g_1 = 0
+        lac_2g_2 = 0
+        ci_2g_2 = 0
+        lac_2g_3 = 0
+        ci_2g_3 = 0
+
+        if not latlngValid:
+            if (byteArray[22] & 0x80) == 0x80:
+                is_4g_lbs = True
+            else:
+                is_2g_lbs = True
+        if is_2g_lbs:
+            mcc_2g = bytes2Short(byteArray, 22)
+            mnc_2g = bytes2Short(byteArray, 24)
+            lac_2g_1 = bytes2Short(byteArray, 26)
+            ci_2g_1 = bytes2Short(byteArray, 28)
+            lac_2g_2 = bytes2Short(byteArray, 30)
+            ci_2g_2 = bytes2Short(byteArray, 32)
+            lac_2g_3 = bytes2Short(byteArray, 34)
+            ci_2g_3 = bytes2Short(byteArray, 36)
+        if is_4g_lbs:
+            mcc_4g = bytes2Short(byteArray, 22) & 0x7FFF
+            mnc_4g = bytes2Short(byteArray, 24)
+            eci_4g = bytes2Integer(byteArray, 26)
+            tac = bytes2Short(byteArray, 30)
+            pcid_4g_1 = bytes2Short(byteArray, 32)
+            pcid_4g_2 = bytes2Short(byteArray, 34)
+            pcid_4g_3 = bytes2Short(byteArray, 36)
+
+        rssiTemp = int(byteArray[38])
+        if rssiTemp == 255:
+            rssi = -999
+        else:
+            rssi = rssiTemp - 128
+        hardware = "{0}.{1}".format((byteArray[39] & 0xF0) >> 4, byteArray[39] & 0x0F)
+        software = self.parseSubLockSoftwareVersion(byteArray, 40)
+        alarmByte = byteArray[43]
+        lockType = byteArray[44] & 0xFF
+        lockStatus = bytes2Short(byteArray, 45)
+        isCharging = (lockStatus & 0x01) == 0x01
+        isChargingOverVoltage = (lockStatus & 0x02) == 0x02
+        isLowPower = (lockStatus & 0x04) == 0x04
+        isHighTemp = (lockStatus & 0x08) == 0x08
+        isLowTemp = (lockStatus & 0x10) == 0x10
+        isOpenLockCover = (lockStatus & 0x20) == 0x20
+        isOpenBackCover = (lockStatus & 0x40) == 0x40
+        isGpsPosition = (lockStatus & 0x80) == 0x80
+        isGpsJamming = (lockStatus & 0x100) == 0x100
+        voltage = bytes2Short(byteArray, 47) / 1000.0
+        solarVoltage = bytes2Short(byteArray, 49) / 1000.0
+        temp = byteArray[51]
+        if temp == 0xFF:
+            temp = -999
+
+        lockId = byte2HexString(byteArray[52:58], 0).upper()
+        deviceId = byte2HexString(byteArray[58:62], 0)
+
+        subLockMessage.protocolHeadType = byteArray[2]
+        subLockMessage.serialNo = serialNo
+        subLockMessage.imei = imei
+        subLockMessage.date = gtm0
+        subLockMessage.orignBytes = byteArray
+        subLockMessage.latlngValid = latlngValid
+        subLockMessage.altitude = altitude
+        subLockMessage.longitude = longitude
+        subLockMessage.latitude = latitude
+        subLockMessage.speed = speedf
+        subLockMessage.azimuth = azimuth
+        subLockMessage.lockType = lockType
+        subLockMessage.lockId = lockId
+        subLockMessage.isHistoryData = isHistoryData
+        subLockMessage.satelliteNumber = satelliteNumber
+        subLockMessage.gpsWorking = isGpsWorking
+        subLockMessage.is_4g_lbs = is_4g_lbs
+        subLockMessage.is_2g_lbs = is_2g_lbs
+        subLockMessage.mcc_2g = mcc_2g
+        subLockMessage.mnc_2g = mnc_2g
+        subLockMessage.lac_2g_1 = lac_2g_1
+        subLockMessage.ci_2g_1 = ci_2g_1
+        subLockMessage.lac_2g_2 = lac_2g_2
+        subLockMessage.ci_2g_2 = ci_2g_2
+        subLockMessage.lac_2g_3 = lac_2g_3
+        subLockMessage.ci_2g_3 = ci_2g_3
+        subLockMessage.mcc_4g = mcc_4g
+        subLockMessage.mnc_4g = mnc_4g
+        subLockMessage.eci_4g = eci_4g
+        subLockMessage.tac = tac
+        subLockMessage.pcid_4g_1 = pcid_4g_1
+        subLockMessage.pcid_4g_2 = pcid_4g_2
+        subLockMessage.pcid_4g_3 = pcid_4g_3
+        subLockMessage.rssi = rssi
+        subLockMessage.isCharging = isCharging
+        subLockMessage.isChargingOverVoltage = isChargingOverVoltage
+        subLockMessage.isLowPower = isLowPower
+        subLockMessage.isHighTemp = isHighTemp
+        subLockMessage.isLowTemp = isLowTemp
+        subLockMessage.isOpenLockCover = isOpenLockCover
+        subLockMessage.isOpenBackCover = isOpenBackCover
+        subLockMessage.isGpsPosition = isGpsPosition
+        subLockMessage.isGpsJamming = isGpsJamming
+        subLockMessage.software = software
+        subLockMessage.hardware = hardware
+        subLockMessage.voltage = voltage
+        subLockMessage.solarVoltage = solarVoltage
+        subLockMessage.temp = float(temp)
+        subLockMessage.deviceId = deviceId
+        subLockMessage.alarmByte = alarmByte
+        return subLockMessage
+
     def parseSecondBluetoothDataMessage(self,byteArray):
         bluetoothPeripheralDataMessage = BluetoothPeripheralDataMessage()
         serialNo = bytes2Short(byteArray,5)
@@ -7433,11 +7789,11 @@ class PersonalAssetMsgDecoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        eci_4g = 0
-        tac = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
         pcid_4g_1 = 0
         pcid_4g_2 = 0
-        pcid_4g_3 = 0
+        earfcn_4g_2 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -8209,11 +8565,11 @@ class PersonalAssetMsgDecoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        eci_4g = 0
-        tac = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
         pcid_4g_1 = 0
         pcid_4g_2 = 0
-        pcid_4g_3 = 0
+        earfcn_4g_2 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -8312,11 +8668,11 @@ class PersonalAssetMsgDecoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        eci_4g = 0
-        tac = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
         pcid_4g_1 = 0
         pcid_4g_2 = 0
-        pcid_4g_3 = 0
+        earfcn_4g_2 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -8809,6 +9165,7 @@ class PersonalAssetMsgDecoder:
             # configMessage.isNeedResp = isNeedResp
             configMessage.imei = imei
             configMessage.configContent = messageData
+            configMessage.configResultContent = messageData
             configMessage.orignBytes = byteArray
             return configMessage
         elif protocol == 0x03:
@@ -8851,11 +9208,11 @@ class PersonalAssetMsgDecoder:
         is_4g_lbs = False
         mcc_4g = 0
         mnc_4g = 0
-        eci_4g = 0
-        tac = 0
+        ci_4g = 0
+        earfcn_4g_1 = 0
         pcid_4g_1 = 0
         pcid_4g_2 = 0
-        pcid_4g_3 = 0
+        earfcn_4g_2 = 0
         is_2g_lbs = False
         mcc_2g = 0
         mnc_2g = 0
@@ -8924,11 +9281,11 @@ class PersonalAssetMsgDecoder:
             deviceTemp = byteArray[45] & 0x7F
             if (byteArray[45] & 0x80) == 0x80:
                 deviceTemp = -1 * deviceTemp
-            lightSensorBytes = [byteArray[46]]
+        lightSensorBytes = [byteArray[46]]
         lightSensorStr = byte2HexString(lightSensorBytes, 0)
         lightSensor = 0
         if lightSensorStr.lower() == "ff":
-            lightSensor = -1
+            lightSensor = -999
         else:
             lightSensor = (int)(lightSensorStr) / 10.0
 
@@ -8936,14 +9293,14 @@ class PersonalAssetMsgDecoder:
         batteryVoltageStr = byte2HexString(batteryVoltageBytes, 0)
         batteryVoltage = 0
         if batteryVoltageStr.lower() == "ff":
-            batteryVoltage = -1
+            batteryVoltage = -999
         else:
              batteryVoltage = (int)(batteryVoltageStr) / 10.0
         solarVoltageBytes = [byteArray[48]]
         solarVoltageStr = byte2HexString(solarVoltageBytes, 0)
         solarVoltage = 0
         if solarVoltageStr.lower() == "ff":
-            solarVoltage = -1
+            solarVoltage = -999
         else:
             solarVoltage = (int)(solarVoltageStr) / 10.0
 
@@ -9004,6 +9361,7 @@ class PersonalAssetMsgDecoder:
         locationMessage.heartbeatInterval = heartbeatInterval
         locationMessage.originalAlarmCode = originalAlarmCode
         locationMessage.mileage = mileage
+        locationMessage.batteryCharge = batteryPercent
         locationMessage.batteryPercent = batteryPercent
         locationMessage.date = gtm0
         locationMessage.latlngValid = latlngValid
@@ -9326,3 +9684,8 @@ class PTTEncoder:
     def get_listen_end_data(self, imei, serial_no):
         command = [0x28, 0x28, 0x08]
         return Encoder.getNormalMsgReply(imei, serial_no, command, [], self.encrypt_type, self.aes_key)
+
+
+
+
+

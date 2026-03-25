@@ -307,7 +307,7 @@ if __name__ == "__main__":
         c, addr = s.accept()
         print("\nConnection received from %s" % str(addr))
         # decoder = Decoder(MessageEncryptType.NONE,"")
-        # decoder = ObdDecoder(MessageEncryptType.NONE,"")
+        #decoder = ObdDecoder(MessageEncryptType.NONE,"")
         decoder = PersonalAssetMsgDecoder(MessageEncryptType.NONE,"")
         while True:
             try:
