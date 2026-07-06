@@ -36,9 +36,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -676,11 +681,22 @@ public class ReadHisDataActivity extends AppCompatActivity {
     };
 
     private void initActionbar() {
-        actionBar = getSupportActionBar();
-        View customView = this.getLayoutInflater().inflate(R.layout.read_his_data_activity_bar, null);
-        actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
-        actionBar.setDisplayShowCustomEnabled(true);
-        actionBar.setCustomView(customView);
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.root_view), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(0, systemBars.top, 0, systemBars.bottom);
+            return insets;
+        });
+        Toolbar toolbar = findViewById(R.id.read_his_toolbar);
+        toolbar.setContentInsetsAbsolute(0, 0);
+        toolbar.setContentInsetStartWithNavigation(0);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false); // 隐藏默认标题
+//        actionBar = getSupportActionBar();
+//        View customView = this.getLayoutInflater().inflate(R.layout.read_his_data_activity_bar, null);
+//        actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+//        actionBar.setDisplayShowCustomEnabled(true);
+//        actionBar.setCustomView(customView);
         TextView tvHead = (TextView) findViewById(R.id.edit_command_title);
         if (deviceName != null) {
             tvHead.setText(deviceName);
@@ -975,7 +991,8 @@ public class ReadHisDataActivity extends AppCompatActivity {
         }
         reconnectBtn.setImageResource(R.mipmap.ic_disconnect);
         TftBleConnectManager.getInstance().disconnect();
-        TftBleConnectManager.getInstance().removeCallback("EditActivity");
+        TftBleConnectManager.getInstance().removeCallback("ReadHisDataActivity");
+        TftBleConnectManager.destroy();
     }
 
 

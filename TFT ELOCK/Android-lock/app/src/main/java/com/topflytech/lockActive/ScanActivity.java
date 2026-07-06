@@ -12,6 +12,11 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import java.util.List;
 
@@ -77,14 +82,26 @@ public class ScanActivity extends AppCompatActivity  implements QRCodeView.Deleg
         super.onDestroy();
     }
     private void initActionbar() {
-        actionBar = getSupportActionBar();
-        View customView = this.getLayoutInflater().inflate(R.layout.custom_activity_bar, null);
-        tvHead = customView.findViewById(R.id.custom_head_title);
-        actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
-        actionBar.setDisplayShowCustomEnabled(true);
-        actionBar.setCustomView(customView);
-        backButton = (ImageView) customView.findViewById(R.id.command_list_bar_back_id);
-        rightButton =(ImageView) customView.findViewById(R.id.img_btn_right);
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.root_view), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(0, systemBars.top, 0, systemBars.bottom);
+            return insets;
+        });
+        Toolbar toolbar = findViewById(R.id.customer_toolbar);
+        toolbar.setContentInsetsAbsolute(0, 0);
+        toolbar.setContentInsetStartWithNavigation(0);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false); // 隐藏默认标题
+//        actionBar = getSupportActionBar();
+//        View customView = this.getLayoutInflater().inflate(R.layout.custom_activity_bar, null);
+//        actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+//        actionBar.setDisplayShowCustomEnabled(true);
+//        actionBar.setCustomView(customView);
+
+        tvHead = findViewById(R.id.custom_head_title);
+        backButton = (ImageView) findViewById(R.id.command_list_bar_back_id);
+        rightButton =(ImageView) findViewById(R.id.img_btn_right);
         rightButton.setVisibility(View.INVISIBLE);
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override

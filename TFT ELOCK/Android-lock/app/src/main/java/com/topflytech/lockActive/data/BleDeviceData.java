@@ -27,10 +27,6 @@ public class BleDeviceData {
     public static UUID readDataNotifyUUID = UUID.fromString("27760003-999d-4d6a-9fc4-c7272be10900");
 
 
-
-
-
-
     public static UUID upgradeDataServiceId = UUID.fromString("27770001-999c-4d6a-9fc4-c7272be10900");
     public static UUID upgradePackageDataWriteUUID = UUID.fromString("27770003-999c-4d6a-9fc4-c7272be10900");
     public static UUID upgradeDataWriteNotifyUUID = UUID.fromString("27770002-999c-4d6a-9fc4-c7272be10900");
@@ -250,9 +246,12 @@ public class BleDeviceData {
     public final static String MODEL_OF_TC019 = "SolarGuardX 200";
     public static final String MODEL_OF_TC015 = "SolarGuardX 100";
 
+    public final static String MODEL_OF_SGX120CB = "SolarGuardX 120 PN:CB01";
     public static boolean isSupportConfig(String model,String version,String deviceId){
         if(model.equals(MODEL_OF_SGX120B01)){
             return true;
+        }else if(model.equals(MODEL_OF_SGX120CB)){
+            return deviceId != null && deviceId.trim().length() > 0;
         }else if(model.equals(MODEL_OF_TC015)){
             return false;
         }else if(deviceId != null && deviceId.trim().length() > 0){
@@ -270,6 +269,8 @@ public class BleDeviceData {
     public static boolean isSupportClearHisAndResetDefault(String model,String version){
         if(model.equals(MODEL_OF_SGX120B01)){
             return false;
+        }else if(model.equals(MODEL_OF_SGX120CB)){
+            return true;
         }else if(model.equals(MODEL_OF_TC015)){
             return false;
         }else if(model.equals(MODEL_OF_TC019)){
@@ -521,13 +522,26 @@ public class BleDeviceData {
             return MODEL_OF_TC019;
         }else if(protocolByte == 119 || protocolByte == 120 || protocolByte == 121|| protocolByte == 122){
             return MODEL_OF_SGX110;
+        }else if((protocolByte &0xff)  == 135 || (protocolByte &0xff)  == 136 || (protocolByte &0xff)  == 137|| (protocolByte &0xff)  == 138){
+            return MODEL_OF_SGX120CB;
         }else{
             return "";
         }
     }
 
+    public static boolean isNotSupportModels(byte protocolByte){
+        return protocolByte != (byte)0x62 && protocolByte != (byte)0x65
+                &&  protocolByte != (byte)0x7b && protocolByte != (byte)0x7c
+                &&  protocolByte != 119 && protocolByte != 120
+                &&  protocolByte != 121 && protocolByte != 122
+                &&  (protocolByte &0xff) != 135 && (protocolByte &0xff) != 136
+                &&  (protocolByte &0xff) != 137 && (protocolByte &0xff) != 138;
+    }
+
     public static boolean isSupportReadHistory(BleDeviceData bleDeviceData){
-        if(bleDeviceData.getModel().equals(MODEL_OF_TC019) || bleDeviceData.getModel().equals(MODEL_OF_SGX110)){
+        if(bleDeviceData.getModel().equals(MODEL_OF_SGX120CB)){
+            return bleDeviceData.supportReadHis;
+        }else if(bleDeviceData.getModel().equals(MODEL_OF_TC019) || bleDeviceData.getModel().equals(MODEL_OF_SGX110)){
             return bleDeviceData.supportReadHis;
         }else if(bleDeviceData.getModel().equals(MODEL_OF_SGX120B01)){
             String formatSoftware = bleDeviceData.getSoftware().replace("V","").replaceAll("v","").replaceAll("\\.","");
@@ -684,3 +698,4 @@ public class BleDeviceData {
 
 
 }
+

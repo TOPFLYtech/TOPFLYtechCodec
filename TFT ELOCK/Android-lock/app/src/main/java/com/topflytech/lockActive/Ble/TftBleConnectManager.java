@@ -42,7 +42,9 @@ public class TftBleConnectManager {
     private UUID curServiceId = BleDeviceData.unlockServiceId;
     private UUID curWriteUUID = BleDeviceData.unlockWriteUUID;
     private UUID curNotifyUUID = BleDeviceData.unlockNotifyUUID;
-
+    public static void destroy() {
+        instance = null;
+    }
     private final static Object lock = new Object();
     public static TftBleConnectManager getInstance(){
         if (instance == null){
@@ -103,6 +105,7 @@ public class TftBleConnectManager {
     public boolean getIsDeviceReady() {
         return isDeviceReady;
     }
+
 
     public boolean isNeedGetLockStatus() {
         return isNeedGetLockStatus;
@@ -326,8 +329,8 @@ public class TftBleConnectManager {
                 setCharacteristicNotification(bluetoothGatt, upgradeCmdReadWriteCharacteristic, false);
             }
             bluetoothGatt.disconnect();
-            bluetoothGatt.close();
         }
+        bluetoothGatt=null;
         bleDevice = null;
         sendMsgMultiQueue.clear();
         sendMsgQueue.clear();
@@ -396,6 +399,20 @@ public class TftBleConnectManager {
 
         }
     }
+    private void clearAllNotifications(BluetoothGatt gatt) {
+        // 清除所有通知注册
+        for (BluetoothGattService service : gatt.getServices()) {
+            for (BluetoothGattCharacteristic characteristic : service.getCharacteristics()) {
+                if ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_NOTIFY) != 0 ||
+                        (characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_INDICATE) != 0) {
+                    if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+
+                    }
+                    gatt.setCharacteristicNotification(characteristic, false);
+                }
+            }
+        }
+    }
     private static final int REQUEST_MTU_SIZE = 30;
     private int negotiatedMtu = 23; // 默认MTU
     private BluetoothGattCallback bluetoothGattCallback = new BluetoothGattCallback() {
@@ -423,7 +440,9 @@ public class TftBleConnectManager {
                 String deviceAddress = gatt.getDevice().getAddress();
                 // 处理断开连接
                  connectStatusCallback(BLE_STATUS_OF_DISCONNECT);
+                clearAllNotifications(gatt);
                 connectSucc = false;
+                gatt.close();
             }
         }
 

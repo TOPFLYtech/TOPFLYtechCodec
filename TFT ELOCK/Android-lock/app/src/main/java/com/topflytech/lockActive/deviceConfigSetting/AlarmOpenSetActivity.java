@@ -10,6 +10,11 @@ import android.widget.CompoundButton;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.topflytech.lockActive.EditActivity;
 import com.topflytech.lockActive.R;
@@ -33,15 +38,26 @@ public class AlarmOpenSetActivity extends AppCompatActivity {
 
     private int alarmOpenSet = 0;
     private void initActionBar(){
-        actionBar = getSupportActionBar();
-        View customView = this.getLayoutInflater().inflate(R.layout.custom_activity_bar, null);
-        tvHead = customView.findViewById(R.id.custom_head_title);
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(0, systemBars.top, 0, systemBars.bottom);
+            return insets;
+        });
+        Toolbar toolbar = findViewById(R.id.customer_toolbar);
+        toolbar.setContentInsetsAbsolute(0, 0);
+        toolbar.setContentInsetStartWithNavigation(0);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false); // 隐藏默认标题
+//        actionBar = getSupportActionBar();
+//        View customView = this.getLayoutInflater().inflate(R.layout.custom_activity_bar, null);
+//        actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+//        actionBar.setDisplayShowCustomEnabled(true);
+//        actionBar.setCustomView(customView);
+        tvHead = findViewById(R.id.custom_head_title);
         tvHead.setText(R.string.alarm_set );
-        actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
-        actionBar.setDisplayShowCustomEnabled(true);
-        actionBar.setCustomView(customView);
-        backButton = (ImageView) customView.findViewById(R.id.command_list_bar_back_id);
-        rightButton =(ImageView) customView.findViewById(R.id.img_btn_right);
+        backButton = (ImageView) findViewById(R.id.command_list_bar_back_id);
+        rightButton =(ImageView) findViewById(R.id.img_btn_right);
         rightButton.setImageResource(R.mipmap.ic_submit);
         backButton.setOnClickListener(new SingleClickListener() {
             @Override

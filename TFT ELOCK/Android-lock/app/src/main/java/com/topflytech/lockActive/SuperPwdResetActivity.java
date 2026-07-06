@@ -15,6 +15,11 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.topflytech.lockActive.Ble.BleStatusCallback;
 import com.topflytech.lockActive.Ble.TftBleConnectManager;
@@ -238,11 +243,22 @@ public class SuperPwdResetActivity extends AppCompatActivity {
     }
 
     private void initActionbar() {
-        actionBar = getSupportActionBar();
-        View customView = this.getLayoutInflater().inflate(R.layout.edit_activity_bar, null);
-        actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
-        actionBar.setDisplayShowCustomEnabled(true);
-        actionBar.setCustomView(customView);
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.root_view), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(0, systemBars.top, 0, systemBars.bottom);
+            return insets;
+        });
+        Toolbar toolbar = findViewById(R.id.edit_toolbar);
+        toolbar.setContentInsetsAbsolute(0, 0);
+        toolbar.setContentInsetStartWithNavigation(0);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false); // 隐藏默认标题
+//        actionBar = getSupportActionBar();
+//        View customView = this.getLayoutInflater().inflate(R.layout.edit_activity_bar, null);
+//        actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+//        actionBar.setDisplayShowCustomEnabled(true);
+//        actionBar.setCustomView(customView);
         TextView tvHead = (TextView)findViewById(R.id.edit_command_title);
         tvHead.setText(id);
         backButton = (ImageView) findViewById(R.id.command_list_bar_back_id);
@@ -525,7 +541,7 @@ public class SuperPwdResetActivity extends AppCompatActivity {
         isSendMsgThreadRunning = false;
         TftBleConnectManager.getInstance().disconnect();
         TftBleConnectManager.getInstance().removeCallback("SuperPwdResetActivity");
-
+        TftBleConnectManager.destroy();
     }
 
     private void fixTime(){

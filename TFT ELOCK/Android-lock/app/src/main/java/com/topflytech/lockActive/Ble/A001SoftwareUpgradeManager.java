@@ -145,7 +145,7 @@ public class A001SoftwareUpgradeManager {
 //                        byte[] offset = MyByteUtils.unSignedInt2Bytes(cur4KPackage * 4096 + curPackageOffset);
                         byte[] content = new byte[]{0x02, 0x00};
                         if (cur4KPackage == upgradeFileContentList.size() - 1 && curPackage == upgradeFileContentList.get(cur4KPackage).size() ) {
-                            content[5] = 0x01;
+                            content[1] = 0x01;
                             writeArray( content);
                             isWaitResponse = true;
                         }else{

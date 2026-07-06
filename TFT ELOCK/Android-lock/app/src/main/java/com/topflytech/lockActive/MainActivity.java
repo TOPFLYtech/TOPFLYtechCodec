@@ -15,6 +15,7 @@ import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -46,10 +47,14 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.king.wechat.qrcode.WeChatQRCodeDetector;
-import com.tencent.bugly.crashreport.CrashReport;
 import com.topflytech.lockActive.data.BleDeviceData;
 import com.topflytech.lockActive.data.BluetoothPermissionHelper;
 import com.topflytech.lockActive.data.CustomMenuItem;
@@ -152,24 +157,37 @@ public class MainActivity extends AppCompatActivity implements BluetoothPermissi
     protected void onCreate(Bundle savedInstanceState) {
         //初始化OpenCV
         OpenCV.initAsync(MainActivity.this);
-
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); // 代码强制竖屏
         //初始化WeChatQRCodeDetector
         WeChatQRCodeDetector.init(MainActivity.this);
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
         super.onCreate(savedInstanceState);
-        CrashReport.initCrashReport(getApplicationContext());
         setContentView(R.layout.activity_main);
         initFavoriteMacs();
-        actionBar = getSupportActionBar();
-        View customView = this.getLayoutInflater().inflate(R.layout.main_activity_bar, null);
-        customView.setOnClickListener(new View.OnClickListener() {
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.root_view), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(0, systemBars.top, 0, systemBars.bottom);
+            return insets;
+        });
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar.setContentInsetsAbsolute(0, 0);
+        toolbar.setContentInsetStartWithNavigation(0);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false); // 隐藏默认标题
+//        actionBar = getSupportActionBar();
+//        View customView = this.getLayoutInflater().inflate(R.layout.custom_activity_bar, null);
+//        actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+//        actionBar.setDisplayShowCustomEnabled(true);
+//        actionBar.setCustomView(customView);
+        toolbar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 clickCount++;
                 if (clickCount >= 10) {
                     Utils.isDebug = true;
                     // 停止点击事件
-                    customView.setOnClickListener(null);
+                    toolbar.setOnClickListener(null);
                 } else if (clickCount > 6) {
                     Toast.makeText(MainActivity.this, "再点击" + (10 - clickCount) + "次，打开Debug功能", Toast.LENGTH_SHORT).show();
                 }
@@ -189,9 +207,7 @@ public class MainActivity extends AppCompatActivity implements BluetoothPermissi
                 }
             }
         });
-        actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
-        actionBar.setDisplayShowCustomEnabled(true);
-        actionBar.setCustomView(customView);
+
         enterDate = new Date();
         bluetoothPermissionHelper = new BluetoothPermissionHelper(this, this);
         BluetoothManager bluetoothManager = (BluetoothManager) this.getSystemService(Context.BLUETOOTH_SERVICE);
@@ -411,7 +427,7 @@ public class MainActivity extends AppCompatActivity implements BluetoothPermissi
     @Override
     protected void onStart() {
         super.onStart();
-        bluetoothPermissionHelper.startCheckBlePermission(MainActivity.this);
+        bluetoothPermissionHelper.startCheckBlePermission();
         initParentSubRelationMap();
     }
 
@@ -421,12 +437,28 @@ public class MainActivity extends AppCompatActivity implements BluetoothPermissi
     public boolean dispatchTouchEvent(MotionEvent ev) {
         if (ev.getAction() == MotionEvent.ACTION_DOWN) {
             View view = getCurrentFocus();
-            if (view != null) {
+            if (view != null && shouldHideKeyboard(view, ev)) {
                 InputMethodManager imm = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                view.clearFocus();
             }
         }
         return super.dispatchTouchEvent(ev);
+    }
+
+    private boolean shouldHideKeyboard(View currentFocusView, MotionEvent event) {
+        if (!(currentFocusView instanceof EditText)) {
+            return false;
+        }
+        int[] location = new int[2];
+        currentFocusView.getLocationOnScreen(location);
+        float rawX = event.getRawX();
+        float rawY = event.getRawY();
+        int left = location[0];
+        int top = location[1];
+        int right = left + currentFocusView.getWidth();
+        int bottom = top + currentFocusView.getHeight();
+        return rawX < left || rawX > right || rawY < top || rawY > bottom;
     }
 
     // 隐藏键盘的方法
@@ -435,6 +467,7 @@ public class MainActivity extends AppCompatActivity implements BluetoothPermissi
         if (view != null) {
             InputMethodManager imm = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            view.clearFocus();
         }
     }
 
@@ -482,7 +515,7 @@ public class MainActivity extends AppCompatActivity implements BluetoothPermissi
         } catch (Exception e) {
 
         }
-        showWaitingCancelDlg("");
+//        showWaitingCancelDlg("");
     }
 
     @Override
@@ -539,12 +572,12 @@ public class MainActivity extends AppCompatActivity implements BluetoothPermissi
                     }
                 }
                 if(hadTimeout){
-                   runOnUiThread(new Runnable() {
-                       @Override
-                       public void run() {
-                           mListAdapter.notifyDataSetChanged();
-                       }
-                   });
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mListAdapter.notifyDataSetChanged();
+                        }
+                    });
                 }
             }
 //            Log.e("BluetoothUtils","checkBleSearchStatus");
@@ -595,19 +628,19 @@ public class MainActivity extends AppCompatActivity implements BluetoothPermissi
     protected void onResume() {
         super.onResume();
         if(mBluetoothAdapter != null){
-            if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
 
-            }
-//            if(!isHadBlePermission){
-//                return;
-//            }
-//            mBluetoothAdapter.startLeScan(startSearchCallback);
-            try {
-                mBLEScanner.startScan(null, scanSettings,startScanCallback);
-//                bluetoothLeScanner.startScan(null, scanSettings,startScanCallback);
-            } catch (Exception e) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
 
-            }
+                        }
+                        mBLEScanner.startScan(null, scanSettings,startScanCallback);
+                    } catch (Exception e) {
+                    }
+                }
+            });
         }
         isOnView = true;
     }
@@ -770,10 +803,10 @@ public class MainActivity extends AppCompatActivity implements BluetoothPermissi
                 if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
 
                 }
-//                if(!mac.contains("15:ED:6C") ){
-////                    Log.e("BluetoothUtils","MainActivity.onDeviceFounded " + device.getName() + "  " + mac + " " + MyByteUtils.bytes2HexString(scanRecord,0));
+                if(mac.contains("EC:2B:04") ){
+                    Log.e("BluetoothUtils","MainActivity.onDeviceFounded " + device.getName() + "  " + mac + " " + MyByteUtils.bytes2HexString(scanRecord,0));
 //                    return;
-//                }
+                }
 //                Log.e("BluetoothUtils","MainActivity.onDeviceFounded " + device.getName() + "  " + mac + " " + MyByteUtils.bytes2HexString(scanRecord,0));
 
                 HashMap<Byte,byte[]> rawDataList = BleDeviceData.parseRawData(scanRecord);
@@ -798,10 +831,7 @@ public class MainActivity extends AppCompatActivity implements BluetoothPermissi
                     if (versionInfo != null && versionInfo.length >= 7) {
                         protocolByte = versionInfo[2];
                     }
-                    if (protocolByte != (byte)0x62 && protocolByte != (byte)0x65
-                            &&  protocolByte != (byte)0x7b && protocolByte != (byte)0x7c
-                            &&  protocolByte != 119 && protocolByte != 120
-                            &&  protocolByte != 121 && protocolByte != 122) {
+                    if (BleDeviceData.isNotSupportModels(protocolByte)) {
                         return;
                     }
                     if (versionInfo != null && versionInfo.length >= 7){
@@ -907,11 +937,11 @@ public class MainActivity extends AppCompatActivity implements BluetoothPermissi
                     if(dataInfo[2] != 0x0b){
                         return;
                     }
-                    if(device.getName() != null && device.getName().contains("321")){
-                        Log.e("BluetoothUtils","MainActivity.onDeviceFounded " + device.getName() + "  " +
-                                mac + " " + MyByteUtils.bytes2HexString(scanRecord,0)
-                                + " " + MyByteUtils.bytes2HexString(dataInfo,0));
-                    }
+//                    if(device.getName() != null && device.getName().contains("321")){
+//                        Log.e("BluetoothUtils","MainActivity.onDeviceFounded " + device.getName() + "  " +
+//                                mac + " " + MyByteUtils.bytes2HexString(scanRecord,0)
+//                                + " " + MyByteUtils.bytes2HexString(dataInfo,0));
+//                    }
                     String hardware = MyByteUtils.parseHardwareVersion(dataInfo[3]);
                     String software = MyByteUtils.parseSoftwareVersion(dataInfo,4);
                     byte lockType = dataInfo[7];
@@ -1161,32 +1191,18 @@ public class MainActivity extends AppCompatActivity implements BluetoothPermissi
 
     @Override
     public void onPermissionsGranted() {
-//        isHadBlePermission = true;
         startBluetoothOperations();
     }
 
     @Override
+    public void onPermissionsDenied() {
+        // 权限被拒绝，显示提示
+        Toast.makeText(MainActivity.this, R.string.permission_denied_desc, Toast.LENGTH_LONG).show();
+    }
+
+    @Override
     public void onLocationStart() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-
-        }
-//        isHadBlePermission = true;
-//        if(!isHadBlePermission){
-//            return;
-//        }
-//        mBluetoothAdapter.stopLeScan(startSearchCallback);
-        try {
-            mBLEScanner.stopScan(startScanCallback);
-        } catch (Exception e) {
-
-        }
-//        mBluetoothAdapter.startLeScan(startSearchCallback);
-        try {
-            mBLEScanner.startScan(null, scanSettings,startScanCallback);
-//            bluetoothLeScanner.startScan(null, scanSettings,startScanCallback);
-        } catch (Exception e) {
-
-        }
+        // 定位服务已开启，可以开始蓝牙扫描
     }
 
     class ItemAdapter extends BaseAdapter {
@@ -1463,8 +1479,8 @@ public class MainActivity extends AppCompatActivity implements BluetoothPermissi
         }
         class DeviceViewHolder {
             TextView deviceNameTextView,  idTextView, dateTextView, rssiTextView , imeiTextView , softwareTextView , hardwareTextView , modelTextView,
-                deviceIdTextView,batteryTextView,solarVoltageTextView,batteryVoltageTextView,tempTextView,imeiHeadTextView,idHeadTextView,alarmTextView,
-                parentLockTextView,parentLockExtendTextview;
+                    deviceIdTextView,batteryTextView,solarVoltageTextView,batteryVoltageTextView,tempTextView,imeiHeadTextView,idHeadTextView,alarmTextView,
+                    parentLockTextView,parentLockExtendTextview;
             Button configBtn,readDataBtn,switchTempBtn,superPwdBtn,connectBtn;
             LinearLayout readDataLL,deviceIdLL,detailLL,mainViewLL,solarVoltageLL,tempLL,alarmLL,batteryVoltageLL,parentLockLL,superPwdLL,connectLL;
             ImageView signalImg,favoriteImgBtn,lockImg,parentLockWarningImg;
