@@ -1,20 +1,19 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 //plugins {
 //    id 'com.android.application'
 //}
 
 android {
-    compileSdkVersion 34
+    compileSdkVersion 35
 //    buildToolsVersion "30.0.2"
-
+    namespace "com.topflytech.lockActive"
     defaultConfig {
         applicationId "com.topflytech.lockActive"
         minSdkVersion 23
-        targetSdkVersion 34
-        versionCode 21
-        versionName "1.0.19"
+        targetSdkVersion 35
+        versionCode 24
+        versionName "1.1.2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         ndk {
@@ -33,9 +32,18 @@ android {
         }
     }
 
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging true
+        }
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
     }
     repositories {
         maven { url 'https://jitpack.io' }
@@ -63,8 +71,6 @@ dependencies {
     implementation 'pub.devrel:easypermissions:1.0.1'
     implementation 'com.qmuiteam:qmui:2.0.0-alpha10'
 //    implementation 'org.litepal.android:core:2.0.0'
-    implementation 'com.tencent.bugly:crashreport:latest.release' //其中latest.release指代最新Bugly SDK版本号，也可以指定明确的版本号，例如2.1.9
-    implementation 'com.tencent.bugly:nativecrashreport:latest.release' //其中latest.release指代最新Bugly NDK版本号，也可以指定明确
     implementation 'com.github.loper7:DateTimePicker:0.6.2'
     implementation 'com.github.huangyanbin:SmartTable:2.2.0'
 //    implementation(name:'date_time_picker', ext:'aar')
@@ -78,21 +84,21 @@ dependencies {
     implementation 'com.liulishuo.filedownloader:library:1.7.7'
 
     // OpenCV基础库（*必须）
-    implementation 'com.github.jenly1314.WeChatQRCode:opencv:2.0.1'
-    implementation 'com.github.jenly1314.WeChatQRCode:opencv-armv7a:2.0.1'
+    implementation 'com.github.jenly1314.WeChatQRCode:opencv:2.4.0'
 
-// OpenCV的其他ABI（可选），根据你的需要选择想要支持的SO库架构
-    implementation 'com.github.jenly1314.WeChatQRCode:opencv-armv64:2.0.1'
-    implementation 'com.github.jenly1314.WeChatQRCode:opencv-x86:2.0.1'
-    implementation 'com.github.jenly1314.WeChatQRCode:opencv-x86_64:2.0.1'
+// OpenCV的ABI（可选），根据你的需要选择想要支持的SO库架构（至少选一个）
+//    implementation 'com.github.jenly1314.WeChatQRCode:opencv-armv7a:2.4.0'
+    implementation 'com.github.jenly1314.WeChatQRCode:opencv-armv64:2.4.0'
+//    implementation 'com.github.jenly1314.WeChatQRCode:opencv-x86:2.4.0'
+//    implementation 'com.github.jenly1314.WeChatQRCode:opencv-x86_64:2.4.0'
 
 //// OpenCV二维码识别功能（可选）
-//    implementation 'com.github.jenly1314.WeChatQRCode:opencv-qrcode:2.0.1'
+//    implementation 'com.github.jenly1314.WeChatQRCode:opencv-qrcode:2.4.0'
 //// OpenCV二维码扫码功能（可选）
-//    implementation 'com.github.jenly1314.WeChatQRCode:opencv-qrcode-scanning:2.0.1'
+//    implementation 'com.github.jenly1314.WeChatQRCode:opencv-qrcode-scanning:2.4.0'
 
 // 微信二维码识别功能（可选）
-    implementation 'com.github.jenly1314.WeChatQRCode:wechat-qrcode:2.0.1'
+    implementation 'com.github.jenly1314.WeChatQRCode:wechat-qrcode:2.4.0'
 // 微信二维码扫码功能（可选）
-    implementation 'com.github.jenly1314.WeChatQRCode:wechat-qrcode-scanning:2.0.1'
+    implementation 'com.github.jenly1314.WeChatQRCode:wechat-qrcode-scanning:2.4.0'
 }
