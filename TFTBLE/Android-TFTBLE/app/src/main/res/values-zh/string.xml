@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="device_model">设备型号：</string>
     <string name="battery">电池：</string>
@@ -39,6 +39,7 @@
     <string name="humidity_low_alarm">湿度低警报：</string>
     <string name="info">信息</string>
     <string name="confirm">确认</string>
+    <string name="ok">确定</string>
     <string name="input_device_password">输入密码</string>
     <string name="cancel">取消</string>
     <string name="error_please_try_again">错误，请重试！</string>
@@ -119,6 +120,7 @@
     <string name="show_detail_chart">查看详细图表信息？</string>
     <string name="prop_light">亮</string>
     <string name="table_head_light">灯</string>
+    <string name="table_head_light_sense">光感</string>
     <string name="report_create_time">报告生成时间：</string>
     <string name="report_time">报告时间：</string>
     <string name="start_value">起始值：</string>
@@ -231,6 +233,10 @@
     <string name="strong_pull_up">强上拉</string>
     <string name="gsensor_enable">GSensor</string>
     <string name="broadcast_type">广播类型</string>
+    <string name="broadcast_type_custom">自定义</string>
+    <string name="broadcast_type_eddystone_custom">Eddystone T-relay</string>
+    <string name="broadcast_type_sensor_custom">自定义</string>
+    <string name="continuous_broadcast">持续广播</string>
     <string name="flag">标识:</string>
     <string name="strong_light">强光</string>
     <string name="identification">身份识别</string>
@@ -379,4 +385,17 @@
     <string name="negative_trigger_pulse_desc">负触发脉宽时间(ms)</string>
     <string name="negative_trigger_pulse_input_error">负触发脉宽时间必须在100到6553500之间</string>
     <string name="pulse_width_time">脉宽时间(ms)</string>
+    <string name="fast_broadcast">快速广播</string>
+    <!-- Bluetooth Permission -->
+    <string name="permission_request_title">权限请求</string>
+    <string name="permission_bluetooth_general_desc">本应用需要以下权限才能使用蓝牙功能：</string>
+    <string name="permission_bluetooth_scan_desc">蓝牙扫描：用于发现附近的蓝牙设备</string>
+    <string name="permission_bluetooth_connect_desc">蓝牙连接：用于连接蓝牙设备</string>
+    <string name="permission_location_desc">位置信息：用于蓝牙设备发现（Android系统要求）</string>
+    <string name="permission_denied_title">权限被拒绝</string>
+    <string name="permission_denied_desc">需要使用蓝牙权限才能使用该功能。请在设置中开启。</string>
+    <string name="location_service_title">定位服务</string>
+    <string name="location_service_desc">蓝牙扫描需要开启定位服务。请开启定位服务。</string>
+    <string name="go_to_settings">前往设置</string>
+    <string name="error">错误</string>
 </resources>

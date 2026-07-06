@@ -6,8 +6,16 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
-
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- 禁用系统默认 ActionBar -->
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
 <!--    <style name="AppTheme.NoActionBar" parent="QMUI.Compat">-->
 <!--&lt;!&ndash;        <item name="windowActionBar">false</item>&ndash;&gt;-->
 <!--&lt;!&ndash;        <item name="windowNoTitle">true</item>&ndash;&gt;-->
