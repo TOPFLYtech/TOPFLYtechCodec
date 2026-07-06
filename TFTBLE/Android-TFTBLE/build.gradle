@@ -1,33 +1,106 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
+apply plugin: 'com.android.application'
 
-buildscript {
-    ext.kotlin_version = '1.6.21'
-    repositories {
-        google()
-        jcenter()
-        maven { url "https://jitpack.io" }
+android {
+    signingConfigs {
+        release {
+            storeFile file('D:\\truck\\mobile\\tftble-android\\tftble.jks') //绝对路径
+            storePassword "topflytech"
+            keyAlias "tftble"
+            keyPassword "topflytech"
+            v1SigningEnabled true
+            v2SigningEnabled true
+        }
     }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.1.2'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
     }
-}
+    compileSdkVersion 35
+    namespace "com.topflytech.tftble"
+    defaultConfig {
+        applicationId "com.topflytech.tftble"
+        minSdkVersion 23
+        targetSdkVersion 35
+        versionCode 65
+        versionName "1.1.2"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        ndk {
+            // 设置支持的SO库架构
+            abiFilters 'armeabi' , 'x86', 'armeabi-v7a', 'x86_64', 'arm64-v8a'
+        }
 
-allprojects {
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+        debug{
+            signingConfig signingConfigs.release
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
     repositories {
-        google()
-        jcenter()
-        maven {url 'https://jcenter.bintray.com'}
-        maven { url 'https://www.jitpack.io' }
         maven { url 'https://jitpack.io' }
-        maven { url 'https://maven.aliyun.com/repository/public' }
-        maven { url 'https://maven.aliyun.com/repository/jcenter' }
-        maven { url 'https://maven.aliyun.com/repository/google' }
     }
 }
 
-task clean(type: Delete) {
-    delete rootProject.buildDir
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation fileTree(dir: 'libs', include: ['*.aar', '*.jar'], exclude: [])
+    implementation("com.google.code.gson:gson:2.10.1")
+
+
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    //    compile 'com.android.support:appcompat-v7:26.0.0-alpha1'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    implementation 'com.google.android.material:material:1.0.0'
+    implementation 'androidx.activity:activity:1.9.1'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
+    implementation 'com.alibaba:fastjson:1.1.46.android'
+//    implementation 'com.inuker.bluetooth:library:1.4.0'
+    implementation 'com.liulishuo.filedownloader:library:1.7.7'
+    implementation project(path: ':sweetAlert')
+    implementation project(path: ':form')
+    implementation 'com.borax12.materialdaterangepicker:library:2.0'
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+//    implementation 'com.github.huangyanbin:SmartTable:2.2.0'
+    implementation 'com.itextpdf:itextg:5.5.10'
+    implementation 'cn.bingoogolapple:bga-qrcode-zxing:1.3.7'
+    implementation 'pub.devrel:easypermissions:1.0.1'
+    implementation 'com.sun.mail:android-mail:1.6.0'
+    implementation 'net.sourceforge.jexcelapi:jxl:2.6.12'
+//    implementation 'com.tencent.bugly:crashreport:latest.release'
+//    implementation 'com.tencent.bugly:nativecrashreport:latest.release'
+//    implementation 'com.contrarywind:Android-PickerView:4.1.9'
+    implementation 'com.qmuiteam:qmui:2.0.0-alpha10'
+    implementation 'androidx.core:core:1.9.0'
+    implementation 'androidx.annotation:annotation-experimental:1.3.0'
+//    implementation 'no.nordicsemi.android:dfu:2.5.0'
+//    implementation 'androidx.work:work-runtime:2.7.1'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'com.github.loper7:DateTimePicker:0.6.2'
+
+
+    implementation 'com.github.gzu-liyujiang.AndroidPicker:Common:4.1.12'
+    implementation 'com.github.gzu-liyujiang.AndroidPicker:WheelView:4.1.12'
+    implementation 'com.github.gzu-liyujiang.AndroidPicker:WheelPicker:4.1.12'
+
+
+    // OpenCV基础库（*必须）
+    implementation 'com.github.jenly1314.WeChatQRCode:opencv:2.4.0'
+
+    implementation 'com.github.jenly1314.WeChatQRCode:opencv-armv64:2.4.0'
+
+// 微信二维码识别功能（可选）
+    implementation 'com.github.jenly1314.WeChatQRCode:wechat-qrcode:2.4.0'
+// 微信二维码扫码功能（可选）
+    implementation 'com.github.jenly1314.WeChatQRCode:wechat-qrcode-scanning:2.4.0'
+
 }
