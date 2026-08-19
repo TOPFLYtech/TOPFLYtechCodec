@@ -24,25 +24,50 @@ class SmtpSettingController :UIViewController,MFMailComposeViewControllerDelegat
     private var receiveEmailLabel:UILabel!
     private var receiveEmailEd:UITextField!
     private var submitBtn:UIButton!
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        self.tftHideTopBar()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.tftShowTopBar()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        self.tftLayoutTopBar()
+        self.tftAdjustContentBelowTopBarIfNeeded()
+        self.tftEnsureTopContentClearance(padding: 8)
+    }
+    
     override func viewDidLoad() {
+        super.viewDidLoad()
         self.view.backgroundColor = UIColor.white
-        let titleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
-               titleLabel.text = "Email setting"
-       self.navigationItem.titleView = titleLabel
+        self.tftInstallTopBar(title: "Email setting")
         self.initUI()
     }
     
     private func initUI(){
-        let descWidth = Int(KSize.width / 3) - 5
-        let inputWidth = Int(KSize.width) - descWidth - 20
+        let viewWidth = Int(self.view.bounds.width)
+        let navBottomY = Int(self.tftTopContentY())
+        self.tftRememberInitialContentTop(CGFloat(navBottomY))
+        let descWidth = Int(CGFloat(viewWidth) / 3.0) - 5
+        let inputWidth = viewWidth - descWidth - 20
         let contentX = descWidth + 10
         let labelHight:Int = 50
         let descX = 5
         let inputHeight = 30
-        var startLabelY:Int = 60
-        var startInputY:Int = 75
+        var startLabelY:Int = navBottomY + 10
+        var startInputY:Int = navBottomY + 25
         let lineHight:Int = 60
-        var lineY:Int = 120
+        var lineY:Int = navBottomY + 70
         smtpServerLabel = UILabel()
         self.initLabel(label: self.smtpServerLabel, content: "SMTP server:", x: descX, y: startLabelY, width: descWidth, height: labelHight, containView: self.view)
         smtpServerEd = UITextField()
@@ -96,10 +121,10 @@ class SmtpSettingController :UIViewController,MFMailComposeViewControllerDelegat
         self.submitBtn = UIButton(type: .system)
         self.submitBtn.setTitle("Submit", for: .normal)
         self.submitBtn.setTitleColor(UIColor.black, for: .normal)
-        self.submitBtn.layer.cornerRadius = 6.0;//6.0是圆角的弧度，根据需求自己更改
+        self.submitBtn.layer.cornerRadius = 12.0
         self.submitBtn.layer.borderWidth = 1.0;//设置边框宽度
         self.submitBtn.backgroundColor = UIColor.nordicLightGray
-        self.submitBtn.frame = CGRect(x: Int((KSize.width - 200) / 2), y: startLabelY + 10, width: 200, height: 30)
+        self.submitBtn.frame = CGRect(x: Int((viewWidth - 200) / 2), y: startLabelY + 10, width: 200, height: 30)
         self.submitBtn.addTarget(self, action: #selector(submit), for:.touchUpInside)
         self.view.addSubview(self.submitBtn)
     }
@@ -153,7 +178,7 @@ class SmtpSettingController :UIViewController,MFMailComposeViewControllerDelegat
     func initLineSplit(y:Int,containView:UIView){
         let smtpServer = UIView()
         smtpServer.backgroundColor = UIColor.gray
-        smtpServer.frame = CGRect(x: 0, y: Double(y), width: Double(KSize.width), height: 0.5)
+        smtpServer.frame = CGRect(x: 0, y: Double(y), width: Double(containView.bounds.width), height: 0.5)
         containView.addSubview(smtpServer)
     }
     

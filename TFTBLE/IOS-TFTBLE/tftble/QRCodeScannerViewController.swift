@@ -13,11 +13,32 @@ class QRCodeScannerViewController: UIViewController, AVCaptureMetadataOutputObje
     var captureSession: AVCaptureSession!
     var videoPreviewLayer: AVCaptureVideoPreviewLayer!
     
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        self.tftHideTopBar()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.tftShowTopBar()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        self.tftLayoutTopBar()
+        let topY = self.tftTopContentY()
+        videoPreviewLayer?.frame = CGRect(x: 0, y: topY, width: view.bounds.width, height: view.bounds.height - topY)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        let titleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
-        titleLabel.text = NSLocalizedString("qrcode_scan", comment: "QR code scanning")
-        self.navigationItem.titleView = titleLabel
+        self.view.backgroundColor = UIColor.black
+        self.tftInstallTopBar(title: NSLocalizedString("qrcode_scan", comment: "QR code scanning"))
         // 创建 AVCaptureSession 实例
         captureSession = AVCaptureSession()
         
@@ -51,7 +72,8 @@ class QRCodeScannerViewController: UIViewController, AVCaptureMetadataOutputObje
         // 创建预览图层
         videoPreviewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
         videoPreviewLayer.videoGravity = .resizeAspectFill
-        videoPreviewLayer.frame = view.layer.bounds
+        let topY = self.tftTopContentY()
+        videoPreviewLayer.frame = CGRect(x: 0, y: topY, width: view.bounds.width, height: view.bounds.height - topY)
         view.layer.addSublayer(videoPreviewLayer)
         
         // 启动会话

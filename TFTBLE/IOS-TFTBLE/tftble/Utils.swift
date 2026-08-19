@@ -7,6 +7,8 @@
 //
 
 import Foundation
+import UIKit
+import ObjectiveC
 
 class Utils{
     static var isDebug:Bool = false
@@ -26,17 +28,25 @@ class Utils{
         
     }
     static func parseS78910SoftwaeVersion(data:[UInt8],index:Int) ->String{
+        // 检查数据长度是否足够
+        if data.count < index + 2 {
+            return "-"
+        }
         let all = (Int(data[index]) << 8) + Int(data[index + 1])
         let version1 = data[index] >> 5
         let version2 = (all & 0x1FFF) >> 7
         let version3 = all & 0x7f
-        let testByte = data[index+2]
         var software = ""
-        if testByte != 0{
-            return String(format: "%d.%d.%02d %@",version1,version2,version3, String(data: Data([testByte]), encoding: .utf8)!)
-        }else{
-            return String(format: "%d.%d.%02d",version1,version2,version3)
+        // 检查是否有testByte
+        if data.count > index + 2 {
+            let testByte = data[index + 2]
+            if testByte != 0 {
+                if let testStr = String(data: Data([testByte]), encoding: .utf8) {
+                    return String(format: "%d.%d.%02d %@", version1, version2, version3, testStr)
+                }
+            }
         }
+        return String(format: "%d.%d.%02d", version1, version2, version3)
     }
     static func hexStringToUInt8Array(_ hexString: String) -> [UInt8] {
         var hex = hexString.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -432,7 +442,7 @@ class Utils{
             dealS10InvalidData(dataList:result)
             return result;
         }
-        for j in 0...4{
+        for j in 0..<4{
             var startIndex = 0
             if j == 0{
                 startIndex = 8;
@@ -531,6 +541,250 @@ class Utils{
         
     }
     
+    static func parseS10BleGXHT30HisData(historyArray: [UInt8]) -> [BleHisData] {
+            let timeIntervalTemp = Int(historyArray[1] & 0x3f) * Int((historyArray[1] & 0x40 == 0x40) ? 10 : 5)
+            let dataCount = Utils.bytes2Short(bytes: historyArray, offset: 2)
+            let timeInterval = Int(timeIntervalTemp)
+            let timestamp = Utils.bytes2Integer(buf: historyArray, pos: 4)
+            var curTimestamp = 0
+            var result = [BleHisData]()
+            
+            print("time :\(timestamp);timeInterval \(timeInterval)")
+            
+            if dataCount == 0 {
+                return result
+            }
+            
+            for j in 0...4 {
+                var startIndex = 0
+                if j == 0 {
+                    startIndex = 8
+                    curTimestamp = timestamp
+                }
+                
+                let remainByte = Utils.arraysCopyOfRange(src: historyArray, from: j * 256 + startIndex, to: j * 256 + 256)
+                // 假设 convertByteArrayToBinaryStr 已经在类中定义，与提供的示例一致
+                var remainBinaryStr = self.convertByteArrayToBinaryStr(byteArray: remainByte)
+                
+                // 补齐位数逻辑 (对应 Java: if(remainBinaryStr.length() < remainByte.length * 8)...)
+                // 注意：convertByteArrayToBinaryStr 通常已经处理了补0，但为了保持逻辑一致，保留检查
+                if remainBinaryStr.count < remainByte.count * 8 {
+                    let needFixLen = remainByte.count * 8 - remainBinaryStr.count
+                    for _ in 0..<needFixLen {
+                        remainBinaryStr = "0" + remainBinaryStr
+                    }
+                }
+                
+                let remainBinaryChar = Utils.splitSingleStrToCharArr(strToSplit: remainBinaryStr)
+                var i = 0
+                
+                // 解析首个完整数据包
+                // 12 bit Temp
+                var tempCharArray = Utils.arraysCopyOfRange(src: remainBinaryChar, from: i, to: i + 12)
+                i += 12
+                // 6 bit Humidity
+                var humidityCharArray = Utils.arraysCopyOfRange(src: remainBinaryChar, from: i, to: i + 6)
+                i += 6
+                // 8 bit Battery
+                var batteryCharArray = Utils.arraysCopyOfRange(src: remainBinaryChar, from: i, to: i + 8)
+                i += 8
+                
+                let tempLong = Utils.binaryCharArrayToLong(binaryArray: tempCharArray)
+                let humidityLong = Utils.binaryCharArrayToLong(binaryArray: humidityCharArray)
+                let battery = Utils.binaryCharArrayToLong(binaryArray: batteryCharArray)
+                
+                var item = BleHisData()
+                item.temp = Float(tempLong) * 0.1 - 100
+                item.battery = Int(battery)
+                item.dateStamp = curTimestamp
+                item.humidity = Int(humidityLong * 2)
+                result.append(item)
+                
+                if result.count >= dataCount {
+                    return result
+                }
+                
+                curTimestamp += timeInterval
+                let dataSize = remainBinaryChar.count
+                
+                // 循环解析压缩数据
+                while i < dataSize {
+                    let charItem = remainBinaryChar[i]
+                    i += 1
+                    
+                    if charItem == "0" { // not change
+                        let lastItem = result[result.count - 1]
+                        var curItem = BleHisData()
+                        curItem.dateStamp = curTimestamp
+                        curItem.temp = lastItem.temp
+                        curItem.battery = lastItem.battery
+                        curItem.prop = lastItem.prop
+                        curItem.humidity = lastItem.humidity
+                        result.append(curItem)
+                        
+                        if result.count >= dataCount {
+                            return result
+                        }
+                        curTimestamp += timeInterval
+                    } else {
+                        if i + 1 >= dataSize {
+                            break
+                        }
+                        let type = remainBinaryChar[i]
+                        i += 1
+                        
+                        if type == "0" { // 18 bit refresh (12 temp + 6 humidity)
+                            if i + 18 >= dataSize {
+                                break
+                            }
+                            tempCharArray = Utils.arraysCopyOfRange(src: remainBinaryChar, from: i, to: i + 12)
+                            i += 12
+                            humidityCharArray = Utils.arraysCopyOfRange(src: remainBinaryChar, from: i, to: i + 6)
+                            i += 6
+                            
+                            let tLong = Utils.binaryCharArrayToLong(binaryArray: tempCharArray)
+                            let hLong = Utils.binaryCharArrayToLong(binaryArray: humidityCharArray)
+                            
+                            var curItem = BleHisData()
+                            curItem.temp = Float(tLong) * 0.1 - 100
+                            curItem.battery = Int(battery) // 注意：这里使用了最初解析的battery，与Java逻辑一致
+                            curItem.dateStamp = curTimestamp
+                            curItem.humidity = Int(hLong * 2)
+                            result.append(curItem)
+                            
+                            if result.count >= dataCount {
+                                return result
+                            }
+                            curTimestamp += timeInterval
+                            
+                        } else { // type == '1', incremental change
+                            if i + 2 >= dataSize {
+                                break
+                            }
+                            let firstChar = remainBinaryChar[i]
+                            i += 1
+                            let secondChar = remainBinaryChar[i]
+                            i += 1
+                            
+                            if firstChar == "0" && secondChar == "0" {
+                                // Copy last item strictly
+                                let lastItem = result[result.count - 1]
+                                var curItem = BleHisData()
+                                curItem.dateStamp = curTimestamp
+                                curItem.humidity = lastItem.humidity
+                                curItem.temp = lastItem.temp
+                                curItem.battery = lastItem.battery
+                                curItem.prop = lastItem.prop
+                                result.append(curItem)
+                                
+                                if result.count >= dataCount {
+                                    return result
+                                }
+                                curTimestamp += timeInterval
+                                
+                            } else if firstChar == "0" && secondChar == "1" { // Humidity change
+                                if i + 1 >= dataSize {
+                                    break
+                                }
+                                let changeChar = remainBinaryChar[i]
+                                i += 1
+                                
+                                let lastItem = result[result.count - 1]
+                                var curItem = BleHisData()
+                                curItem.dateStamp = curTimestamp
+                                curItem.temp = lastItem.temp
+                                curItem.battery = lastItem.battery
+                                curItem.prop = lastItem.prop
+                                
+                                if changeChar == "0" {
+                                    curItem.humidity = lastItem.humidity + 2
+                                } else {
+                                    curItem.humidity = lastItem.humidity - 2
+                                }
+                                result.append(curItem)
+                                
+                                if result.count >= dataCount {
+                                    return result
+                                }
+                                curTimestamp += timeInterval
+                                
+                            } else if firstChar == "1" && secondChar == "0" { // Temp change
+                                if i + 1 >= dataSize {
+                                    break
+                                }
+                                let changeChar = remainBinaryChar[i]
+                                i += 1
+                                
+                                let lastItem = result[result.count - 1]
+                                var curItem = BleHisData()
+                                curItem.dateStamp = curTimestamp
+                                curItem.humidity = lastItem.humidity
+                                curItem.battery = lastItem.battery
+                                curItem.prop = lastItem.prop
+                                
+                                if changeChar == "0" {
+                                    curItem.temp = lastItem.temp + 0.1
+                                } else {
+                                    curItem.temp = lastItem.temp - 0.1
+                                }
+                                result.append(curItem)
+                                
+                                if result.count >= dataCount {
+                                    return result
+                                }
+                                curTimestamp += timeInterval
+                                
+                            } else { // firstChar == "1" && secondChar == "1" -> Both Change
+                                // Temp change
+                                if i + 1 >= dataSize {
+                                    break // basic safety check, though we technically need 2 bits
+                                }
+                                let changeTempChar = remainBinaryChar[i]
+                                i += 1
+                                
+                                var tempVal: Float = 0.0
+                                let lastItem = result[result.count - 1]
+                                
+                                if changeTempChar == "0" {
+                                    tempVal = lastItem.temp + 0.1
+                                } else {
+                                    tempVal = lastItem.temp - 0.1
+                                }
+                                
+                                // Humidity change
+                                if i + 1 > dataSize { // check strict bound
+                                    break
+                                }
+                                let changeHumidityChar = remainBinaryChar[i]
+                                i += 1
+                                
+                                var humVal: Int = 0
+                                if changeHumidityChar == "0" {
+                                    humVal = lastItem.humidity + 2
+                                } else {
+                                    humVal = lastItem.humidity - 2
+                                }
+                                
+                                var curItem = BleHisData()
+                                curItem.dateStamp = curTimestamp
+                                curItem.humidity = humVal
+                                curItem.temp = tempVal
+                                curItem.battery = lastItem.battery
+                                curItem.prop = lastItem.prop
+                                result.append(curItem)
+                                
+                                if result.count >= dataCount {
+                                    return result
+                                }
+                                curTimestamp += timeInterval
+                            }
+                        }
+                    }
+                }
+            }
+            return result
+        }
+    
     
     static func parseS02BleHisData(historyArray:[UInt8]) ->[BleHisData]{
         var timeIntervalTemp = Int(historyArray[1] & 0x3f) * Int((historyArray[1] & 0x40 == 0x40) ? 10 : 5)
@@ -542,7 +796,7 @@ class Utils{
         if dataCount == 0{
             return result;
         }
-        for j in 0...4{
+        for j in 0..<4{
             var startIndex = 0
             if j == 0{
                 startIndex = 8;
@@ -877,5 +1131,239 @@ class Utils{
         }
         return today
         
+    }
+}
+
+private final class TFTTopBarState {
+    let topBarView = UIView()
+    let titleLabel = UILabel()
+    let leftButton = UIButton(type: .custom)
+    let rightButton = UIButton(type: .custom)
+    var hasRightButton = false
+}
+
+private var tftTopBarStateKey: UInt8 = 0
+private var tftInitialContentTopKey: UInt8 = 0
+private var tftAppliedContentDeltaKey: UInt8 = 0
+
+extension UIViewController {
+    private var tftTopBarState: TFTTopBarState? {
+        get { objc_getAssociatedObject(self, &tftTopBarStateKey) as? TFTTopBarState }
+        set { objc_setAssociatedObject(self, &tftTopBarStateKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
+    }
+    
+    private var tftInitialContentTop: CGFloat? {
+        get { objc_getAssociatedObject(self, &tftInitialContentTopKey) as? CGFloat }
+        set { objc_setAssociatedObject(self, &tftInitialContentTopKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
+    }
+    
+    private var tftAppliedContentDelta: CGFloat {
+        get { (objc_getAssociatedObject(self, &tftAppliedContentDeltaKey) as? CGFloat) ?? 0 }
+        set { objc_setAssociatedObject(self, &tftAppliedContentDeltaKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
+    }
+    
+    func tftInstallTopBar(title: String, rightIconName: String? = nil, rightAction: Selector? = nil) {
+        if self.tftTopBarState == nil {
+            let state = TFTTopBarState()
+            state.topBarView.backgroundColor = UIColor.colorPrimary
+            state.titleLabel.textAlignment = .center
+            state.titleLabel.font = UIFont.boldSystemFont(ofSize: 22)
+            state.leftButton.frame = CGRect(x: 0, y: 0, width: 30, height: 30)
+            state.leftButton.setImage(self.tftRenderTopIcon(named: "ic_back.png") ?? self.tftRenderTopIcon(named: "player_back"), for: .normal)
+            state.leftButton.addTarget(self, action: #selector(tftBackClick), for: .touchUpInside)
+            state.rightButton.frame = CGRect(x: 0, y: 0, width: 30, height: 30)
+            state.topBarView.addSubview(state.leftButton)
+            state.topBarView.addSubview(state.titleLabel)
+            self.view.addSubview(state.topBarView)
+            self.tftTopBarState = state
+        }
+        
+        guard let state = self.tftTopBarState else { return }
+        state.titleLabel.text = title
+        state.rightButton.removeFromSuperview()
+        state.hasRightButton = false
+        
+        if let rightIconName = rightIconName, let rightAction = rightAction {
+            state.hasRightButton = true
+            state.rightButton.setImage(self.tftRenderTopIcon(named: rightIconName), for: .normal)
+            state.rightButton.removeTarget(nil, action: nil, for: .allEvents)
+            state.rightButton.addTarget(self, action: rightAction, for: .touchUpInside)
+            state.topBarView.addSubview(state.rightButton)
+        }
+        
+        self.navigationItem.hidesBackButton = true
+        self.navigationItem.leftBarButtonItem = nil
+        self.navigationItem.rightBarButtonItem = nil
+        self.tftLayoutTopBar()
+    }
+    
+    func tftLayoutTopBar() {
+        guard let state = self.tftTopBarState else { return }
+        // Re-apply hidden nav bar each layout pass to avoid iOS 26 restoring it unexpectedly.
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
+        self.navigationItem.hidesBackButton = true
+        self.navigationItem.leftBarButtonItem = nil
+        self.navigationItem.rightBarButtonItem = nil
+        let safeTop = self.tftCurrentSafeTopInset()
+        let barHeight = safeTop + 56
+        let width = self.view.bounds.width
+        state.topBarView.frame = CGRect(x: 0, y: 0, width: width, height: barHeight)
+        state.leftButton.frame = CGRect(x: 12, y: safeTop + 13, width: 30, height: 30)
+        if state.hasRightButton {
+            state.rightButton.frame = CGRect(x: width - 44, y: safeTop + 13, width: 30, height: 30)
+        }
+        state.titleLabel.frame = CGRect(x: 56, y: safeTop + 8, width: width - 112, height: 40)
+        self.view.bringSubviewToFront(state.topBarView)
+    }
+    
+    func tftShowTopBar() {
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
+        self.navigationItem.hidesBackButton = true
+        self.navigationItem.leftBarButtonItem = nil
+        self.navigationItem.rightBarButtonItem = nil
+        self.tftLayoutTopBar()
+    }
+    
+    func tftHideTopBar() {
+        self.navigationController?.setNavigationBarHidden(false, animated: false)
+    }
+    
+    func tftTopContentY() -> CGFloat {
+        return self.tftCurrentSafeTopInset() + 56
+    }
+    
+    func tftRememberInitialContentTop(_ top: CGFloat) {
+        if self.tftInitialContentTop == nil {
+            self.tftInitialContentTop = top
+        }
+    }
+    
+    func tftAdjustContentBelowTopBarIfNeeded() {
+        guard let state = self.tftTopBarState, let initialTop = self.tftInitialContentTop else { return }
+        let targetTop = self.tftTopContentY()
+        let newDelta = targetTop - initialTop
+        let step = newDelta - self.tftAppliedContentDelta
+        if abs(step) < 0.5 { return }
+        for subview in self.view.subviews where subview !== state.topBarView {
+            subview.frame = subview.frame.offsetBy(dx: 0, dy: step)
+        }
+        self.tftAppliedContentDelta = newDelta
+    }
+    
+    func tftEnsureTopContentClearance(padding: CGFloat = 8) {
+        guard let state = self.tftTopBarState else { return }
+        let minAllowedY = self.tftTopContentY() + padding
+        var currentMinY = CGFloat.greatestFiniteMagnitude
+        for subview in self.view.subviews where subview !== state.topBarView {
+            currentMinY = min(currentMinY, subview.frame.minY)
+        }
+        if currentMinY == CGFloat.greatestFiniteMagnitude {
+            return
+        }
+        let shift = minAllowedY - currentMinY
+        if shift <= 0.5 {
+            return
+        }
+        for subview in self.view.subviews where subview !== state.topBarView {
+            subview.frame = subview.frame.offsetBy(dx: 0, dy: shift)
+        }
+        self.tftAppliedContentDelta += shift
+    }
+    
+    func tftSetTopBarDebugBorder(color: UIColor, width: CGFloat) {
+        guard let state = self.tftTopBarState else { return }
+        state.topBarView.layer.borderColor = color.cgColor
+        state.topBarView.layer.borderWidth = width
+    }
+    
+    func tftCurrentSafeTopInset() -> CGFloat {
+        return self.tftSafeTopInset()
+    }
+    
+    @objc private func tftBackClick() {
+        self.navigationController?.popViewController(animated: true)
+    }
+    
+    private func tftRenderTopIcon(named: String) -> UIImage? {
+        guard let original = UIImage(named: named) else { return nil }
+        let size = CGSize(width: 24, height: 24)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        return renderer.image { _ in
+            original.draw(in: CGRect(origin: .zero, size: size))
+        }
+    }
+    
+    private func tftSafeTopInset() -> CGFloat {
+        let inset = self.view.safeAreaInsets.top
+        if inset > 0 { return inset }
+        if let navInset = self.navigationController?.view.safeAreaInsets.top, navInset > 0 {
+            return navInset
+        }
+        if let windowInset = self.view.window?.safeAreaInsets.top, windowInset > 0 {
+            return windowInset
+        }
+        if #available(iOS 13.0, *) {
+            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let statusHeight = scene.statusBarManager?.statusBarFrame.height,
+               statusHeight > 0 {
+                return statusHeight
+            }
+            for scene in UIApplication.shared.connectedScenes {
+                if let windowScene = scene as? UIWindowScene {
+                    if let window = windowScene.windows.first(where: { $0.isKeyWindow }) {
+                        return window.safeAreaInsets.top
+                    }
+                }
+            }
+            if let keyWindow = UIApplication.shared.windows.first(where: { $0.isKeyWindow }) {
+                let keyInset = keyWindow.safeAreaInsets.top
+                if keyInset > 0 {
+                    return keyInset
+                }
+            }
+        } else {
+            let statusHeight = UIApplication.shared.statusBarFrame.height
+            if statusHeight > 0 {
+                return statusHeight
+            }
+        }
+        return 20
+    }
+}
+
+final class QMUIGhostButton: UIButton {
+    var ghostColor: UIColor = .systemBlue {
+        didSet {
+            applyGhostStyle()
+        }
+    }
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        commonInit()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        commonInit()
+    }
+
+    override var isEnabled: Bool {
+        didSet {
+            alpha = isEnabled ? 1.0 : 0.5
+        }
+    }
+
+    private func commonInit() {
+        layer.cornerRadius = 12
+        layer.borderWidth = 1
+        clipsToBounds = true
+        titleLabel?.font = UIFont.systemFont(ofSize: 12)
+        applyGhostStyle()
+    }
+
+    private func applyGhostStyle() {
+        setTitleColor(ghostColor, for: .normal)
+        layer.borderColor = ghostColor.cgColor
     }
 }

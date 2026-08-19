@@ -188,15 +188,6 @@ public class RFIDActivity extends AppCompatActivity {
     private void showWaitingCancelDlg(String warning){
         waitingCancelDlg = new SweetAlertDialog(RFIDActivity.this, SweetAlertDialog.PROGRESS_TYPE);
         waitingCancelDlg.getProgressHelper().setBarColor(Color.parseColor("#A5DC86"));
-        waitingCancelDlg.showCancelButton(true);
-        waitingCancelDlg.setCancelText(getResources().getString(R.string.cancel));
-        waitingCancelDlg.setCancelClickListener(new SweetAlertDialog.OnSweetClickListener() {
-            @Override
-            public void onClick(SweetAlertDialog sweetAlertDialog) {
-                sweetAlertDialog.hide();
-                sweetAlertDialog.dismiss();
-            }
-        });
         if (warning != null && !warning.isEmpty()){
             waitingCancelDlg.setTitleText(warning);
         }

@@ -8,7 +8,6 @@
 import Foundation
 import UIKit
 import CLXToast
-import QMUIKit
 class EditRS485CmdController : UIViewController {
  
     private var etCmd:UITextView!
@@ -22,27 +21,46 @@ class EditRS485CmdController : UIViewController {
  
     private var fontSize:CGFloat = Utils.fontSize
     override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        self.tftHideTopBar()
         self.connectStatusDelegate?.setConnectStatus()
+    }
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.tftShowTopBar()
+    }
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
+    }
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        self.tftLayoutTopBar()
+        self.tftAdjustContentBelowTopBarIfNeeded()
     }
     
     override func viewDidLoad() {
         self.view.backgroundColor = UIColor.white
-        let titleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
-        titleLabel.text = NSLocalizedString("send_data", comment: "RS485 send")
-        self.navigationItem.titleView = titleLabel
+        self.tftInstallTopBar(title: NSLocalizedString("send_data", comment: "RS485 send"))
+        let viewWidth = Int(self.view.bounds.width)
+        let navBottomY = Int(self.tftTopContentY())
+        self.tftRememberInitialContentTop(CGFloat(navBottomY))
+        let editorTopY = navBottomY + 16
+        let isHexY = editorTopY + 190
+        let addLineEndY = isHexY + 30
          
        
         self.etCmd = UITextView()
         self.etCmd.font = UIFont.systemFont(ofSize: fontSize)
         self.etCmd.textColor = UIColor.black
         self.etCmd.layer.borderWidth=1
-        self.etCmd.frame = CGRect(x:15,y:80,width:Int(KSize.width) - 30,height: 180)
+        self.etCmd.frame = CGRect(x:15,y:editorTopY,width:viewWidth - 30,height: 180)
         self.view.addSubview(self.etCmd)
         
      
         
         self.cbIsHex = CheckBox.init()
-        self.cbIsHex.frame = CGRect(x: 10, y: 270, width: 25, height: 25)
+        self.cbIsHex.frame = CGRect(x: 10, y: isHexY, width: 25, height: 25)
         self.cbIsHex.style = .tick
         self.cbIsHex.borderStyle = .roundedSquare(radius: 5)
         self.cbIsHex.addTarget(self, action: #selector(cbIsHexTapped), for: .valueChanged)
@@ -50,11 +68,11 @@ class EditRS485CmdController : UIViewController {
         let isHexLb = UILabel()
         isHexLb.font = UIFont.systemFont(ofSize: fontSize)
         isHexLb.text = NSLocalizedString("send_by_hex", comment: "Hex data")
-        isHexLb.frame = CGRect(x: 40, y: 270, width: 250, height: 30)
+        isHexLb.frame = CGRect(x: 40, y: isHexY, width: 250, height: 30)
         view.addSubview( isHexLb)
 	
     	self.cbAddLineEnd = CheckBox.init()
-        self.cbAddLineEnd.frame = CGRect(x: 10, y: 300, width: 25, height: 25)
+        self.cbAddLineEnd.frame = CGRect(x: 10, y: addLineEndY, width: 25, height: 25)
         self.cbAddLineEnd.style = .tick
         self.cbAddLineEnd.borderStyle = .roundedSquare(radius: 5)
         self.cbAddLineEnd.addTarget(self, action: #selector(cbAddLineEndTapped), for: .valueChanged)
@@ -64,13 +82,13 @@ class EditRS485CmdController : UIViewController {
         addLineEndLb.lineBreakMode = NSLineBreakMode.byWordWrapping;
         addLineEndLb.numberOfLines = 0;
         addLineEndLb.text = NSLocalizedString("add_line_end", comment: "Automatically add [0D 0A]at the end of sending")
-        addLineEndLb.frame = CGRect(x: 40, y: 300, width: 250, height: 30)
+        addLineEndLb.frame = CGRect(x: 40, y: addLineEndY, width: 250, height: 30)
         view.addSubview( addLineEndLb)
         self.submitBtn = QMUIGhostButton()
         self.submitBtn.titleLabel?.font = UIFont.systemFont(ofSize: fontSize)
         self.submitBtn.setTitle(NSLocalizedString("submit", comment: "Submit"), for: .normal)
         self.submitBtn.ghostColor = UIColor.colorPrimary 
-        self.submitBtn.frame = CGRect(x: Int((KSize.width - 200) / 2), y: 340, width: 200, height: 30)
+        self.submitBtn.frame = CGRect(x: Int((viewWidth - 200) / 2), y: addLineEndY + 40, width: 200, height: 30)
         self.submitBtn.addTarget(self, action: #selector(submit), for:.touchUpInside)
         self.view.addSubview(self.submitBtn)
 

@@ -4,7 +4,8 @@ version = VERSION_NAME
 group = GROUP
 
 android {
-    compileSdkVersion 33
+    namespace "cn.pedant.SweetAlert"
+    compileSdkVersion 36
 //    buildToolsVersion "29.0.2"
 
     defaultConfig {

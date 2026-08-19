@@ -10,7 +10,6 @@ import Foundation
 import UIKit
 import DateTimePicker
 import ActionSheetPicker_3_0
-import QMUIKit
 class HistorySelectController: UIViewController, UIPickerViewDataSource, UIPickerViewDelegate {
     func numberOfComponents(in pickerView: UIPickerView) -> Int {
         return self.dateRangeList.count
@@ -38,12 +37,33 @@ class HistorySelectController: UIViewController, UIPickerViewDataSource, UIPicke
     private var downTriangleStr:String!
     private var submitBtn:QMUIGhostButton!
     public var setDateDelegate:HistorySelectDelegate?
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        self.tftHideTopBar()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
+        self.tftShowTopBar()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        self.tftLayoutTopBar()
+        self.tftAdjustContentBelowTopBarIfNeeded()
+        self.tftEnsureTopContentClearance(padding: 8)
+    }
  
     override func viewDidLoad() {
         super.viewDidLoad()
-        let titleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
-        titleLabel.text = NSLocalizedString("select_datetime", comment: "Select datetime")
-        self.navigationItem.titleView = titleLabel
+        self.tftInstallTopBar(title: NSLocalizedString("select_datetime", comment: "Select datetime"))
         self.dateFormatter = DateFormatter()
         self.dateFormatter.dateFormat = "yyyy-MM-dd HH : mm"
         self.dateStart = Utils.getStartDate(selectedIndex: 0)
@@ -52,10 +72,12 @@ class HistorySelectController: UIViewController, UIPickerViewDataSource, UIPicke
         self.dateRangeList = Utils.getDateRangeList()
         self.view.backgroundColor = UIColor.white
       
-        let appFrame = UIScreen.main.bounds
- 
+        let viewWidth = self.view.bounds.width
+        let navBottomY = self.tftTopContentY()
+        self.tftRememberInitialContentTop(navBottomY)
+     
         self.downTriangleStr = "▼"
-        let btnDateRangeFrame = CGRect.init(x: appFrame.size.width/2 - 100, y: 80, width: 200, height: 30);
+        let btnDateRangeFrame = CGRect.init(x: viewWidth/2 - 100, y: navBottomY + 16, width: 200, height: 30);
         self.btnDateRangePicker = UIButton.init(frame: btnDateRangeFrame)
         self.btnDateRangePicker.setTitle(String(format: "%@ %@", self.dateRangeList[self.currentDateSelect],self.downTriangleStr), for: .normal)
         self.btnDateRangePicker.setTitleColor(UIColor.brown, for: .normal)
@@ -65,7 +87,7 @@ class HistorySelectController: UIViewController, UIPickerViewDataSource, UIPicke
         
         let view = UIView.init(frame: CGRect(x: 4, y: self.btnDateRangePicker.frame.origin.y+self.btnDateRangePicker.frame.size.height + 3, width: self.view.frame.size.width-8, height: 75))
         view.backgroundColor = UIColor.clear
-        view.layer.cornerRadius = 5;
+        view.layer.cornerRadius = 8;
         view.layer.masksToBounds = true
         view.layer.borderWidth = 0.3
         view.layer.borderColor = UIColor.gray.cgColor
@@ -85,7 +107,7 @@ class HistorySelectController: UIViewController, UIPickerViewDataSource, UIPicke
         self.labelSelectDateStart.backgroundColor = UIColor.clear
         view.addSubview(self.labelSelectDateStart)
         
-        let btnSelectDateStartFrame = CGRect(x:65,y: 3, width: appFrame.size.width/2+65, height: 30)
+        let btnSelectDateStartFrame = CGRect(x:65,y: 3, width: viewWidth/2+65, height: 30)
         self.btnSelectDateStart = UIButton.init(frame: btnSelectDateStartFrame)
         self.btnSelectDateStart.setTitle(self.dateFormatter.string(from: self.dateStart), for: .normal)
         self.btnSelectDateStart.setTitleColor(UIColor.brown, for: .normal)
@@ -99,7 +121,7 @@ class HistorySelectController: UIViewController, UIPickerViewDataSource, UIPicke
         self.labelSelectDateEnd.backgroundColor = UIColor.clear
         view.addSubview(self.labelSelectDateEnd)
         
-        let btnSelectDateEndFrame = CGRect(x: 65,y: btnSelectDateStart.frame.origin.y + btnSelectDateStart.frame.height + 3, width: appFrame.size.width/2+65, height: 30)
+        let btnSelectDateEndFrame = CGRect(x: 65,y: btnSelectDateStart.frame.origin.y + btnSelectDateStart.frame.height + 3, width: viewWidth/2+65, height: 30)
         self.btnSelectDateEnd = UIButton.init(frame: btnSelectDateEndFrame)
         self.btnSelectDateEnd.setTitle(self.dateFormatter.string(from: self.dateEnd), for: .normal)
         self.btnSelectDateEnd.setTitleColor(UIColor.brown, for: .normal)
@@ -109,7 +131,7 @@ class HistorySelectController: UIViewController, UIPickerViewDataSource, UIPicke
         self.submitBtn = QMUIGhostButton()
         self.submitBtn.setTitle(NSLocalizedString("submit", comment: "Submit"), for: .normal)
         self.submitBtn.ghostColor = UIColor.colorPrimary 
-        self.submitBtn.frame = CGRect(x: Int((KSize.width - 200) / 2), y: Int(view.frame.origin.y) + Int(view.frame.height) + 10, width: 200, height: 30)
+        self.submitBtn.frame = CGRect(x: Int((viewWidth - 200) / 2), y: Int(view.frame.origin.y) + Int(view.frame.height) + 10, width: 200, height: 30)
         self.submitBtn.addTarget(self, action: #selector(submit), for:.touchUpInside)
         self.view.addSubview(self.submitBtn)
         
@@ -122,10 +144,11 @@ class HistorySelectController: UIViewController, UIPickerViewDataSource, UIPicke
     }
     
     @objc func btnSelectedDateStartClick(sender:UIButton){
-        let min = Date().addingTimeInterval(-60 * 60 * 24 * 64)
+         let min = Date().addingTimeInterval(-60 * 60 * 24 * 64)
          let max = Date().addingTimeInterval(60 * 60 * 24 * 4)
          let picker = DateTimePicker.create(minimumDate: min, maximumDate: max)
-         picker.frame = CGRect(x: 0, y: 100, width: picker.frame.size.width, height: picker.frame.size.height)
+         let pickerTopY = self.tftTopContentY() + 20
+         picker.frame = CGRect(x: 0, y: pickerTopY, width: picker.frame.size.width, height: picker.frame.size.height)
         picker.selectedDate = self.dateStart
         picker.completionHandler = {
                date in
@@ -138,7 +161,8 @@ class HistorySelectController: UIViewController, UIPickerViewDataSource, UIPicke
         let min = Date().addingTimeInterval(-60 * 60 * 24 * 64)
          let max = Date().addingTimeInterval(60 * 60 * 24 * 4)
          let picker = DateTimePicker.create(minimumDate: min, maximumDate: max)
-         picker.frame = CGRect(x: 0, y: 100, width: picker.frame.size.width, height: picker.frame.size.height)
+         let pickerTopY = self.tftTopContentY() + 20
+         picker.frame = CGRect(x: 0, y: pickerTopY, width: picker.frame.size.width, height: picker.frame.size.height)
         picker.selectedDate = self.dateEnd
         picker.completionHandler = {
                date in
@@ -155,7 +179,7 @@ class HistorySelectController: UIViewController, UIPickerViewDataSource, UIPicke
     }
     
     @objc func dateRangeClick(sender:UIButton){
-         ActionSheetStringPicker.show(withTitle: "", rows: self.dateRangeList, initialSelection:self.currentDateSelect, doneBlock: {
+         ActionSheetStringPicker.show(withTitle: nil, rows: self.dateRangeList, initialSelection:self.currentDateSelect, doneBlock: {
                         picker, index, value in
                         self.currentDateSelect = index
 //                        print("values = \(values)")

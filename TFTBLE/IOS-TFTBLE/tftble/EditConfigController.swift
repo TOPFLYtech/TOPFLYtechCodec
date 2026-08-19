@@ -10,7 +10,6 @@ import UIKit
 import iOSDFULibrary
 import CoreBluetooth
 import CLXToast
-import QMUIKit
 import ActionSheetPicker_3_0
 extension UILabel{
     var defaultFont: UIFont?{
@@ -229,6 +228,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         "negativeTrigger":[ "read":198, "write":197, ],
         "a002Status":[ "read":199,   ],
         "bleConnectTimeout":[ "read":201, "write":200, ],
+        "setFastBroadcast":[ "read":203, "write":202, ],
     ]
     private var fontSize:CGFloat = Utils.fontSize
     private var waitingView:AEUIAlertView!
@@ -236,7 +236,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     private var upgradeWarningView:AEAlertView!
     private var betaUpgradeWarningView:AEAlertView!
     public var hardware = ""
-    var software = ""
+    var software = "" 
     private var netSoftwareVersion = "0"
     private var upgradePackageLink = ""
     private var betaNetSoftwareVersion = "0"
@@ -415,6 +415,8 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     private var editResetFactoryBtn:QMUIGhostButton!
     private var rebootLabel:UILabel!
     private var editRebootBtn:QMUIGhostButton!
+    private var fastBroadcastLabel:UILabel!
+    private var fastBroadcastSwitch:UISwitch!
     
     
     private var transmittedPower = 0
@@ -433,11 +435,13 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     private var getExtSensorTypeNextCtrl = -1
     private let GET_EXT_SENSOR_TYPE_NEXT_DO_GET_HIS_DATA = 1
     private let GET_EXT_SENSOR_TYPE_NEXT_DO_START_RECORD = 2
+    private var contentScrollView:UIScrollView!
     private var curCtrlNegativeTriggerPort = 0
-    private var extSensorType = 0
+    var extSensorType = 0
     private var isA001Protocol = false;
     private var a001UpgradeManager:A001SoftwareUpgradeManager!
     override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
         self.needConnect = false
         a001UpgradeManager.stopUpgrade()
         if self.leaveViewNeedDisconnect{
@@ -447,24 +451,40 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         }
         self.onView = false
         self.pwdErrorWarning = false
+        self.tftHideTopBar()
     }
     
     func initRightBtn(isConnect:Bool){
-        if isConnect{
-            let rightBarButtonItem = UIBarButtonItem (barButtonSystemItem: UIBarButtonItem.SystemItem.refresh, target: self, action: #selector(self.refreshClick))
-            self.navigationItem.rightBarButtonItem = rightBarButtonItem
-        }else{
-            let btn = UIButton.init(frame: CGRect.init(x: KSize.width - 50, y: 0, width: 25, height: 25))
-            btn.setImage(UIImage(named:"ic_disconnect.png"), for: .normal)
-            let rightBarButtonItem =  UIBarButtonItem.init(customView: btn)
-            btn.addTarget(self, action: #selector(self.refreshClick), for: .touchUpInside)
-            self.navigationItem.rightBarButtonItem = rightBarButtonItem
+        let iconName = isConnect ? "ic_refresh.png" : "ic_disconnect.png"
+        self.tftInstallTopBar(title: mac, rightIconName: iconName, rightAction: #selector(self.refreshClick))
+    }
+    
+    private func updateContentLayout() {
+        guard self.contentScrollView != nil else {
+            return
         }
+        let navBottomY = self.tftTopContentY()
+        self.contentScrollView.frame = CGRect(x: 0, y: navBottomY, width: self.view.bounds.width, height: self.view.bounds.height - navBottomY)
     }
     
     override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
         self.onView = true
         self.pwdErrorWarning = false
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.tftShowTopBar()
+        self.initRightBtn(isConnect: self.connected)
+        self.updateContentLayout()
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        self.tftLayoutTopBar()
+        self.updateContentLayout()
     }
     
     func checkUpgradeProtocol(){
@@ -476,10 +496,10 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     override func viewDidLoad() {
         super.viewDidLoad()
         self.onView = true
-        let titleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
-        titleLabel.text = mac
-        for var i in 6..<60{
-            self.saveIntervalList.append(String(format:"%d",i * 10))
+        self.tftInstallTopBar(title: mac, rightIconName: "ic_disconnect.png", rightAction: #selector(self.refreshClick))
+        self.saveIntervalList.removeAll()
+        for value in stride(from: 60, through: 600, by: 10) {
+            self.saveIntervalList.append(String(format: "%ds", value))
         }
         self.dinStatusEventList.append( NSLocalizedString("close", comment: "Close"))
         self.dinStatusEventList.append( NSLocalizedString("din_status_event_rising_edge", comment: "Rising edge"))
@@ -502,29 +522,50 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         self.bleConnectTimeoutCtrlTypes.append( NSLocalizedString("close", comment: "close"))
         checkUpgradeProtocol();
         if deviceType == "A002"{
-            broadcastCycleList.insert("0s", at: 0)
+            let continuousLabel = NSLocalizedString("continuous_broadcast", comment: "Continuous broadcast")
+            broadcastCycleList.insert(continuousLabel, at: 0)
+            broadcastTypeList = ["Eddystone T-relay"]
+            if versionToInt(self.software) > 1005 {
+                broadcastTypeList.append(NSLocalizedString("custom_broadcast", comment: "Custom broadcast"))
+            }
         }
         if deviceType == "S07"{
             broadcastTypeList[0] = "Eddystone T-button"
             broadcastTypeList.append("Eddystone UID")
             transmittedPowerList.removeFirst()
-            let curVersion = self.software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "").replacingOccurrences(of: ".", with: "")
-            if   curVersion >= "1007"{
+            let customLabel = NSLocalizedString("custom", comment: "Custom")
+            let versionInt = versionToInt(self.software)
+            if versionInt >= 1007{
                 broadcastTypeList.append("Eddystone ID Auto")
+            }
+            if versionInt >= 1008{
+                broadcastTypeList.append(customLabel)
             }
         }else if deviceType == "S08" {
             transmittedPowerList.removeFirst()
             broadcastTypeList[0] = "Eddystone T-sense"
             broadcastTypeList.append("Eddystone UID")
+            let customLabel = NSLocalizedString("custom", comment: "Custom")
+            let versionInt = versionToInt(self.software)
+            if versionInt >= 1009{
+                broadcastTypeList.append(customLabel)
+            }
         }else if deviceType == "S10" {
-            transmittedPowerList.removeFirst()
+            let hardwareTemp = self.hardware.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "").replacingOccurrences(of: ".", with: "")
+            if hardwareTemp < "12" {
+                transmittedPowerList.removeFirst()
+            }
             broadcastTypeList[0] = "Eddystone T-one"
             broadcastTypeList.append("Eddystone UID")
+            let customLabel = NSLocalizedString("custom", comment: "Custom")
+            let versionInt = versionToInt(self.software)
+            if versionInt >= 1008{
+                broadcastTypeList.append(customLabel)
+            }
         }else if deviceType == "S02" || deviceType == "S04" || deviceType == "S05"{
             transmittedPowerList.removeFirst()
         }
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-        self.navigationItem.titleView = titleLabel
         self.initRightBtn(isConnect:false)
         self.view.backgroundColor = UIColor.white
         self.needConnect = true
@@ -966,6 +1007,9 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                 }else if(type == UInt8(self.controlFunc["doorEnable"]?["read"] ?? 0)
                          || type == UInt8(self.controlFunc["doorEnable"]?["write"] ?? 0)){
                     readDoorEnableStatusResp(resp: bytes)
+                }else if(type == UInt8(self.controlFunc["setFastBroadcast"]?["read"] ?? 0)
+                         || type == UInt8(self.controlFunc["setFastBroadcast"]?["write"] ?? 0)){
+                    readFastBroadcastStatusResp(resp: bytes)
                 }else if(type == UInt8(self.controlFunc["btnTriggerTime"]?["read"] ?? 0)
                          || type == UInt8(self.controlFunc["btnTriggerTime"]?["write"] ?? 0)){
                     readBtnTriggerTimeResp(resp: bytes)
@@ -1072,7 +1116,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     
     func readExtSensorTypeResp(resp:[UInt8]){
         self.extSensorType = Int(resp[2])
-        if self.extSensorType == 1{
+        if self.extSensorType == 1 || self.extSensorType == 2 || self.extSensorType == 3 {
             if getExtSensorTypeNextCtrl == GET_EXT_SENSOR_TYPE_NEXT_DO_START_RECORD{
                 getExtSensorTypeNextCtrl = -1
                 self.startRecord()
@@ -1227,7 +1271,11 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     func readBroadcastCycleResp(resp:[UInt8]){
         if deviceType == "S02" || deviceType == "S04" || deviceType == "S05"  || deviceType == "A002"{
             let broadcast = (Int(resp[2]) << 8) + Int(resp[3])
-            self.broadcastCycleContentLabel.text = String(format:"%ds",broadcast)
+            if deviceType == "A002" && broadcast == 0 {
+                self.broadcastCycleContentLabel.text = NSLocalizedString("continuous_broadcast", comment: "Continuous broadcast")
+            } else {
+                self.broadcastCycleContentLabel.text = String(format:"%ds",broadcast)
+            }
         }else{
             if deviceType == "S07" || deviceType == "S08"{
                 let curVersion = self.software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "").replacingOccurrences(of: ".", with: "")
@@ -1531,7 +1579,26 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     }
     func readBroadcastTypeResp(resp:[UInt8]){
         let value = Int(resp[2])
-        if value < self.broadcastTypeList.count {
+        let customLabel = NSLocalizedString("custom", comment: "Custom")
+        if self.deviceType == "A002" {
+            if value == 4 {
+                self.broadcastTypeContentLabel.text = NSLocalizedString("custom_broadcast", comment: "Custom broadcast")
+            } else {
+                self.broadcastTypeContentLabel.text = "Eddystone T-relay"
+            }
+            return
+        }
+        self.beaconMajorSetView.isHidden = true
+        self.beaconMinorSetView.isHidden = true
+        self.eddystoneNidSetView.isHidden = true
+        self.eddystoneBidSetView.isHidden = true
+        if value == 4{
+            self.broadcastTypeContentLabel.text = customLabel
+            if self.deviceType == "S08"{
+                self.readDoorEnableStatus()
+                self.doorView.isHidden = false
+            }
+        }else if value < self.broadcastTypeList.count {
             self.broadcastTypeContentLabel.text = self.broadcastTypeList[value]
             //            if self.deviceType == "S07"{
             //                if value == 0{
@@ -1540,10 +1607,6 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             //                    self.longRangeView.isHidden = false
             //                }
             //            }
-            self.beaconMajorSetView.isHidden = true
-            self.beaconMinorSetView.isHidden = true
-            self.eddystoneNidSetView.isHidden = true
-            self.eddystoneBidSetView.isHidden = true
             if self.deviceType == "S07" || self.deviceType == "S08" || self.deviceType == "S10"{
                 if value == 1{
                     self.beaconMajorSetView.isHidden = false
@@ -1567,7 +1630,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                 }
             }
             if self.deviceType == "S08"{
-                if value == 0{
+                if value == 0 || value == 4{
                     self.readDoorEnableStatus()
                     self.doorView.isHidden = false
                 }else{
@@ -1605,6 +1668,17 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             doorSwitch.isOn = true
         }
     }
+    
+    func readFastBroadcastStatusResp(resp:[UInt8]){
+        if resp[2] == 0{
+            broadcastCycleView.isHidden = false
+            fastBroadcastSwitch.isOn = false
+        }else{
+            broadcastCycleView.isHidden = true
+            fastBroadcastSwitch.isOn = true
+        }
+    }
+    
     func readGSensorSensitivityResp(resp:[UInt8]){
         self.gSensorSensitivityContentLabel.text = String(format:"%d",Int(resp[2]))
     }
@@ -2015,7 +2089,12 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         }
         self.readData(cmdHead: self.controlFunc["doorEnable"]?["read"] ?? 0)
     }
-    
+    func readFastBroadcastStatus(){
+        if !self.isCurrentDeviceTypeFunc(funcName: "setFastBroadcast"){
+            return
+        }
+        self.readData(cmdHead: self.controlFunc["setFastBroadcast"]?["read"] ?? 0)
+    }
     func writeDoorEnableStatus(){
         var data:[UInt8]
         if doorSwitch.isOn {
@@ -2253,8 +2332,10 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                         if dataCorrect{
                             var bleHisDataList:[BleHisData] = [BleHisData]()
                             if deviceType == "S10"{
-                                if self.extSensorType == 1{
+                                if self.extSensorType == 1 || self.extSensorType == 2{
                                     bleHisDataList = Utils.parseS10BleGX112HisData(historyArray: byteDataArray)
+                                }else if self.extSensorType == 3{
+                                    bleHisDataList = Utils.parseS10BleGXHT30HisData(historyArray: byteDataArray)
                                 }
                                 
                             }else{
@@ -2287,6 +2368,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                     self.allBleHisData.append(bleHisDataList[i])
                     i+=1
                 }
+                self.allBleHisData.sort { $0.dateStamp < $1.dateStamp }
                 
                 self.isReadingHistory = false
                 if self.allBleHisData.count == 0{
@@ -2299,6 +2381,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                 historyView.startDate = Int(self.startDate.timeIntervalSince1970)
                 historyView.endDate = Int(self.endDate.timeIntervalSince1970)
                 historyView.mac = self.mac
+                historyView.extSensorType = self.extSensorType
                 historyView.deviceName = self.nameContentLabel.text!
                 historyView.id = self.mac
                 historyView.showBleHisData = self.allBleHisData
@@ -2546,6 +2629,17 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         self.writeArrayData(cmdHead: self.controlFunc["ledOpen"]?["write"] ?? 0, content: data)
     }
     
+    func writeFastBroadcastStatus(){
+        var data = [UInt8]()
+        if self.fastBroadcastSwitch.isOn {
+            data.append(UInt8(1))
+        }else{
+            data.append(UInt8(0))
+        }
+        self.writeArrayData(cmdHead: self.controlFunc["setFastBroadcast"]?["write"] ?? 0, content: data)
+    }
+     
+    
     func writeLightSensorOpenStatus(){
         var data = [UInt8]()
         if self.lightSensorOpenSwitch.isOn {
@@ -2680,6 +2774,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         self.readTempSensorId()
         self.readBleConnectTimeout()
         self.readNegativeTrigger()
+        self.readFastBroadcastStatus()
         if self.deviceType != "S08"{
             self.readDoorEnableStatus()
         }
@@ -2796,7 +2891,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             }
         }
         
-        ActionSheetStringPicker.show(withTitle: "", rows: self.transmittedPowerList, initialSelection:currentIndex, doneBlock: {
+        ActionSheetStringPicker.show(withTitle: nil, rows: self.transmittedPowerList, initialSelection:currentIndex, doneBlock: {
             picker, index, value in
             //                                self.currentDateSelect = index
             //                        print("values = \(values)")
@@ -2813,7 +2908,6 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
             return
         }
-        var currentIndex = 0
         let key = self.broadcastCycleContentLabel.text
         var selectIndex = 0
         for (index, element) in self.broadcastCycleList.enumerated() {
@@ -2822,9 +2916,14 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                 break
             }
         }
-        ActionSheetStringPicker.show(withTitle: "", rows: self.broadcastCycleList, initialSelection:selectIndex, doneBlock: {
+        ActionSheetStringPicker.show(withTitle: nil, rows: self.broadcastCycleList, initialSelection:selectIndex, doneBlock: {
             picker, index, value in
-            let broadcastCycleInt = Int(self.broadcastCycleList[index].replacingOccurrences(of: "s", with: ""))
+            var broadcastCycleInt:Int?
+            if self.deviceType == "A002" && index == 0 {
+                broadcastCycleInt = 0
+            } else {
+                broadcastCycleInt = Int(self.broadcastCycleList[index].replacingOccurrences(of: "s", with: ""))
+            }
             self.writeBroadcastData(value: broadcastCycleInt ?? 10)
             return
         }, cancel: { ActionMultipleStringCancelBlock in return }, origin: sender)
@@ -2842,6 +2941,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         editRangeValue.connectStatusDelegate = self
         self.editRangeValueType = "temp"
         editRangeValue.deviceType = deviceType
+        editRangeValue.extSensorType = self.extSensorType
         editRangeValue.type = "temp"
         print(self.tempAlarmUp)
         if self.tempAlarmUpOpen{
@@ -2868,6 +2968,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         let editRangeValue = EditRangeValueController()
         editRangeValue.delegate = self
         editRangeValue.deviceType = deviceType
+        editRangeValue.extSensorType = self.extSensorType
         editRangeValue.connectStatusDelegate = self
         self.editRangeValueType = "humidity"
         editRangeValue.type = "humidity"
@@ -2882,7 +2983,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
             return
         }
-        let key = self.saveIntervalContentLabel.text?.replacingOccurrences(of: "s", with: "")
+        let key = self.saveIntervalContentLabel.text
         var selectIndex = 0
         for (index, element) in self.saveIntervalList.enumerated() {
             if element == key{
@@ -2890,16 +2991,13 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                 break
             }
         }
-        ActionSheetStringPicker.show(withTitle: "", rows: self.saveIntervalList, initialSelection:selectIndex, doneBlock: {
+        let picker = ActionSheetStringPicker(title: nil, rows: self.saveIntervalList, initialSelection: selectIndex, doneBlock: {
             picker, index, value in
-            //                                self.currentDateSelect = index
-            //                        print("values = \(values)")
-            //                        print("indexes = \(indexes)")
-            //                                self.initDateRangeValue()
-            let saveIntervalInt = Int(self.saveIntervalList[index])
+            let saveIntervalInt = Int(self.saveIntervalList[index].replacingOccurrences(of: "s", with: ""))
             self.writeSaveIntervalData(value: saveIntervalInt ?? 60)
             return
-        }, cancel: { ActionMultipleStringCancelBlock in return }, origin: sender)
+        }, cancel: { _ in return }, origin: sender)
+        picker?.show()
     }
     
     @objc private func rebootClick(){
@@ -2973,7 +3071,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
             return
         }
-        ActionSheetStringPicker.show(withTitle: "", rows: self.portList, initialSelection:0, doneBlock: {
+        ActionSheetStringPicker.show(withTitle: nil, rows: self.portList, initialSelection:0, doneBlock: {
             picker, index, value in
             self.readPositiveNegativeWarning(port: index)
             return
@@ -3000,7 +3098,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                 break
             }
         }
-        ActionSheetStringPicker.show(withTitle: "", rows: self.oneWireWorkModeList, initialSelection:currentIndex, doneBlock: {
+        ActionSheetStringPicker.show(withTitle: nil, rows: self.oneWireWorkModeList, initialSelection:currentIndex, doneBlock: {
             picker, index, value in
             self.writeOneWireWorkMode(value: index)
             return
@@ -3048,7 +3146,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                 break
             }
         }
-        ActionSheetStringPicker.show(withTitle: "", rows: self.rs485BaudRateList, initialSelection:currentIndex, doneBlock: {
+        ActionSheetStringPicker.show(withTitle: nil, rows: self.rs485BaudRateList, initialSelection:currentIndex, doneBlock: {
             picker, index, value in
             self.writeRs485BaudRate(value: Int(self.rs485BaudRateList[index]) ?? 0)
             return
@@ -3062,17 +3160,31 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         print("editBroadcastTypeClick")
         var currentIndex = 0
         var patchStr = self.broadcastTypeContentLabel.text
+        let customLabel = NSLocalizedString("custom", comment: "Custom")
         for index in 0..<self.broadcastTypeList.count{
             if patchStr == self.broadcastTypeList[index]{
                 currentIndex = index
                 break
             }
         }
-        ActionSheetStringPicker.show(withTitle: "", rows: self.broadcastTypeList, initialSelection:currentIndex, doneBlock: {
+        ActionSheetStringPicker.show(withTitle: nil, rows: self.broadcastTypeList, initialSelection:currentIndex, doneBlock: {
             picker, index, value in
-            self.writeBroadcastType(value: index)
+            if self.deviceType == "A002" {
+                self.writeBroadcastType(value: index == 0 ? 0 : 4)
+                return
+            }
+            var sendValue = index
+            if index < self.broadcastTypeList.count && self.broadcastTypeList[index] == customLabel{
+                sendValue = 4
+            }
+            self.writeBroadcastType(value: sendValue)
             return
         }, cancel: { ActionMultipleStringCancelBlock in return }, origin: sender)
+    }
+    
+    func versionToInt(_ version:String) -> Int{
+        let digits = version.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+        return Int(digits) ?? 0
     }
     @objc private func editGSensorSensitivityClick() {
         if !self.connected{
@@ -3204,11 +3316,11 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                     self.writeBeaconMajorSet(value: beaconMajorSet)
                     editBeaconMajorSetAlert.dismiss()
                 }else{
-                    Toast.hudBuilder.title(NSLocalizedString("input_error", comment: "Input error!")).show()
+                    Toast.hudBuilder.title(NSLocalizedString("beacon_major_minor_range_error", comment: "Value is incorrect!It must between 0 and 65535.")).show()
                 }
                 
             }else{
-                Toast.hudBuilder.title(NSLocalizedString("input_error", comment: "Input error!")).show()
+                Toast.hudBuilder.title(NSLocalizedString("beacon_major_minor_range_error", comment: "Value is incorrect!It must between 0 and 65535.")).show()
             }
         }
         editBeaconMajorSetAlert.addAction(action: action_one)
@@ -3239,11 +3351,11 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                     self.writeBeaconMinorSet(value: beaconMinorSet)
                     editBeaconMinorSetAlert.dismiss()
                 }else{
-                    Toast.hudBuilder.title(NSLocalizedString("input_error", comment: "Input error!")).show()
+                    Toast.hudBuilder.title(NSLocalizedString("beacon_major_minor_range_error", comment: "Value is incorrect!It must between 0 and 65535.")).show()
                 }
                 
             }else{
-                Toast.hudBuilder.title(NSLocalizedString("input_error", comment: "Input error!")).show()
+                Toast.hudBuilder.title(NSLocalizedString("beacon_major_minor_range_error", comment: "Value is incorrect!It must between 0 and 65535.")).show()
             }
         }
         editBeaconMinorSetAlert.addAction(action: action_one)
@@ -3386,6 +3498,18 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         print("ledSwitchAction")
         self.writeLedOpenStatus()
     }
+    
+    @objc func fastBroadcastSwitchAction(senger:UISwitch){
+        if !self.connected{
+            self.ledSwitch.isOn = !self.ledSwitch.isOn
+            Toast.hudBuilder.title(NSLocalizedString("need_reconnect_warning", comment: "Has been disconnected, please reconnect manually!")).show()
+            return
+        }
+        print("fastBroadcastSwitchAction")
+        self.writeFastBroadcastStatus()
+    }
+    
+    
     @objc func lightSeosorOpenSwitchAction(senger:UISwitch){
         if !self.connected{
             self.lightSensorOpenSwitch.isOn = !self.lightSensorOpenSwitch.isOn
@@ -3937,7 +4061,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         }
         
         
-        ActionSheetStringPicker.show(withTitle: "", rows: self.dinStatusEventList, initialSelection:currentIndex, doneBlock: {
+        ActionSheetStringPicker.show(withTitle: nil, rows: self.dinStatusEventList, initialSelection:currentIndex, doneBlock: {
             picker, index, value in
             self.writeDinStatusEvent(value: index)
             return
@@ -3959,7 +4083,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         }
         var currentIndex = 0
         self.curCtrlNegativeTriggerPort = port
-        ActionSheetStringPicker.show(withTitle: "", rows: self.negativeTriggerTypeList, initialSelection:0, doneBlock: {
+        ActionSheetStringPicker.show(withTitle: nil, rows: self.negativeTriggerTypeList, initialSelection:0, doneBlock: {
             picker, index, value in
             if index == 0{
                 self.writeNormalNegativeTrigger()
@@ -4032,7 +4156,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         }
         var currentIndex = 0
         
-        ActionSheetStringPicker.show(withTitle: NSLocalizedString("ble_connect_timeout", comment: ""), rows: self.bleConnectTimeoutCtrlTypes, initialSelection:0, doneBlock: {
+        ActionSheetStringPicker.show(withTitle: nil, rows: self.bleConnectTimeoutCtrlTypes, initialSelection:0, doneBlock: {
             picker, index, value in
             if index == 0{
                 DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(1000)) {
@@ -4118,10 +4242,13 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
     var relayOutputView:UIView!
     var bleConnectTimeoutView:UIView!
     var rebootView:UIView!
+    var fastBroadcastView:UIView!
     
     func initUI(){
         let scrollView = UIScrollView()
-        scrollView.frame = self.view.bounds
+        self.contentScrollView = scrollView
+        let navBottomY = self.tftTopContentY()
+        scrollView.frame = CGRect(x: 0, y: navBottomY, width: self.view.bounds.width, height: self.view.bounds.height - navBottomY)
         var scrollViewHeight:Float = 910
         if self.deviceType != "S02"{
             scrollViewHeight = 730
@@ -5261,6 +5388,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         recordControlView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         recordControlView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
         stackView.addArrangedSubview(recordControlView)
+        let recordDescWidth = descWidth + 25
         self.recordControlLabel = UILabel()
         self.recordControlLabel.textColor = UIColor.black
         self.recordControlLabel.lineBreakMode = NSLineBreakMode.byWordWrapping;
@@ -5268,18 +5396,18 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         self.recordControlLabel.text = NSLocalizedString("record_control_desc", comment: "Record control:")
         self.recordControlLabel.lineBreakMode = NSLineBreakMode.byWordWrapping;
         self.recordControlLabel.numberOfLines = 0;
-        self.recordControlLabel.frame = CGRect(x: 15, y: 0, width: descWidth, height: 60)
+        self.recordControlLabel.frame = CGRect(x: 15, y: 0, width: recordDescWidth, height: 60)
         recordControlView.addSubview(self.recordControlLabel)
         self.startRecordBtn = QMUIGhostButton()
         self.startRecordBtn.setTitle(NSLocalizedString("start_record", comment: "Start Record"), for: .normal)
         self.startRecordBtn.ghostColor = UIColor.colorPrimary
-        self.startRecordBtn.frame = CGRect(x: contentX - 20, y: 15, width: 120, height: btnHeight)
+        self.startRecordBtn.frame = CGRect(x: contentX + 15, y: 15, width: 100, height: btnHeight)
         self.startRecordBtn.addTarget(self, action: #selector(startRecordClick), for:.touchUpInside)
         recordControlView.addSubview(self.startRecordBtn)
         self.stopRecordBtn = QMUIGhostButton()
         self.stopRecordBtn.setTitle(NSLocalizedString("stop_record", comment: "Stop Record"), for: .normal)
         self.stopRecordBtn.ghostColor = UIColor.colorPrimary
-        self.stopRecordBtn.frame = CGRect(x: contentX - 20, y: 15, width: 120, height: btnHeight)
+        self.stopRecordBtn.frame = CGRect(x: contentX + 15, y: 15, width: 100, height: btnHeight)
         self.stopRecordBtn.addTarget(self, action: #selector(stopRecordClick), for:.touchUpInside)
         self.stopRecordBtn.isHidden = true
         recordControlView.addSubview(self.stopRecordBtn)
@@ -5306,13 +5434,13 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         self.clearRecordLabel.text = NSLocalizedString("clear_cache_desc", comment:"Clear cache:")
         self.clearRecordLabel.lineBreakMode = NSLineBreakMode.byWordWrapping;
         self.clearRecordLabel.numberOfLines = 0;
-        self.clearRecordLabel.frame = CGRect(x: 15, y: 0, width: descWidth, height: 60)
+        self.clearRecordLabel.frame = CGRect(x: 15, y: 0, width: recordDescWidth, height: 60)
         clearRecordView.addSubview(self.clearRecordLabel)
         self.clearRecordBtn = QMUIGhostButton()
         self.clearRecordBtn.titleLabel?.font = UIFont.systemFont(ofSize: fontSize)
         self.clearRecordBtn.setTitle(NSLocalizedString("clear_record", comment:"Clear record"), for: .normal)
         self.clearRecordBtn.ghostColor = UIColor.colorPrimary
-        self.clearRecordBtn.frame = CGRect(x: contentX + 15, y: 15, width: 120, height: btnHeight)
+        self.clearRecordBtn.frame = CGRect(x: contentX + 15, y: 15, width: 100, height: btnHeight)
         self.clearRecordBtn.addTarget(self, action: #selector(clearRecordClick), for:.touchUpInside)
         clearRecordView.addSubview(self.clearRecordBtn)
         let clearRecordLine = UIView()
@@ -5924,6 +6052,34 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             ledView.isHidden = true
         }
         
+        fastBroadcastView = UIView()
+                fastBroadcastView.heightAnchor.constraint(equalToConstant: 60).isActive = true
+                fastBroadcastView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
+                stackView.addArrangedSubview(fastBroadcastView)
+                self.fastBroadcastLabel = UILabel()
+                self.fastBroadcastLabel.font = UIFont.systemFont(ofSize: fontSize)
+                self.fastBroadcastLabel.textColor = UIColor.black
+                self.fastBroadcastLabel.lineBreakMode = NSLineBreakMode.byWordWrapping;
+                self.fastBroadcastLabel.numberOfLines = 0;
+                self.fastBroadcastLabel.text = NSLocalizedString("fast_broadcast", comment:"fastBroadcast:")
+                self.fastBroadcastLabel.frame = CGRect(x: 15, y: 0, width: descWidth, height: 60)
+                fastBroadcastView.addSubview(self.fastBroadcastLabel)
+                self.fastBroadcastSwitch = UISwitch()
+                self.fastBroadcastSwitch.frame = CGRect(x: contentX, y: 10, width: 70, height: 30)
+                self.fastBroadcastSwitch.addTarget(self, action: #selector(fastBroadcastSwitchAction),
+                                         for:UIControl.Event.valueChanged)
+                fastBroadcastView.addSubview(self.fastBroadcastSwitch)
+                let fastBroadcastLine = UIView()
+                fastBroadcastLine.backgroundColor = UIColor.gray
+                fastBroadcastLine.frame = CGRect(x: 0, y: Double(60), width: Double(KSize.width), height: 0.5)
+                fastBroadcastView.addSubview(fastBroadcastLine)
+                
+                if self.isCurrentDeviceTypeFunc(funcName: "setFastBroadcast"){
+                    fastBroadcastView.isHidden = false
+                }else{
+                    fastBroadcastView.isHidden = true
+                }
+        
         lightSensorOpenView = UIView()
         lightSensorOpenView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         lightSensorOpenView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
@@ -6227,6 +6383,14 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
                     return false;
                 }
             }
+            if funcName == "setFastBroadcast"{
+                let curVersion = self.software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "").replacingOccurrences(of: ".", with: "")
+                if Int(curVersion) ?? 0 >= 21{
+                    return true;
+                }else{
+                    return false;
+                }
+            }
             if funcName == "firmware" || funcName == "password" || funcName == "resetFactory" || funcName == "broadcastCycle"
                 || funcName == "tempAlarm" || funcName == "ledOpen" || funcName == "deviceName" || funcName == "relay"
                 || funcName == "time"  {
@@ -6299,7 +6463,7 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
         }else if deviceType == "S10"{
             if funcName == "saveInterval" || funcName == "firmware" || funcName == "password" || funcName == "resetFactory" || funcName == "broadcastCycle"
                 || funcName == "tempAlarm" || funcName == "ledOpen" || funcName == "deviceName" || funcName == "startRecord"
-                || funcName == "stopRecord" || funcName == "clearRecord"
+                || funcName == "stopRecord" || funcName == "clearRecord" || (funcName == "humidityAlarm" && extSensorType == 3)
                 || funcName == "saveCount"  || funcName == "readOriginData" || funcName == "transmittedPower"
                 || funcName == "broadcastType" || funcName == "readHistory"
                 || funcName == "time"   || funcName == "shutdown"   || funcName == "readExtSensorType"
@@ -6334,6 +6498,9 @@ class EditConfigController:UIViewController,CBCentralManagerDelegate,CBPeriphera
             }
             return false;
         }else if deviceType == "A002"{
+            if funcName == "broadcastType" {
+                return versionToInt(self.software) > 1005
+            }
             if funcName == "firmware" || funcName == "password" || funcName == "resetFactory"  || funcName == "deviceName"
                 || funcName == "broadcastCycle"  || funcName == "time"  || funcName == "ledOpen"
                 || funcName == "relay" || funcName == "reboot" || funcName == "negativeTrigger" || funcName == "a002Status"
@@ -6443,4 +6610,3 @@ extension EditConfigController:SetConnectStatusDelegate{
         self.leaveViewNeedDisconnect = true
     }
 }
-

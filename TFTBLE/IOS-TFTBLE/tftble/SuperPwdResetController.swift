@@ -11,7 +11,6 @@ import UIKit
 import iOSDFULibrary
 import CoreBluetooth
 import CLXToast
-import QMUIKit
 import ActionSheetPicker_3_0
  
 class SuperPwdResetController:UIViewController,CBCentralManagerDelegate,CBPeripheralDelegate,  LoggerDelegate{
@@ -177,6 +176,7 @@ class SuperPwdResetController:UIViewController,CBCentralManagerDelegate,CBPeriph
     private var pwdErrorWarning = false;
  
     override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
         self.needConnect = false
         if self.leaveViewNeedDisconnect{
             if self.selfPeripheral != nil{
@@ -185,33 +185,37 @@ class SuperPwdResetController:UIViewController,CBCentralManagerDelegate,CBPeriph
         }
         self.onView = false
         self.pwdErrorWarning = false
+        self.tftHideTopBar()
     }
     
     func initRightBtn(isConnect:Bool){
-        if isConnect{
-            let rightBarButtonItem = UIBarButtonItem (barButtonSystemItem: UIBarButtonItem.SystemItem.refresh, target: self, action: #selector(self.refreshClick))
-            self.navigationItem.rightBarButtonItem = rightBarButtonItem
-        }else{
-            let btn = UIButton.init(frame: CGRect.init(x: KSize.width - 50, y: 0, width: 25, height: 25))
-            btn.setImage(UIImage(named:"ic_disconnect.png"), for: .normal)
-            let rightBarButtonItem =  UIBarButtonItem.init(customView: btn)
-            btn.addTarget(self, action: #selector(self.refreshClick), for: .touchUpInside)
-            self.navigationItem.rightBarButtonItem = rightBarButtonItem
-        }
+        let rightIcon = isConnect ? "ic_refresh.png" : "ic_disconnect.png"
+        self.tftInstallTopBar(title: mac, rightIconName: rightIcon, rightAction: #selector(self.refreshClick))
     }
     
     override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
         self.onView = true
         self.pwdErrorWarning = false
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.tftShowTopBar()
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        self.tftLayoutTopBar()
+        self.tftAdjustContentBelowTopBarIfNeeded()
+        self.tftEnsureTopContentClearance(padding: 8)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         self.onView = true
-        let titleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
-        titleLabel.text = mac
-         
-        self.navigationItem.titleView = titleLabel
+        self.tftInstallTopBar(title: mac, rightIconName: "ic_disconnect.png", rightAction: #selector(self.refreshClick))
         self.initRightBtn(isConnect:false)
         self.view.backgroundColor = UIColor.white
         self.needConnect = true
@@ -594,7 +598,9 @@ class SuperPwdResetController:UIViewController,CBCentralManagerDelegate,CBPeriph
     
     func initUI(){
         let scrollView = UIScrollView()
-        scrollView.frame = self.view.bounds
+        let navBottomY = self.tftTopContentY()
+        self.tftRememberInitialContentTop(navBottomY)
+        scrollView.frame = CGRect(x: 0, y: navBottomY, width: self.view.bounds.width, height: self.view.bounds.height - navBottomY)
         var scrollViewHeight:Float = 150
        
         //        scrollView.isPagingEnabled = true

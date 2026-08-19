@@ -3,8 +3,9 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/root_view"
     android:background="@color/bg_color_white">
-
+    <include layout="@layout/custom_activity_bar" />
     <ListView
         android:id="@+id/lv_sub_lock_ids"
         android:layout_width="match_parent"

@@ -141,16 +141,16 @@ import CoreBluetooth
         self.report  = report
         
         // Get the peripheral object
-        let peripheral = service.peripheral
+        let peripheral = service.peripheral!
         
         // Set the peripheral delegate to self
-        peripheral!.delegate = self
+        peripheral.delegate = self
         
         // Discover DFU characteristics
         logger.v("Discovering characteristics in DFU Service...")
         logger.d("peripheral.discoverCharacteristics(nil, for: \(uuidHelper.secureDFUService.uuidString))")
         
-        peripheral!.discoverCharacteristics(nil, for: service)
+        peripheral.discoverCharacteristics(nil, for: service)
     }
     
     /**

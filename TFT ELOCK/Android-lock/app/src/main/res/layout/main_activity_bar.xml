@@ -1,52 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.appcompat.widget.Toolbar
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/toolbar"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
-    <ImageView
-        android:id="@+id/main_left_refresh"
-        android:layout_width="@dimen/tab_action_bar_img_size"
-        android:layout_height="@dimen/tab_action_bar_img_size"
-        android:src="@mipmap/ic_refresh"
-        android:padding="5dp"
-        android:layout_centerVertical="true"
-        android:scaleType="centerCrop"
-        android:clickable="true"
-        />
+    android:background="@color/colorPrimary"
+    android:layout_height="?attr/actionBarSize"
+    android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+    android:elevation="4dp"
+    android:contentInsetStart="0dp"
+    android:contentInsetEnd="0dp"
+    android:contentInsetLeft="0dp"
+    android:contentInsetRight="0dp"
+    android:paddingLeft="25px"
+    android:paddingRight="25px">
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="5dp"
-        >
-
-        <TextView
-            android:id="@+id/edit_command_title"
+        android:layout_height="wrap_content">
+        <ImageView
+            android:id="@+id/main_left_refresh"
+            android:layout_width="@dimen/tab_action_bar_img_size"
+            android:layout_height="@dimen/tab_action_bar_img_size"
+            android:src="@mipmap/ic_refresh"
+            android:padding="5dp"
+            android:layout_centerVertical="true"
+            android:scaleType="centerCrop"
+            android:clickable="true"
+            />
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="44dp"
-            android:gravity="center"
-            android:maxLines="1"
-            android:text="@string/main_bar_text"
-            android:textColor="@color/actionbar_text"
-            android:textSize="@dimen/text_size" />
+            android:layout_height="wrap_content"
+            android:padding="5dp"
+            >
 
+            <TextView
+                android:id="@+id/edit_command_title"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:maxLines="1"
+                android:text="@string/main_bar_text"
+                android:textColor="@color/actionbar_text"
+                android:textSize="@dimen/text_size" />
+
+        </RelativeLayout>
+        <ImageView
+            android:id="@+id/main_bar_favorite"
+            android:layout_toLeftOf="@+id/main_right_menu"
+            android:layout_height="@dimen/tab_action_bar_right_imgbtn_size"
+            android:layout_width="@dimen/tab_action_bar_right_imgbtn_size"
+            android:layout_centerVertical="true"
+            android:src="@mipmap/ic_hide_favorite"
+            android:layout_marginRight="5dp"
+            android:gravity="center"
+            />
+        <ImageView
+            android:id="@+id/main_right_menu"
+            android:layout_alignParentRight="true"
+            android:layout_height="@dimen/tab_action_bar_right_imgbtn_size"
+            android:layout_width="@dimen/tab_action_bar_right_imgbtn_size"
+            android:layout_centerVertical="true"
+            android:src="@mipmap/ic_list"
+            android:padding="5dp"
+            android:gravity="center"
+            />
     </RelativeLayout>
-    <ImageView
-        android:id="@+id/main_bar_favorite"
-        android:layout_toLeftOf="@+id/main_right_menu"
-        android:layout_height="@dimen/tab_action_bar_right_imgbtn_size"
-        android:layout_width="@dimen/tab_action_bar_right_imgbtn_size"
-        android:layout_centerVertical="true"
-        android:src="@mipmap/ic_hide_favorite"
-        android:layout_marginRight="5dp"
-        android:gravity="center"
-        />
-    <ImageView
-        android:id="@+id/main_right_menu"
-        android:layout_alignParentRight="true"
-        android:layout_height="@dimen/tab_action_bar_right_imgbtn_size"
-        android:layout_width="@dimen/tab_action_bar_right_imgbtn_size"
-        android:layout_centerVertical="true"
-        android:src="@mipmap/ic_list"
-        android:padding="5dp"
-        android:gravity="center"
-        />
-</RelativeLayout>
+</androidx.appcompat.widget.Toolbar>

@@ -9,7 +9,6 @@
 import Foundation
 import UIKit
 import JXMarqueeView
-import QMUIKit
 class DeviceS05Cell: UITableViewCell {
     private var fontSize:CGFloat = Utils.fontSize
     lazy var deviceNameLabel: UILabel = {

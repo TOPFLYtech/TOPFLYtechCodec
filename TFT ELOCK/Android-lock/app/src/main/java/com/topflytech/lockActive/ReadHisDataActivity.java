@@ -247,7 +247,7 @@ public class ReadHisDataActivity extends AppCompatActivity {
             }
         });
         sweetPwdDlg.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
-        sweetPwdDlg.setTitleText(getResources().getString(R.string.input_ble_pwd));
+        sweetPwdDlg.setTitleText(getResources().getString(R.string.input_ble_open_lock_pwd));
         sweetPwdDlg.setCancelable(true);
         sweetPwdDlg.setCancelText(getResources().getString(R.string.cancel));
         sweetPwdDlg.setConfirmText(getResources().getString(R.string.confirm));

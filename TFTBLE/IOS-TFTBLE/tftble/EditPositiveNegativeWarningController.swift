@@ -8,7 +8,6 @@
 import Foundation
 import UIKit
 import CLXToast
-import QMUIKit
 import ActionSheetPicker_3_0
 class EditPositiveNegativeWarningController : UIViewController{
     private var portLabel:UILabel!
@@ -38,7 +37,22 @@ class EditPositiveNegativeWarningController : UIViewController{
     var oldPwd:String = ""
     private var fontSize:CGFloat = Utils.fontSize
     override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        self.tftHideTopBar()
         self.connectStatusDelegate?.setConnectStatus()
+    }
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.tftShowTopBar()
+    }
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
+    }
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        self.tftLayoutTopBar()
+        self.tftAdjustContentBelowTopBarIfNeeded()
     }
     @objc func dismissKeyboard()
        {
@@ -48,16 +62,17 @@ class EditPositiveNegativeWarningController : UIViewController{
         self.view.backgroundColor = UIColor.white
         self.modeList.append( NSLocalizedString("close", comment: "Close"))
         self.modeList.append( NSLocalizedString("open", comment: "Open"))
-        let titleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
-        titleLabel.text = NSLocalizedString("positive_negative_warning", comment: "Ain event reporting mode")
-        self.navigationItem.titleView = titleLabel
-        let descWidth = Int(KSize.width / 2)
-        let contentX = Int(KSize.width / 2 + 10)
+        self.tftInstallTopBar(title: NSLocalizedString("positive_negative_warning", comment: "Ain event reporting mode"))
+        let viewWidth = Int(self.view.bounds.width)
+        let navBottomY = Int(self.tftTopContentY())
+        self.tftRememberInitialContentTop(CGFloat(navBottomY))
+        let descWidth = Int(CGFloat(viewWidth) / 2.0)
+        let contentX = descWidth + 10
         
-        var startLabelY:Int = 60
-        var startInputY:Int = 75
+        var startLabelY:Int = navBottomY + 10
+        var startInputY:Int = navBottomY + 25
         let lineHigh:Int = 60
-        var lineY:Int = 120
+        var lineY:Int = navBottomY + 70
         
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(
                     target: self,
@@ -83,7 +98,7 @@ class EditPositiveNegativeWarningController : UIViewController{
         self.view.addSubview(self.portInput)
         let oldPwdLine = UIView()
         oldPwdLine.backgroundColor = UIColor.gray
-        oldPwdLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(KSize.width), height: 0.5)
+        oldPwdLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(viewWidth), height: 0.5)
         self.view.addSubview(oldPwdLine)
         startLabelY += lineHigh
         lineY += lineHigh
@@ -106,7 +121,7 @@ class EditPositiveNegativeWarningController : UIViewController{
         self.view.addSubview(self.modeInput)
         let newPwdLine = UIView()
         newPwdLine.backgroundColor = UIColor.gray
-        newPwdLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(KSize.width), height: 0.5)
+        newPwdLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(viewWidth), height: 0.5)
         self.view.addSubview(newPwdLine)
         startLabelY += lineHigh
         lineY += lineHigh
@@ -127,7 +142,7 @@ class EditPositiveNegativeWarningController : UIViewController{
         self.view.addSubview(self.highVoltageInput)
         let repeatPwdLine = UIView()
         repeatPwdLine.backgroundColor = UIColor.gray
-        repeatPwdLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(KSize.width), height: 0.5)
+        repeatPwdLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(viewWidth), height: 0.5)
         self.view.addSubview(repeatPwdLine)
         startLabelY += lineHigh
         lineY += lineHigh
@@ -148,7 +163,7 @@ class EditPositiveNegativeWarningController : UIViewController{
         self.view.addSubview(self.lowVoltageInput)
         let lowVoltageLine = UIView()
         lowVoltageLine.backgroundColor = UIColor.gray
-        lowVoltageLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(KSize.width), height: 0.5)
+        lowVoltageLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(viewWidth), height: 0.5)
         self.view.addSubview(lowVoltageLine)
         startLabelY += lineHigh
         lineY += lineHigh
@@ -169,7 +184,7 @@ class EditPositiveNegativeWarningController : UIViewController{
         self.view.addSubview(self.samplingIntervalInput)
         let samplingIntervalLine = UIView()
         samplingIntervalLine.backgroundColor = UIColor.gray
-        samplingIntervalLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(KSize.width), height: 0.5)
+        samplingIntervalLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(viewWidth), height: 0.5)
         self.view.addSubview(samplingIntervalLine)
         startLabelY += lineHigh
         lineY += lineHigh
@@ -190,7 +205,7 @@ class EditPositiveNegativeWarningController : UIViewController{
         self.view.addSubview(self.ditheringIntervalHighInput)
         let ditheringIntervalHighLine = UIView()
         ditheringIntervalHighLine.backgroundColor = UIColor.gray
-        ditheringIntervalHighLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(KSize.width), height: 0.5)
+        ditheringIntervalHighLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(viewWidth), height: 0.5)
         self.view.addSubview(ditheringIntervalHighLine)
         startLabelY += lineHigh
         lineY += lineHigh
@@ -211,7 +226,7 @@ class EditPositiveNegativeWarningController : UIViewController{
         self.view.addSubview(self.ditheringIntervalLowInput)
         let ditheringIntervalLowLine = UIView()
         ditheringIntervalLowLine.backgroundColor = UIColor.gray
-        ditheringIntervalLowLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(KSize.width), height: 0.5)
+        ditheringIntervalLowLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(viewWidth), height: 0.5)
         self.view.addSubview(ditheringIntervalLowLine)
          startLabelY += lineHigh
         lineY += lineHigh
@@ -220,7 +235,7 @@ class EditPositiveNegativeWarningController : UIViewController{
         self.submitBtn.titleLabel?.font = UIFont.systemFont(ofSize: fontSize)
         self.submitBtn.setTitle(NSLocalizedString("submit", comment: "Submit"), for: .normal)
         self.submitBtn.ghostColor = UIColor.colorPrimary 
-        self.submitBtn.frame = CGRect(x: Int((KSize.width - 200) / 2), y: startLabelY + 10, width: 200, height: 30)
+        self.submitBtn.frame = CGRect(x: Int((viewWidth - 200) / 2), y: startLabelY + 10, width: 200, height: 30)
         self.submitBtn.addTarget(self, action: #selector(submit), for:.touchUpInside)
         self.view.addSubview(self.submitBtn)
 
@@ -257,7 +272,7 @@ class EditPositiveNegativeWarningController : UIViewController{
         if selectIndex < 0 || selectIndex >= self.modeList.count{
             selectIndex = 0
         }
-         ActionSheetStringPicker.show(withTitle: "", rows: self.modeList, initialSelection:selectIndex, doneBlock: {
+         ActionSheetStringPicker.show(withTitle: nil, rows: self.modeList, initialSelection:selectIndex, doneBlock: {
             picker, index, value in
             self.mode = index
             self.modeInput.text = self.modeList[index]

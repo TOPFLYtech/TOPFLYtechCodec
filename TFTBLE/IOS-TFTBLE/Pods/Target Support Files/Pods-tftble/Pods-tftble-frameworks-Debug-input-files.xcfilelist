@@ -5,10 +5,8 @@ ${BUILT_PRODUCTS_DIR}/DateTimePicker/DateTimePicker.framework
 ${BUILT_PRODUCTS_DIR}/IQKeyboardManagerSwift/IQKeyboardManagerSwift.framework
 ${BUILT_PRODUCTS_DIR}/JXMarqueeView/JXMarqueeView.framework
 ${BUILT_PRODUCTS_DIR}/PDFGenerator/PDFGenerator.framework
-${BUILT_PRODUCTS_DIR}/QMUIKit/QMUIKit.framework
 ${BUILT_PRODUCTS_DIR}/SwiftCharts/SwiftCharts.framework
 ${BUILT_PRODUCTS_DIR}/SwiftPopMenu/SwiftPopMenu.framework
 ${BUILT_PRODUCTS_DIR}/ZIPFoundation/ZIPFoundation.framework
 ${BUILT_PRODUCTS_DIR}/iOSDFULibrary/iOSDFULibrary.framework
 ${BUILT_PRODUCTS_DIR}/libxlsxwriter/xlsxwriter.framework
-${BUILT_PRODUCTS_DIR}/swiftScan/swiftScan.framework

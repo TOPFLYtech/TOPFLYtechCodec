@@ -8,7 +8,6 @@
 import Foundation
 import UIKit
 import CLXToast
-import QMUIKit
 class EditDoutOutputController : UIViewController,UITextFieldDelegate {
     private var dout0Label:UILabel!
     private var dout0Input:UITextField!
@@ -24,7 +23,22 @@ class EditDoutOutputController : UIViewController,UITextFieldDelegate {
     
     
     override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        self.tftHideTopBar()
         self.connectStatusDelegate?.setConnectStatus()
+    }
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.tftShowTopBar()
+    }
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
+    }
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        self.tftLayoutTopBar()
+        self.tftAdjustContentBelowTopBarIfNeeded()
     }
     @objc func dismissKeyboard()
        {
@@ -34,11 +48,12 @@ class EditDoutOutputController : UIViewController,UITextFieldDelegate {
         self.view.backgroundColor = UIColor.white
         self.modeList.append( NSLocalizedString("close", comment: "Close"))
         self.modeList.append( NSLocalizedString("open", comment: "Open"))
-        let titleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
-        titleLabel.text = NSLocalizedString("dout_status", comment: "Dout status")
-        self.navigationItem.titleView = titleLabel
-        let descWidth = Int(KSize.width / 2)
-        let contentX = Int(KSize.width / 2 + 10)
+        self.tftInstallTopBar(title: NSLocalizedString("dout_status", comment: "Dout status"))
+        let viewWidth = Int(self.view.bounds.width)
+        let navBottomY = Int(self.tftTopContentY())
+        self.tftRememberInitialContentTop(CGFloat(navBottomY))
+        let descWidth = Int(CGFloat(viewWidth) / 2.0)
+        let contentX = descWidth + 10
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(
                     target: self,
                     action: #selector(dismissKeyboard))
@@ -46,10 +61,10 @@ class EditDoutOutputController : UIViewController,UITextFieldDelegate {
                 tap.cancelsTouchesInView = false
                 view.addGestureRecognizer(tap)
         
-        var startLabelY:Int = 60
-        var startInputY:Int = 75
+        var startLabelY:Int = navBottomY + 10
+        var startInputY:Int = navBottomY + 25
         let lineHigh:Int = 60
-        var lineY:Int = 120
+        var lineY:Int = navBottomY + 70
         
         self.dout0Label = UILabel()
         self.dout0Label.font = UIFont.systemFont(ofSize: fontSize)
@@ -68,7 +83,7 @@ class EditDoutOutputController : UIViewController,UITextFieldDelegate {
         self.view.addSubview(self.dout0Input)
         let dout0Line = UIView()
         dout0Line.backgroundColor = UIColor.gray
-        dout0Line.frame = CGRect(x: 0, y: Double(lineY), width: Double(KSize.width), height: 0.5)
+        dout0Line.frame = CGRect(x: 0, y: Double(lineY), width: Double(viewWidth), height: 0.5)
         self.view.addSubview(dout0Line)
         startLabelY += lineHigh
         lineY += lineHigh
@@ -91,7 +106,7 @@ class EditDoutOutputController : UIViewController,UITextFieldDelegate {
         self.view.addSubview(self.dout1Input)
         let dout1Line = UIView()
         dout1Line.backgroundColor = UIColor.gray
-        dout1Line.frame = CGRect(x: 0, y: Double(lineY), width: Double(KSize.width), height: 0.5)
+        dout1Line.frame = CGRect(x: 0, y: Double(lineY), width: Double(viewWidth), height: 0.5)
         self.view.addSubview(dout1Line)
         startLabelY += lineHigh
         lineY += lineHigh
@@ -100,7 +115,7 @@ class EditDoutOutputController : UIViewController,UITextFieldDelegate {
         self.submitBtn.titleLabel?.font = UIFont.systemFont(ofSize: fontSize)
         self.submitBtn.setTitle(NSLocalizedString("submit", comment: "Submit"), for: .normal)
         self.submitBtn.ghostColor = UIColor.colorPrimary 
-        self.submitBtn.frame = CGRect(x: Int((KSize.width - 200) / 2), y: startLabelY + 10, width: 200, height: 30)
+        self.submitBtn.frame = CGRect(x: Int((viewWidth - 200) / 2), y: startLabelY + 10, width: 200, height: 30)
         self.submitBtn.addTarget(self, action: #selector(submit), for:.touchUpInside)
         self.view.addSubview(self.submitBtn)
  

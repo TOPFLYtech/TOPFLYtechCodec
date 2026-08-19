@@ -3,6 +3,7 @@
     <string name="main_bar_text">Bluetooth Device</string>
     <string name="ble_not_support">Does not support Bluetooth</string>
     <string name="confirm">Confirm</string>
+    <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="please_input_search_name">Please input some text</string>
     <string name="ble_name">Device name</string>
@@ -80,6 +81,16 @@
     <string name="refresh_status">Refresh status</string>
     <string name="pwd_error">Unlock password incorrect!</string>
     <string name="unique_id">Unique ID:</string>
+    <string name="save">Save</string>
+    <string name="custom_identity">Custom identity</string>
+    <string name="identity_mode_auto">Use generated 12-character ID</string>
+    <string name="identity_mode_hex">Enter hexadecimal ID</string>
+    <string name="identity_mode_text">Enter description text</string>
+    <string name="identity_hex_hint">Hexadecimal ID (12-40 characters)</string>
+    <string name="identity_text_hint">Description (6-20 UTF-8 bytes)</string>
+    <string name="identity_hex_error">Enter an even-length hexadecimal ID of 12-40 characters</string>
+    <string name="identity_text_error">Description must contain 6-20 UTF-8 bytes</string>
+    <string name="identity_empty_error">Identity cannot be empty</string>
     <string name="lock_status_09">BLE wakes up device to connect network.</string>
     <string name="error_retry">Error,please try again.</string>
     <string name="func_not_open">The current function is not turned on.</string>
@@ -190,8 +201,8 @@
     <string name="ip_domain">Domain/IP</string>
     <string name="port">Port</string>
     <string name="acc_on_value_warning">Ignition on is from 5 to 65535 or 0,0 means it is disable.</string>
-    <string name="acc_off_value_warning">Ignition off must be 0 or between 1200 and 2147483647</string>
-    <string name="angle_value_warning">Angle mustis from 15 to 180 or 0,0 means it is disable.</string>
+    <string name="acc_off_value_warning">Ignition off must between 0 and 2147483647</string>
+    <string name="angle_value_warning">Angle must is from 15 to 180 or 0,0 means it is disable.</string>
     <string name="distance_value_warning">Distance is from 10 to 65535 or 0,0 means it is disable.</string>
     <string name="port_invalid">Invalid port number</string>
     <string name="port_warning">Port must be between 0 and 65535</string>
@@ -323,4 +334,15 @@
     <string name="gps_location">GPS location alarm</string>
     <string name="gps_location_lost">GPS location lost alarm</string>
     <string name="lock_status_0a">Key wakes up device to connect network.</string>
+    <!-- Bluetooth Permission -->
+    <string name="permission_request_title">Permission Request</string>
+    <string name="permission_bluetooth_general_desc">This app needs the following permissions to use Bluetooth features:</string>
+    <string name="permission_bluetooth_scan_desc">Bluetooth Scan: Used to discover nearby Bluetooth devices</string>
+    <string name="permission_bluetooth_connect_desc">Bluetooth Connect: Used to connect to Bluetooth devices</string>
+    <string name="permission_location_desc">Location: Used for Bluetooth device discovery (required by Android system)</string>
+    <string name="permission_denied_title">Permission Denied</string>
+    <string name="permission_denied_desc">Bluetooth permissions are required to use this feature. Please enable them in Settings.</string>
+    <string name="location_service_title">Location Service</string>
+    <string name="location_service_desc">Location service is required for Bluetooth scanning. Please enable it.</string>
+    <string name="go_to_settings">Go to Settings</string>
 </resources>

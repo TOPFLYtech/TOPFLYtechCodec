@@ -8,7 +8,6 @@
 import Foundation
 import UIKit
 import CLXToast
-import QMUIKit
 
 class EditInstructionSequenceController : UIViewController {
  
@@ -18,7 +17,22 @@ class EditInstructionSequenceController : UIViewController {
     private var fontSize:CGFloat = Utils.fontSize
     
     override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        self.tftHideTopBar()
         self.connectStatusDelegate?.setConnectStatus()
+    }
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.tftShowTopBar()
+    }
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
+    }
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        self.tftLayoutTopBar()
+        self.tftAdjustContentBelowTopBarIfNeeded()
     }
     @objc func dismissKeyboard()
        {
@@ -26,21 +40,23 @@ class EditInstructionSequenceController : UIViewController {
        }
     override func viewDidLoad() {
         self.view.backgroundColor = UIColor.white
-        let titleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
-        titleLabel.text = NSLocalizedString("send_instruction_sequence", comment: "Send instruction sequence")
-        self.navigationItem.titleView = titleLabel
+        self.tftInstallTopBar(title: NSLocalizedString("send_instruction_sequence", comment: "Send instruction sequence"))
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(
                     target: self,
                     action: #selector(dismissKeyboard))
 
                 tap.cancelsTouchesInView = false
                 view.addGestureRecognizer(tap)
+        let viewWidth = Int(self.view.bounds.width)
+        let navBottomY = Int(self.tftTopContentY())
+        self.tftRememberInitialContentTop(CGFloat(navBottomY))
+        let editorTopY = navBottomY + 16
         
         self.etCmd = UITextView()
         self.etCmd.font = UIFont.systemFont(ofSize: fontSize)
         self.etCmd.textColor = UIColor.black
         self.etCmd.layer.borderWidth=1
-        self.etCmd.frame = CGRect(x:15,y:80,width:Int(KSize.width) - 30,height: 180)
+        self.etCmd.frame = CGRect(x:15,y:editorTopY,width:viewWidth - 30,height: 180)
         self.view.addSubview(self.etCmd)
        
        
@@ -48,7 +64,7 @@ class EditInstructionSequenceController : UIViewController {
         self.submitBtn.titleLabel?.font = UIFont.systemFont(ofSize: fontSize)
         self.submitBtn.setTitle(NSLocalizedString("submit", comment: "Submit"), for: .normal)
         self.submitBtn.ghostColor = UIColor.colorPrimary 
-        self.submitBtn.frame = CGRect(x: Int((KSize.width - 200) / 2), y: 270, width: 200, height: 30)
+        self.submitBtn.frame = CGRect(x: Int((viewWidth - 200) / 2), y: editorTopY + 190, width: 200, height: 30)
         self.submitBtn.addTarget(self, action: #selector(submit), for:.touchUpInside)
         self.view.addSubview(self.submitBtn)
  

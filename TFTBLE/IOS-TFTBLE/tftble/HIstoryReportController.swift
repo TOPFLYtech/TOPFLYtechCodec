@@ -14,7 +14,6 @@ import MessageUI
 import CLXToast
 import SwiftPopMenu
 import PDFGenerator
-import QMUIKit
 import Charts
 class HistoryReportController:UIViewController, UITableViewDataSource,UITableViewDelegate,MFMailComposeViewControllerDelegate{
    
@@ -71,6 +70,24 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
     private var isHadValidTempData = false
     var popMenu:SwiftPopMenu!
     
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        self.tftHideTopBar()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
+        self.tftShowTopBar()
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        self.tftLayoutTopBar()
+        self.tftAdjustContentBelowTopBarIfNeeded()
+        self.tftEnsureTopContentClearance(padding: 8)
+    }
+    
     override func viewWillDisappear(_ animated:Bool) {
             super.viewWillDisappear(animated)
             navigationController?.interactivePopGestureRecognizer?.isEnabled = true;
@@ -79,15 +96,19 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
         
 
         override func viewDidAppear(_ animated:Bool) {
+        super.viewDidAppear(animated)
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
             navigationController?.interactivePopGestureRecognizer?.isEnabled = false;
         }
-    
+    var extSensorType = 0
     override func viewDidLoad() {
         super.viewDidLoad()
         self.view.backgroundColor = UIColor.white
-        let titleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
-        titleLabel.text = NSLocalizedString("report", comment: "Report")
-        self.navigationItem.titleView = titleLabel
+        self.tftInstallTopBar(
+            title: NSLocalizedString("report", comment: "Report"),
+            rightIconName: "ic_category.png",
+            rightAction: #selector(self.rightClick)
+        )
         self.initRightBtn()		
 //                self.readFile()
         for item in showBleHisData {
@@ -98,6 +119,7 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
                 isHadValidHumidityData = true
             }
         }
+        isHadValidHumidityData = extSensorType == 3
         self.initData()
         self.initUI()
         self.makeTable()
@@ -157,13 +179,6 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
     }
     
     func initRightBtn(){
-        let btn = UIButton.init(frame: CGRect.init(x: KSize.width - 50, y: 0, width: 25, height: 25))
-        btn.setImage(UIImage(named:"ic_category.png"), for: .normal)
-        let rightBarButtonItem =  UIBarButtonItem.init(customView: btn)
-        btn.addTarget(self, action: #selector(self.rightClick), for: .touchUpInside)
-        self.navigationItem.rightBarButtonItem = rightBarButtonItem
-        
-        
         //数据源（icon可不填）
         let popData = [(icon:"",title:NSLocalizedString("send_pdf", comment: "Send pdf")),
                        (icon:"",title:NSLocalizedString("send_excel", comment: "Send excel")),
@@ -360,15 +375,18 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
         worksheet_write_string(sheet, lxw_row_t(rowIndex), 2, txBatteryEnd.text, nil)
         rowIndex+=1
         
-        worksheet_write_string(sheet, lxw_row_t(rowIndex), 0, txDescReportProp.text, nil)
-        let propOpen = self.deviceType == "S02" || self.deviceType == "S10" ? NSLocalizedString("light", comment:"Light:") : NSLocalizedString("open_desc", comment: "Open:")
-        let propClose = self.deviceType == "S02" || self.deviceType == "S10" ? NSLocalizedString("dark_desc", comment: "Dark:" ): NSLocalizedString("close_desc", comment: "Close:")
-        worksheet_write_string(sheet, lxw_row_t(rowIndex), 1, String(format:"%@%@",propOpen,txOpenCount.text as! CVarArg), nil)
-        worksheet_write_string(sheet, lxw_row_t(rowIndex), 2, String(format:"%@%@",propClose, txCloseCount.text as! CVarArg), nil)
-        rowIndex+=1
-        rowIndex+=1
+        if self.deviceType != "S10"{
+            worksheet_write_string(sheet, lxw_row_t(rowIndex), 0, txDescReportProp.text, nil)
+            let propOpen = self.deviceType == "S02" || self.deviceType == "S10" ? NSLocalizedString("light", comment:"Light:") : NSLocalizedString("open_desc", comment: "Open:")
+            let propClose = self.deviceType == "S02" || self.deviceType == "S10" ? NSLocalizedString("dark_desc", comment: "Dark:" ): NSLocalizedString("close_desc", comment: "Close:")
+            worksheet_write_string(sheet, lxw_row_t(rowIndex), 1, String(format:"%@%@",propOpen,txOpenCount.text as! CVarArg), nil)
+            worksheet_write_string(sheet, lxw_row_t(rowIndex), 2, String(format:"%@%@",propClose, txCloseCount.text as! CVarArg), nil)
+            rowIndex+=1
+            rowIndex+=1
+        }
+       
         
-        if self.deviceType == "S02" {
+        if self.deviceType == "S02" || (self.deviceType == "S10" && isHadValidHumidityData) {
             worksheet_write_string(sheet, lxw_row_t(rowIndex), 0, "", nil)
             worksheet_write_string(sheet, lxw_row_t(rowIndex), 1, txS02TempHead.text, nil)
             worksheet_write_string(sheet, lxw_row_t(rowIndex), 2, txS02HumidityHead.text, nil)
@@ -479,15 +497,17 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
         }
         
         var detailRowIndex = 55
-        if self.deviceType != "S02" || self.deviceType == "S10"{
+        if self.deviceType != "S02" || !(self.deviceType == "S10" && isHadValidHumidityData){
             detailRowIndex = 38
         }
         worksheet_write_string(sheet, lxw_row_t(detailRowIndex), 0, NSLocalizedString("date1", comment: "Date"), nil)
         worksheet_write_string(sheet, lxw_row_t(detailRowIndex), 1, NSLocalizedString("battery1", comment: "Battery"), nil)
         worksheet_write_string(sheet, lxw_row_t(detailRowIndex), 2, NSLocalizedString("temp1", comment: "Temperature"), nil)
-        if deviceType == "S02"  {
+        if deviceType == "S02" || (self.deviceType == "S10" && isHadValidHumidityData) {
             worksheet_write_string(sheet, lxw_row_t(detailRowIndex), 3, NSLocalizedString("humidity1", comment: "Humidity"), nil)
-            worksheet_write_string(sheet, lxw_row_t(detailRowIndex), 4, NSLocalizedString("light1", comment: "Light"), nil)
+            if self.deviceType != "S10"{
+                worksheet_write_string(sheet, lxw_row_t(detailRowIndex), 4, NSLocalizedString("light_sensor", comment: "Light Sense"), nil)
+            }
         }else if self.deviceType == "S10"{
             
         }else{
@@ -511,14 +531,17 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
             }
             
             
-            if deviceType == "S02"  {
+            if deviceType == "S02" || (deviceType == "S10" && isHadValidHumidityData)  {
                 if bleHisItem.humidity == -999{
                       worksheet_write_string(sheet, lxw_row_t(detailRowIndex+index), 3, "-", nil)
                 }else{
                       worksheet_write_number(sheet, lxw_row_t(detailRowIndex+index), 3, Double(bleHisItem.humidity), nil)
                 }
-                let prop = bleHisItem.prop == 1 ? NSLocalizedString("light1", comment: "Light") : NSLocalizedString("dark", comment: "Dark")
-                worksheet_write_string(sheet, lxw_row_t(detailRowIndex+index), 4, prop, nil)
+                if deviceType == "S02"{
+                    let prop = bleHisItem.prop == 1 ? NSLocalizedString("light1", comment: "Light") : NSLocalizedString("dark", comment: "Dark")
+                    worksheet_write_string(sheet, lxw_row_t(detailRowIndex+index), 4, prop, nil)
+                }
+                
             }else if self.deviceType == "S10"{
                 
             }else{
@@ -570,7 +593,7 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
         let bomData = Data(bomHeader)
         let handle = FileHandle(forWritingAtPath:path)
         handle?.write(bomData)
-        var StrItem = "\(NSLocalizedString("date1", comment: "Date")),\(NSLocalizedString("battery1", comment: "Battery")),\(NSLocalizedString("temp1", comment: "Temperature")),\(NSLocalizedString("humidity1", comment: "Humidity")),\(NSLocalizedString("light1", comment: "Light"))\n"
+        var StrItem = "\(NSLocalizedString("date1", comment: "Date")),\(NSLocalizedString("battery1", comment: "Battery")),\(NSLocalizedString("temp1", comment: "Temperature")),\(NSLocalizedString("humidity1", comment: "Humidity")),\(NSLocalizedString("light_sensor", comment: "Light Sense"))\n"
         if self.deviceType == "S04"{
             StrItem = "\(NSLocalizedString("date1", comment: "Date")),\(NSLocalizedString("battery1", comment: "Battery")),\(NSLocalizedString("temp1", comment: "Temperature")),\(NSLocalizedString("door1", comment: "Door")),\(NSLocalizedString("alarm1", comment: "Alarm"))\n"
         }
@@ -578,7 +601,11 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
             StrItem = "\(NSLocalizedString("date1", comment: "Date")),\(NSLocalizedString("battery1", comment: "Battery")),\(NSLocalizedString("temp1", comment: "Temperature")),\(NSLocalizedString("door1", comment: "Door"))\n"
         }
         if  self.deviceType == "S10"{
-            StrItem = "\(NSLocalizedString("date1", comment: "Date")),\(NSLocalizedString("battery1", comment: "Battery")),\(NSLocalizedString("temp1", comment: "Temperature"))\n"
+            if isHadValidHumidityData {
+                StrItem = "\(NSLocalizedString("date1", comment: "Date")),\(NSLocalizedString("battery1", comment: "Battery")),\(NSLocalizedString("temp1", comment: "Temperature")),\(NSLocalizedString("humidity1", comment: "Humidity"))\n"
+            }else{
+                StrItem = "\(NSLocalizedString("date1", comment: "Date")),\(NSLocalizedString("battery1", comment: "Battery")),\(NSLocalizedString("temp1", comment: "Temperature"))\n"
+            }
         }
         handle?.write(StrItem.data(using: String.Encoding.utf8)!)
         for var i in 0..<self.showBleHisData.count{
@@ -606,9 +633,16 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
                 if bleHisItem.humidity != -999{
                     humidityStr = String(format:"%d",bleHisItem.humidity)
                 }
-                StrItem = self.dateFormatter.string(from: Date(timeIntervalSince1970: Double(bleHisItem.dateStamp))) + "," + String(format:"%d%%",bleHisItem.battery)
-                + "," + tempStr
-                + "\n"
+                if isHadValidHumidityData{
+                    StrItem = self.dateFormatter.string(from: Date(timeIntervalSince1970: Double(bleHisItem.dateStamp))) + "," + String(format:"%d%%",bleHisItem.battery)
+                    + "," + tempStr + "," + humidityStr
+                    + "\n"
+                }else{
+                    StrItem = self.dateFormatter.string(from: Date(timeIntervalSince1970: Double(bleHisItem.dateStamp))) + "," + String(format:"%d%%",bleHisItem.battery)
+                    + "," + tempStr
+                    + "\n"
+                }
+                
             }else{
                 var tempStr = "-"
                 if bleHisItem.temp != -999{
@@ -703,7 +737,12 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
             headView.frame = CGRect(x: 0, y: 0, width: KSize.width, height: 40)
             detailTableView.tableHeaderView = headView
             if self.deviceType == "S10"{
-                headView.humidityLabel.isHidden = true
+                if isHadValidHumidityData{
+                    headView.humidityLabel.isHidden = false
+                }else{
+                    headView.humidityLabel.isHidden = true
+                }
+                
                 headView.propLabel.isHidden = true
             }else{
                 headView.humidityLabel.isHidden = false
@@ -747,7 +786,7 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
     }
     
     @objc func pageRangeClick(sender:UIButton){
-        ActionSheetStringPicker.show(withTitle: "", rows: self.pageRangeList, initialSelection:self.currentPage - 1, doneBlock: {
+        ActionSheetStringPicker.show(withTitle: nil, rows: self.pageRangeList, initialSelection:self.currentPage - 1, doneBlock: {
             picker, index, value in
             self.currentPage = index + 1
             //                        print("values = \(values)")
@@ -823,7 +862,12 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
             cell.humidityLabel.text = humidityStr
             cell.propLabel.text = bleHisItem.prop == 1 ? NSLocalizedString("light1", comment: "Light") : NSLocalizedString("dark", comment: "Dark")
             if self.deviceType == "S10"{
-                cell.humidityLabel.isHidden = true
+                if isHadValidHumidityData{
+                    cell.humidityLabel.isHidden = false
+                }else{
+                    cell.humidityLabel.isHidden = true
+                }
+                
                 cell.propLabel.isHidden = true
             }else{
                 cell.humidityLabel.isHidden = false
@@ -901,6 +945,7 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
         self.endBattery = endItem.battery
         var tempStr = "-"
         if beginItem.temp != -999{
+            // 假设 Utils.getCurTemp 返回 Float
             tempStr = String(format:"%.2f",Utils.getCurTemp(sourceTemp: beginItem.temp))
         }
         self.beginTemp = tempStr
@@ -909,16 +954,15 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
             tempStr = String(format:"%.2f",Utils.getCurTemp(sourceTemp: endItem.temp))
         }
         self.endTemp = tempStr
+        // 假设 beginHumidity/endHumidity 属性是 Float 类型
         self.beginHumidity = Float(beginItem.humidity)
         self.endHumidity = Float(endItem.humidity)
+
         self.propOpenCount = 0
         self.propCloseCount = 0
-        self.maxTemp = -998
-        self.minTemp = beginItem.temp
-        self.maxHumidity = -998
-        self.minHumidity = beginItem.humidity
         self.tempSum=0
         self.humiditySum = 0
+
         self.overMaxTempLimitCount = 0
         self.overMaxTempLimitTime = 0
         self.overMinTempLimitCount = 0
@@ -927,77 +971,138 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
         self.overMaxHumidityLimitTime = 0
         self.overMinHumidityLimitCount = 0
         self.overMinHumidityLimitTime = 0
-        var beginTempUp = false,beginTempDown = false,beginHumidityUp = false,beginHumidityDown = false;
-        var startHighTempCalDate = 0,endHighTempCalDate = 0,startHighHumidityCalDate = 0,endHighHumidityCalDate = 0;
-        var startLowTempCalDate = 0,endLowTempCalDate = 0,startLowHumidityCalDate = 0,endLowHumidityCalDate = 0;
-//        if showBleHisData.count > 0{
-//            let bleHisData = showBleHisData[0]
-//            maxTemp = bleHisData.temp
-//            minTemp = bleHisData.temp
-//            maxHumidity = bleHisData.humidity
-//            minHumidity = bleHisData.humidity
-//        }
-        var i = 0
-        while i < showBleHisData.count{
+
+        // ⚠️ 修复点 1: 确保 max/minTemp/Humidity 的初始化与 Java 逻辑一致
+        // Java 代码逻辑是：如果列表不为空，用第一个有效数据初始化 max/min。
+        // Swift 代码应使用第一个项目进行初始化。
+        if showBleHisData.count > 0 {
+            let firstItem = showBleHisData[0]
+            self.maxTemp = firstItem.temp
+            self.minTemp = firstItem.temp
+            self.maxHumidity = firstItem.humidity
+            self.minHumidity = firstItem.humidity
+        } else {
+            // 列表为空时的安全处理，虽然前面取 beginItem/endItem 时已经隐含了 count > 0
+            self.maxTemp = -999 // 或其他合适默认值
+            self.minTemp = -999
+            self.maxHumidity = -999
+            self.minHumidity = -999
+        }
+
+        // ⚠️ 修复点 2: 添加布尔变量来跟踪连续超限状态 (Java 中的 beginTempUp/Down, beginHumidityUp/Down)
+        var beginTempUp = false
+        var beginTempDown = false
+        var beginHumidityUp = false
+        var beginHumidityDown = false
+
+        // Java代码中未使用 startTempCalDate/endTempCalDate 等变量，它们可以被移除或忽略。
+
+        for i in 0..<showBleHisData.count {
             let bleHisData = showBleHisData[i]
+            let lastItem: BleHisData? = i > 0 ? showBleHisData[i - 1] : nil
+            
+            // 累加求和
             if bleHisData.temp != -999{
-                tempSum+=bleHisData.temp
+                self.tempSum += bleHisData.temp
             }
             if bleHisData.humidity != -999{
-                humiditySum += Float(bleHisData.humidity)
+                self.humiditySum += Float(bleHisData.humidity)
             }
             
+            // 统计 Prop 状态
             if bleHisData.prop == 1{
-                propOpenCount+=1
+                self.propOpenCount += 1
             }else{
-                propCloseCount+=1
+                self.propCloseCount += 1
             }
-            if bleHisData.temp > self.maxTemp && bleHisData.temp != -999{
-                self.maxTemp = bleHisData.temp
-            }
-            if bleHisData.temp < self.minTemp && bleHisData.temp != -999{
-                self.minTemp = bleHisData.temp
-            }
-            if bleHisData.humidity > maxHumidity && bleHisData.humidity != -999{
-                self.maxHumidity = bleHisData.humidity
-            }
-            if bleHisData.humidity < self.minHumidity && bleHisData.humidity != -999{
-                self.minHumidity = bleHisData.humidity
-            }
-            if tempAlarmUp != 4095 && bleHisData.temp > Float(tempAlarmUp) && bleHisData.temp != -999{
-                if i != 0{
-                    var lastItem = showBleHisData[i - 1]
-                    overMaxTempLimitTime += bleHisData.dateStamp - lastItem.dateStamp
+            
+            // 最大/最小值更新
+            if bleHisData.temp != -999 {
+                if bleHisData.temp > self.maxTemp {
+                    self.maxTemp = bleHisData.temp
                 }
-                overMaxTempLimitCount+=1
-            }
-            if tempAlarmDown != 4095 && bleHisData.temp < Float(tempAlarmDown) && bleHisData.temp != -999{
-                if i != 0{
-                    var lastItem = showBleHisData[i - 1]
-                    overMinTempLimitTime += bleHisData.dateStamp - lastItem.dateStamp
+                if bleHisData.temp < self.minTemp {
+                    self.minTemp = bleHisData.temp
                 }
-                overMinTempLimitCount+=1
             }
+            
+            if bleHisData.humidity != -999 {
+                if bleHisData.humidity > self.maxHumidity {
+                    self.maxHumidity = bleHisData.humidity
+                }
+                if bleHisData.humidity < self.minHumidity {
+                    self.minHumidity = bleHisData.humidity
+                }
+            }
+
+            // --- ⚠️ 修复点 3: 温湿度超限时间和计数逻辑 (关键修复) ---
+
+            // 温度上限报警
+            if tempAlarmUp != 4095 && bleHisData.temp != -999 {
+                if bleHisData.temp > Float(tempAlarmUp) {
+                    if beginTempUp && lastItem != nil {
+                        // 连续超限，累加时间差
+                        self.overMaxTempLimitTime += bleHisData.dateStamp - lastItem!.dateStamp
+                    }
+                    beginTempUp = true
+                    self.overMaxTempLimitCount += 1 // 只要超限就计数
+                } else {
+                    beginTempUp = false // 退出超限状态
+                }
+            }
+            
+            // 温度下限报警
+            if tempAlarmDown != 4095 && bleHisData.temp != -999 {
+                if bleHisData.temp < Float(tempAlarmDown) {
+                    if beginTempDown && lastItem != nil {
+                        // 连续超限，累加时间差
+                        self.overMinTempLimitTime += bleHisData.dateStamp - lastItem!.dateStamp
+                    }
+                    beginTempDown = true
+                    self.overMinTempLimitCount += 1 // 只要超限就计数
+                } else {
+                    beginTempDown = false // 退出超限状态
+                }
+            }
+            
             if self.deviceType == "S02" || self.deviceType == "S10"{
-                if humidityAlarmUp != 4095 && bleHisData.humidity > humidityAlarmUp && bleHisData.humidity != -999{
-                    if i != 0{
-                        var lastItem = showBleHisData[i - 1]
-                        overMaxHumidityLimitTime += bleHisData.dateStamp - lastItem.dateStamp
+                // 湿度上限报警
+                if humidityAlarmUp != 4095 && bleHisData.humidity != -999 {
+                    if bleHisData.humidity > humidityAlarmUp {
+                        if beginHumidityUp && lastItem != nil {
+                            // 连续超限，累加时间差
+                            self.overMaxHumidityLimitTime += bleHisData.dateStamp - lastItem!.dateStamp
+                        }
+                        beginHumidityUp = true
+                        self.overMaxHumidityLimitCount += 1 // 只要超限就计数
+                    } else {
+                        beginHumidityUp = false // 退出超限状态
                     }
-                    overMaxHumidityLimitCount+=1
                 }
-                if humidityAlarmDown != 4095 && bleHisData.humidity < humidityAlarmDown && bleHisData.humidity != -999{
-                    if i != 0{
-                        var lastItem = showBleHisData[i - 1]
-                        overMinHumidityLimitTime += bleHisData.dateStamp - lastItem.dateStamp
+                
+                // 湿度下限报警
+                if humidityAlarmDown != 4095 && bleHisData.humidity != -999 {
+                    if bleHisData.humidity < humidityAlarmDown {
+                        if beginHumidityDown && lastItem != nil {
+                            // 连续超限，累加时间差
+                            self.overMinHumidityLimitTime += bleHisData.dateStamp - lastItem!.dateStamp
+                        }
+                        beginHumidityDown = true
+                        self.overMinHumidityLimitCount += 1 // 只要超限就计数
+                    } else {
+                        beginHumidityDown = false // 退出超限状态
                     }
-                    overMinHumidityLimitCount+=1
                 }
             }
-            i+=1
         }
-        averageHumidity = Float(humiditySum) / Float(showBleHisData.count)
-        averageTemp = tempSum / Float(showBleHisData.count)
+        // 计算平均值
+        if showBleHisData.count > 0 {
+            self.averageHumidity = self.humiditySum / Float(showBleHisData.count)
+            self.averageTemp = self.tempSum / Float(showBleHisData.count)
+        } else {
+            self.averageHumidity = 0
+            self.averageTemp = 0
+        }
         if self.deviceType == "S02"{
             self.deviceModel = "TSTH1-B"
         }else if self.deviceType == "S04"{
@@ -1013,7 +1118,9 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
     
     func initUI(){
         self.mainView = UIScrollView()
-        self.mainView.frame = self.view.bounds
+        let navBottomY = self.tftTopContentY()
+        self.tftRememberInitialContentTop(navBottomY)
+        self.mainView.frame = CGRect(x: 0, y: navBottomY, width: self.view.bounds.width, height: self.view.bounds.height - navBottomY)
         //为了让内容横向滚动，设置横向内容宽度为3个页面的宽度总和
         self.mainView.contentSize = CGSize(width: KSize.width, height: 2000)
         //        scrollView.isPagingEnabled = true
@@ -1031,7 +1138,7 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
         //sum panel
         self.sumView = UIView.init()
         sumView.backgroundColor = UIColor.clear
-        sumView.layer.cornerRadius = 5;
+        sumView.layer.cornerRadius = 8;
         sumView.layer.masksToBounds = true
         sumView.layer.borderWidth = 0.3
         sumView.layer.borderColor = UIColor.gray.cgColor
@@ -1120,17 +1227,17 @@ class HistoryReportController:UIViewController, UITableViewDataSource,UITableVie
         //next panel
         secondView = UIView.init()
         secondView.backgroundColor = UIColor.clear
-        secondView.layer.cornerRadius = 5;
+        secondView.layer.cornerRadius = 8;
         secondView.layer.masksToBounds = true
         secondView.layer.borderWidth = 0.3
         secondView.layer.borderColor = UIColor.gray.cgColor
         secondView.isUserInteractionEnabled = true
         self.mainView.addSubview(secondView)
         startLabelY = 0
-        if self.deviceType == "S02"{
+        if self.deviceType == "S02" || (self.deviceType == "S10" && isHadValidHumidityData){
             var isSupportHumidity = true
             if self.deviceType == "S10"{
-                isSupportHumidity = false
+                isSupportHumidity = isHadValidHumidityData
             }
             self.txS02TempHead = UILabel()
             self.initLabel(label: self.txS02TempHead, content: String(format:"%@(%@)",NSLocalizedString("temp1", comment: "Temperature"),Utils.getCurTempUnit()), x: contentX, y: startLabelY, width: descWidth, height: labelHigh, containView: secondView)

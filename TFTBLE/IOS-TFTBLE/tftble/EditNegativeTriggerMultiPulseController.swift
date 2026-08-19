@@ -10,7 +10,6 @@
 import Foundation
 import UIKit
 import CLXToast
-import QMUIKit
 class EditNegativeTriggerMultiPulseController : UIViewController,UITextFieldDelegate {
     private var portLabel:UILabel!
     private var portInput:UITextField!
@@ -30,7 +29,22 @@ class EditNegativeTriggerMultiPulseController : UIViewController,UITextFieldDele
     
     
     override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        self.tftHideTopBar()
         self.connectStatusDelegate?.setConnectStatus()
+    }
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.tftShowTopBar()
+    }
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
+    }
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        self.tftLayoutTopBar()
+        self.tftAdjustContentBelowTopBarIfNeeded()
     }
     @objc func dismissKeyboard()
     {
@@ -38,11 +52,12 @@ class EditNegativeTriggerMultiPulseController : UIViewController,UITextFieldDele
     }
     override func viewDidLoad() {
         self.view.backgroundColor = UIColor.white
-        let titleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
-        titleLabel.text = NSLocalizedString("relay_pulse", comment: "Pulse")
-        self.navigationItem.titleView = titleLabel
-        let descWidth = Int(KSize.width / 2)
-        let contentX = Int(KSize.width / 2 + 10)
+        self.tftInstallTopBar(title: NSLocalizedString("relay_pulse", comment: "Pulse"))
+        let viewWidth = Int(self.view.bounds.width)
+        let navBottomY = Int(self.tftTopContentY())
+        self.tftRememberInitialContentTop(CGFloat(navBottomY))
+        let descWidth = Int(CGFloat(viewWidth) / 2.0)
+        let contentX = descWidth + 10
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(
             target: self,
             action: #selector(dismissKeyboard))
@@ -50,10 +65,10 @@ class EditNegativeTriggerMultiPulseController : UIViewController,UITextFieldDele
         tap.cancelsTouchesInView = false
         view.addGestureRecognizer(tap)
         
-        var startLabelY:Int = 60
-        var startInputY:Int = 75
+        var startLabelY:Int = navBottomY + 10
+        var startInputY:Int = navBottomY + 25
         let lineHigh:Int = 60
-        var lineY:Int = 120
+        var lineY:Int = navBottomY + 70
         self.portLabel = UILabel()
           self.portLabel.font = UIFont.systemFont(ofSize: fontSize)
           self.portLabel.textColor = UIColor.black
@@ -73,7 +88,7 @@ class EditNegativeTriggerMultiPulseController : UIViewController,UITextFieldDele
             self.view.addSubview(self.portInput)
           let portLine = UIView()
           portLine.backgroundColor = UIColor.gray
-          portLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(KSize.width), height: 0.5)
+          portLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(viewWidth), height: 0.5)
           self.view.addSubview(portLine)
           startLabelY += lineHigh
           lineY += lineHigh
@@ -95,7 +110,7 @@ class EditNegativeTriggerMultiPulseController : UIViewController,UITextFieldDele
         self.view.addSubview(self.startLevelInput)
         let startLevelLine = UIView()
         startLevelLine.backgroundColor = UIColor.gray
-        startLevelLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(KSize.width), height: 0.5)
+        startLevelLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(viewWidth), height: 0.5)
         self.view.addSubview(startLevelLine)
         startLabelY += lineHigh
         lineY += lineHigh
@@ -119,7 +134,7 @@ class EditNegativeTriggerMultiPulseController : UIViewController,UITextFieldDele
         self.view.addSubview(self.highLevelPulseWidthTimeInput)
         let highLevelPulseWidthTimeLine = UIView()
         highLevelPulseWidthTimeLine.backgroundColor = UIColor.gray
-        highLevelPulseWidthTimeLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(KSize.width), height: 0.5)
+        highLevelPulseWidthTimeLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(viewWidth), height: 0.5)
         self.view.addSubview(highLevelPulseWidthTimeLine)
         startLabelY += lineHigh
         lineY += lineHigh
@@ -142,7 +157,7 @@ class EditNegativeTriggerMultiPulseController : UIViewController,UITextFieldDele
         self.view.addSubview(self.lowLevelPulseWidthTimeInput)
         let lowLevelPulseWidthTimeLine = UIView()
         lowLevelPulseWidthTimeLine.backgroundColor = UIColor.gray
-        lowLevelPulseWidthTimeLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(KSize.width), height: 0.5)
+        lowLevelPulseWidthTimeLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(viewWidth), height: 0.5)
         self.view.addSubview(lowLevelPulseWidthTimeLine)
         startLabelY += lineHigh
         lineY += lineHigh
@@ -165,7 +180,7 @@ class EditNegativeTriggerMultiPulseController : UIViewController,UITextFieldDele
         self.view.addSubview(self.pulseCountInput)
         let pulseCountLine = UIView()
         pulseCountLine.backgroundColor = UIColor.gray
-        pulseCountLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(KSize.width), height: 0.5)
+        pulseCountLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(viewWidth), height: 0.5)
         self.view.addSubview(pulseCountLine)
         startLabelY += lineHigh
         lineY += lineHigh
@@ -175,7 +190,7 @@ class EditNegativeTriggerMultiPulseController : UIViewController,UITextFieldDele
         self.submitBtn.titleLabel?.font = UIFont.systemFont(ofSize: fontSize)
         self.submitBtn.setTitle(NSLocalizedString("submit", comment: "Submit"), for: .normal)
         self.submitBtn.ghostColor = UIColor.colorPrimary
-        self.submitBtn.frame = CGRect(x: Int((KSize.width - 200) / 2), y: startLabelY + 10, width: 200, height: 30)
+        self.submitBtn.frame = CGRect(x: Int((viewWidth - 200) / 2), y: startLabelY + 10, width: 200, height: 30)
         self.submitBtn.addTarget(self, action: #selector(submit), for:.touchUpInside)
         self.view.addSubview(self.submitBtn)
         

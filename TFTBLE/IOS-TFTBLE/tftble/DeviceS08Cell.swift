@@ -9,7 +9,6 @@
 import Foundation
 import UIKit
 import JXMarqueeView
-import QMUIKit
 class DeviceS08Cell: UITableViewCell {
     private var fontSize:CGFloat = Utils.fontSize
     lazy var deviceNameLabel: UILabel = {
@@ -171,6 +170,8 @@ class DeviceS08Cell: UITableViewCell {
         let label = UILabel()
         label.textColor = UIColor.black
         label.font = UIFont.systemFont(ofSize: fontSize)
+        label.lineBreakMode = .byCharWrapping
+        label.numberOfLines = 0
         return label
     }()
     
@@ -185,6 +186,8 @@ class DeviceS08Cell: UITableViewCell {
         let label = UILabel()
         label.textColor = UIColor.black
         label.font = UIFont.systemFont(ofSize: fontSize)
+        label.lineBreakMode = .byCharWrapping
+        label.numberOfLines = 0
         return label
     }()
     

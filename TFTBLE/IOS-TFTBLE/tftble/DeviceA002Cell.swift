@@ -9,7 +9,6 @@
 import Foundation
 import UIKit
 import JXMarqueeView
-import QMUIKit
 class DeviceA002Cell: UITableViewCell {
     private var fontSize:CGFloat = Utils.fontSize
     lazy var deviceNameLabel: UILabel = {
@@ -118,6 +117,21 @@ class DeviceA002Cell: UITableViewCell {
         let label = UILabel()
         label.textColor = UIColor.black
         label.font = UIFont.systemFont(ofSize: fontSize)
+        return label
+    }()
+    lazy var broadcastTypeLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.black
+        label.text = NSLocalizedString("broadcast_type_desc", comment: "Broadcast type:")
+        label.font = UIFont.systemFont(ofSize: fontSize)
+        return label
+    }()
+    lazy var broadcastTypeContentLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.black
+        label.font = UIFont.systemFont(ofSize: fontSize)
+        label.lineBreakMode = NSLineBreakMode.byWordWrapping
+        label.numberOfLines = 0
         return label
     }()
     lazy var inputLabel: UILabel = {
@@ -231,10 +245,10 @@ class DeviceA002Cell: UITableViewCell {
         }()
     
     var marqueeView:JXMarqueeView!
-//    override func layoutSubviews() {
-//        super.layoutSubviews()
-//       self.initLayoutPosition()
-//    }
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        self.initLayoutPosition()
+    }
     
     
      func resetPosition(version:String){
@@ -243,12 +257,16 @@ class DeviceA002Cell: UITableViewCell {
          initLayoutPosition()
      }
      
-    func initLayoutPosition(){ 
-        let descWidth:Int = Int(self.bounds.size.width / 2 - 20)
-        let contentX:Int = Int(self.bounds.size.width / 2)
+    func initLayoutPosition(){
+        let availableWidth = Int(self.contentView.bounds.size.width > 0 ? self.contentView.bounds.size.width : self.bounds.size.width)
+        guard availableWidth > 0 else {
+            return
+        }
+        let descWidth:Int = Int(CGFloat(availableWidth) / 2 - 20)
+        let contentX:Int = Int(CGFloat(availableWidth) / 2)
          
         var height:Int = 8
-        let contentLabelWidth:Int = Int(self.bounds.size.width) - contentX
+        let contentLabelWidth:Int = availableWidth - contentX - 8
         self.rootView.isUserInteractionEnabled=true
         self.deviceNameLabel.frame = CGRect(x: 8, y: height, width: descWidth, height: 30)
         self.deviceNameContentLabel.frame = CGRect(x: contentX, y: height, width: contentLabelWidth, height: 30)
@@ -273,6 +291,9 @@ class DeviceA002Cell: UITableViewCell {
         height += 30
         self.batteryLabel.frame = CGRect(x: 8, y: height, width: descWidth, height: 30)
         self.batteryContentLabel.frame = CGRect(x: contentX, y: height, width: contentLabelWidth, height: 30)
+        height += 30
+        self.broadcastTypeLabel.frame = CGRect(x: 8, y: height, width: descWidth, height: 30)
+        self.broadcastTypeContentLabel.frame = CGRect(x: contentX, y: height, width: contentLabelWidth, height: 30)
         height += 30
         
         self.inputLabel.frame = CGRect(x: 8, y: height, width: descWidth, height: 30)
@@ -303,7 +324,7 @@ class DeviceA002Cell: UITableViewCell {
         self.rootView.layer.masksToBounds = true
         self.rootView.layer.borderWidth = 1
         self.rootView.layer.borderColor = UIColor.nordicLightGray.cgColor
-        self.rootView.frame = CGRect(x: 5, y: 5, width: Int(self.bounds.size.width)-10, height: height + 12)
+        self.rootView.frame = CGRect(x: 5, y: 5, width: availableWidth - 10, height: height + 12)
 
     }
     func snpLayoutSubview(){
@@ -323,6 +344,8 @@ class DeviceA002Cell: UITableViewCell {
         self.rootView.addSubview(softwareContentLabel)
         self.rootView.addSubview(batteryLabel)
         self.rootView.addSubview(batteryContentLabel)
+        self.rootView.addSubview(broadcastTypeLabel)
+        self.rootView.addSubview(broadcastTypeContentLabel)
         self.rootView.addSubview(inputLabel)
         self.rootView.addSubview(inputContentLabel)
         self.rootView.addSubview(relayInputLabel)
@@ -364,4 +387,3 @@ class DeviceA002Cell: UITableViewCell {
         }
     }
 }
-

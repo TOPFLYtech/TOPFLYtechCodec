@@ -1,7 +1,9 @@
 package com.topflytech.lockActive;
 
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
@@ -34,6 +36,7 @@ import com.topflytech.lockActive.Ble.TftBleConnectManager;
 import com.topflytech.lockActive.data.BleDeviceData;
 import com.topflytech.lockActive.data.BleRespData;
 import com.topflytech.lockActive.data.DownloadFileManager;
+import com.topflytech.lockActive.data.IdentityInfoEncoder;
 import com.topflytech.lockActive.data.MyByteUtils;
 import com.topflytech.lockActive.data.OpenAPI;
 import com.topflytech.lockActive.data.UniqueIDTool;
@@ -61,8 +64,13 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.regex.Pattern;
 
 import cn.pedant.SweetAlert.SweetAlertDialog;
+import com.qmuiteam.qmui.widget.dialog.QMUIBottomSheet;
 
 public class UnlockActivity extends AppCompatActivity {
+    private static final String SGX110_IDENTITY_PREFS = "sgx110_identity_info";
+    private static final String SGX110_IDENTITY_BYTES = "identity_bytes";
+    private static final String SGX110_IDENTITY_DISPLAY = "identity_display";
+
     public static boolean isDebug = false;
     public static boolean isOnlyActiveNetwork = false;
 
@@ -84,6 +92,7 @@ public class UnlockActivity extends AppCompatActivity {
     private Button btnOpenLock;
     private Button btnLock;
     private Button btnActiveNetwork;
+    private Button btnCustomIdentity;
     private TextView tvLog;
     private TextView tvLockRefreshTime;
     private TextView tvUniqueIdTv;
@@ -92,9 +101,11 @@ public class UnlockActivity extends AppCompatActivity {
     private LinearLayout lnLock;
     private LinearLayout lnUnlock;
     private LinearLayout lnActiveNetwork;
+    private LinearLayout lnCustomIdentity;
     private Button btnClearLog;
     private Button btnRefreshStatus;
     private String uniqueID;
+    private byte[] selectedIdentityInfo;
 
     private String software;
     private String deviceId;
@@ -219,7 +230,22 @@ public class UnlockActivity extends AppCompatActivity {
         tvLockRefreshTime = (TextView)findViewById(R.id.tv_lock_refresh_time);
         tvUniqueIdTv = (TextView)findViewById(R.id.tv_unique_id);
         uniqueID = UniqueIDTool.getUniqueID();
-        tvUniqueIdTv.setText(uniqueID);
+        initIdentityInfo();
+        btnCustomIdentity = (Button)findViewById(R.id.btn_custom_identity);
+        lnCustomIdentity = (LinearLayout)findViewById(R.id.ln_custom_identity);
+        if (BleDeviceData.MODEL_OF_SGX110.equals(model)) {
+            lnCustomIdentity.setVisibility(View.VISIBLE);
+            btnCustomIdentity.setVisibility(View.VISIBLE);
+            btnCustomIdentity.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    showCustomIdentityDialog();
+                }
+            });
+        } else {
+            lnCustomIdentity.setVisibility(View.GONE);
+            btnCustomIdentity.setVisibility(View.GONE);
+        }
         btnOpenLock = (Button)findViewById(R.id.btn_unlock);
         lnShowLog = (LinearLayout)findViewById(R.id.ln_log);
         if (isDebug){
@@ -260,7 +286,7 @@ public class UnlockActivity extends AppCompatActivity {
         btnActiveNetwork.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                byte[] needSendBytes = getCmdContent(BleDeviceData.activeNetworkHead,new byte[]{0x00},true);
+                byte[] needSendBytes = getCmdContent(BleDeviceData.activeNetworkHead,new byte[]{0x00},selectedIdentityInfo);
                 TftBleConnectManager.getInstance().writeContent(needSendBytes);
             }
         });
@@ -408,7 +434,7 @@ public class UnlockActivity extends AppCompatActivity {
                             }
                         }
                     }else{
-                        byte[] needSendBytes = getCmdContent(BleDeviceData.unlockHead,pwd.getBytes(),true);
+                        byte[] needSendBytes = getCmdContent(BleDeviceData.unlockHead,pwd.getBytes(),selectedIdentityInfo);
                         TftBleConnectManager.getInstance().writeContent(needSendBytes);
                     }
 
@@ -430,26 +456,128 @@ public class UnlockActivity extends AppCompatActivity {
     }
 
     private byte[] getCmdContent(byte[] head,byte[] content,boolean isNeedUniqueID){
+        return getCmdContent(head, content, isNeedUniqueID ? IdentityInfoEncoder.encodeAutomatic(uniqueID) : null);
+    }
+
+    private byte[] getCmdContent(byte[] head, byte[] content, byte[] identityInfo){
         if (content == null){
             content = new byte[]{};
         }
         int len  = content.length;
-        if(isNeedUniqueID){
-            len += 6;
+        if(identityInfo != null){
+            len += identityInfo.length;
         }
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try {
             outputStream.write(head);
             outputStream.write(len);
             outputStream.write(content);
-            if(isNeedUniqueID){
-                outputStream.write(MyByteUtils.hexString2Bytes(uniqueID));
+            if(identityInfo != null){
+                outputStream.write(identityInfo);
             }
             return outputStream.toByteArray();
         } catch (IOException e) {
             e.printStackTrace();
         }
         return new byte[]{};
+    }
+
+    private void showCustomIdentityDialog() {
+        QMUIBottomSheet.BottomListSheetBuilder builder = new QMUIBottomSheet.BottomListSheetBuilder(this)
+                .setTitle(getString(R.string.custom_identity))
+                .addItem(getString(R.string.identity_mode_auto))
+                .addItem(getString(R.string.identity_mode_hex))
+                .addItem(getString(R.string.identity_mode_text));
+        builder.setOnSheetItemClickListener(new QMUIBottomSheet.BottomListSheetBuilder.OnSheetItemClickListener() {
+            @Override
+            public void onClick(QMUIBottomSheet dialog, View itemView, int position, String tag) {
+                dialog.dismiss();
+                if (position == 0) {
+                    selectedIdentityInfo = IdentityInfoEncoder.encodeAutomatic(uniqueID);
+                    tvUniqueIdTv.setText(uniqueID);
+                    saveIdentityInfo(selectedIdentityInfo, uniqueID);
+                } else {
+                    showIdentityInputDialog(position == 1);
+                }
+            }
+        });
+        builder.build().show();
+    }
+
+    private void showIdentityInputDialog(boolean hexadecimal) {
+        SweetAlertDialog inputDialog = new SweetAlertDialog(UnlockActivity.this, SweetAlertDialog.INPUT_TYPE);
+        inputDialog.getProgressHelper().setBarColor(Color.parseColor("#18c2d6"));
+        inputDialog.setTitleText(getString(hexadecimal ? R.string.identity_mode_hex : R.string.identity_mode_text));
+        inputDialog.setCancelable(true);
+        inputDialog.setCancelText(getResources().getString(R.string.cancel));
+        inputDialog.setConfirmText(getResources().getString(R.string.save));
+        inputDialog.setInputType(hexadecimal
+                ? InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                : InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
+        inputDialog.setInputText("");
+        inputDialog.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+            @Override
+            public void onClick(SweetAlertDialog sweetAlertDialog) {
+                String value = sweetAlertDialog.getInputText();
+                try {
+                    byte[] identityInfo = hexadecimal
+                            ? IdentityInfoEncoder.encodeHex(value)
+                            : IdentityInfoEncoder.encodeText(value);
+                    String displayValue = hexadecimal ? value.toUpperCase() : value;
+                    selectedIdentityInfo = identityInfo;
+                    tvUniqueIdTv.setText(displayValue);
+                    saveIdentityInfo(selectedIdentityInfo, displayValue);
+                    sweetAlertDialog.hide();
+                    sweetAlertDialog.dismiss();
+                } catch (IllegalArgumentException e) {
+                    Toast.makeText(UnlockActivity.this,
+                            value == null || value.isEmpty()
+                                    ? R.string.identity_empty_error
+                                    : (hexadecimal ? R.string.identity_hex_error : R.string.identity_text_error),
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        inputDialog.setCancelClickListener(new SweetAlertDialog.OnSweetClickListener() {
+            @Override
+            public void onClick(SweetAlertDialog sweetAlertDialog) {
+                sweetAlertDialog.hide();
+                sweetAlertDialog.dismiss();
+            }
+        });
+        inputDialog.show();
+    }
+
+    private void initIdentityInfo() {
+        selectedIdentityInfo = IdentityInfoEncoder.encodeAutomatic(uniqueID);
+        tvUniqueIdTv.setText(uniqueID);
+        if (!BleDeviceData.MODEL_OF_SGX110.equals(model)) {
+            return;
+        }
+
+        SharedPreferences preferences = getSharedPreferences(SGX110_IDENTITY_PREFS, Context.MODE_PRIVATE);
+        String savedBytes = preferences.getString(SGX110_IDENTITY_BYTES, null);
+        if (savedBytes == null || savedBytes.isEmpty()) {
+            return;
+        }
+        try {
+            selectedIdentityInfo = IdentityInfoEncoder.encodeHex(savedBytes);
+            String displayValue = preferences.getString(SGX110_IDENTITY_DISPLAY, savedBytes);
+            tvUniqueIdTv.setText(displayValue);
+        } catch (IllegalArgumentException e) {
+            preferences.edit().remove(SGX110_IDENTITY_BYTES).remove(SGX110_IDENTITY_DISPLAY).apply();
+        }
+    }
+
+    private void saveIdentityInfo(byte[] identityInfo, String displayValue) {
+        if (!BleDeviceData.MODEL_OF_SGX110.equals(model) || identityInfo == null) {
+            return;
+        }
+        getSharedPreferences(SGX110_IDENTITY_PREFS, Context.MODE_PRIVATE)
+                .edit()
+                .putString(SGX110_IDENTITY_BYTES, MyByteUtils.bytes2HexString(identityInfo, 0))
+                .putString(SGX110_IDENTITY_DISPLAY, displayValue)
+                .apply();
     }
 
 

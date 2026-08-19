@@ -5,15 +5,15 @@ apply plugin: 'kotlin-android'
 //}
 
 android {
-    compileSdkVersion 35
+    compileSdkVersion 36
 //    buildToolsVersion "30.0.2"
     namespace "com.topflytech.lockActive"
     defaultConfig {
         applicationId "com.topflytech.lockActive"
         minSdkVersion 23
-        targetSdkVersion 35
-        versionCode 24
-        versionName "1.1.2"
+        targetSdkVersion 36
+        versionCode 27
+        versionName "1.2.3"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         ndk {

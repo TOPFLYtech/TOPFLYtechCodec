@@ -82,6 +82,8 @@
 "this_month"="This month";
 "previous_month"="Previous month";
 "custom"="Custom";
+"custom_broadcast"="Custom broadcast";
+"continuous_broadcast"="Continuous broadcast";
 "temp_alarm"="Temperature alarm";
 "humidity_alarm"="Humidity alarm";
 "high_desc"="High:";
@@ -165,6 +167,7 @@
 "door_enable_desc"="Door:";
 "shutdown_desc"="Shutdown:";
 "shutdown"="Shutdown";
+"confirm_shutdown_warning"="Confirm shutdown?";
 "close"="Close";
 "din_status_event_rising_edge"="Rising edge";
 "din_status_event_falling_edge"="Falling edge";
@@ -199,8 +202,9 @@
 "beacon_minor_set"="Beacon minor set";
 "eddystone_nid_set"="Name space ID";
 "eddystone_bid_set"="Instance ID";
-"eddystone_nid_set_len_error"="The length must be 10 characters";
-"eddystone_bid_set_len_error"="The length must be 6 characters";
+"eddystone_nid_set_len_error"="The length must be 10 bytes";
+"eddystone_bid_set_len_error"="The length must be 6 bytes";
+"beacon_major_minor_range_error"="Value is incorrect!It must between 0 and 65535.";
 "send_cmd_invalid_len"="The length is incorrect. The length cannot be greater than 200.";
 "send_by_hex"="Hex data";
 "add_line_end"="Automatically add [0D 0A]at the end of sending";

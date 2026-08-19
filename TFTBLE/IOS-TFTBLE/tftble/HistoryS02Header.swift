@@ -73,7 +73,7 @@ class HistoryS02Header:UITableViewHeaderFooterView{
         self.batteryLabel.text = NSLocalizedString("battery1", comment: "Battery")
         self.tempLabel.text = NSLocalizedString("temp1", comment: "Temperature")
         self.humidityLabel.text = NSLocalizedString("humidity1", comment: "Humidity")
-        self.propLabel.text = NSLocalizedString("light1", comment: "Light")
+        self.propLabel.text = NSLocalizedString("light_sensor", comment: "Photosensitive")
     }
     
     required init?(coder: NSCoder) {

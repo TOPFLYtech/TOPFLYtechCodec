@@ -84,6 +84,8 @@
 "this_month"="This month";
 "previous_month"="Previous month";
 "custom"="Custom";
+"custom_broadcast"="Custom broadcast";
+"continuous_broadcast"="Continuous broadcast";
 "temp_alarm"="Temperature alarm";
 "humidity_alarm"="Humidity alarm";
 "high_desc"="High:";
@@ -115,6 +117,7 @@
 "temp1"="Temperature";
 "humidity1"="Humidity";
 "light1"="Light";
+"light_sensor"="Light Sense";
 "door1"="Door";
 "alarm1"="Alarm";
 "dark"="Dark";
@@ -246,8 +249,9 @@
 "beacon_minor_set"="Beacon minor set";
 "eddystone_nid_set"="Name space ID";
 "eddystone_bid_set"="Instance ID";
-"eddystone_nid_set_len_error"="The length must be 10 characters";
-"eddystone_bid_set_len_error"="The length must be 6 characters";
+"eddystone_nid_set_len_error"="The length must be 10 bytes";
+"eddystone_bid_set_len_error"="The length must be 6 bytes";
+"beacon_major_minor_range_error"="Value is incorrect!It must between 0 and 65535.";
 "send_cmd_invalid_len"="The length is incorrect. The length cannot be greater than 200.";
 "send_by_hex"="Hex data";
 "add_line_end"="Automatically add [0D 0A]at the end of sending";
@@ -275,6 +279,8 @@
 "cycle_time_error_warning"="Cycle time must be greater than init enable time.";
 "ext_sensor_desc"="Ext Sensor:";
 "temp_sensor_gx112"="Temperature Sensor GX112";
+"temp_sensor_gxts03"="Temperature Sensor GXTS03";
+"temp_humi_sensor_gxth30"="Temperature and Humidity Sensor GXTH30";
 "not_find_ext_sensor"="No external sensor found, please connect the external sensor first";
 "high_must_great_than_low"="The highest value must be greater than the lowest value";
 "qrcode_scan"="QR code scanning";
@@ -284,6 +290,8 @@
 "s08_value_incorrect_out_of_temp_range1"="Value is incorrect!It must between -20 and 174.";
 "s10_value_incorrect_out_of_temp_range"="Value is incorrect!It must between -54 and 149.";
 "s10_value_incorrect_out_of_temp_range1"="Value is incorrect!It must between -65 and 300.";
+"s10_gxts03_value_incorrect_out_of_temp_range"="Value is incorrect!It must between -44 and 129.";
+"s10_gxts03_value_incorrect_out_of_temp_range1"="Value is incorrect!It must between -49 and 264.";
 "input_super_device_password"="Enter super password";
 "reset"="Reset";
 "super_password_is_error"="Super password is error!";
@@ -331,8 +339,10 @@
 "multi_pulse"="Multi-pulse";
 "reboot_succ"="Reboot successfully!";
 "confirm_reboot_warning"="Try to reboot?";
+"confirm_shutdown_warning"="Confirm shutdown?";
 "ble_connect_timeout_input_error"="Bluetooth connection timed out is incorrect!It must between 30 and 65535";
 "ble_connect_timeout"="Bluetooth connection timed out";
 "negative_trigger_pulse_desc"="Negative trigger pulse time(ms)";
 "negative_trigger_pulse_input_error"="Negative trigger pulse time is incorrect!It must between 100 and 6553500";
 "pulse_width_time"="Pulse width time(ms)";
+"fast_broadcast"="Quick Broadcast";

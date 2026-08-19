@@ -11,10 +11,8 @@ PODS:
   - JXMarqueeView (0.0.8)
   - libxlsxwriter (0.6.9)
   - PDFGenerator (3.1.0)
-  - QMUIKit (1.5.0)
   - SwiftCharts (0.6.5)
   - SwiftPopMenu (2.0.2)
-  - swiftScan (1.2.0)
   - ZIPFoundation (0.9.9)
 
 DEPENDENCIES:
@@ -27,10 +25,8 @@ DEPENDENCIES:
   - JXMarqueeView
   - libxlsxwriter
   - PDFGenerator (from `https://github.com/sgr-ksmt/PDFGenerator.git`)
-  - QMUIKit
   - SwiftCharts
   - SwiftPopMenu (from `https://github.com/TangledHusky/SwiftPopMenu.git`)
-  - swiftScan (from `https://github.com/MxABC/swiftScan.git`)
 
 SPEC REPOS:
   https://github.com/CocoaPods/Specs.git:
@@ -40,7 +36,6 @@ SPEC REPOS:
     - IQKeyboardManagerSwift
     - JXMarqueeView
     - libxlsxwriter
-    - QMUIKit
     - SwiftCharts
     - ZIPFoundation
 
@@ -53,8 +48,6 @@ EXTERNAL SOURCES:
     :git: https://github.com/sgr-ksmt/PDFGenerator.git
   SwiftPopMenu:
     :git: https://github.com/TangledHusky/SwiftPopMenu.git
-  swiftScan:
-    :git: https://github.com/MxABC/swiftScan.git
 
 CHECKOUT OPTIONS:
   ActionSheetPicker-3.0:
@@ -69,26 +62,21 @@ CHECKOUT OPTIONS:
   SwiftPopMenu:
     :commit: cba2bf540b52ee9c0cc13b6ea639cd102f1ebbf1
     :git: https://github.com/TangledHusky/SwiftPopMenu.git
-  swiftScan:
-    :commit: fd652ea645b29841f5990ed1583ce6038f190e56
-    :git: https://github.com/MxABC/swiftScan.git
 
 SPEC CHECKSUMS:
   ActionSheetPicker-3.0: 5b62e07b00bd970509cf5ece99cb7447eae5dd0d
   Bugly: 2c256069145f550171907c5cb1c0f84ad291f6c1
   CLXToast: 01c075036feabfebe256856018996f10bd73f24f
   DateTimePicker: 997176ea28954f3c18817b9565a53b28ee4400b8
-  iOSDFULibrary: 3053cf01eaabec37dc7372fb77ae4a218b577c55
+  iOSDFULibrary: 2bae808c58f65cf18ed5d1d4cc92ddeddd6ba847
   IQKeyboardManagerSwift: c7955c0bdbf7b2eb29bb7daaa44e3d90f55a9a85
   JXMarqueeView: dfb4eadb1bf7245c9b41706e907c889fbf53c2dc
   libxlsxwriter: 863cff6657797176917741ab87b783fe99539869
   PDFGenerator: 17d6bc525db0a3fcd156fbf00f9d1b8d5cc75d1e
-  QMUIKit: 26665f0374366b83cb840b6111d2430ddbfc7a9b
   SwiftCharts: 2e755ea292f0b87d3e4b2c1eb5afc080a20cdc15
   SwiftPopMenu: e8ad0724497781abec06c16e158d08d741c794cd
-  swiftScan: d7f91607b1a47cc04e6eb654c2c01e2e940e337d
   ZIPFoundation: 89df685c971926b0323087952320bdfee9f0b6ef
 
-PODFILE CHECKSUM: e9550e2eb573475273ad085d11fa8eeb1588cd09
+PODFILE CHECKSUM: d284c7d974ddde5b930c57c6b0e8de27f3b8d9f5
 
-COCOAPODS: 1.15.2
+COCOAPODS: 1.16.2

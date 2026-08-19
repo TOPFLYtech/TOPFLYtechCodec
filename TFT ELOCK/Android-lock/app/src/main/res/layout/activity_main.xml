@@ -3,6 +3,7 @@
     android:orientation="vertical"  android:id="@+id/root_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent" android:background="@color/main_bkg_color">
+    <include layout="@layout/main_activity_bar" />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

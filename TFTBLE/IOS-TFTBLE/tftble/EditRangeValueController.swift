@@ -9,7 +9,6 @@
 import Foundation
 import UIKit
 import CLXToast
-import QMUIKit
 protocol EditRangeValueDelegate {
     func setRangeValue(high: Int,low:Int)
 }
@@ -30,10 +29,22 @@ class EditRangeValueController:UIViewController{
     var lowOpen = false
     var type = ""
     var deviceType = ""
+    var extSensorType = 0
     private var fontSize:CGFloat = Utils.fontSize
     
     override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        self.tftHideTopBar()
         self.connectStatusDelegate?.setConnectStatus()
+    }
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.tftShowTopBar()
+    }
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        self.tftLayoutTopBar()
+        self.tftAdjustContentBelowTopBarIfNeeded()
     }
     @objc func dismissKeyboard()
        {
@@ -47,25 +58,26 @@ class EditRangeValueController:UIViewController{
                 tap.cancelsTouchesInView = false
                 view.addGestureRecognizer(tap)
         
-        let titleLabel = UILabel()
-        self.navigationItem.titleView = titleLabel
+        var topBarTitle = ""
         if type == "temp"{
-            titleLabel.frame = CGRect(x: 0, y: 0, width: 180, height: 40)
             let tempAlarmStr = NSLocalizedString("temp_alarm", comment: "Temperature alarm")
-            titleLabel.text = "\(tempAlarmStr)(\(Utils.getCurTempUnit()))"
+            topBarTitle = "\(tempAlarmStr)(\(Utils.getCurTempUnit()))"
         }else if type == "humidity"{
-            titleLabel.frame = CGRect(x: 0, y: 0, width: 130, height: 40)
-            titleLabel.text = NSLocalizedString("humidity_alarm", comment: "Humidity alarm")
+            topBarTitle = NSLocalizedString("humidity_alarm", comment: "Humidity alarm")
         }
+        self.tftInstallTopBar(title: topBarTitle)
         self.view.backgroundColor = UIColor.white
-        let descWidth = Int(KSize.width / 3)
-        let contentX = Int(KSize.width / 3 + 10)
-        let btnX = Int(KSize.width / 3 * 2 + 15)
-        var startLabelY:Int = 60
-        var startInputY:Int = 75
+        let viewWidth = Int(self.view.bounds.width)
+        let navBottomY = Int(self.tftTopContentY())
+        self.tftRememberInitialContentTop(CGFloat(navBottomY))
+        let descWidth = Int(CGFloat(viewWidth) / 3.0)
+        let contentX = descWidth + 10
+        let btnX = descWidth * 2 + 15
+        var startLabelY:Int = navBottomY + 10
+        var startInputY:Int = navBottomY + 25
         let lineHigh:Int = 60
-        var lineY:Int = 120
-        var btnY:Int = 75
+        var lineY:Int = navBottomY + 70
+        var btnY:Int = navBottomY + 25
         let btnHeight = 30
         self.highValueLabel = UILabel()
         self.highValueLabel.textColor = UIColor.black
@@ -86,7 +98,7 @@ class EditRangeValueController:UIViewController{
         self.view.addSubview(self.highValueSwitch)
         let oldPwdLine = UIView()
         oldPwdLine.backgroundColor = UIColor.gray
-        oldPwdLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(KSize.width), height: 0.5)
+        oldPwdLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(viewWidth), height: 0.5)
         self.view.addSubview(oldPwdLine)
         startLabelY += lineHigh
         lineY += lineHigh
@@ -111,7 +123,7 @@ class EditRangeValueController:UIViewController{
         self.view.addSubview(self.lowValueSwitch)
         let newPwdLine = UIView()
         newPwdLine.backgroundColor = UIColor.gray
-        newPwdLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(KSize.width), height: 0.5)
+        newPwdLine.frame = CGRect(x: 0, y: Double(lineY), width: Double(viewWidth), height: 0.5)
         self.view.addSubview(newPwdLine)
         startLabelY += lineHigh
         lineY += lineHigh
@@ -120,7 +132,7 @@ class EditRangeValueController:UIViewController{
         self.submitBtn.setTitle(NSLocalizedString("submit", comment: "Submit"), for: .normal)
         self.submitBtn.ghostColor = UIColor.colorPrimary
         self.submitBtn.titleLabel?.font = UIFont.systemFont(ofSize: fontSize)
-        self.submitBtn.frame = CGRect(x: Int((KSize.width - 200) / 2), y: startLabelY + 10, width: 200, height: 30)
+        self.submitBtn.frame = CGRect(x: Int((viewWidth - 200) / 2), y: startLabelY + 10, width: 200, height: 30)
         self.submitBtn.addTarget(self, action: #selector(submit), for:.touchUpInside)
         self.view.addSubview(self.submitBtn)
         
@@ -144,6 +156,8 @@ class EditRangeValueController:UIViewController{
         }
     }
     override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
         
 //        self.highValueLabel.text = NSLocalizedString("high_desc", comment: "High:")
 //        self.lowValueLabel.text = NSLocalizedString("low_desc", comment: "Low:")
@@ -279,13 +293,24 @@ class EditRangeValueController:UIViewController{
                 return
             }
         }else if deviceType == "S10"{
-            if  (saveHighValue < saveLowValue && saveLowValue != 4095) || (saveHighValue != 4095 && saveHighValue >= 1500) ||
-                (saveLowValue != 4095 && saveLowValue <= -550){
+            let isGxts03Family = extSensorType == 2 || extSensorType == 3
+            let maxTemp = isGxts03Family ? 1300 : 1500
+            let minTemp = isGxts03Family ? -450 : -550
+            if  (saveHighValue < saveLowValue && saveLowValue != 4095) || (saveHighValue != 4095 && saveHighValue >= maxTemp) ||
+                (saveLowValue != 4095 && saveLowValue <= minTemp){
                 let tempUnit = UserDefaults.standard.integer(forKey: "tempUnit")
-                if tempUnit == 0{
-                    Toast.hudBuilder.title(NSLocalizedString("s10_value_incorrect_out_of_temp_range", comment: "Value is incorrect!It must between -54 and 149.")).show()
+                if isGxts03Family {
+                    if tempUnit == 0{
+                        Toast.hudBuilder.title(NSLocalizedString("s10_gxts03_value_incorrect_out_of_temp_range", comment: "Value is incorrect!It must between -44 and 129.")).show()
+                    }else{
+                        Toast.hudBuilder.title(NSLocalizedString("s10_gxts03_value_incorrect_out_of_temp_range1", comment: "Value is incorrect!It must between -49 and 264.")).show()
+                    }
                 }else{
-                    Toast.hudBuilder.title(NSLocalizedString("s10_value_incorrect_out_of_temp_range1", comment: "Value is incorrect!It must between -65 and 300.")).show()
+                    if tempUnit == 0{
+                        Toast.hudBuilder.title(NSLocalizedString("s10_value_incorrect_out_of_temp_range", comment: "Value is incorrect!It must between -54 and 149.")).show()
+                    }else{
+                        Toast.hudBuilder.title(NSLocalizedString("s10_value_incorrect_out_of_temp_range1", comment: "Value is incorrect!It must between -65 and 300.")).show()
+                    }
                 }
                 return
             }

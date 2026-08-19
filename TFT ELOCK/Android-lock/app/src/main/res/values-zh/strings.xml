@@ -4,6 +4,7 @@
     <string name="main_bar_text">蓝牙设备</string>
     <string name="ble_not_support">不支持蓝牙</string>
     <string name="confirm">确认</string>
+    <string name="ok">确定</string>
     <string name="cancel">取消</string>
     <string name="please_input_search_name">请输入一些文字</string>
     <string name="ble_name">设备名称</string>
@@ -81,6 +82,16 @@
     <string name="refresh_status">刷新状态</string>
     <string name="pwd_error">开锁密码错误</string>
     <string name="unique_id">唯一ID：</string>
+    <string name="save">保存</string>
+    <string name="custom_identity">自定义身份信息</string>
+    <string name="identity_mode_auto">使用自动生成的12位ID</string>
+    <string name="identity_mode_hex">输入十六进制ID</string>
+    <string name="identity_mode_text">输入描述文本</string>
+    <string name="identity_hex_hint">十六进制ID（12-40个字符）</string>
+    <string name="identity_text_hint">描述文本（6-20个UTF-8字节）</string>
+    <string name="identity_hex_error">请输入12-40个字符且长度为偶数的十六进制ID</string>
+    <string name="identity_text_error">描述文本转换为UTF-8后必须为6-20字节</string>
+    <string name="identity_empty_error">身份信息不能为空</string>
     <string name="lock_status_09">BLE唤醒设备请求联网事件</string>
     <string name="error_retry">错误，请重试！</string>
     <string name="func_not_open">当前功能未开启。</string>
@@ -191,7 +202,7 @@
     <string name="ip_domain">域名/IP</string>
     <string name="port">端口</string>
     <string name="acc_on_value_warning">点火值必须在5到65535之间或者是0,0意味着禁用</string>
-    <string name="acc_off_value_warning">点火关闭必须为 0 或介于 1200 和 2147483647 之间</string>
+    <string name="acc_off_value_warning">点火关闭必须在 0 和 2147483647 之间</string>
     <string name="angle_value_warning">角度值必须在15到180之间或者是0,0意味着禁用</string>
     <string name="distance_value_warning">距离值必须在100到65535之间或者是0,0意味着禁用</string>
     <string name="port_invalid">无效的端口号</string>
@@ -324,4 +335,15 @@
     <string name="gps_location">GPS定位警报</string>
     <string name="gps_location_lost">GPS定位丢失警报</string>
     <string name="lock_status_0a">按键唤醒设备连接网络</string>
+    <!-- Bluetooth Permission -->
+    <string name="permission_request_title">权限请求</string>
+    <string name="permission_bluetooth_general_desc">本应用需要以下权限才能使用蓝牙功能：</string>
+    <string name="permission_bluetooth_scan_desc">蓝牙扫描：用于发现附近的蓝牙设备</string>
+    <string name="permission_bluetooth_connect_desc">蓝牙连接：用于连接蓝牙设备</string>
+    <string name="permission_location_desc">位置信息：用于蓝牙设备发现（Android系统要求）</string>
+    <string name="permission_denied_title">权限被拒绝</string>
+    <string name="permission_denied_desc">需要使用蓝牙权限才能使用该功能。请在设置中开启。</string>
+    <string name="location_service_title">定位服务</string>
+    <string name="location_service_desc">蓝牙扫描需要开启定位服务。请开启定位服务。</string>
+    <string name="go_to_settings">前往设置</string>
 </resources>

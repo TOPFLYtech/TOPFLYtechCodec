@@ -2,7 +2,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/root_view"
     android:orientation="vertical" >
+    <include layout="@layout/edit_activity_bar" />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -118,6 +120,24 @@
                 android:layout_margin="5dp"
                 android:focusable="false"
                 android:text="@string/active_network"
+                android:textAllCaps="false"
+                android:textSize="10dp"></com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="2"
+            android:id="@+id/ln_custom_identity"
+            android:descendantFocusability="blocksDescendants"
+            android:gravity="center_horizontal">
+
+            <com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton
+                android:id="@+id/btn_custom_identity"
+                android:layout_width="80dp"
+                android:layout_height="match_parent"
+                android:layout_margin="5dp"
+                android:focusable="false"
+                android:text="@string/custom_identity"
                 android:textAllCaps="false"
                 android:textSize="10dp"></com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton>
         </LinearLayout>

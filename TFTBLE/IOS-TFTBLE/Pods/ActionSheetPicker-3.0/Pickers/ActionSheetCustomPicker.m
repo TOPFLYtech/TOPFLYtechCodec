@@ -63,7 +63,7 @@
 
 - (UIView *)configuredPickerView
 {
-    CGRect pickerFrame = CGRectMake(0, 40, self.viewSize.width, 216);
+    CGRect pickerFrame = CGRectMake(0, ([[NSProcessInfo processInfo] operatingSystemVersion].majorVersion >= 26 ? 52 : 40), self.viewSize.width, 216);
     UIPickerView *pv = [[UIPickerView alloc] initWithFrame:pickerFrame];
     self.pickerView = pv;
 

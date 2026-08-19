@@ -316,22 +316,6 @@ public class MainActivity extends AppCompatActivity implements BluetoothPermissi
                 public void afterTextChanged(Editable editable) {
                     fuzzyKey = editable.toString().trim();
                     refreshShowItem();
-                    if (fuzzyKey.length() == 15) {
-                        for (BleDeviceData bleDeviceData : allBleDeviceDataList) {
-                            if (bleDeviceData.getImei().equals(fuzzyKey)) {
-                                Intent intent = new Intent(MainActivity.this, EditActivity.class);
-                                intent.putExtra("mac", bleDeviceData.getMac());
-                                intent.putExtra("deviceName", bleDeviceData.getDeviceName());
-                                intent.putExtra("id", bleDeviceData.getId());
-                                intent.putExtra("model", bleDeviceData.getModel());
-                                intent.putExtra("software", bleDeviceData.getSoftware());
-                                intent.putExtra("deviceId",bleDeviceData.getDeviceId());
-                                intent.putExtra("imei",bleDeviceData.getImei());
-                                startActivity(intent);
-                                break;
-                            }
-                        }
-                    }
                 }
             });
             favoriteBtn = (ImageView) findViewById(R.id.main_bar_favorite);
@@ -493,8 +477,13 @@ public class MainActivity extends AppCompatActivity implements BluetoothPermissi
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_SCAN_QRCODE && resultCode == RESPONSE_SCAN_QRCODE) {
-            String value = data.getStringExtra("value");
-            searchEditText.setText(value);
+            if (data != null) {
+                String value = data.getStringExtra("value");
+                searchEditText.setText(value);
+                if (value != null) {
+                    searchEditText.setSelection(searchEditText.length());
+                }
+            }
         }
         bluetoothPermissionHelper.onActivityResult(requestCode,resultCode);
     }

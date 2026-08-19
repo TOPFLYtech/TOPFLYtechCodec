@@ -120,6 +120,10 @@ static NSString *const kActionTarget = @"buttonActionTarget";
 // Allow the user to specify a custom done button
 - (void)setDoneButton:(UIBarButtonItem *)button;
 
+// Expose picker actions so callers can wire custom text toolbar buttons.
+- (IBAction)actionPickerDone:(id)sender;
+- (IBAction)actionPickerCancel:(id)sender;
+
 // Hide picker programmatically
 - (void)hidePickerWithCancelAction;
 

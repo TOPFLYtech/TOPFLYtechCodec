@@ -6,6 +6,10 @@
 //
 
 extension Sequence {
+    func indexed() -> EnumeratedSequence<Self> {
+        enumerated()
+    }
+
     func max<T>(
         by keyPath: KeyPath<Element, T>,
         areInIncreasingOrder: (T, T) -> Bool
@@ -15,5 +19,24 @@ extension Sequence {
 
     func max<T: Comparable>(by keyPath: KeyPath<Element, T>) -> Element? {
         max(by: keyPath, areInIncreasingOrder: <)
+    }
+}
+
+extension Collection {
+    func partitioningIndex(where belongsInSecondPartition: (Element) -> Bool) -> Index {
+        var lowerBound = startIndex
+        var upperBound = endIndex
+
+        while lowerBound != upperBound {
+            let distance = self.distance(from: lowerBound, to: upperBound)
+            let mid = index(lowerBound, offsetBy: distance / 2)
+            if belongsInSecondPartition(self[mid]) {
+                upperBound = mid
+            } else {
+                lowerBound = index(after: mid)
+            }
+        }
+
+        return lowerBound
     }
 }
