@@ -43,6 +43,8 @@ class TftBleConnectManager: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     private var needConnect = false
     private var foundDevice = false
     private var isSubLock = false
+    private var pendingReconnectPeripheral: CBPeripheral?
+    private var pendingReconnectIsSubLock = false
 
     var sendMsgThread: Thread?
     private var bleNotifyCallbackMap = [String: BleStatusCallback]()
@@ -88,9 +90,15 @@ class TftBleConnectManager: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     }
     
     func initManager() {
-        centralManager = CBCentralManager(delegate: self, queue: nil)
-        self.sendMsgThread = Thread(target: self, selector: #selector(sendMsgThreadFunc), object: nil)
-        self.sendMsgThread?.start()
+        if centralManager == nil {
+            centralManager = CBCentralManager(delegate: self, queue: nil)
+        } else {
+            centralManager.delegate = self
+        }
+        if self.sendMsgThread == nil || self.sendMsgThread?.isFinished == true {
+            self.sendMsgThread = Thread(target: self, selector: #selector(sendMsgThreadFunc), object: nil)
+            self.sendMsgThread?.start()
+        }
     }
     
     func setDeviceReady(ready:Bool){
@@ -161,23 +169,27 @@ class TftBleConnectManager: NSObject, CBCentralManagerDelegate, CBPeripheralDele
         }
     }
     func connect(connectPeripheral:CBPeripheral,isSubLock:Bool) {
-        
         if connectPeripheral == nil{
             return
         }
-        
-        if macAddress != nil && connectPeripheral.identifier.uuidString != macAddress {
-            disconnect()
-        }
-        enterUpgrade = false
-        self.needConnect = true
+
         self.isSubLock = isSubLock
         cbPeripheral = connectPeripheral
-        selfPeripheral = nil
         macAddress = connectPeripheral.identifier.uuidString
-        
-        centralManager.connect(cbPeripheral, options: nil)
-        cbPeripheral.delegate = self
+        needConnect = true
+
+        pendingReconnectPeripheral = nil
+        pendingReconnectIsSubLock = false
+
+        if selfPeripheral != nil &&
+            (selfPeripheral.state == .connected || selfPeripheral.state == .connecting) {
+            pendingReconnectPeripheral = connectPeripheral
+            pendingReconnectIsSubLock = isSubLock
+            disconnect()
+            return
+        }
+
+        startConnect(connectPeripheral: connectPeripheral, isSubLock: isSubLock)
     }
     func disconnect() {
         if selfPeripheral != nil {
@@ -187,6 +199,38 @@ class TftBleConnectManager: NSObject, CBCentralManagerDelegate, CBPeripheralDele
         connectSucc = false
         enterUpgrade = false
         isDeviceReady = false
+    }
+
+    private func startConnect(connectPeripheral: CBPeripheral, isSubLock: Bool) {
+        if centralManager == nil || centralManager.state != .poweredOn {
+            return
+        }
+
+        enterUpgrade = false
+        needConnect = true
+        foundDevice = false
+        self.isSubLock = isSubLock
+        cbPeripheral = connectPeripheral
+        macAddress = connectPeripheral.identifier.uuidString
+        notifyBleStatus(TftBleConnectManager.BLE_STATUS_OF_CONNECTING)
+
+        let identifiers = [connectPeripheral.identifier]
+        let retrievedPeripherals = centralManager.retrievePeripherals(withIdentifiers: identifiers)
+        if let activePeripheral = retrievedPeripherals.first {
+            selfPeripheral = activePeripheral
+            selfPeripheral.delegate = self
+            centralManager.connect(activePeripheral, options: nil)
+            return
+        }
+
+        beginScanForTarget()
+    }
+
+    private func beginScanForTarget() {
+        selfPeripheral = nil
+        cbPeripheral.delegate = self
+        centralManager.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: true])
+        notifyBleStatus(TftBleConnectManager.BLE_STATUS_OF_SCANNING)
     }
     
     //notify succ
@@ -219,6 +263,10 @@ class TftBleConnectManager: NSObject, CBCentralManagerDelegate, CBPeripheralDele
         notifyBleStatus(TftBleConnectManager.BLE_STATUS_OF_DISCONNECT)
         self.connectSucc = false
         self.isCanSendMsg = false
+        self.selfPeripheral = nil
+        if needConnect, let targetPeripheral = cbPeripheral, peripheral.identifier == targetPeripheral.identifier {
+            beginScanForTarget()
+        }
     }
     
     /** 断开连接 */
@@ -228,6 +276,15 @@ class TftBleConnectManager: NSObject, CBCentralManagerDelegate, CBPeripheralDele
         notifyBleStatus(TftBleConnectManager.BLE_STATUS_OF_DISCONNECT)
         self.connectSucc = false
         self.isCanSendMsg = false
+        self.selfPeripheral = nil
+        if let reconnectPeripheral = pendingReconnectPeripheral {
+            let reconnectIsSubLock = pendingReconnectIsSubLock
+            pendingReconnectPeripheral = nil
+            pendingReconnectIsSubLock = false
+            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(200)) {
+                self.startConnect(connectPeripheral: reconnectPeripheral, isSubLock: reconnectIsSubLock)
+            }
+        }
     }
     
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
@@ -244,7 +301,11 @@ class TftBleConnectManager: NSObject, CBCentralManagerDelegate, CBPeripheralDele
             print("central.state is .poweredOff")
         case .poweredOn:
             print("central.state is .poweredOn connect")
-            self.centralManager.scanForPeripherals(withServices: nil,options: [CBCentralManagerScanOptionAllowDuplicatesKey : true])
+            if needConnect, let targetPeripheral = cbPeripheral {
+                startConnect(connectPeripheral: targetPeripheral, isSubLock: isSubLock)
+            } else {
+                self.centralManager.scanForPeripherals(withServices: nil,options: [CBCentralManagerScanOptionAllowDuplicatesKey : true])
+            }
         }
     }
     
@@ -268,7 +329,8 @@ class TftBleConnectManager: NSObject, CBCentralManagerDelegate, CBPeripheralDele
             self.selfPeripheral.delegate = self
             if self.needConnect{
                 print("connect to device...")
-                self.centralManager.connect(self.selfPeripheral)
+                self.centralManager.stopScan()
+                self.centralManager.connect(self.selfPeripheral, options: nil)
             }
         }
     }

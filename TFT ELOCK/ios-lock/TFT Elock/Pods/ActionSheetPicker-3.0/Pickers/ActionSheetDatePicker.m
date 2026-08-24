@@ -155,7 +155,7 @@
 }
 
 - (UIView *)configuredPickerView {
-    CGRect datePickerFrame = CGRectMake(0, 40, self.viewSize.width, 216);
+    CGRect datePickerFrame = CGRectMake(0, ([[NSProcessInfo processInfo] operatingSystemVersion].majorVersion >= 26 ? 52 : 40), self.viewSize.width, 216);
     UIDatePicker *datePicker = [[UIDatePicker alloc] initWithFrame:datePickerFrame];
     datePicker.datePickerMode = self.datePickerMode;
     datePicker.maximumDate = self.maximumDate;

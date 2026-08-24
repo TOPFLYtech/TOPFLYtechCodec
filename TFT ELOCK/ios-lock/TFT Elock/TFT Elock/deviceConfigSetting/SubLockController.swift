@@ -232,6 +232,7 @@ class SubLockController: UIViewController, UITableViewDataSource, UITableViewDel
   
     }
     var connectStatusDelegate:SetConnectStatusDelegate?
+    private var tableTopConstraint: NSLayoutConstraint?
     override func viewDidLoad() {
         super.viewDidLoad()
         TftBleConnectManager.getInstance().setCallback(activityName: "SubLockController", callback: self)
@@ -243,56 +244,18 @@ class SubLockController: UIViewController, UITableViewDataSource, UITableViewDel
 
     }
     
-    var barLabel:UILabel!
-    var leftBtn:UIButton!
-    var favoriteBtn:UIButton!
-    var rightMenuBtn:UIButton!
-    let imageSize = CGSize(width: 24, height: 24)
-    let renderer = UIGraphicsImageRenderer(size: CGSize(width: 24, height: 24))
     func initNavBar(){
         initPopMenu()
-        barLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
-       //                titleLabel.text = "Bluetooth sensor"
-       barLabel.text =  NSLocalizedString("subLock", comment: "sub-lock")
-       barLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
-       self.navigationItem.titleView = barLabel
-       let rightMenuImage = renderer.image { (context) in
-           // 绘制图像
-           let originalImage = UIImage(named: "ic_list.png")
-           originalImage?.draw(in: CGRect(origin: .zero, size: imageSize))
-       }
-          
-       
-       rightMenuBtn = UIButton(type: .custom) as! UIButton
-       rightMenuBtn.setImage(rightMenuImage, for:.normal)
-       rightMenuBtn.addTarget(self, action: #selector(showPopMenuClick), for:.touchUpInside)
-       rightMenuBtn.frame = CGRectMake(0, 0, 30, 30)
-       let rightMenuBtn = UIBarButtonItem(customView: rightMenuBtn)
-        let leftImage = renderer.image { (context) in
-            // 绘制图像
-            let originalImage = UIImage(named: "ic_back.png")
-            originalImage?.draw(in: CGRect(origin: .zero, size: imageSize))
-        }
-           
-       leftBtn = UIButton(type: .custom) as! UIButton
-       leftBtn.setImage(leftImage, for: .normal)
-       leftBtn.addTarget(self, action: #selector(leftClick), for: .touchUpInside)
-       leftBtn.frame = CGRectMake(0, 0, 30, 30)
-       let leftBarBtn = UIBarButtonItem(customView: leftBtn)
-        
-       self.navigationItem.setLeftBarButtonItems([leftBarBtn ], animated: false)
-       self.navigationItem.setRightBarButtonItems([  rightMenuBtn], animated: false)
-       
-       navigationController?.navigationBar.barTintColor = UIColor.colorPrimary
-    
-        
-    }
-    @objc private func leftClick() {
-        navigationController?.popViewController(animated: true)
+        self.tftInstallTopBar(
+            title: NSLocalizedString("subLock", comment: "sub-lock"),
+            rightIconName: "ic_list.png",
+            rightAction: #selector(showPopMenuClick)
+        )
     }
     
     @objc private func showPopMenuClick() {
         print("showPopMenuClick")
+        initPopMenu()
         self.popMenu.show()
     }
  
@@ -313,7 +276,7 @@ class SubLockController: UIViewController, UITableViewDataSource, UITableViewDel
         ]
         
         //init  (注意：arrow点是基于屏幕的位置)
-        popMenu = SwiftPopMenu(menuWidth: 150, arrow: CGPoint(x: KSize.width - 10, y: 70), datas: popData,configures: parameters)
+        popMenu = SwiftPopMenu(menuWidth: 150, arrow: CGPoint(x: KSize.width - 10, y: self.tftTopContentY()), datas: popData,configures: parameters)
         
         //click
         popMenu.didSelectMenuBlock = { [weak self](index:Int)->Void in
@@ -337,8 +300,9 @@ class SubLockController: UIViewController, UITableViewDataSource, UITableViewDel
         
         // 设置自动布局约束
         tableView.translatesAutoresizingMaskIntoConstraints = false
+        tableTopConstraint = tableView.topAnchor.constraint(equalTo: view.topAnchor)
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: topLayoutGuide.bottomAnchor),
+            tableTopConstraint!,
             tableView.bottomAnchor.constraint(equalTo: bottomLayoutGuide.topAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
@@ -350,6 +314,23 @@ class SubLockController: UIViewController, UITableViewDataSource, UITableViewDel
         
         // 注册单元格
         tableView.register(SimpleDeleteItem.self,forCellReuseIdentifier:SimpleDeleteItem.identifier)
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: false)
+        self.tftShowTopBar()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: false)
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        self.tftLayoutTopBar()
+        tableTopConstraint?.constant = self.tftTopContentY()
     }
     
    

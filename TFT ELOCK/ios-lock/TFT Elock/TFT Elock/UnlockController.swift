@@ -17,6 +17,9 @@ import ActionSheetPicker_3_0
 
 
 class UnlockController:UIViewController,BleStatusCallback,UpgradeStatusCallback{
+    private static let identityInfoPreferencesKey = "sgx110.identity.info.bytes"
+    private static let identityInfoDisplayPreferencesKey = "sgx110.identity.info.display"
+
     func onUpgradeStatus(status: Int, percent: Float) {
          
     }
@@ -97,19 +100,30 @@ class UnlockController:UIViewController,BleStatusCallback,UpgradeStatusCallback{
                 i+=5
             }else if Utils.arraysEqual(item1: head, item2: BleDeviceData.unlockHead){
                 if (i + 5 <= respContent.count){
-                    var lockType = respContent[i+4]
-                    self.setLockRefreshTime()
-                    DispatchQueue.main.async {
-                        self.waitingView.dismiss()
+                    let lockType = respContent[i+4]
+                    if lockType == 0xff {
+                        // Android treats a complete unlock response with 0xff
+                        // as a password/identity failure, not as a lock state.
+                        DispatchQueue.main.async {
+                            Toast.hudBuilder.title(NSLocalizedString("unlock_pwd_error", comment: "Ble password is error")).show()
+                            self.showUnClockPwdWin()
+                        }
+                    } else {
+                        self.setLockRefreshTime()
+                        DispatchQueue.main.async {
+                            self.waitingView.dismiss()
+                        }
+                        self.parseLockType(lockType: lockType)
                     }
-                    self.parseLockType(lockType: lockType)
                 }else{
                     let errorCode = respContent[i+3] & 0x7f;
-                    if(errorCode == BleRespData.ERROR_CODE_OF_PWD_ERROR){
-                        //                        Toast.makeText(EditActivity.this,R.string.pwd_error,Toast.LENGTH_SHORT).show();
-                        Toast.hudBuilder.title(NSLocalizedString("pwd_error", comment: "Password is error")).show()
+                    DispatchQueue.main.async {
+                        if errorCode == BleRespData.ERROR_CODE_OF_PWD_ERROR {
+                            Toast.hudBuilder.title(NSLocalizedString("unlock_pwd_error", comment: "Ble password is error")).show()
+                        } else {
+                            Toast.hudBuilder.title(NSLocalizedString("fail", comment: "Fail")).show()
+                        }
                     }
-                    
                 }
                 i+=5
             }else if Utils.arraysEqual(item1: head, item2: BleDeviceData.lockHead){
@@ -222,7 +236,6 @@ class UnlockController:UIViewController,BleStatusCallback,UpgradeStatusCallback{
     private var blePwdAlert:AEUIAlertView!
     private var betaUpgradeWarningView:AEAlertView!
     private var upgradeWarningView:AEAlertView!
-    var barLabel:UILabel!
     var blePwd:String!
     var newPwd:String!
     var cbPeripheral:CBPeripheral!
@@ -256,6 +269,8 @@ class UnlockController:UIViewController,BleStatusCallback,UpgradeStatusCallback{
     private var subLockInitViewFuncs: [Int] = []
     
     private var uniqueID = ""
+    private var selectedIdentityInfo: [UInt8] = []
+    private var identityDisplayValue = ""
     override func viewDidDisappear(_ animated: Bool) {
         if self.leaveViewNeedDisconnect{
             TftBleConnectManager.getInstance().setOnThisView(false)
@@ -263,14 +278,31 @@ class UnlockController:UIViewController,BleStatusCallback,UpgradeStatusCallback{
             TftBleConnectManager.getInstance().disconnect()
         }
     }
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: false)
+        self.tftShowTopBar()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: false)
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        self.tftLayoutTopBar()
+        self.tftAdjustContentBelowTopBarIfNeeded()
+        if self.unlockBtn != nil, self.activeNetworkBtn != nil, self.customIdentityBtn != nil {
+            self.initDiffUI()
+        }
+    }
     private var a001SoftwareUpgradeManager:A001SoftwareUpgradeManager!
     override func viewDidLoad() {
         super.viewDidLoad()
         uniqueID = UniqueIDTool.getMediaDrmID()
-       
+        initIdentityInfo()
         print("uid:\(uniqueID)")
-        self.navigationController!.navigationBar.isTranslucent = false
-        self.extendedLayoutIncludesOpaqueBars = true
         self.initUI()
         let mac = self.cbPeripheral.identifier.uuidString
         self.initNavBar()
@@ -288,23 +320,14 @@ class UnlockController:UIViewController,BleStatusCallback,UpgradeStatusCallback{
     
     
     func initNavBar(){
-        barLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
-        //        titleLabel.text = "Bluetooth sensor"
-        barLabel.text = self.name
-        self.navigationItem.titleView = barLabel
+        self.tftInstallTopBar(title: self.name)
         self.initRightBtn(isConnect: false)
-        navigationController?.navigationBar.barTintColor = UIColor.colorPrimary
     }
     func initRightBtn(isConnect:Bool){
         if isConnect{
-            let rightBarButtonItem = UIBarButtonItem (barButtonSystemItem: UIBarButtonItem.SystemItem.refresh, target: self, action: #selector(self.refreshClick))
-            self.navigationItem.rightBarButtonItem = rightBarButtonItem
+            self.tftSetTopBarRightButtons([(iconName: "ic_refresh.png", action: #selector(self.refreshClick))])
         }else{
-            let btn = UIButton.init(frame: CGRect.init(x: KSize.width - 50, y: 0, width: 25, height: 25))
-            btn.setImage(UIImage(named:"ic_disconnect.png"), for: .normal)
-            let rightBarButtonItem =  UIBarButtonItem.init(customView: btn)
-            btn.addTarget(self, action: #selector(self.refreshClick), for: .touchUpInside)
-            self.navigationItem.rightBarButtonItem = rightBarButtonItem
+            self.tftSetTopBarRightButtons([(iconName: "ic_disconnect.png", action: #selector(self.refreshClick))])
         }
     }
     @objc private func refreshClick() {
@@ -348,7 +371,7 @@ class UnlockController:UIViewController,BleStatusCallback,UpgradeStatusCallback{
                     let content = Utils.getWriteCmdContent(cmdCode: BleDeviceData.func_id_of_sub_lock_unlock, content: needSend, pwd: nil)
                     TftBleConnectManager.getInstance().writeArrayContent(writeContentList: content)
                 }else{
-                    var needSend = self.getCmdContent(head: BleDeviceData.unlockHead, content: pwdArray,isNeedUniqueID: true)
+                    let needSend = self.getCmdContent(head: BleDeviceData.unlockHead, content: pwdArray, identityInfo: self.selectedIdentityInfo)
                     TftBleConnectManager.getInstance().writeContent(content: needSend)
                 }
              
@@ -471,6 +494,7 @@ class UnlockController:UIViewController,BleStatusCallback,UpgradeStatusCallback{
         label.font = UIFont.systemFont(ofSize: 14)
         return label
     }()
+    private var customIdentityBtn: UIButton!
     
      
      
@@ -496,14 +520,30 @@ class UnlockController:UIViewController,BleStatusCallback,UpgradeStatusCallback{
          
     }
     private func initDiffUI() {  
+        let buttonY = unlockBtn.frame.minY
         if BleDeviceData.isSubLockDevice(model: model) { 
             activeNetworkBtn.isHidden = true
-            unlockBtn.frame = CGRect(x: (Int)(self.view.bounds.size.width / 2  - 40), y: unlockBtnY, width: 80, height: 30) 
+            customIdentityBtn.isHidden = true
+            unlockBtn.frame = CGRect(x: self.view.bounds.size.width / 2 - 40, y: buttonY, width: 80, height: 30)
         } else {
-             
+            let viewWidth = self.view.bounds.width
             activeNetworkBtn.isHidden = false
-            unlockBtn.frame = CGRect(x: (Int)(self.view.bounds.size.width / 2 / 2  - 40), y: unlockBtnY, width: 80, height: 30)
-            
+            customIdentityBtn.isHidden = model != BleDeviceData.MODEL_OF_SGX110
+            if model == BleDeviceData.MODEL_OF_SGX110 {
+                // Android lays out the three visible actions in equal columns.
+                let regularButtonWidth: CGFloat = 80
+                let identityButtonWidth = min(120, max(90, viewWidth / 3 - 12))
+                let firstCenter = viewWidth / 6
+                let middleCenter = viewWidth / 2
+                let lastCenter = viewWidth * 5 / 6
+
+                unlockBtn.frame = CGRect(x: firstCenter - regularButtonWidth / 2, y: buttonY, width: regularButtonWidth, height: 30)
+                activeNetworkBtn.frame = CGRect(x: middleCenter - regularButtonWidth / 2, y: buttonY, width: regularButtonWidth, height: 30)
+                customIdentityBtn.frame = CGRect(x: lastCenter - identityButtonWidth / 2, y: buttonY, width: identityButtonWidth, height: 30)
+            } else {
+                unlockBtn.frame = CGRect(x: viewWidth / 4 - 40, y: buttonY, width: 80, height: 30)
+                activeNetworkBtn.frame = CGRect(x: viewWidth * 3 / 4 - 40, y: buttonY, width: 80, height: 30)
+            }
         }
     } 
     func initUI(){
@@ -515,7 +555,7 @@ class UnlockController:UIViewController,BleStatusCallback,UpgradeStatusCallback{
         self.uniqueIDLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
         self.uniqueIDDescLabel.frame = CGRect(x: dateLabelX+80, y: contentY, width: 200, height: 30)
         self.uniqueIDDescLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
-        self.uniqueIDDescLabel.text = uniqueID
+        self.uniqueIDDescLabel.text = identityDisplayValue
         self.view.addSubview(self.uniqueIDLabel)
         self.view.addSubview(self.uniqueIDDescLabel)
         contentY = contentY + 25
@@ -538,7 +578,7 @@ class UnlockController:UIViewController,BleStatusCallback,UpgradeStatusCallback{
         self.lockStatusLabel.lineBreakMode = NSLineBreakMode.byWordWrapping
         self.lockStatusLabel.numberOfLines = 0
         self.view.addSubview(self.lockStatusLabel)
-        contentY = contentY + 50
+        contentY = Int(self.lockStatusLabel.frame.maxY) + 10
         //        let lockBtn = UIButton.init(frame:CGRect(x: (Int)(self.view.bounds.size.width / 3 / 2 - 40), y: contentY, width: 80, height: 30))
         //        lockBtn.setTitle( NSLocalizedString("lock", comment: "Lock"), for: .normal)
         //        lockBtn.setTitleColor(UIColor.nordicBlue, for: .normal)
@@ -568,6 +608,19 @@ class UnlockController:UIViewController,BleStatusCallback,UpgradeStatusCallback{
         activeNetworkBtn.addTarget(self, action: #selector(activeNetworkClick), for:.touchUpInside)
         activeNetworkBtn.titleLabel!.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
         self.view.addSubview(activeNetworkBtn)
+
+        customIdentityBtn = UIButton(frame: CGRect(x: 0, y: contentY, width: 120, height: 30))
+        customIdentityBtn.setTitle(NSLocalizedString("custom_identity", comment: "Custom identity"), for: .normal)
+        customIdentityBtn.setTitleColor(UIColor.nordicBlue, for: .normal)
+        customIdentityBtn.layer.cornerRadius = 15
+        customIdentityBtn.layer.borderWidth = 1.0
+        customIdentityBtn.layer.borderColor = UIColor.nordicBlue.cgColor
+        customIdentityBtn.titleLabel?.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
+        customIdentityBtn.titleLabel?.adjustsFontSizeToFitWidth = true
+        customIdentityBtn.titleLabel?.minimumScaleFactor = 0.75
+        customIdentityBtn.titleLabel?.numberOfLines = 1
+        customIdentityBtn.addTarget(self, action: #selector(showCustomIdentityMenu), for: .touchUpInside)
+        self.view.addSubview(customIdentityBtn)
         contentY = contentY + 30
         self.initDiffUI()
          
@@ -575,19 +628,129 @@ class UnlockController:UIViewController,BleStatusCallback,UpgradeStatusCallback{
     
     
     
+    // The Android overload with a Boolean always uses the generated identity.
     func getCmdContent(head:[UInt8],content:[UInt8],isNeedUniqueID:Bool)->[UInt8]{
+        let identityInfo = isNeedUniqueID ? IdentityInfoEncoder.encodeAutomatic(uniqueID) : nil
+        return getCmdContent(head: head, content: content, identityInfo: identityInfo)
+    }
+
+    // Unlock and active-network commands use the identity selected by the user.
+    func getCmdContent(head:[UInt8],content:[UInt8],identityInfo:[UInt8]?)->[UInt8]{
         var result = [UInt8]()
         var len = content.count
-        if isNeedUniqueID{
-            len += 6
+        if let identityInfo = identityInfo {
+            len += identityInfo.count
         }
         result.append(contentsOf: head)
         result.append((UInt8)(len))
         result.append(contentsOf: content)
-        if isNeedUniqueID{
-            result.append(contentsOf: Utils.hexString2Bytes(hexStr: self.uniqueID))
+        if let identityInfo = identityInfo {
+            result.append(contentsOf: identityInfo)
         }
         return result
+    }
+
+    private func initIdentityInfo() {
+        selectedIdentityInfo = IdentityInfoEncoder.encodeAutomatic(uniqueID) ?? []
+        identityDisplayValue = uniqueID
+
+        guard model == BleDeviceData.MODEL_OF_SGX110 else {
+            return
+        }
+
+        guard let savedBytes = UserDefaults.standard.string(forKey: Self.identityInfoPreferencesKey),
+              let savedIdentity = IdentityInfoEncoder.encodeHex(savedBytes) else {
+            UserDefaults.standard.removeObject(forKey: Self.identityInfoPreferencesKey)
+            UserDefaults.standard.removeObject(forKey: Self.identityInfoDisplayPreferencesKey)
+            return
+        }
+
+        selectedIdentityInfo = savedIdentity
+        identityDisplayValue = UserDefaults.standard.string(forKey: Self.identityInfoDisplayPreferencesKey) ?? savedBytes.uppercased()
+    }
+
+    private func saveIdentityInfo(_ identityInfo: [UInt8], displayValue: String) {
+        guard model == BleDeviceData.MODEL_OF_SGX110 else {
+            return
+        }
+        UserDefaults.standard.set(Utils.bytes2HexString(bytes: identityInfo, pos: 0), forKey: Self.identityInfoPreferencesKey)
+        UserDefaults.standard.set(displayValue, forKey: Self.identityInfoDisplayPreferencesKey)
+    }
+
+    @objc private func showCustomIdentityMenu() {
+        guard model == BleDeviceData.MODEL_OF_SGX110 else {
+            return
+        }
+
+        let identityModes = [
+            NSLocalizedString("identity_mode_auto", comment: "Use generated ID"),
+            NSLocalizedString("identity_mode_hex", comment: "Enter hexadecimal ID"),
+            NSLocalizedString("identity_mode_text", comment: "Enter description text")
+        ]
+        ActionSheetStringPicker.show(withTitle: nil,
+                                     rows: identityModes,
+                                     initialSelection: 0,
+                                     doneBlock: { [weak self] _, index, _ in
+                                         guard let self = self else { return }
+                                         switch index {
+                                         case 0:
+                                             self.selectedIdentityInfo = IdentityInfoEncoder.encodeAutomatic(self.uniqueID) ?? []
+                                             self.identityDisplayValue = self.uniqueID
+                                             self.uniqueIDDescLabel.text = self.identityDisplayValue
+                                             self.saveIdentityInfo(self.selectedIdentityInfo, displayValue: self.identityDisplayValue)
+                                         case 1:
+                                             self.showIdentityInputAfterPickerDismissed(hexadecimal: true)
+                                         default:
+                                             self.showIdentityInputAfterPickerDismissed(hexadecimal: false)
+                                         }
+                                     },
+                                     cancel: { _ in return },
+                                     origin: customIdentityBtn)
+    }
+
+    private func showIdentityInputAfterPickerDismissed(hexadecimal: Bool) {
+        // ActionSheetPicker invokes its callback before the dismiss animation finishes.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+            self?.showIdentityInput(hexadecimal: hexadecimal)
+        }
+    }
+
+    private func showIdentityInput(hexadecimal: Bool) {
+        let input = AEUIAlertView(
+            style: .textField,
+            title: NSLocalizedString(hexadecimal ? "identity_mode_hex" : "identity_mode_text", comment: "Identity input mode"),
+            message: nil
+        )
+        input.textField.placeholder = NSLocalizedString(
+            hexadecimal ? "identity_hex_hint" : "identity_text_hint",
+            comment: "Identity input hint"
+        )
+
+        let cancel = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { _ in
+            input.dismiss()
+        }
+        let save = AEAlertAction(title: NSLocalizedString("save", comment: "Save"), style: .defaulted) { _ in
+            let value = input.textField.text ?? ""
+            let identityInfo = hexadecimal
+                ? IdentityInfoEncoder.encodeHex(value)
+                : IdentityInfoEncoder.encodeText(value)
+            guard let identityInfo = identityInfo else {
+                let key = value.isEmpty
+                    ? "identity_empty_error"
+                    : (hexadecimal ? "identity_hex_error" : "identity_text_error")
+                Toast.hudBuilder.title(NSLocalizedString(key, comment: "Invalid identity information")).show()
+                return
+            }
+
+            self.selectedIdentityInfo = identityInfo
+            self.identityDisplayValue = hexadecimal ? value.uppercased() : value
+            self.uniqueIDDescLabel.text = self.identityDisplayValue
+            self.saveIdentityInfo(identityInfo, displayValue: self.identityDisplayValue)
+            input.dismiss()
+        }
+        input.addAction(action: cancel)
+        input.addAction(action: save)
+        input.show()
     }
     
     
@@ -600,7 +763,7 @@ class UnlockController:UIViewController,BleStatusCallback,UpgradeStatusCallback{
     }
     
     @objc private func activeNetworkClick() {
-        var needSend = self.getCmdContent(head: BleDeviceData.activeNetworkHead, content: [0x00],isNeedUniqueID: true)
+        let needSend = self.getCmdContent(head: BleDeviceData.activeNetworkHead, content: [0x00], identityInfo: self.selectedIdentityInfo)
         TftBleConnectManager.getInstance().writeContent(content: needSend)
     }
     

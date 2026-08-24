@@ -30,10 +30,9 @@ class EditTimerController : UIViewController, UITextFieldDelegate{
            view.endEditing(true)
        }
     override func viewDidLoad() {
+        super.viewDidLoad()
         self.view.backgroundColor = UIColor.white
-        let titleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
-        titleLabel.text = NSLocalizedString("timer", comment: "timer")
-        self.navigationItem.titleView = titleLabel
+        self.tftInstallTopBar(title: NSLocalizedString("timer", comment: "timer"))
         let descWidth = Int(KSize.width / 2)
         let contentX = Int(KSize.width / 2 )
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(
@@ -155,6 +154,23 @@ class EditTimerController : UIViewController, UITextFieldDelegate{
         self.submitBtn.addTarget(self, action: #selector(submit), for:.touchUpInside)
         self.view.addSubview(self.submitBtn)
     }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: false)
+        self.tftShowTopBar()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: false)
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        self.tftLayoutTopBar()
+        self.tftAdjustContentBelowTopBarIfNeeded()
+    }
     
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         // Allow only numeric characters and backspace
@@ -184,7 +200,7 @@ class EditTimerController : UIViewController, UITextFieldDelegate{
             return
         }
 
-        if  accOffValue < 0 || accOffValue > 2147483647 || (accOffValue > 0 && accOffValue < 1200){
+        if  accOffValue < 0 || accOffValue > 2147483647 {
             Toast.hudBuilder.title(NSLocalizedString("acc_off_value_warning", comment: "")).show()
             return
         }

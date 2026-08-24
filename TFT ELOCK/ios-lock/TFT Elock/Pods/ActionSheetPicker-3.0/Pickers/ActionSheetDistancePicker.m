@@ -89,7 +89,7 @@
 
 
 - (UIView *)configuredPickerView {
-    CGRect distancePickerFrame = CGRectMake(0, 40, self.viewSize.width, 216);
+    CGRect distancePickerFrame = CGRectMake(0, ([[NSProcessInfo processInfo] operatingSystemVersion].majorVersion >= 26 ? 52 : 40), self.viewSize.width, 216);
     DistancePickerView *picker = [[DistancePickerView alloc] initWithFrame:distancePickerFrame];
     picker.delegate = self;
     picker.dataSource = self;

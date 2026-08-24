@@ -113,6 +113,7 @@ class BleDeviceData{
     public static let MODEL_OF_SGX110 = "SolarGuardX 110"
     public static let MODEL_OF_TC019 = "SolarGuardX 200"
     public static let MODEL_OF_TC015 = "SolarGuardX 100"
+    public static let MODEL_OF_SGX120CB = "SolarGuardX 120 PN:CB01"
     public static func isSubLockDevice(model: String) -> Bool {
         if model == BleDeviceData.MODEL_OF_SGX120B01 {
             return true
@@ -193,23 +194,15 @@ class BleDeviceData{
     public static func isSupportClearHisAndResetDefault(model: String, version: String) -> Bool {
         if model == BleDeviceData.MODEL_OF_SGX120B01 {
             return false
+        }else if model == BleDeviceData.MODEL_OF_SGX120CB {
+            return true
         }else if model == BleDeviceData.MODEL_OF_TC015{
             return false
         }else if model == BleDeviceData.MODEL_OF_TC019{
-            let curVersion = (version ?? "").replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "").replacingOccurrences(of: ".", with: "")
-            if curVersion >= "116" {
-                return true
-            } else {
-                return false
-            }
+            return parseVersionInt(version) >= 116
         }
         else  {
-            let curVersion = (version ?? "").replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "").replacingOccurrences(of: ".", with: "")
-            if curVersion >= "106" {
-                return true
-            } else {
-                return false
-            }
+            return parseVersionInt(version) >= 106
         }
     }
 
@@ -217,16 +210,16 @@ class BleDeviceData{
     public static func isSupportConfig(model: String, version: String, deviceId: String?) -> Bool {
         if model == BleDeviceData.MODEL_OF_SGX120B01 {
             return true
+        }else if model == BleDeviceData.MODEL_OF_SGX120CB{
+            guard let deviceId = deviceId else {
+                return false
+            }
+            return !deviceId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }else if model == BleDeviceData.MODEL_OF_TC015{
             return false
         }
         else if   let deviceId = deviceId, !deviceId.trimmingCharacters(in: .whitespaces).isEmpty {
-            let curVersion = (version ?? "").replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "").replacingOccurrences(of: ".", with: "")
-            if curVersion >= "105" {
-                return true
-            } else {
-                return false
-            }
+            return parseVersionInt(version) >= 105
         } else {
             return false
         }
@@ -240,24 +233,45 @@ class BleDeviceData{
             return BleDeviceData.MODEL_OF_TC019
         }else if protocolByte == 119 || protocolByte == 120 || protocolByte == 121 || protocolByte == 122{
             return BleDeviceData.MODEL_OF_SGX110
+        }else if protocolByte == 135 || protocolByte == 136 || protocolByte == 137 || protocolByte == 138{
+            return BleDeviceData.MODEL_OF_SGX120CB
         }
         return ""
     }
+
+    static func isNotSupportModels(protocolByte: UInt8) -> Bool {
+        return protocolByte != 0x62 && protocolByte != 0x65
+            && protocolByte != 0x7b && protocolByte != 0x7c
+            && protocolByte != 119 && protocolByte != 120
+            && protocolByte != 121 && protocolByte != 122
+            && protocolByte != 135 && protocolByte != 136
+            && protocolByte != 137 && protocolByte != 138
+    }
     
     static func isSupportReadHis(bleDeviceData:BleDeviceData) -> Bool{
-        if bleDeviceData.model == BleDeviceData.MODEL_OF_TC019 || bleDeviceData.model == BleDeviceData.MODEL_OF_SGX110{
+        if bleDeviceData.model == BleDeviceData.MODEL_OF_TC019
+            || bleDeviceData.model == BleDeviceData.MODEL_OF_SGX110
+            || bleDeviceData.model == BleDeviceData.MODEL_OF_SGX120CB {
             return bleDeviceData.isSupportReadHis
         }else if bleDeviceData.model ==  BleDeviceData.MODEL_OF_SGX120B01{
-            let curVersion = bleDeviceData.software.replacingOccurrences(of: "V", with: "").replacingOccurrences(of: "v", with: "").replacingOccurrences(of: ".", with: "") 
-            if curVersion >= "1002" {
-                return true
-            } else {
-                return false
-            }
+            return parseVersionInt(bleDeviceData.software) >= 1002
         }
         return false
     }
+
+    private static func parseVersionInt(_ version: String?) -> Int {
+        guard let version = version else {
+            return 0
+        }
+        let normalized = version.replacingOccurrences(of: "V", with: "")
+            .replacingOccurrences(of: "v", with: "")
+            .replacingOccurrences(of: ".", with: "")
+        return Int(normalized) ?? 0
+    }
     func getBatteryPercnet() ->String{
+        if self.model == BleDeviceData.MODEL_OF_SGX120B01 && self.isSubLock {
+            return "\(self.batteryPercent)%"
+        }
         return "\(self.getRealBatteryPercent(voltage: voltage))%"
     }
     

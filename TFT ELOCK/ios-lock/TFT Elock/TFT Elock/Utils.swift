@@ -415,6 +415,10 @@ class Utils{
         }
         return 0
     }
+
+    static func signedByteToInt(_ byte: UInt8) -> Int {
+        return Int(Int8(bitPattern: byte))
+    }
     
     static func splitSingleStrToCharArr(strToSplit:String) -> [Character] {
         let splitedCharArr:[Character] = Array(strToSplit)

@@ -41,9 +41,7 @@ class HistorySelectController: UIViewController, UIPickerViewDataSource, UIPicke
  
     override func viewDidLoad() {
         super.viewDidLoad()
-        let titleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
-        titleLabel.text = NSLocalizedString("select_datetime", comment: "Select datetime")
-        self.navigationItem.titleView = titleLabel
+        self.tftInstallTopBar(title: NSLocalizedString("select_datetime", comment: "Select datetime"))
         self.dateFormatter = DateFormatter()
         self.dateFormatter.dateFormat = "yyyy-MM-dd HH : mm"
         self.dateStart = Utils.getStartDate(selectedIndex: 0)
@@ -55,7 +53,13 @@ class HistorySelectController: UIViewController, UIPickerViewDataSource, UIPicke
         let appFrame = UIScreen.main.bounds
  
         self.downTriangleStr = "▼"
-        let btnDateRangeFrame = CGRect.init(x: appFrame.size.width/2 - 100, y: 0, width: 200, height: 30);
+        let dateRangeOffsetY: CGFloat
+        if #available(iOS 26.0, *) {
+            dateRangeOffsetY = 7
+        } else {
+            dateRangeOffsetY = 0
+        }
+        let btnDateRangeFrame = CGRect.init(x: appFrame.size.width/2 - 100, y: dateRangeOffsetY, width: 200, height: 30);
         self.btnDateRangePicker = UIButton.init(frame: btnDateRangeFrame)
         self.btnDateRangePicker.setTitle(String(format: "%@ %@", self.dateRangeList[self.currentDateSelect],self.downTriangleStr), for: .normal)
         self.btnDateRangePicker.setTitleColor(UIColor.brown, for: .normal)
@@ -124,6 +128,23 @@ class HistorySelectController: UIViewController, UIPickerViewDataSource, UIPicke
 //        self.datePicker.frame = CGRect(x: 0, y: 100, width: self.datePicker.frame.size.width, height: self.datePicker.frame.size.height)
 //        self.view.addSubview(self.datePicker)
     }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: false)
+        self.tftShowTopBar()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: false)
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        self.tftLayoutTopBar()
+        self.tftAdjustContentBelowTopBarIfNeeded()
+    }
     
     @objc func btnSelectedDateStartClick(sender:UIButton){
         let min = Date().addingTimeInterval(-60 * 60 * 24 * 64)
@@ -169,7 +190,7 @@ class HistorySelectController: UIViewController, UIPickerViewDataSource, UIPicke
     }
     
     @objc func dateRangeClick(sender:UIButton){
-         ActionSheetStringPicker.show(withTitle: "", rows: self.dateRangeList, initialSelection:self.currentDateSelect, doneBlock: {
+         ActionSheetStringPicker.show(withTitle: nil, rows: self.dateRangeList, initialSelection:self.currentDateSelect, doneBlock: {
                         picker, index, value in
                         self.currentDateSelect = index
 //                        print("values = \(values)")

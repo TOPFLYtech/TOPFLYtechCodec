@@ -150,11 +150,15 @@ CG_INLINE BOOL isIPhone4() {
         }
 #pragma clang diagnostic pop
 
-        UIBarButtonItem *sysDoneButton = [self createButtonWithType:UIBarButtonSystemItemDone target:self
-                                                             action:@selector(actionPickerDone:)];
+        UIBarButtonItem *sysDoneButton = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"confirm", nil)
+                                                                          style:UIBarButtonItemStyleDone
+                                                                         target:self
+                                                                         action:@selector(actionPickerDone:)];
 
-        UIBarButtonItem *sysCancelButton = [self createButtonWithType:UIBarButtonSystemItemCancel target:self
-                                                               action:@selector(actionPickerCancel:)];
+        UIBarButtonItem *sysCancelButton = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"cancel", nil)
+                                                                            style:UIBarButtonItemStylePlain
+                                                                           target:self
+                                                                           action:@selector(actionPickerCancel:)];
 
         [self setCancelBarButtonItem:sysCancelButton];
         [self setDoneBarButtonItem:sysDoneButton];
@@ -469,7 +473,7 @@ CG_INLINE BOOL isIPhone4() {
 
 
 - (UIToolbar *)createPickerToolbarWithTitle:(NSString *)title {
-    CGRect frame = CGRectMake(0, 0, self.viewSize.width, 44);
+    CGRect frame = CGRectMake(0, ([[NSProcessInfo processInfo] operatingSystemVersion].majorVersion >= 26 ? 12 : 0), self.viewSize.width, 44);
     UIToolbar *pickerToolbar = [[UIToolbar alloc] initWithFrame:frame];
     pickerToolbar.barStyle = (NSFoundationVersionNumber > NSFoundationVersionNumber_iOS_6_1) ? UIBarStyleDefault : UIBarStyleBlackTranslucent;
 

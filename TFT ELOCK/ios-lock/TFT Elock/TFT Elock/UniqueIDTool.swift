@@ -71,3 +71,39 @@ class UniqueIDTool{
    
 }
 
+// Matches the Android unlock identity rules. Identity data is appended to
+// parent-lock commands and must contain between 6 and 20 bytes.
+enum IdentityInfoEncoder {
+    private static let minimumByteCount = 6
+    private static let maximumByteCount = 20
+
+    static func encodeAutomatic(_ value: String) -> [UInt8]? {
+        guard value.count == 12 else {
+            return nil
+        }
+        return encodeHex(value)
+    }
+
+    static func encodeHex(_ value: String) -> [UInt8]? {
+        let characters = Array(value)
+        guard characters.count >= minimumByteCount * 2,
+              characters.count <= maximumByteCount * 2,
+              characters.count % 2 == 0,
+              !characters.isEmpty,
+              characters.allSatisfy({ $0.isHexDigit }) else {
+            return nil
+        }
+        return Utils.hexString2Bytes(hexStr: value)
+    }
+
+    static func encodeText(_ value: String) -> [UInt8]? {
+        guard !value.isEmpty else {
+            return nil
+        }
+        let bytes = Array(value.utf8)
+        guard bytes.count >= minimumByteCount && bytes.count <= maximumByteCount else {
+            return nil
+        }
+        return bytes
+    }
+}

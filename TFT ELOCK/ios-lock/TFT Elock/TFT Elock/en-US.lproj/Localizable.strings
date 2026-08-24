@@ -36,6 +36,16 @@
 "need_reconect_manaual_warning"="The current Bluetooth connection has been disconnected. If you need to reconnect, please manually click the refresh button in the upper right corner.";
 "device_name"="Device name";
 "cancel"="Cancel";
+"save"="Save";
+"custom_identity"="Custom identity";
+"identity_mode_auto"="Use generated 12-character ID";
+"identity_mode_hex"="Enter hexadecimal ID";
+"identity_mode_text"="Enter description text";
+"identity_hex_hint"="Hexadecimal ID (12-40 characters)";
+"identity_text_hint"="Description (6-20 UTF-8 bytes)";
+"identity_hex_error"="Enter an even-length hexadecimal ID of 12-40 characters";
+"identity_text_error"="Description must contain 6-20 UTF-8 bytes";
+"identity_empty_error"="Identity cannot be empty";
 "confirm"="Confirm";
 "incorrect_name_length"="Incorrect name length!";
 "broadcast_cycle"="Broadcast cycle";

@@ -24,10 +24,9 @@ class EditLockPwdController : UIViewController{
            view.endEditing(true)
        }
     override func viewDidLoad() {
+        super.viewDidLoad()
         self.view.backgroundColor = UIColor.white
-        let titleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
-        titleLabel.text = NSLocalizedString("unlock_pwd", comment: "unlock_pwd")
-        self.navigationItem.titleView = titleLabel
+        self.tftInstallTopBar(title: NSLocalizedString("unlock_pwd", comment: "unlock_pwd"))
         let descWidth = Int(KSize.width / 2)
         let contentX = Int(KSize.width / 2 )
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(
@@ -121,6 +120,23 @@ class EditLockPwdController : UIViewController{
         self.submitBtn.frame = CGRect(x: Int((KSize.width - 200) / 2), y: startLabelY + 10, width: 200, height: 30)
         self.submitBtn.addTarget(self, action: #selector(submit), for:.touchUpInside)
         self.view.addSubview(self.submitBtn)
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: false)
+        self.tftShowTopBar()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: false)
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        self.tftLayoutTopBar()
+        self.tftAdjustContentBelowTopBarIfNeeded()
     }
     var delegate : EditLockPwdDelegate?
     @objc private func submit(){

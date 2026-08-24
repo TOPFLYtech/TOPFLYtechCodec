@@ -2,54 +2,7 @@
 import UIKit
 
 class AlarmOpenSetViewController: UIViewController {
-
-    
-    var barLabel:UILabel!
-    var leftBtn:UIButton!
-    var favoriteBtn:UIButton!
-    var rightMenuBtn:UIButton!
-    let imageSize = CGSize(width: 24, height: 24)
-    let renderer = UIGraphicsImageRenderer(size: CGSize(width: 24, height: 24))
-    func initNavBar(){
-        barLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
-       //                titleLabel.text = "Bluetooth sensor"
-       barLabel.text =  NSLocalizedString("alarm_set", comment: "alarm_set")
-       barLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
-       self.navigationItem.titleView = barLabel
-       let rightMenuImage = renderer.image { (context) in
-           // 绘制图像
-           let originalImage = UIImage(named: "ic_okay.png")
-           originalImage?.draw(in: CGRect(origin: .zero, size: imageSize))
-       }
-          
-       
-       rightMenuBtn = UIButton(type: .custom) as! UIButton
-       rightMenuBtn.setImage(rightMenuImage, for:.normal)
-       rightMenuBtn.addTarget(self, action: #selector(showPopMenuClick), for:.touchUpInside)
-       rightMenuBtn.frame = CGRectMake(0, 0, 30, 30)
-       let rightMenuBtn = UIBarButtonItem(customView: rightMenuBtn)
-        let leftImage = renderer.image { (context) in
-            // 绘制图像
-            let originalImage = UIImage(named: "ic_back.png")
-            originalImage?.draw(in: CGRect(origin: .zero, size: imageSize))
-        }
-           
-       leftBtn = UIButton(type: .custom) as! UIButton
-       leftBtn.setImage(leftImage, for: .normal)
-       leftBtn.addTarget(self, action: #selector(leftClick), for: .touchUpInside)
-       leftBtn.frame = CGRectMake(0, 0, 30, 30)
-       let leftBarBtn = UIBarButtonItem(customView: leftBtn)
-        
-       self.navigationItem.setLeftBarButtonItems([leftBarBtn ], animated: false)
-       self.navigationItem.setRightBarButtonItems([  rightMenuBtn], animated: false)
-       
-       navigationController?.navigationBar.barTintColor = UIColor.colorPrimary
-    
-        
-    }
-    @objc private func leftClick() {
-        navigationController?.popViewController(animated: true)
-    }
+    private var stackTopConstraint: NSLayoutConstraint?
     
     @objc private func showPopMenuClick() {
         print("showPopMenuClick")
@@ -59,7 +12,11 @@ class AlarmOpenSetViewController: UIViewController {
     var alarmOpenSet = 0
     override func viewDidLoad() {
         super.viewDidLoad()
-        initNavBar()
+        self.tftInstallTopBar(
+            title: NSLocalizedString("alarm_set", comment: "alarm_set"),
+            rightIconName: "ic_okay.png",
+            rightAction: #selector(showPopMenuClick)
+        )
         view.backgroundColor = .white
         
         let stackView = UIStackView(arrangedSubviews: [
@@ -83,10 +40,28 @@ class AlarmOpenSetViewController: UIViewController {
         
         view.addSubview(stackView)
         
+        stackTopConstraint = stackView.topAnchor.constraint(equalTo: view.topAnchor, constant: 16)
         NSLayoutConstraint.activate([
-            stackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            stackTopConstraint!,
             stackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20)
         ])
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: false)
+        self.tftShowTopBar()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: false)
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        self.tftLayoutTopBar()
+        stackTopConstraint?.constant = self.tftTopContentY() + 16
     }
     var delegate:EditAlarmOpenDelegate?
     private func createCheckbox(title: String, position:Int,isVisible: Bool = true) -> UIView {

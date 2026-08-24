@@ -51,14 +51,25 @@ class SimpleDeleteItem:  UITableViewCell {
     
     func initLayoutPosition()
     {
-        let descWidth = self.bounds.size.width / 2 + 30
-        let btnX = self.bounds.size.width / 2 + 60
-        self.rootView.frame = CGRect(x: 5, y: 5, width: Int(self.bounds.size.width)-10, height: oneLineHeight + 10)
+        let buttonWidth: CGFloat = 70
+        let buttonRightInset: CGFloat = 8
+        let labelLeftInset: CGFloat = 8
+        let labelButtonGap: CGFloat = 12
+        let rootWidth = max(0, self.bounds.width - 10)
+        let buttonX = max(0, rootWidth - buttonWidth - buttonRightInset)
+        let labelWidth = max(0, buttonX - labelLeftInset - labelButtonGap)
+
+        self.rootView.frame = CGRect(x: 5, y: 5, width: rootWidth, height: CGFloat(oneLineHeight + 10))
         self.rootView.isUserInteractionEnabled=true
-      
-        self.itemContentLabel.frame = CGRect(x: 8, y: 5, width: Int(descWidth), height: oneLineHeight - 5)
-        self.deleteBtn.frame = CGRect(x: Int(btnX), y: 0, width: 70, height: oneLineHeight)
-        self.rootView.backgroundColor = UIColor.white 
+
+        self.itemContentLabel.frame = CGRect(x: labelLeftInset, y: 5, width: labelWidth, height: CGFloat(oneLineHeight - 5))
+        self.deleteBtn.frame = CGRect(x: buttonX, y: 0, width: buttonWidth, height: CGFloat(oneLineHeight))
+        self.rootView.backgroundColor = UIColor.white
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        self.initLayoutPosition()
     }
     
     
@@ -67,7 +78,6 @@ class SimpleDeleteItem:  UITableViewCell {
         self.contentView.addSubview(rootView)
         self.rootView.addSubview(itemContentLabel)
         self.rootView.addSubview(deleteBtn)
-        self.initLayoutPosition()
         
     }
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {

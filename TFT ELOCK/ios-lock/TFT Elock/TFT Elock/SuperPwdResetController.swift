@@ -66,6 +66,7 @@ class SuperPwdResetController:UIViewController,CBCentralManagerDelegate,CBPeriph
     private var pwdErrorWarning = false;
  
     override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
         self.needConnect = false
         if self.leaveViewNeedDisconnect{
             if self.selfPeripheral != nil{
@@ -78,29 +79,35 @@ class SuperPwdResetController:UIViewController,CBCentralManagerDelegate,CBPeriph
     
     func initRightBtn(isConnect:Bool){
         if isConnect{
-            let rightBarButtonItem = UIBarButtonItem (barButtonSystemItem: UIBarButtonItem.SystemItem.refresh, target: self, action: #selector(self.refreshClick))
-            self.navigationItem.rightBarButtonItem = rightBarButtonItem
+            self.tftSetTopBarRightButtons([(iconName: "ic_refresh.png", action: #selector(self.refreshClick))])
         }else{
-            let btn = UIButton.init(frame: CGRect.init(x: KSize.width - 50, y: 0, width: 25, height: 25))
-            btn.setImage(UIImage(named:"ic_disconnect.png"), for: .normal)
-            let rightBarButtonItem =  UIBarButtonItem.init(customView: btn)
-            btn.addTarget(self, action: #selector(self.refreshClick), for: .touchUpInside)
-            self.navigationItem.rightBarButtonItem = rightBarButtonItem
+            self.tftSetTopBarRightButtons([(iconName: "ic_disconnect.png", action: #selector(self.refreshClick))])
         }
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: false)
+        self.tftShowTopBar()
+    }
+
     override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: false)
         self.onView = true
         self.pwdErrorWarning = false
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        self.tftLayoutTopBar()
+        self.tftAdjustContentBelowTopBarIfNeeded()
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         self.onView = true
-        let titleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
-        titleLabel.text = mac
-         
-        self.navigationItem.titleView = titleLabel
+        self.tftInstallTopBar(title: mac)
         self.initRightBtn(isConnect:false)
         self.view.backgroundColor = UIColor.white
         self.needConnect = true

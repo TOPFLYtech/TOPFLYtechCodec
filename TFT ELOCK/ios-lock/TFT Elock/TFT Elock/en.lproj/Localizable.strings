@@ -191,7 +191,7 @@
 "ip_domain"="Domain/IP";
 "port"="Port";
 "acc_on_value_warning"="Ignition on is from 5 to 65535 or 0,0 means it is disable.";
-"acc_off_value_warning"="Ignition off must be 0 or between 1200 and 2147483647";
+"acc_off_value_warning"="Ignition off must between 0 and 2147483647";
 "angle_value_warning"="Angle mustis from 15 to 180 or 0,0 means it is disable.";
 "distance_value_warning"="Distance is from 10 to 65535 or 0,0 means it is disable.";
 "port_invalid"="Invalid port number";
@@ -295,6 +295,16 @@
 "old_unlock_error"="Old unlock password error";
 "network"="Network";
 "input_error"="Input error!";
+"save"="Save";
+"custom_identity"="Custom identity";
+"identity_mode_auto"="Use generated 12-character ID";
+"identity_mode_hex"="Enter hexadecimal ID";
+"identity_mode_text"="Enter description text";
+"identity_hex_hint"="Hexadecimal ID (12-40 characters)";
+"identity_text_hint"="Description (6-20 UTF-8 bytes)";
+"identity_hex_error"="Enter an even-length hexadecimal ID of 12-40 characters";
+"identity_text_error"="Description must contain 6-20 UTF-8 bytes";
+"identity_empty_error"="Identity cannot be empty";
 "connect"="Connect";
 "reset_default"="Restore Default Settings";
 "clear_his_data"="Clear history data";

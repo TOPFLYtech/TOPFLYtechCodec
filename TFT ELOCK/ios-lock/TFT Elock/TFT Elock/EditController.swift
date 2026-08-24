@@ -229,8 +229,16 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
                         self.parseReadResp(bleRespData: bleRespData)
                     }else{
                         if bleRespData.errorCode == BleRespData.ERROR_CODE_OF_PWD_ERROR {
-                            Toast.hudBuilder.title(NSLocalizedString("ble_pwd_error", comment: "Ble password is error")).show() 
-                            showAccessPwdWin()
+                            if bleRespData.controlCode == BleDeviceData.func_id_of_unlock
+                                || bleRespData.controlCode == BleDeviceData.func_id_of_sub_lock_unlock {
+                                Toast.hudBuilder.title(NSLocalizedString("unlock_pwd_error", comment: "Unlock password is error")).show()
+                                showUnClockPwdWin()
+                            } else if bleRespData.controlCode == BleDeviceData.func_id_of_change_unlock_pwd {
+                                Toast.hudBuilder.title(NSLocalizedString("old_unlock_error", comment: "Old unlock password is error")).show()
+                            } else {
+                                Toast.hudBuilder.title(NSLocalizedString("ble_pwd_error", comment: "Ble password is error")).show()
+                                showAccessPwdWin()
+                            }
                         }else{
                             if TftBleConnectManager.getInstance().isOnThsView(){
                                 Toast.hudBuilder.title(NSLocalizedString("fail", comment: "Fail")).show()
@@ -374,7 +382,8 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
                 Toast.hudBuilder.title(NSLocalizedString("success", comment: "Success")).show()
             }
         }else if code == BleDeviceData.func_id_of_sub_lock_ble_transmitted_power{
-            transmittedPowerContentLabel.text = "\(bleRespData.data![0]) dBm"
+            let transmittedPower = Utils.signedByteToInt(bleRespData.data![0])
+            transmittedPowerContentLabel.text = "\(transmittedPower) dBm"
         }else if code == BleDeviceData.func_id_of_sub_lock_broadcast_interval{
             broadcastIntervalContentLabel.text = "\(bleRespData.data![0]) s"
         }else if code == BleDeviceData.func_id_of_sub_lock_device_id{
@@ -490,7 +499,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
     private var blePwdAlert:AEUIAlertView!
     private var betaUpgradeWarningView:AEAlertView!
     private var upgradeWarningView:AEAlertView!
-    var barLabel:UILabel!
     var blePwd:String!
     var newPwd:String!
     var cbPeripheral:CBPeripheral!
@@ -531,6 +539,30 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
             TftBleConnectManager.getInstance().disconnect()
         }
     }
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: false)
+        self.tftShowTopBar()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: false)
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        self.tftLayoutTopBar()
+        let startY = self.tftTopContentY()
+        if self.configScrollView != nil {
+            self.configScrollView.frame = CGRect(
+                x: 0,
+                y: Int(startY),
+                width: Int(self.view.bounds.width),
+                height: Int(self.view.bounds.height - startY)
+            )
+        }
+    }
     private var a001SoftwareUpgradeManager:A001SoftwareUpgradeManager!
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -558,8 +590,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
             BleDeviceData.func_id_of_sub_lock_temp_alarm_set
         ]
         print("uid:\(uniqueID)")
-        self.navigationController!.navigationBar.isTranslucent = false
-        self.extendedLayoutIncludesOpaqueBars = true
         self.initUI()
         let mac = self.cbPeripheral.identifier.uuidString
         self.initNavBar()
@@ -578,23 +608,14 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
     
     
     func initNavBar(){
-        barLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
-        //        titleLabel.text = "Bluetooth sensor"
-        barLabel.text = self.name
-        self.navigationItem.titleView = barLabel
+        self.tftInstallTopBar(title: self.name)
         self.initRightBtn(isConnect: false)
-        navigationController?.navigationBar.barTintColor = UIColor.colorPrimary
     }
     func initRightBtn(isConnect:Bool){
         if isConnect{
-            let rightBarButtonItem = UIBarButtonItem (barButtonSystemItem: UIBarButtonItem.SystemItem.refresh, target: self, action: #selector(self.refreshClick))
-            self.navigationItem.rightBarButtonItem = rightBarButtonItem
+            self.tftSetTopBarRightButtons([(iconName: "ic_refresh.png", action: #selector(self.refreshClick))])
         }else{
-            let btn = UIButton.init(frame: CGRect.init(x: KSize.width - 50, y: 0, width: 25, height: 25))
-            btn.setImage(UIImage(named:"ic_disconnect.png"), for: .normal)
-            let rightBarButtonItem =  UIBarButtonItem.init(customView: btn)
-            btn.addTarget(self, action: #selector(self.refreshClick), for: .touchUpInside)
-            self.navigationItem.rightBarButtonItem = rightBarButtonItem
+            self.tftSetTopBarRightButtons([(iconName: "ic_disconnect.png", action: #selector(self.refreshClick))])
         }
     }
     @objc private func refreshClick() {
@@ -1536,8 +1557,9 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         let action_two = AEAlertAction(title: NSLocalizedString("confirm", comment: "Confirm"), style: .defaulted) { (action) in
             let transmittedPowerStr = String(editTransmittedPowerAlert.textField.text ?? "")
             let transmittedPower = Int(transmittedPowerStr) ?? -1
-            if transmittedPower <= 10 && transmittedPower >= 1{
-                var dataArray = [(UInt8)(transmittedPower)]
+            if transmittedPower >= -20 && transmittedPower <= 10{
+                let signedPower = Int8(transmittedPower)
+                let dataArray = [UInt8(bitPattern: signedPower)]
                 let cmd = Utils.getWriteCmdContent(cmdCode: BleDeviceData.func_id_of_sub_lock_ble_transmitted_power, content: dataArray,pwd: self.blePwd)
                 TftBleConnectManager.getInstance().writeArrayContent(writeContentList: cmd)
                 editTransmittedPowerAlert.dismiss()
@@ -2020,7 +2042,7 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
     }
     func initConfigUI(startY:Int){
         configScrollView = UIScrollView()
-        configScrollView.frame = CGRect(x: 0, y: startY + 5, width: Int(KSize.width), height: Int(KSize.height) - startY)
+        configScrollView.frame = CGRect(x: 0, y: startY, width: Int(self.view.bounds.width), height: Int(self.view.bounds.height) - startY)
         var scrollViewHeight:Float = 910
         //        scrollView.isPagingEnabled = true
         configScrollView.showsHorizontalScrollIndicator = false
@@ -2078,7 +2100,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         nameView = UIView()
         nameView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         nameView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(nameView)
         
         self.nameLabel = UILabel()
         self.nameLabel.textColor = UIColor.black
@@ -2118,7 +2139,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         deviceIdView = UIView()
         deviceIdView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         deviceIdView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(deviceIdView)
         
         self.deviceIdLabel = UILabel()
         self.deviceIdLabel.textColor = UIColor.black
@@ -2158,7 +2178,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         modelView = UIView()
         modelView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         modelView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(modelView)
         
         self.modelLabel = UILabel()
         self.modelLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
@@ -2198,7 +2217,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         hardwareView = UIView()
         hardwareView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         hardwareView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(hardwareView)
         
         self.hardwareLabel = UILabel()
         self.hardwareLabel.textColor = UIColor.black
@@ -2235,7 +2253,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         softwareView = UIView()
         softwareView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         softwareView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(softwareView)
         
         
         self.softwareLabel = UILabel()
@@ -2272,7 +2289,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         bootVersionView = UIView()
         bootVersionView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         bootVersionView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(bootVersionView)
        
         self.bootVersionLabel = UILabel()
         self.bootVersionLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
@@ -2307,7 +2323,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         blePwdView = UIView()
         blePwdView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         blePwdView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(blePwdView)
         
         self.blePwdLabel = UILabel()
         self.blePwdLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
@@ -2342,7 +2357,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         unclockPwdView = UIView()
         unclockPwdView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         unclockPwdView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(unclockPwdView)
         self.unclockPwdLabel = UILabel()
         self.unclockPwdLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
         self.unclockPwdLabel.textColor = UIColor.black
@@ -2375,7 +2389,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         timerView = UIView()
         timerView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         timerView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(timerView)
         self.timerLabel = UILabel()
         self.timerLabel.textColor = UIColor.black
         self.timerLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
@@ -2411,7 +2424,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         rfidView = UIView()
         rfidView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         rfidView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(rfidView)
         self.rfidLabel = UILabel()
         self.rfidLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
         self.rfidLabel.textColor = UIColor.black
@@ -2444,7 +2456,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         subLockView = UIView()
         subLockView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         subLockView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(subLockView)
         self.subLockLabel = UILabel()
         self.subLockLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
         self.subLockLabel.textColor = UIColor.black
@@ -2477,7 +2488,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         ip1View = UIView()
         ip1View.heightAnchor.constraint(equalToConstant: 60).isActive = true
         ip1View.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(ip1View)
         self.ip1Label = UILabel()
         self.ip1Label.textColor = UIColor.black
         self.ip1Label.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
@@ -2511,7 +2521,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         port1View = UIView()
         port1View.heightAnchor.constraint(equalToConstant: 60).isActive = true
         port1View.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(port1View)
         self.port1Label = UILabel()
         self.port1Label.textColor = UIColor.black
         self.port1Label.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
@@ -2546,7 +2555,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         ip2View = UIView()
         ip2View.heightAnchor.constraint(equalToConstant: 60).isActive = true
         ip2View.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(ip2View)
         self.ip2Label = UILabel()
         self.ip2Label.textColor = UIColor.black
         self.ip2Label.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
@@ -2581,7 +2589,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         port2View = UIView()
         port2View.heightAnchor.constraint(equalToConstant: 60).isActive = true
         port2View.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(port2View)
         self.port2Label = UILabel()
         self.port2Label.textColor = UIColor.black
         self.port2Label.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
@@ -2616,7 +2623,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         apnAddrView = UIView()
         apnAddrView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         apnAddrView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(apnAddrView)
         self.apnAddrLabel = UILabel()
         self.apnAddrLabel.textColor = UIColor.black
         self.apnAddrLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
@@ -2651,7 +2657,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         apnUsernameView = UIView()
         apnUsernameView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         apnUsernameView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(apnUsernameView)
         self.apnUsernameLabel = UILabel()
         self.apnUsernameLabel.textColor = UIColor.black
         self.apnUsernameLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
@@ -2686,7 +2691,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         apnPwdView = UIView()
         apnPwdView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         apnPwdView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(apnPwdView)
         self.apnPwdLabel = UILabel()
         self.apnPwdLabel.textColor = UIColor.black
         self.apnPwdLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
@@ -2721,7 +2725,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         alarmSetView = UIView()
         alarmSetView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         alarmSetView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(alarmSetView)
         self.alarmSetLabel = UILabel()
         self.alarmSetLabel.textColor = UIColor.black
         self.alarmSetLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
@@ -2755,7 +2758,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         tempAlarmView = UIView()
         tempAlarmView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         tempAlarmView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(tempAlarmView)
         self.tempAlarmLabel = UILabel()
         self.tempAlarmLabel.textColor = UIColor.black
         self.tempAlarmLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
@@ -2790,7 +2792,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         broadcastIntervalView = UIView()
         broadcastIntervalView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         broadcastIntervalView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(broadcastIntervalView)
         self.broadcastIntervalLabel = UILabel()
         self.broadcastIntervalLabel.textColor = UIColor.black
         self.broadcastIntervalLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
@@ -2826,7 +2827,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         longRangeView = UIView()
         longRangeView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         longRangeView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(longRangeView)
         self.longRangeLabel = UILabel()
         self.longRangeLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
         self.longRangeLabel.textColor = UIColor.black
@@ -2849,7 +2849,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         transmittedPowerView = UIView()
         transmittedPowerView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         transmittedPowerView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(transmittedPowerView)
         self.transmittedPowerLabel = UILabel()
         self.transmittedPowerLabel.textColor = UIColor.black
         self.transmittedPowerLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
@@ -2884,7 +2883,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         ledView = UIView()
         ledView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         ledView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(ledView)
         self.ledLabel = UILabel()
         self.ledLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
         self.ledLabel.textColor = UIColor.black
@@ -2906,7 +2904,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         buzzerView = UIView()
         buzzerView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         buzzerView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(buzzerView)
         self.buzzerLabel = UILabel()
         self.buzzerLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
         self.buzzerLabel.textColor = UIColor.black
@@ -2929,7 +2926,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         clearHisDataView = UIView()
         clearHisDataView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         clearHisDataView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(clearHisDataView)
         self.clearHisDataLabel = UILabel()
         self.clearHisDataLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
         self.clearHisDataLabel.textColor = UIColor.black
@@ -2957,7 +2953,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         resetDefaultView = UIView()
         resetDefaultView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         resetDefaultView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(resetDefaultView)
         self.resetDefaultLabel = UILabel()
         self.resetDefaultLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
         self.resetDefaultLabel.textColor = UIColor.black
@@ -2984,7 +2979,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         rebootView = UIView()
         rebootView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         rebootView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(rebootView)
         self.rebootLabel = UILabel()
         self.rebootLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
         self.rebootLabel.textColor = UIColor.black
@@ -3011,7 +3005,6 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         shutdownView = UIView()
         shutdownView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         shutdownView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
-        stackView.addArrangedSubview(shutdownView)
         self.shutdownLabel = UILabel()
         self.shutdownLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
         self.shutdownLabel.textColor = UIColor.black
@@ -3040,6 +3033,36 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
         resetFactoryView = UIView()
         resetFactoryView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         resetFactoryView.widthAnchor.constraint(equalToConstant:  KSize.width).isActive = true // 设置视图的宽度
+        // Keep the configuration order aligned with Android EditActivity.
+        stackView.addArrangedSubview(nameView)
+        stackView.addArrangedSubview(deviceIdView)
+        stackView.addArrangedSubview(modelView)
+        stackView.addArrangedSubview(hardwareView)
+        stackView.addArrangedSubview(softwareView)
+        stackView.addArrangedSubview(bootVersionView)
+        stackView.addArrangedSubview(timerView)
+        stackView.addArrangedSubview(rfidView)
+        stackView.addArrangedSubview(subLockView)
+        stackView.addArrangedSubview(unclockPwdView)
+        stackView.addArrangedSubview(blePwdView)
+        stackView.addArrangedSubview(ip1View)
+        stackView.addArrangedSubview(port1View)
+        stackView.addArrangedSubview(ip2View)
+        stackView.addArrangedSubview(port2View)
+        stackView.addArrangedSubview(apnAddrView)
+        stackView.addArrangedSubview(apnUsernameView)
+        stackView.addArrangedSubview(apnPwdView)
+        stackView.addArrangedSubview(alarmSetView)
+        stackView.addArrangedSubview(tempAlarmView)
+        stackView.addArrangedSubview(broadcastIntervalView)
+        stackView.addArrangedSubview(longRangeView)
+        stackView.addArrangedSubview(transmittedPowerView)
+        stackView.addArrangedSubview(ledView)
+        stackView.addArrangedSubview(buzzerView)
+        stackView.addArrangedSubview(clearHisDataView)
+        stackView.addArrangedSubview(resetDefaultView)
+        stackView.addArrangedSubview(rebootView)
+        stackView.addArrangedSubview(shutdownView)
         stackView.addArrangedSubview(resetFactoryView)
         self.resetFactoryLabel = UILabel()
         self.resetFactoryLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
@@ -3069,7 +3092,7 @@ class EditController:UIViewController,BleStatusCallback,URLSessionDownloadDelega
     }
     func initUI(){
         self.view.backgroundColor = UIColor.white
-        var contentY = 70
+        var contentY = Int(self.tftTopContentY())
         let dateLabelWidth = 60
         let dateLabelX:Int = (Int)(self.view.bounds.size.width / 2 - 100)
         self.uniqueIDLabel.frame = CGRect(x: dateLabelX, y: contentY, width: 80, height: 30)

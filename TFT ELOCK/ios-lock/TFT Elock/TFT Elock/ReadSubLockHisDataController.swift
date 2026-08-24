@@ -447,7 +447,6 @@ class ReadSubLockHisDataController:UIViewController,UITableViewDataSource,UITabl
     private var progressBar:MyProgress!
     private var waitingView:AEUIAlertView!
     private var pwdAlert:AEUIAlertView!
-    var barLabel:UILabel!
 //    var centralManager   : CBCentralManager!
     var cbPeripheral:CBPeripheral!
 //    private var selfPeripheral:CBPeripheral!
@@ -484,6 +483,22 @@ class ReadSubLockHisDataController:UIViewController,UITableViewDataSource,UITabl
         self.onView = false
         self.needConnect = false
     }
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: false)
+        self.tftShowTopBar()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: false)
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        self.tftLayoutTopBar()
+        self.tftAdjustContentBelowTopBarIfNeeded()
+    }
     private var isShowPwdDlg = false
     func showPwdWin(isNextShowDateDlg:Bool){
         if self.isShowPwdDlg{
@@ -494,8 +509,8 @@ class ReadSubLockHisDataController:UIViewController,UITableViewDataSource,UITabl
             self.pwdAlert.show()
             return
         }
-        self.pwdAlert = AEUIAlertView(style: .password, title: NSLocalizedString("input_ble_open_lock_pwd", comment:"Please enter your password"), message: nil)
-        self.pwdAlert.textField.placeholder = NSLocalizedString("input_ble_open_lock_pwd", comment:"Please enter your password")
+        self.pwdAlert = AEUIAlertView(style: .password, title: NSLocalizedString("input_ble_pwd", comment:"Please enter your Bluetooth password"), message: nil)
+        self.pwdAlert.textField.placeholder = NSLocalizedString("input_ble_pwd", comment:"Please enter your Bluetooth password")
       
         let action_one = AEAlertAction(title: NSLocalizedString("cancel", comment: "Cancel"), style: .cancel) { (action) in
             self.pwdAlert.dismiss()
@@ -526,8 +541,6 @@ class ReadSubLockHisDataController:UIViewController,UITableViewDataSource,UITabl
         tableDateFormat.locale = Locale(identifier: "en_US_POSIX")
         uniqueID = UniqueIDTool.getMediaDrmID()
         print("uid:\(uniqueID)")
-        self.navigationController!.navigationBar.isTranslucent = false
-        self.extendedLayoutIncludesOpaqueBars = true
 //        self.makeSomeData()
         self.initUI()
         self.initNavBar()
@@ -561,11 +574,7 @@ class ReadSubLockHisDataController:UIViewController,UITableViewDataSource,UITabl
     let imageSize = CGSize(width: 24, height: 24)
     let renderer = UIGraphicsImageRenderer(size: CGSize(width: 24, height: 24))
     func initNavBar(){
-        barLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
-        //                titleLabel.text = "Bluetooth sensor"
-        barLabel.text =  self.name
-        barLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
-        self.navigationItem.titleView = barLabel
+        self.tftInstallTopBar(title: self.name)
         
         
         
@@ -584,27 +593,21 @@ class ReadSubLockHisDataController:UIViewController,UITableViewDataSource,UITabl
             let originalImage = UIImage(named: "ic_disconnect.png")
             originalImage?.draw(in: CGRect(origin: .zero, size: imageSize))
         }
-        lightAlarmBtn = UIButton(type: .custom) as! UIButton
+        lightAlarmBtn = UIButton(type: .custom)
         lightAlarmBtn.setImage(lightImage, for: .normal)
         lightAlarmBtn.addTarget(self, action: #selector(lightAlarmCancelClick), for:.touchUpInside)
         lightAlarmBtn.frame = CGRectMake(0, 0, 30, 30)
-        let lightBarBtn = UIBarButtonItem(customView: lightAlarmBtn)
         
-        menuSelectBtn = UIButton(type: .custom) as! UIButton
+        menuSelectBtn = UIButton(type: .custom)
         menuSelectBtn.setImage(menuImage, for:.normal)
         menuSelectBtn.addTarget(self, action: #selector(menuSelectClick), for:.touchUpInside)
         menuSelectBtn.frame = CGRectMake(0, 0, 30, 30)
-        let menuBarBtn = UIBarButtonItem(customView: menuSelectBtn)
         
-        refreshConnectBtn = UIButton(type: .custom) as! UIButton
+        refreshConnectBtn = UIButton(type: .custom)
         refreshConnectBtn.setImage(refreshImage, for: .normal)
         refreshConnectBtn.addTarget(self, action: #selector(refreshClick), for: .touchUpInside)
         refreshConnectBtn.frame = CGRectMake(0, 0, 30, 30)
-        let refreshConnectBarBtn = UIBarButtonItem(customView: refreshConnectBtn)
-        
-        self.navigationItem.setRightBarButtonItems([refreshConnectBarBtn, menuBarBtn], animated: false)
-        
-        navigationController?.navigationBar.barTintColor = UIColor.colorPrimary
+        self.tftSetTopBarRightCustomButtons([refreshConnectBtn, menuSelectBtn])
     }
     let prevButton = UIButton()
     let nextButton = UIButton()
@@ -1518,4 +1521,3 @@ class ReadSubLockHisDataController:UIViewController,UITableViewDataSource,UITabl
         }
     }
 }
-

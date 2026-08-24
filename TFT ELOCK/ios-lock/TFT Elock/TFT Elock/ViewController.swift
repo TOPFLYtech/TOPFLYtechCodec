@@ -72,6 +72,8 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
     private var centralManager   : CBCentralManager!
     private var waitingView:AEUIAlertView!
     private var isOpenFilter = false
+    private let searchContainerHeight: CGFloat = 60
+    private var topBarView:UIView!
     private var searchView:UIView!
     private var searchBar:UISearchBar!
     private var scanBtn:UIButton!
@@ -379,16 +381,16 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 var protocolType:String = "",model:String =  BleDeviceData.MODEL_OF_SGX120B01
                 let hardware = Utils.parseSGX120HardwareVersion(hardware: String(format: "%02x", versionInfo[1]))
                 let software = Utils.parseSGX120SoftwaeVersion(data: [UInt8](versionInfo), index: 2)
+                if versionInfo.count < 16 {
+                    return;
+                }
                 let lockType = versionInfo[5]
                 let lockStatus = Utils.bytes2Short(bytes: versionInfo, offset: 6)
                 
                 let voltageTemp = Utils.bytes2Short(bytes: versionInfo, offset: 8)
                 let voltage = Float(voltageTemp) / 1000
-                let batteryPercent = versionInfo[10]
+                let batteryPercent = Int(versionInfo[10] & 0xff)
                 let solarVoltageTemp = Float(Utils.bytes2Short(bytes: versionInfo, offset: 11)) / 1000
-                if(versionInfo.count < 14){
-                    return;
-                }
                 var temp = Int(versionInfo[13] & 0xff)
                 if temp == 0xff {
                     temp = -999
@@ -406,6 +408,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 bleDeviceData.mac = mac
                 bleDeviceData.id = imei.uppercased()
                 bleDeviceData.voltage = voltage
+                bleDeviceData.batteryPercent = batteryPercent
                 bleDeviceData.deviceName = deviceName
                 bleDeviceData.isSupportReadHis = false
                 bleDeviceData.lastRegDate = Date()
@@ -478,10 +481,6 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                     var imeiByte = Utils.arraysCopyOfRange(src: imeiInfo, from: 1, to: imeiInfo.count)
                     imei = String(bytes:imeiByte,encoding:.utf8)!
                 }
-                if deviceIdData != nil && deviceIdData!.count >= 5{
-                    var deviceIdByte = Utils.arraysCopyOfRange(src: deviceIdData!, from: 0, to: deviceIdData!.count)
-                    deviceId = Utils.bytes2HexString(bytes: deviceIdByte, pos: 0)
-                }
                 var software:String = "",hardware:String = "",protocolType:String = "",model:String = ""
                 var protocolByte:UInt8 = 0x00
                 var voltage:Float = 0.0
@@ -489,10 +488,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                 if versionInfo != nil && versionInfo.count >= 5{
                     protocolByte = versionInfo[0]
                 }
-                if protocolByte != 0x62 && protocolByte != 0x65
-                    &&  protocolByte != 0x7b && protocolByte != 0x7c
-                    &&  protocolByte != 119 && protocolByte != 120
-                    &&  protocolByte != 121 && protocolByte != 122{
+                if BleDeviceData.isNotSupportModels(protocolByte: protocolByte){
                     return;
                 }
                 if versionInfo != nil && versionInfo.count >= 5{
@@ -505,7 +501,11 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                     let softwareInt = Int(softwareStr)!
                     software = String.init(format: "V%d", softwareInt)
                     model = BleDeviceData.parseModel(protocolByte: protocolByte)
-                    if versionInfo.count == 7{
+                    if model == BleDeviceData.MODEL_OF_SGX120CB && versionInfo.count == 9 {
+                        let voltageStr = String.init(format: "%d.%d", versionInfo[4],versionInfo[5]);
+                        voltage = (Float(voltageStr) ?? 0) / 10
+                        isSupportReadHis = versionInfo[8] == 1
+                    }else if versionInfo.count == 7{
                         let voltageStr = String.init(format: "%d.%d", versionInfo[4],versionInfo[5]);
                         voltage = (Float(voltageStr) ?? 0) / 10
                         isSupportReadHis = versionInfo[6] == 1
@@ -521,8 +521,12 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
                             
                         }
                     }
-                    
-                    
+                }
+                if let deviceIdData = deviceIdData, deviceIdData.count >= 5 {
+                    // Keep SGX120CB aligned with the SGX110/legacy iOS path until
+                    // Android AEAF slicing is verified against real broadcast samples.
+                    let deviceIdByte = Utils.arraysCopyOfRange(src: deviceIdData, from: 0, to: deviceIdData.count)
+                    deviceId = Utils.bytes2HexString(bytes: deviceIdByte, pos: 0)
                 }
                 var bleDeviceData = BleDeviceData()
                 bleDeviceData.hardware = hardware
@@ -658,8 +662,6 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         if self.isOpenFilter {
             print ("hide")
             self.searchView.isHidden = true
-            dataTable.frame.origin.y = 0
-            dataTable.frame = CGRect(x: 0, y: 0, width: KSize.width, height: KSize.height)
             self.searchBar.text = ""
             self.searchBar.resignFirstResponder()
             fuzzyKey = ""
@@ -667,10 +669,9 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         }else{
             print ("show")
             self.searchView.isHidden = false
-            dataTable.frame.origin.y = 120
-            dataTable.frame = CGRect(x: 0, y: 120, width: KSize.width, height: KSize.height - 120)
         }
         self.isOpenFilter = !self.isOpenFilter
+        self.updateSearchAndTableLayout()
     }
     
     
@@ -678,6 +679,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
     
     
     override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         print("viewDidAppear")
         if self.bleStateSucc{
             centralManager.scanForPeripherals(withServices: nil,options: [CBCentralManagerScanOptionAllowDuplicatesKey : true])
@@ -687,11 +689,52 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         self.initParentSubRelationMap()
     }
     override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
         print("viewDidDIsappear")
-        //        self.centralManager.stopScan()
+        self.navigationController?.setNavigationBarHidden(false, animated: false)
     }
     override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         print("viewWillAppear")
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        self.updateSearchAndTableLayout()
+    }
+    
+    private func updateSearchAndTableLayout() {
+        guard self.topBarView != nil,
+              self.refreshBtn != nil,
+              self.favoriteBtn != nil,
+              self.rightMenuBtn != nil,
+              self.barLabel != nil,
+              self.searchView != nil,
+              self.scanBtn != nil,
+              self.closeSearchBtn != nil,
+              self.searchBar != nil,
+              self.dataTable != nil else {
+            return
+        }
+        let viewWidth = self.view.bounds.width
+        let viewHeight = self.view.bounds.height
+        let safeTop = self.view.safeAreaInsets.top
+        let topBarHeight = safeTop + 56
+        
+        self.topBarView.frame = CGRect(x: 0, y: 0, width: viewWidth, height: topBarHeight)
+        self.refreshBtn.frame = CGRect(x: 12, y: safeTop + 13, width: 30, height: 30)
+        self.favoriteBtn.frame = CGRect(x: viewWidth - 84, y: safeTop + 13, width: 30, height: 30)
+        self.rightMenuBtn.frame = CGRect(x: viewWidth - 44, y: safeTop + 13, width: 30, height: 30)
+        self.barLabel.frame = CGRect(x: 56, y: safeTop + 8, width: viewWidth - 112, height: 40)
+        
+        self.searchView.frame = CGRect(x: 0, y: topBarHeight, width: viewWidth, height: searchContainerHeight)
+        self.scanBtn.frame = CGRect(x: viewWidth - 80, y: 10, width: 40, height: 40)
+        self.closeSearchBtn.frame = CGRect(x: viewWidth - 35, y: 18, width: 25, height: 25)
+        self.searchBar.frame = CGRect(x: 0, y: 0, width: viewWidth - 80, height: searchContainerHeight)
+        
+        let tableY = self.isOpenFilter ? (topBarHeight + searchContainerHeight) : topBarHeight
+        self.dataTable.frame = CGRect(x: 0, y: tableY, width: viewWidth, height: viewHeight - tableY)
     }
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
@@ -824,34 +867,6 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
     }
     func dataTableFuzzySearch(){
         self.updateAllItem()
-        if fuzzyKey.count == 15{
-            var i=0
-            while i < allBleDeviceInfoArray.count{
-                let bleDeviceData = allBleDeviceInfoArray[i]
-                let imei:String = bleDeviceData.imei ?? ""
-                if imei == fuzzyKey{
-                    let macStr = bleDeviceData.mac
-                    print(macStr)
-                    for item in self.discoveredPeripherals{
-                        if item.mac == macStr {
-                            let peripheral = item.peripheral
-                            self.centralManager.stopScan()
-                            let editView = UnlockController()
-                            editView.cbPeripheral = peripheral
-                            editView.name = bleDeviceData.deviceName
-                            editView.model = bleDeviceData.model
-                            editView.software = bleDeviceData.software
-                            editView.deviceId = bleDeviceData.deviceId
-                            editView.imei = bleDeviceData.imei
-                            self.navigationController?.pushViewController(editView, animated: false)
-                            break
-                        }
-                    }
-                    break
-                }
-                i+=1
-            }
-        }
     }
     
     func regularCheckTimeoutSignal(){
@@ -880,8 +895,8 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         if clickCount >= 10 {
             Utils.isDebug = true
             // 停止点击事件
-            navigationController?.navigationBar.gestureRecognizers?.forEach {
-                navigationController?.navigationBar.removeGestureRecognizer($0)
+            self.topBarView.gestureRecognizers?.forEach {
+                self.topBarView.removeGestureRecognizer($0)
             }
         }else if clickCount > 6{
             Toast.hudBuilder.title("再点击\(10 - clickCount)次，打开Debug功能").show()
@@ -911,8 +926,6 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         //        print("uid:\(self.uniqueID)")
         super.viewDidLoad()
         self.initFavoriteImeis()
-        self.navigationController!.navigationBar.isTranslucent = false
-        self.extendedLayoutIncludesOpaqueBars = true
         self.view.backgroundColor = UIColor.white
         self.view.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
         makeTable()
@@ -924,11 +937,11 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         self.searchBar = UISearchBar()
         self.searchBar.backgroundColor = UIColor.white
         self.searchBar.barTintColor = UIColor.white
-        self.searchBar.frame = CGRect(x:0,y:0,width: KSize.width - 80,height:60)
+        self.searchBar.frame = CGRect(x:0,y:0,width: KSize.width - 80,height:searchContainerHeight)
         self.searchBar.delegate = self
         self.searchView = UIView()
         self.searchView.backgroundColor = UIColor.white
-        self.searchView.frame = CGRect(x:0,y:60,width: KSize.width,height:60)
+        self.searchView.frame = CGRect(x:0,y:60,width: KSize.width,height:searchContainerHeight)
         self.searchView.isHidden = true
         self.scanBtn = UIButton()
         self.scanBtn.backgroundColor = UIColor.white
@@ -948,9 +961,10 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         self.view.addSubview(self.searchView)
         // 设置标题栏点击事件监听器
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(titleBarTapped))
-        navigationController?.navigationBar.addGestureRecognizer(tapGesture)
+        self.topBarView.addGestureRecognizer(tapGesture)
         let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         self.view.addGestureRecognizer(tap)
+        self.updateSearchAndTableLayout()
         
         
     }
@@ -961,12 +975,17 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
     let imageSize = CGSize(width: 24, height: 24)
     let renderer = UIGraphicsImageRenderer(size: CGSize(width: 24, height: 24))
     func initNavBar(){
+        self.topBarView = UIView()
+        self.topBarView.backgroundColor = UIColor.colorPrimary
+        self.view.addSubview(self.topBarView)
+        
         initPopMenu()
         barLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
-        //                titleLabel.text = "Bluetooth sensor"
         barLabel.text =  NSLocalizedString("main_bar_text", comment: "Bluetooth device")
-        barLabel.font = UIFont.systemFont(ofSize: CGFloat(Utils.fontSize))
-        self.navigationItem.titleView = barLabel
+        barLabel.textAlignment = .center
+        barLabel.textColor = .white
+        barLabel.font = UIFont.boldSystemFont(ofSize: 22)
+        self.topBarView.addSubview(barLabel)
         
         
         
@@ -986,27 +1005,24 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
             let originalImage = UIImage(named: "ic_refresh.png")
             originalImage?.draw(in: CGRect(origin: .zero, size: imageSize))
         }
-        favoriteBtn = UIButton(type: .custom) as! UIButton
+        favoriteBtn = UIButton(type: .custom)
         favoriteBtn.setImage(favoriteImage, for: .normal)
         favoriteBtn.addTarget(self, action: #selector(switchFavoriteClick), for:.touchUpInside)
         favoriteBtn.frame = CGRectMake(0, 0, 30, 30)
-        let infoBarBtn = UIBarButtonItem(customView: favoriteBtn)
         
-        rightMenuBtn = UIButton(type: .custom) as! UIButton
+        rightMenuBtn = UIButton(type: .custom)
         rightMenuBtn.setImage(rightMenuImage, for:.normal)
         rightMenuBtn.addTarget(self, action: #selector(showPopMenuClick), for:.touchUpInside)
         rightMenuBtn.frame = CGRectMake(0, 0, 30, 30)
-        let searchBarBtn = UIBarButtonItem(customView: rightMenuBtn)
         
-        refreshBtn = UIButton(type: .custom) as! UIButton
+        refreshBtn = UIButton(type: .custom)
         refreshBtn.setImage(refreshImage, for: .normal)
         refreshBtn.addTarget(self, action: #selector(leftClick), for: .touchUpInside)
         refreshBtn.frame = CGRectMake(0, 0, 30, 30)
-        let refreshBarBtn = UIBarButtonItem(customView: refreshBtn)
-        self.navigationItem.setLeftBarButtonItems([refreshBarBtn ], animated: false)
-        self.navigationItem.setRightBarButtonItems([  searchBarBtn, infoBarBtn], animated: false)
         
-        navigationController?.navigationBar.barTintColor = UIColor.colorPrimary
+        self.topBarView.addSubview(refreshBtn)
+        self.topBarView.addSubview(favoriteBtn)
+        self.topBarView.addSubview(rightMenuBtn)
         
         
     }
@@ -1027,6 +1043,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
     }
     @objc private func showPopMenuClick() {
         print("showPopMenuClick")
+        self.initPopMenu()
         self.popMenu.show()
     }
     @objc private func getInfoClick() {
@@ -1053,7 +1070,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
         ]
         
         //init  (注意：arrow点是基于屏幕的位置)
-        popMenu = SwiftPopMenu(menuWidth: 150, arrow: CGPoint(x: KSize.width - 10, y: 70), datas: popData,configures: parameters)
+        popMenu = SwiftPopMenu(menuWidth: 150, arrow: CGPoint(x: self.view.bounds.width - 10, y: self.view.safeAreaInsets.top + 56), datas: popData,configures: parameters)
         
         //click
         popMenu.didSelectMenuBlock = { [weak self](index:Int)->Void in
@@ -1079,7 +1096,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
     }
     func makeTable()
     {
-        dataTable=UITableView.init(frame: CGRect(x: 0, y: 0, width: KSize.width, height: KSize.height - 10), style:.plain)
+        dataTable=UITableView.init(frame: self.view.bounds, style:.plain)
         dataTable.delegate = self
         dataTable.backgroundColor = UIColor.white
         dataTable.dataSource = self
@@ -1432,4 +1449,3 @@ class ViewController: UIViewController, CBCentralManagerDelegate,CBPeripheralDel
     
     
 }
-

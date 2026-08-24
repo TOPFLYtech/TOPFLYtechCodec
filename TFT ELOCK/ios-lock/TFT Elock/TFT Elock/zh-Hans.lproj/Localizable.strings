@@ -191,7 +191,7 @@
 "ip_domain"="域名/IP";
 "port"="端口";
 "acc_on_value_warning"="点火值必须在5到65535之间或者是0,0意味着禁用";
-"acc_off_value_warning"="点火关闭必须为 0 或介于 1200 和 2147483647 之间";
+"acc_off_value_warning"="点火关闭必须在 0 和 2147483647 之间";
 "angle_value_warning"="角度值必须在15到180之间或者是0,0意味着禁用";
 "distance_value_warning"="距离值必须在100到65535之间或者是0,0意味着禁用";
 "port_invalid"="无效的端口号";
@@ -295,6 +295,16 @@
 "old_unlock_error"="旧的解锁密码错误";
 "network"="网络";
 "input_error"="输入错误!";
+"save"="保存";
+"custom_identity"="自定义身份信息";
+"identity_mode_auto"="使用自动生成的12位ID";
+"identity_mode_hex"="输入十六进制ID";
+"identity_mode_text"="输入描述文本";
+"identity_hex_hint"="十六进制ID（12-40个字符）";
+"identity_text_hint"="描述文本（6-20个UTF-8字节）";
+"identity_hex_error"="请输入12-40个字符且长度为偶数的十六进制ID";
+"identity_text_error"="描述文本转换为UTF-8后必须为6-20字节";
+"identity_empty_error"="身份信息不能为空";
 "connect"="连接";
 "reset_default"="恢复默认设置";
 "clear_his_data"="清除历史数据";
